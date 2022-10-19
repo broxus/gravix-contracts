@@ -1,0 +1,185 @@
+{
+	"ABI version": 2,
+	"version": "2.2",
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"_owner","type":"address"},
+				{"name":"_usdt","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferOwnership",
+			"inputs": [
+				{"name":"new_owner","type":"address"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "receiveTokenWalletAddress",
+			"inputs": [
+				{"name":"wallet","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onAcceptTokensTransfer",
+			"inputs": [
+				{"name":"value0","type":"address"},
+				{"name":"amount","type":"uint128"},
+				{"name":"sender","type":"address"},
+				{"name":"value3","type":"address"},
+				{"name":"remainingGasTo","type":"address"},
+				{"name":"payload","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "installPlatformCode",
+			"inputs": [
+				{"name":"code","type":"cell"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "installOrUpdateVexesAccountCode",
+			"inputs": [
+				{"name":"code","type":"cell"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "upgradeVexesAccount",
+			"inputs": [
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "forceUpgradeVexesAccounts",
+			"inputs": [
+				{"name":"users","type":"address[]"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onVexesAccountUpgrade",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"name":"old_version","type":"uint32"},
+				{"name":"new_version","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onVexesAccountDeploy",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "deployVexesAccount",
+			"inputs": [
+				{"name":"user","type":"address"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getVexesAccountAddress",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"user","type":"address"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"deploy_nonce","type":"uint32"}
+	],
+	"events": [
+		{
+			"name": "NewOwner",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_owner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "PlatformCodeInstall",
+			"inputs": [
+				{"name":"call_id","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "VexesAccountCodeUpdate",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"old_version","type":"uint32"},
+				{"name":"new_version","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "VexesAccountUpgrade",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"user","type":"address"},
+				{"name":"old_version","type":"uint32"},
+				{"name":"new_version","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "VexesAccountDeploy",
+			"inputs": [
+				{"name":"user","type":"address"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"fields": [
+		{"name":"_pubkey","type":"uint256"},
+		{"name":"_timestamp","type":"uint64"},
+		{"name":"_constructorFlag","type":"bool"},
+		{"name":"deploy_nonce","type":"uint32"},
+		{"name":"owner","type":"address"},
+		{"name":"usdt","type":"address"},
+		{"name":"usdtWallet","type":"address"},
+		{"name":"platformCode","type":"cell"},
+		{"name":"vexesAccountCode","type":"cell"},
+		{"name":"vexesAccountVersion","type":"uint32"},
+		{"name":"vexesVaultVersion","type":"uint32"},
+		{"name":"usdtBalance","type":"uint128"}
+	]
+}
