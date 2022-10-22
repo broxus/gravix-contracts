@@ -10,6 +10,7 @@ interface IVexesVault is IAcceptTokensTransferCallback {
     event VexesAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
     event VexesAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
     event VexesAccountDeploy(address user);
+    event ActionRevert(uint32 call_id, address user);
 
     function receiveTokenWalletAddress(address wallet) external;
 }
