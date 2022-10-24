@@ -41,7 +41,7 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
     }
 
 
-    function validateOrderParams(uint market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+    function validateOrderRequestParams(uint market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
         if (!markets.exists(market_idx)) return false;
         Market _market = markets[market_idx];
 
@@ -89,8 +89,9 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         return uint32(DateTimeLib.timestampFromDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, 0));
     }
 
-    function encodePrepareOrderPayload(
+    function encodeOrderRequestPayload(
         uint market_idx,
+        OrderType order_type,
         uint32 leverage,
         uint128 expected_price,
         uint32 max_slippage,
@@ -98,22 +99,23 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         uint32 call_id
     ) external pure returns (TvmCell payload) {
         TvmBuilder builder;
-        builder.store(market_idx, leverage, expected_price, max_slippage);
-        return encodeTokenTransferPayload(Action.PrepareOrder, nonce, call_id, builder.toCell());
+        builder.store(market_idx, order_type, leverage, expected_price, max_slippage);
+        return encodeTokenTransferPayload(Action.OrderRequest, nonce, call_id, builder.toCell());
     }
 
-    function decodePrepareOrderPayload(
+    function decodeOrderRequestPayload(
         TvmCell action_payload
     ) public pure returns (
         uint market_idx,
+        OrderType order_type,
         uint32 leverage,
         uint128 expected_price,
         uint32 max_slippage
     ) {
         TvmSlice slice = action_payload.toSlice();
         (
-            market_idx, leverage, expected_price, max_slippage
-        ) = slice.decode(uint, uint32, uint128, uint32);
+            market_idx, order_type, leverage, expected_price, max_slippage
+        ) = slice.decode(uint, OrderType, uint32, uint128, uint32);
     }
 
     function encodeTokenTransferPayload(

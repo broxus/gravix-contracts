@@ -16,4 +16,6 @@ library Errors {
 
     uint16 constant NOT_VEX_ACCOUNT = 2000;
     uint16 constant ALREADY_INITIALIZED = 2001;
+
+    uint16 constant NOT_VAULT = 3000;
 }

@@ -15,9 +15,11 @@ abstract contract VexesVaultStorage is IVexesVault {
     uint32 vexesAccountVersion;
     uint32 vexesVaultVersion;
 
-    uint128 usdtBalance;
-    uint128 poolBalance;
-    uint128 vaultBalance;
+    // real and virtual balances
+    uint128 usdtBalance; // actual usdt balance, equal to sum of all virtual balances
+    uint128 poolBalance; // liquidity deposits
+    uint128 insuranceFund; // collected fees, pnl and etc.
+    uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders
 
     uint128 totalLongs;
     uint128 totalShorts;
@@ -36,7 +38,7 @@ abstract contract VexesVaultStorage is IVexesVault {
     // datetime lib count days from 1
     enum WeekDay { NULL, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday } // TODO: remove ?
 
-    enum Action { PrepareOrder, LiquidityDeposit }
+    enum Action { OrderRequest, LiquidityDeposit }
 
     struct Time {
         uint8 hour;
@@ -91,4 +93,7 @@ abstract contract VexesVaultStorage is IVexesVault {
     mapping (uint => mapping (uint8 => TimeInterval)) workingHours;
     // 2.key - weekend interval start timestamp
     mapping (uint => mapping (uint32 => DateTimeInterval)) weekends;
+
+    uint32 request_nonce = 0;
+    mapping (uint32 => PendingOrderRequest) pending_requests;
 }

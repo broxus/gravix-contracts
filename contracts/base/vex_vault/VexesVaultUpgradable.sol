@@ -51,17 +51,8 @@ abstract contract VexesVaultUpgradable is VexesVaultHelpers {
 
     function _upgradeVexesAccount(address user, uint128 value, Callback.CallMeta meta) internal view {
         address vex_acc = getVexesAccountAddress(user);
-
-        uint16 flag = 0;
-        if (value == 0) {
-            flag = MsgFlag.ALL_NOT_RESERVED;
-        }
-
-        IVexesAccount(vex_acc).upgrade{ value: value, flag: flag }(
-            vexesAccountCode,
-            vexesAccountVersion,
-            meta
-        );
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
+        IVexesAccount(vex_acc).upgrade{ value: value, flag: flag }(vexesAccountCode, vexesAccountVersion, meta);
     }
 
     function onVexesAccountUpgrade(
@@ -76,7 +67,7 @@ abstract contract VexesVaultUpgradable is VexesVaultHelpers {
         _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
     }
 
-    function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view onlyVexesAccount(user) {
+    function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view override onlyVexesAccount(user) {
         emit VexesAccountDeploy(user);
 
         tvm.rawReserve(_reserve(), 0);

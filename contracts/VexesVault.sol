@@ -7,8 +7,8 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "./libraries/Gas.sol";
 import "./libraries/Callback.sol";
+import "./base/vex_vault/VexesVaultUpgradable.sol";
 import {DateTime as DateTimeLib} from "./libraries/DateTime.sol";
-import "./base/vault/VexesVaultUpgradable.sol";
 
 
 contract VexesVault is VexesVaultUpgradable {
@@ -45,7 +45,6 @@ contract VexesVault is VexesVaultUpgradable {
         TvmCell payload
     ) external override {
         require (msg.sender == usdtWallet, Errors.NOT_TOKEN_WALLET);
-        tvm.rawReserve(_reserve(), 0);
 
         (
             Action action,
@@ -58,60 +57,169 @@ contract VexesVault is VexesVaultUpgradable {
         // common cases
         bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
 
-        if (!exception && action == Action.PrepareOrder) {
-            exception = exception && _handlePrepareOrder(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
+        if (!exception && action == Action.OrderRequest) {
+            exception = exception && _handleOrderRequest(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
         } else if (!exception && action == Action.LiquidityDeposit) {
 
         }
 
 
 
+        if (exception) {
+            emit ActionRevert(call_id, sender);
+            // if payload assembled correctly, send nonce, otherwise send payload we got with this transfer
+            payload = correct ? _makeCell(nonce) : payload;
+            _transferUsdt(amount, sender, payload, remainingGasTo, MsgFlag.ALL_NOT_RESERVED);
+        }
     }
 
-    function _handlePrepareOrder(
+
+    // TODO: NOI ограничения
+    function _handleOrderRequest(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
-    ) internal view returns (bool order_created) {
+    ) internal returns (bool request_saved) {
         (
             uint market_idx,
+            OrderType order_type,
             uint32 leverage,
             uint128 expected_price,
             uint32 max_slippage
-        ) = decodePrepareOrderPayload(order_params_payload);
+        ) = decodeOrderRequestPayload(order_params_payload);
 
-        if (!validateOrderParams(market_idx, leverage, max_slippage)) return false;
+        if (!validateOrderRequestParams(market_idx, leverage, max_slippage)) return false;
         if (!marketOpen(market_idx)) return false;
-        _prepareOrder(user, market_idx, collateral, leverage, expected_price,max_slippage);
+        _orderRequest(user, market_idx, order_type, collateral, leverage, expected_price, max_slippage, meta);
         return true;
     }
 
-    function _prepareOrder(
+    function _orderRequest(
         address user,
         uint market_idx,
+        OrderType order_type,
         uint128 collateral,
         uint32 leverage,
         uint128 expected_price,
-        uint32 max_slippage // %
-    ) internal view {
+        uint32 max_slippage, // %
+        Callback.CallMeta meta
+    ) internal {
+        tvm.rawReserve(_reserve(), 0);
+
         Market _market = markets[market_idx];
-        uint128 leveragedPosition = math.muldiv(collateral, leverage, LEVERAGE_BASE);
-        uint128 openFee = math.muldiv(leveragedPosition, _market.fees.openFee, HUNDRED_PERCENT);
-        uint128 collateralSubFee = collateral - openFee;
-        leveragedPosition = math.muldiv(collateralSubFee, leverage, LEVERAGE_BASE);
+        request_nonce += 1;
+
+        PendingOrderRequest new_request = PendingOrderRequest(
+            user,
+            market_idx,
+            order_type,
+            collateral,
+            expected_price,
+            leverage,
+            max_slippage,
+            _market.fees.openFee,
+            _market.fees.spread,
+            _market.fees.borrowBaseRatePerHour,
+            meta
+        );
+        pending_requests[request_nonce] = new_request;
 
         address vex_acc = getVexesAccountAddress(user);
-        IVexesAccount(vex_acc).prepareOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            market_idx, collateralSubFee, openFee, leveragedPosition,
-            expected_price, max_slippage, _market.fees.borrowBaseRatePerHour
+        IVexesAccount(vex_acc).process_orderRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            request_nonce,
+            new_request
         );
     }
 
+    function finish_orderRequest(
+        uint32 request_nonce,
+        address user,
+        uint32 request_key
+    ) external override onlyVexesAccount(user) {
+        tvm.rawReserve(_reserve(), 0);
 
+        PendingOrderRequest request = pending_requests[request_nonce];
+        delete pending_requests[request_nonce];
 
+        usdtBalance += request.collateral;
+        collateralReserve += request.collateral;
 
+        emit OrderRequest(
+            request.meta.call_id,
+            user,
+            request.marketIdx,
+            request.collateral,
+            request.expectedPrice,
+            request.leverage,
+            request.maxSlippage,
+            request_key
+        );
 
+        _sendCallbackOrGas(user, request.meta.nonce, true, request.meta.send_gas_to);
+    }
 
+    // TODO: authorization for oracle
+    function executeOrder(address user, uint32 request_key, uint128 asset_price, Callback.CallMeta meta) external view {
+        tvm.rawReserve(_reserve(), 0);
 
+        address vex_acc = getVexesAccountAddress(user);
+        IVexesAccount(vex_acc).process_executeOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            request_key,
+            asset_price,
+            meta
+        );
+    }
 
+    function revert_executeOrder(
+        address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta
+    ) external override onlyVexesAccount(user) {
+        tvm.rawReserve(_reserve(), 0);
+
+        usdtBalance -= collateral;
+        collateralReserve -= collateral;
+
+        emit OrderRequestRevert(
+            meta.call_id,
+            user,
+            request_key
+        );
+
+        _transferUsdt(
+            collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+        );
+    }
+
+    function finish_executeOrder(
+        address user, uint32 request_key, uint128 open_price, uint128 open_fee, Callback.CallMeta meta
+    ) external override onlyVexesAccount(user) {
+        tvm.rawReserve(_reserve(), 0);
+
+        // TODO: money flow routing!
+        insuranceFund += open_fee;
+
+        emit OrderRequestExecuted(
+            meta.call_id,
+            user,
+            open_price,
+            open_fee,
+            request_key
+        );
+
+        _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
+    }
+
+    onBounce(TvmSlice slice) external view {
+        tvm.accept();
+
+        uint32 functionId = slice.decode(uint32);
+        // if processing failed - contract was not deployed. Deploy and try again
+        if (functionId == tvm.functionId(IVexesAccount.process_orderRequest)) {
+            tvm.rawReserve(_reserve(), 0);
+            uint32 _request_nonce = slice.decode(uint32);
+            PendingOrderRequest request = pending_requests[_request_nonce];
+
+            address vex_acc = deployVexesAccount(request.user);
+            IVexesAccount(vex_acc).process_orderRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(_request_nonce, request);
+        }
+    }
 
 
 
