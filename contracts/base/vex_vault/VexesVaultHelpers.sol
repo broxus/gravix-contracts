@@ -89,9 +89,9 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         return uint32(DateTimeLib.timestampFromDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, 0));
     }
 
-    function encodeOrderRequestPayload(
+    function encodeMarketOrderRequestPayload(
         uint market_idx,
-        OrderType order_type,
+        PositionType position_type,
         uint32 leverage,
         uint128 expected_price,
         uint32 max_slippage,
@@ -99,23 +99,23 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         uint32 call_id
     ) external pure returns (TvmCell payload) {
         TvmBuilder builder;
-        builder.store(market_idx, order_type, leverage, expected_price, max_slippage);
-        return encodeTokenTransferPayload(Action.OrderRequest, nonce, call_id, builder.toCell());
+        builder.store(market_idx, position_type, leverage, expected_price, max_slippage);
+        return encodeTokenTransferPayload(Action.MarketOrderRequest, nonce, call_id, builder.toCell());
     }
 
-    function decodeOrderRequestPayload(
+    function decodeMarketOrderRequestPayload(
         TvmCell action_payload
     ) public pure returns (
         uint market_idx,
-        OrderType order_type,
+        PositionType position_type,
         uint32 leverage,
         uint128 expected_price,
-        uint32 max_slippage
+        uint32 max_slippage_rate
     ) {
         TvmSlice slice = action_payload.toSlice();
         (
-            market_idx, order_type, leverage, expected_price, max_slippage
-        ) = slice.decode(uint, OrderType, uint32, uint128, uint32);
+            market_idx, position_type, leverage, expected_price, max_slippage_rate
+        ) = slice.decode(uint, PositionType, uint32, uint128, uint32);
     }
 
     function encodeTokenTransferPayload(
