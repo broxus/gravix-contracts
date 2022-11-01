@@ -62,16 +62,16 @@ contract VexesAccount is VexesAccountHelpers {
         uint128 min_price = request.expectedPrice - allowed_delta;
         uint128 max_price = request.expectedPrice + allowed_delta;
 
-        if (asset_price < min_price || asset_price > max_price) {
+        uint128 open_price = request.positionType == IVexesVault.PositionType.Long ?
+        math.muldiv(asset_price, (HUNDRED_PERCENT + request.spreadRate), HUNDRED_PERCENT) :
+        math.muldiv(asset_price, (HUNDRED_PERCENT - request.spreadRate), HUNDRED_PERCENT);
+
+        if (open_price < min_price || open_price > max_price) {
             IVexesVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, request.collateral, meta
             );
             return;
         }
-
-        uint128 open_price = request.positionType == IVexesVault.PositionType.Long ?
-            math.muldiv(asset_price, (HUNDRED_PERCENT + request.spreadRate), HUNDRED_PERCENT) :
-            math.muldiv(asset_price, (HUNDRED_PERCENT - request.spreadRate), HUNDRED_PERCENT);
 
         uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
         uint128 open_fee = math.muldiv(leveraged_position, request.openFeeRate, HUNDRED_PERCENT);

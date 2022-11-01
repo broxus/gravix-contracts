@@ -33,8 +33,12 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         }
     }
 
-    function _setupTokenWallet() internal view {
+    function _setupTokenWallets() internal view {
         ITokenRoot(usdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexesVault.receiveTokenWalletAddress }(
+            address(this), // owner
+            Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
+        );
+        ITokenRoot(stvUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexesVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
@@ -87,6 +91,16 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         ) = slice.decode(uint, PositionType, uint32, uint128, uint32);
     }
 
+    function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
+        TvmCell empty;
+        return encodeTokenTransferPayload(Action.LiquidityDeposit, nonce, call_id, empty);
+    }
+
+    function encodeLiquidityWithdraw(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
+        TvmCell empty;
+        return encodeTokenTransferPayload(Action.LiquidityWithdraw, nonce, call_id, empty);
+    }
+
     function encodeTokenTransferPayload(
         Action action, uint32 nonce, uint32 call_id, TvmCell action_payload
     ) public pure returns (TvmCell payload) {
@@ -105,7 +119,7 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         TvmSlice slice = payload.toSlice();
         // 1 uint8 + 2 uint32 and 1 cell
         (uint16 bits, uint8 refs) = slice.size();
-        if ((bits == 8 + 32 + 32) && (refs == 1) && payload.toSlice().decode(uint8) <= uint8(Action.LiquidityDeposit)) {
+        if ((bits == 8 + 32 + 32) && (refs == 1) && payload.toSlice().decode(uint8) <= uint8(Action.LiquidityWithdraw)) {
             action = slice.decode(Action);
             nonce = slice.decode(uint32);
             call_id = slice.decode(uint32);
@@ -128,20 +142,17 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         return builder.toCell();
     }
 
-    function _transferUsdt(
-        uint128 amount, address receiver, TvmCell payload, address send_gas_to, uint16 flag
-    ) internal view {
-        uint128 value;
-        if (flag != MsgFlag.ALL_NOT_RESERVED) {
-            value = Gas.TOKEN_TRANSFER_VALUE;
-        }
+    function _transfer(
+        address wallet, uint128 amount, address receiver, TvmCell payload, address send_gas_to, uint16 flag
+    ) internal pure {
+        uint128 value = flag != MsgFlag.ALL_NOT_RESERVED ? Gas.TOKEN_TRANSFER_VALUE : 0;
         bool notify = false;
         // notify = true if payload is non-empty
         TvmSlice slice = payload.toSlice();
         if (slice.bits() > 0 || slice.refs() > 0) {
             notify = true;
         }
-        ITokenWallet(usdtWallet).transfer{value: value, flag: flag}(
+        ITokenWallet(wallet).transfer{value: value, flag: flag}(
             amount,
             receiver,
             0,

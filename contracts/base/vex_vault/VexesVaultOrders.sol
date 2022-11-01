@@ -23,11 +23,11 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
     ) internal returns (bool request_saved) {
         (
-        uint market_idx,
-        PositionType position_type,
-        uint32 leverage,
-        uint128 expected_price,
-        uint32 max_slippage_rate
+            uint market_idx,
+            PositionType position_type,
+            uint32 leverage,
+            uint128 expected_price,
+            uint32 max_slippage_rate
         ) = decodeMarketOrderRequestPayload(order_params_payload);
 
         if (!validateOrderRequestParams(market_idx, leverage, max_slippage_rate)) return false;
@@ -46,8 +46,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         uint32 max_slippage_rate, // %
         Callback.CallMeta meta
     ) internal {
-        tvm.rawReserve(_reserve(), 0);
-
         Market _market = markets[market_idx];
         request_nonce += 1;
 
@@ -82,7 +80,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         PendingMarketOrderRequest request = pending_market_requests[request_nonce];
         delete pending_market_requests[request_nonce];
 
-        usdtBalance += request.collateral;
         collateralReserve += request.collateral;
 
         emit MarketOrderRequest(
@@ -119,7 +116,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     ) external override onlyVexesAccount(user) {
         tvm.rawReserve(_reserve(), 0);
 
-        usdtBalance -= collateral;
         collateralReserve -= collateral;
 
         emit MarketOrderExecutionRevert(
@@ -130,8 +126,8 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
 
         if (collateral > 0) {
             // too high slippage
-            _transferUsdt(
-                collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+            _transfer(
+                usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
             );
         } else {
             // tried to execute non-existent order
@@ -144,7 +140,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     ) external override onlyVexesAccount(user) {
         tvm.rawReserve(_reserve(), 0);
 
-        // TODO: money flow routing!
         _collectOpenFee(open_fee);
         collateralReserve -= open_fee;
 
@@ -183,11 +178,10 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     ) external override onlyVexesAccount(user) {
         tvm.rawReserve(_reserve(), 0);
 
-        usdtBalance -= collateral;
         collateralReserve -= collateral;
 
         emit CancelMarketOrder(meta.call_id, user, request_key);
-        _transferUsdt(collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+        _transfer(usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
     }
 
 
@@ -234,7 +228,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
 
             // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
             uint128 user_net_usdt = uint128(collateral + pnl_with_fees - position_view.closeFee);
-            _transferUsdt(user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+            _transfer(usdtWallet, user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
         }
     }
 

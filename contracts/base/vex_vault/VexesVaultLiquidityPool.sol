@@ -1,31 +1,69 @@
 pragma ever-solidity ^0.62.0;
 
 
-
+import "broxus-token-contracts/contracts/interfaces/IBurnableTokenWallet.sol";
 import "broxus-token-contracts/contracts/interfaces/ITokenRootUpgradeable.sol";
-import "broxus-token-contracts/contracts/interfaces/ITokenWalletUpgradeable.sol";
-import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
 import "../../interfaces/IVexesAccount.sol";
 import "./VexesVaultUpgradable.sol";
-import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
-
 
 
 abstract contract VexesVaultLiquidityPool is VexesVaultUpgradable {
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDITY POOL ---------------------------------------
     // ----------------------------------------------------------------------------------
+    function _handleUsdtDeposit(
+        address user, uint128 amount, Callback.CallMeta meta
+    ) internal {
+        uint128 mint_amount = usdtToStvUsdt(amount);
+
+        poolBalance += amount;
+        stvUsdtSupply += mint_amount;
+
+        emit LiquidityPoolDeposit(meta.call_id, user, amount, mint_amount);
+
+        ITokenRoot(stvUsdt).mint{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            mint_amount, user, Gas.TOKEN_WALLET_DEPLOY_VALUE / 2, meta.send_gas_to, true, _makeCell(meta.nonce)
+        );
+    }
+
+    function _handleStvUsdtDeposit(address user, uint128 amount, Callback.CallMeta meta) internal view {
+        TvmBuilder builder;
+        builder.store(user);
+        builder.store(meta);
+        IBurnableTokenWallet(stvUsdtWallet).burn{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount, meta.send_gas_to, address(this), builder.toCell()
+        );
+    }
+
+    function _handleStvUsdtBurn(uint128 stv_usdt_amount, TvmCell payload) internal {
+        TvmSlice slice = payload.toSlice();
+
+        address user = slice.decode(address);
+        Callback.CallMeta meta = slice.decode(Callback.CallMeta);
+
+        uint128 usdt_amount = stvUsdtToUsdt(stv_usdt_amount);
+
+        poolBalance -= usdt_amount;
+        stvUsdtSupply -= stv_usdt_amount;
+
+        emit LiquidityPoolWithdraw(meta.call_id, user, usdt_amount, stv_usdt_amount);
+
+        _transfer(usdtWallet, usdt_amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+    }
+
     function usdtToStvUsdt(uint128 usdt_amount) public view returns (uint128 stv_amount) {
         if (stvUsdtSupply == 0) return usdt_amount;
-        return math.muldiv(usdt_amount, stvUsdtSupply, poolBalance);
+        (uint128 in_price,) = stvUsdtPrice();
+        return math.muldiv(usdt_amount, SCALING_FACTOR, in_price);
     }
 
     function stvUsdtToUsdt(uint128 stv_amount) public view returns (uint128 usdt_amount) {
         if (stvUsdtSupply == 0) return stv_amount;
-        return math.muldiv(stv_amount, poolBalance, stvUsdtSupply);
+        (,uint128 out_price) = stvUsdtPrice();
+        return math.muldiv(stv_amount, out_price, SCALING_FACTOR);
     }
 
     // @dev Prices are multiplied by 10**18

@@ -13,6 +13,7 @@ library Errors {
     uint16 constant NOT_TOKEN_WALLET = 1006;
     uint16 constant BAD_SENDER = 1007;
     uint16 constant EMERGENCY = 1008;
+    uint16 constant NOT_TOKEN_ROOT = 1009;
 
     uint16 constant NOT_VEX_ACCOUNT = 2000;
     uint16 constant ALREADY_INITIALIZED = 2001;

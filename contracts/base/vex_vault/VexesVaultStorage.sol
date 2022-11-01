@@ -9,14 +9,13 @@ abstract contract VexesVaultStorage is IVexesVault {
     address owner;
     address usdt;
     address usdtWallet;
+    address stvUsdt;
+    address stvUsdtWallet;
 
     TvmCell platformCode;
     TvmCell vexesAccountCode;
     uint32 vexesAccountVersion;
     uint32 vexesVaultVersion;
-
-    // real and virtual balances
-    uint128 usdtBalance; // actual usdt balance, equal to sum of all virtual balances
 
     // liquidity pool staff
     uint128 poolBalance; // liquidity deposits

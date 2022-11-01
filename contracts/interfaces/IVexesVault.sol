@@ -2,12 +2,13 @@ pragma ever-solidity ^0.62.0;
 
 
 import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
+import "broxus-token-contracts/contracts/interfaces/IAcceptTokensBurnCallback.sol";
 import "./IVexesAccount.sol";
 import "../libraries/Callback.sol";
 
 
-interface IVexesVault is IAcceptTokensTransferCallback {
-    enum Action { MarketOrderRequest, LiquidityDeposit }
+interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
+    enum Action { MarketOrderRequest, LiquidityDeposit, LiquidityWithdraw }
 
     struct Time {
         uint8 hour;
@@ -95,6 +96,8 @@ interface IVexesVault is IAcceptTokensTransferCallback {
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IVexesAccount.PositionView position_view);
     event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IVexesAccount.PositionView position_view);
+    event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stv_usdt_amount_out);
+    event LiquidityPoolWithdraw(uint32 call_id, address user, uint128 usdt_amount_out, uint128 stv_usdt_amount_in);
 
     function receiveTokenWalletAddress(address wallet) external;
     function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view;
