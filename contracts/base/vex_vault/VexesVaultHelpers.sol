@@ -50,37 +50,6 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         return true;
     }
 
-    function marketOpen(uint market_idx) public view returns (bool open) {
-        Market _market = markets[market_idx];
-
-        if (_market.paused) return false;
-        if (!_market.scheduleEnabled) return true;
-
-        (
-        uint year, uint month, uint day,,,
-        ) = DateTimeLib.timestampToDateTime(now);
-        uint cur_week_day = DateTimeLib.getDayOfWeek(now);
-
-        // first check if market is shut down because of weekend
-        // weekend intervals are sorted by beginning and cant intersect
-        // so that its enough to check 1st interval with lower start
-        optional(uint32, DateTimeInterval) opt = weekends[market_idx].prevOrEq(now);
-        if (opt.hasValue()) {
-            (,DateTimeInterval last_weekend) = opt.get();
-            if (now <= _dateTimeToTimestamp(last_weekend.to)) return false;
-        }
-
-        // now lets check if we are on working hours of market
-        mapping (uint8 => TimeInterval) working_hours = workingHours[market_idx];
-        if (!working_hours.exists(uint8(cur_week_day))) return false;
-        // ok, so, we are on working day, lets get timestamp of start/end of the working day
-        TimeInterval work_interval = working_hours[uint8(cur_week_day)];
-        DateTime from_dt = _timeToDateTime(year, month, day, work_interval.from);
-        DateTime to_dt = _timeToDateTime(year, month, day, work_interval.to);
-        if (now < _dateTimeToTimestamp(from_dt) || now > _dateTimeToTimestamp(to_dt)) return false;
-        return true;
-    }
-
     function _timeToDateTime(uint year, uint month, uint day, Time time) internal pure returns (DateTime dt) {
         return DateTime(uint16(year), uint8(month), uint8(day), time.hour, time.minute);
     }

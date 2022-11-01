@@ -186,6 +186,7 @@ contract VexesAccount is VexesAccountHelpers {
             position.positionType,
             position.initialCollateral,
             position.openPrice,
+            close_price,
             position.leverage,
             borrow_fee,
             funding_fee,

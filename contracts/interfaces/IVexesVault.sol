@@ -7,10 +7,6 @@ import "../libraries/Callback.sol";
 
 
 interface IVexesVault is IAcceptTokensTransferCallback {
-    enum DistributionSchema { Pool, InsuranceFund }
-
-    // datetime lib count days from 1
-    enum WeekDay { NULL, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday } // TODO: remove ?
     enum Action { MarketOrderRequest, LiquidityDeposit }
 
     struct Time {
@@ -96,32 +92,20 @@ interface IVexesVault is IAcceptTokensTransferCallback {
     event MarketOrderExecution(uint32 call_id, address user, uint128 open_price, uint128 open_fee, uint32 request_key);
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 request_key);
-    event ClosePositionRevert(uint32 call_id, address user, uint32 request_key);
+    event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
+    event ClosePosition(uint32 call_id, address user, uint32 position_key, IVexesAccount.PositionView position_view);
+    event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IVexesAccount.PositionView position_view);
 
     function receiveTokenWalletAddress(address wallet) external;
     function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view;
-
-    function finish_requestMarketOrder(
-        uint32 request_nonce,
-        address user,
-        uint32 request_key
-    ) external;
-
+    function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key) external;
     function revert_executeMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
     function finish_executeMarketOrder(
         address user, uint32 request_key, uint128 open_price, uint128 open_fee, Callback.CallMeta meta
     ) external;
-
-    function revert_cancelMarketOrder(
-        address user, uint32 request_key, Callback.CallMeta meta
-    ) external view;
-    function finish_cancelMarketOrder(
-        address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta
-    ) external;
-
-    function revert_closePosition(
-        address user, uint32 position_key, Callback.CallMeta meta
-    ) external view;
+    function revert_cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view;
+    function finish_cancelMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
+    function revert_closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view;
     function finish_closePosition(
         address user, uint32 position_key, IVexesAccount.PositionView order_view, Callback.CallMeta meta
     ) external;

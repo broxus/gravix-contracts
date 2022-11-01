@@ -41,6 +41,7 @@ interface IVexesAccount {
         IVexesVault.PositionType positionType;
         uint128 initialCollateral;
         uint128 openPrice;
+        uint128 closePrice;
         uint32 leverage;
         uint128 borrowFee;
         uint128 fundingFee;
