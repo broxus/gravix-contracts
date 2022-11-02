@@ -197,6 +197,11 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         _;
     }
 
+    modifier onlyActive() {
+        require (!paused || msg.sender == owner, Errors.NOT_ACTIVE);
+        _;
+    }
+
     function _validateHours(mapping (uint8 => TimeInterval)) internal pure returns (bool) {
         // TODO:
         return false;

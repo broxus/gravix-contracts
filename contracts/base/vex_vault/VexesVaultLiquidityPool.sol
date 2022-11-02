@@ -73,7 +73,7 @@ abstract contract VexesVaultLiquidityPool is VexesVaultUpgradable {
         // out price is current real price
         out_price = math.muldiv(poolBalance, SCALING_FACTOR, stvUsdtSupply);
         // if we are in undercollateralized state
-        in_price = targetPrice > 0 ? out_price + (targetPrice - out_price) / 2 : out_price;
+        in_price = targetPrice > 0 ? targetPrice : out_price;
     }
 
     function poolDebt() public view returns (uint128) {
@@ -91,7 +91,7 @@ abstract contract VexesVaultLiquidityPool is VexesVaultUpgradable {
         _collectFeeWithSchema(closeFeeDistributionSchema, amount);
     }
 
-    function _collectFeeWithSchema(uint32[2] fee_schema, uint128 amount) internal {
+    function _collectFeeWithSchema(uint64[2] fee_schema, uint128 amount) internal {
         uint128 pool_fee = math.muldiv(amount, fee_schema[uint256(DistributionSchema.Pool)], HUNDRED_PERCENT);
         uint128 fund_fee = amount - pool_fee;
 

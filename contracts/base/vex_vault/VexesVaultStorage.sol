@@ -33,11 +33,12 @@ abstract contract VexesVaultStorage is IVexesVault {
     uint128 constant SCALING_FACTOR = 10**18;
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
     uint32 constant LEVERAGE_BASE = 100;
-    uint32 constant HUNDRED_PERCENT = 1_000_000; // 100%, this allows precision up to 0.0001%
-    uint32 liquidationThresholdRate = 100_000; // 10%
+    uint64 constant HUNDRED_PERCENT = 1_000_000_000_000; // 100%, this allows precision up to 0.0000000001%
+    uint32 constant HOUR = 3600;
+    uint64 liquidationThresholdRate = 100_000_000_000; // 10%
 
-    uint32[2] openFeeDistributionSchema = [HUNDRED_PERCENT, 0];
-    uint32[2] closeFeeDistributionSchema = [0, HUNDRED_PERCENT];
+    uint64[2] openFeeDistributionSchema = [HUNDRED_PERCENT, 0];
+    uint64[2] closeFeeDistributionSchema = [0, HUNDRED_PERCENT];
     enum DistributionSchema { Pool, InsuranceFund }
 
     uint32 marketCount = 0;

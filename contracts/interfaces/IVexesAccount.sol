@@ -12,12 +12,12 @@ interface IVexesAccount {
         uint128 collateral;
         uint128 expectedPrice;
         uint32 leverage;
-        uint32 maxSlippageRate; // %
-        uint32 openFeeRate; // %
-        uint32 closeFeeRate; // %
-        uint32 spreadRate; // %
-        uint32 liquidationThresholdRate; // %
-        uint32 borrowBaseRatePerHour; // %
+        uint64 maxSlippageRate; // %
+        uint64 openFeeRate; // %
+        uint64 closeFeeRate; // %
+        uint64 spreadRate; // %
+        uint64 liquidationThresholdRate; // %
+        uint64 borrowBaseRatePerHour; // %
     }
 
     // TODO: funding acc share ?
@@ -28,10 +28,10 @@ interface IVexesAccount {
         uint128 openFee; // amount of usdt taken when position was opened
         uint128 openPrice;
         uint32 leverage;
-        uint32 borrowBaseRatePerHour; // % per hour
-        uint32 spreadRate; // %
-        uint32 closeFeeRate; // %
-        uint32 liquidationThresholdRate; // %
+        uint64 borrowBaseRatePerHour; // % per hour
+        uint64 spreadRate; // %
+        uint64 closeFeeRate; // %
+        uint64 liquidationThresholdRate; // %
         uint32 createdAt; // %
     }
 

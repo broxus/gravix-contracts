@@ -131,10 +131,12 @@ contract VexesAccount is VexesAccountHelpers {
         );
     }
 
-//    // @param assets_prices - key - market idx, value - current price
-//    function getOrdersView(mapping (uint => uint128) assets_prices) external view returns (PositionView[] orders_view) {
-//
-//    }
+    function getOrdersView(uint32[] positions_keys, uint128[] assets_prices) external view returns (PositionView[] orders_views) {
+        require (positions_keys.length == assets_prices.length, Errors.BAD_INPUT);
+        for (uint i = 0; i < positions_keys.length; i++) {
+            orders_views.push(getPositionView(positions_keys[i], assets_prices[i]));
+        }
+    }
 
     function getPositionView(uint32 position_key, uint128 asset_price) public view returns (PositionView position_view) {
         Position position = positions[position_key];

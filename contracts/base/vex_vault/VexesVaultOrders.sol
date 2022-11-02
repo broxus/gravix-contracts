@@ -100,7 +100,12 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // --------------------------- ORDER EXECUTE HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
     // TODO: authorization for oracle
-    function executeOrder(address user, uint32 request_key, uint128 asset_price, Callback.CallMeta meta) external view {
+    function executeOrder(
+        address user,
+        uint32 request_key,
+        uint128 asset_price,
+        Callback.CallMeta meta
+    ) external view onlyActive {
         tvm.rawReserve(_reserve(), 0);
 
         address vex_acc = getVexesAccountAddress(user);
@@ -157,7 +162,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER REQUEST CANCEL HANDLERS ------------------------
     // ----------------------------------------------------------------------------------
-    function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view {
+    function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view onlyActive {
         tvm.rawReserve(_reserve(), 0);
 
         address vex_acc = getVexesAccountAddress(user);
@@ -189,7 +194,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // --------------------------- ORDER CLOSE HANDLERS ---------------------------------
     // ----------------------------------------------------------------------------------
     // TODO: add work with oracle
-    function closePosition(address user, uint32 position_key, uint128 asset_price, Callback.CallMeta meta) external view {
+    function closePosition(address user, uint32 position_key, uint128 asset_price, Callback.CallMeta meta) external view onlyActive {
         tvm.rawReserve(_reserve(), 0);
 
         address vex_acc = getVexesAccountAddress(user);
@@ -237,5 +242,54 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     //    function liquidatePositions()
 
+
+    // ----------------------------------------------------------------------------------
+    // --------------------------- FUNDINGS ---------------------------------------------
+    // ----------------------------------------------------------------------------------
+    function _updateFundings(uint market_idx) internal {
+        Market _market = markets[market_idx];
+
+        if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
+
+        (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
+
+        int256 long_fundings = math.muldiv(long_rate_per_hour, int256(_market.totalLongs), HUNDRED_PERCENT);
+        long_fundings = math.muldiv(long_fundings, (now - _market.lastFundingUpdateTime), HOUR);
+
+        _market.accLongFundingPerShare -= math.muldiv(long_fundings, SCALING_FACTOR, _market.totalLongs);
+
+        int256 short_fundings = math.muldiv(short_rate_per_hour, int256(_market.totalShorts), HUNDRED_PERCENT);
+        short_fundings = math.muldiv(short_fundings, (now - _market.lastFundingUpdateTime), HOUR);
+
+        _market.accShortFundingPerShare -= math.muldiv(short_fundings, SCALING_FACTOR, _market.totalShorts);
+
+        markets[market_idx] = _market;
+    }
+
+    // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
+    function getFundingRates(uint market_idx) public view returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
+        Market _market = markets[market_idx];
+        return _getFundingRates(_market);
+    }
+
+    // @notice If rate is positive - trader should pay, negative - receive payment
+    function _getFundingRates(Market _market) internal pure returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
+        if (_market.lastFundingUpdateTime > 0) {
+            uint128 noi = uint128(math.abs(int256(_market.totalLongs) - _market.totalShorts));
+            uint128 funding_rate_per_hour = math.muldiv(
+                _market.fees.fundingBaseRatePerHour,
+                math.muldiv(noi, SCALING_FACTOR, _market.depth),
+                SCALING_FACTOR
+            );
+
+            if (_market.totalLongs >= _market.totalShorts) {
+                long_rate_per_hour = int128(funding_rate_per_hour);
+                short_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalLongs, _market.totalShorts));
+            } else {
+                short_rate_per_hour = int128(funding_rate_per_hour);
+                long_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalShorts, _market.totalLongs));
+            }
+        }
+    }
 
 }

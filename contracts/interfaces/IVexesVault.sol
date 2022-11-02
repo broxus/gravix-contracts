@@ -35,11 +35,11 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
 
     struct Fees {
         // fee and rates in %
-        uint32 openFeeRate;
-        uint32 closeFeeRate;
-        uint32 spreadRate;
-        uint32 borrowBaseRatePerHour;
-        uint32 fundingBaseRatePerHour;
+        uint64 openFeeRate;
+        uint64 closeFeeRate;
+        uint64 spreadRate;
+        uint64 borrowBaseRatePerHour;
+        uint64 fundingBaseRatePerHour;
     }
 
     struct Market {
@@ -47,7 +47,13 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
 
         uint128 totalLongs;
         uint128 totalShorts;
-        uint32 maxLeverage; // 100x = 10_000, e.g multiplied by 100
+
+        int256 accLongFundingPerShare;
+        int256 accShortFundingPerShare;
+        uint32 lastFundingUpdateTime;
+
+        uint32 maxLeverage; // 100x = 10_000, e.g multiplied by base (100)
+        uint128 depth;
 
         Fees fees;
         // if this is true, market works only in specified workingHours
@@ -65,11 +71,11 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint128 expectedPrice;
         uint32 leverage;
         uint32 maxSlippageRate; // %
-        uint32 openFeeRate; // %
-        uint32 closeFeeRate; // %
-        uint32 spreadRate; // %
-        uint32 liquidationThresholdRate; // %
-        uint32 borrowBaseRatePerHour; // %
+        uint64 openFeeRate; // %
+        uint64 closeFeeRate; // %
+        uint64 spreadRate; // %
+        uint64 liquidationThresholdRate; // %
+        uint64 borrowBaseRatePerHour; // %
         Callback.CallMeta meta;
     }
 
