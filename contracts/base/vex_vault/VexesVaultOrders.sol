@@ -246,24 +246,24 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDINGS ---------------------------------------------
     // ----------------------------------------------------------------------------------
-    function _updateFundings(uint market_idx) internal {
+    function _updateFunding(uint market_idx) internal {
         Market _market = markets[market_idx];
-
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
         (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
 
-        int256 long_fundings = math.muldiv(long_rate_per_hour, int256(_market.totalLongs), HUNDRED_PERCENT);
-        long_fundings = math.muldiv(long_fundings, (now - _market.lastFundingUpdateTime), HOUR);
-
-        _market.accLongFundingPerShare -= math.muldiv(long_fundings, SCALING_FACTOR, _market.totalLongs);
-
-        int256 short_fundings = math.muldiv(short_rate_per_hour, int256(_market.totalShorts), HUNDRED_PERCENT);
-        short_fundings = math.muldiv(short_fundings, (now - _market.lastFundingUpdateTime), HOUR);
-
-        _market.accShortFundingPerShare -= math.muldiv(short_fundings, SCALING_FACTOR, _market.totalShorts);
+        _market.accLongFundingPerShare -= _calculateFunding(long_rate_per_hour, _market.totalLongs, _market.lastFundingUpdateTime);
+        _market.accShortFundingPerShare -= _calculateFunding(short_rate_per_hour, _market.totalShorts, _market.lastFundingUpdateTime);
+        _market.lastFundingUpdateTime = now;
 
         markets[market_idx] = _market;
+    }
+
+    function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint32 last_update_time) internal pure returns (int256) {
+        if (rate_per_hour == 0 || total_position == 0) return 0;
+        int256 funding = math.muldiv(rate_per_hour, int256(total_position), HUNDRED_PERCENT);
+        funding = math.muldiv(funding, (now - last_update_time), HOUR);
+        return math.muldiv(funding, SCALING_FACTOR, total_position);
     }
 
     // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
@@ -274,19 +274,21 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
 
     // @notice If rate is positive - trader should pay, negative - receive payment
     function _getFundingRates(Market _market) internal pure returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
-        if (_market.lastFundingUpdateTime > 0) {
-            uint128 noi = uint128(math.abs(int256(_market.totalLongs) - _market.totalShorts));
-            uint128 funding_rate_per_hour = math.muldiv(
-                _market.fees.fundingBaseRatePerHour,
-                math.muldiv(noi, SCALING_FACTOR, _market.depth),
-                SCALING_FACTOR
-            );
+        uint128 noi = uint128(math.abs(int256(_market.totalLongs) - _market.totalShorts));
+        uint128 funding_rate_per_hour = math.muldiv(
+            _market.fees.fundingBaseRatePerHour,
+            math.muldiv(noi, SCALING_FACTOR, _market.depth),
+            SCALING_FACTOR
+        );
 
-            if (_market.totalLongs >= _market.totalShorts) {
-                long_rate_per_hour = int128(funding_rate_per_hour);
+        if (_market.totalLongs >= _market.totalShorts) {
+            long_rate_per_hour = int128(funding_rate_per_hour);
+            if (_market.totalShorts > 0) {
                 short_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalLongs, _market.totalShorts));
-            } else {
-                short_rate_per_hour = int128(funding_rate_per_hour);
+            }
+        } else {
+            short_rate_per_hour = int128(funding_rate_per_hour);
+            if (_market.totalLongs > 0) {
                 long_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalShorts, _market.totalLongs));
             }
         }
