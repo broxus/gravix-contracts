@@ -28,6 +28,7 @@ interface IVexesAccount {
         uint128 openFee; // amount of usdt taken when position was opened
         uint128 openPrice;
         uint32 leverage;
+        int256 accFundingPerShare;
         uint64 borrowBaseRatePerHour; // % per hour
         uint64 spreadRate; // %
         uint64 closeFeeRate; // %
@@ -44,7 +45,7 @@ interface IVexesAccount {
         uint128 closePrice;
         uint32 leverage;
         uint128 borrowFee;
-        uint128 fundingFee;
+        int256 fundingFee;
         uint128 openFee;
         uint128 closeFee;
         uint128 liquidationPrice;
@@ -58,7 +59,21 @@ interface IVexesAccount {
         IVexesVault.PendingMarketOrderRequest pending_request
     ) external;
     function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
-    function process_executeMarketOrder(uint32 request_key, uint128 asset_price, Callback.CallMeta meta) external;
-    function process_closePosition(uint32 request_key, uint128 asset_price, Callback.CallMeta meta) external;
+    function process_executeMarketOrder(
+        uint32 request_key,
+        uint128 asset_price,
+        uint market_idx,
+        int256 accLongFundingPerShare,
+        int256 accShortFundingPerShare,
+        Callback.CallMeta meta
+    ) external;
+    function process_closePosition(
+        uint32 position_key,
+        uint128 asset_price,
+        uint market_idx,
+        int256 accLongFundingPerShare,
+        int256 accShortFundingPerShare,
+        Callback.CallMeta meta
+    ) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
 }

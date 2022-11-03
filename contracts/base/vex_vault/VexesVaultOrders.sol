@@ -103,15 +103,21 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     function executeOrder(
         address user,
         uint32 request_key,
+        uint market_idx,
         uint128 asset_price,
         Callback.CallMeta meta
-    ) external view onlyActive {
+    ) external onlyActive {
         tvm.rawReserve(_reserve(), 0);
+
+        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
 
         address vex_acc = getVexesAccountAddress(user);
         IVexesAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             request_key,
             asset_price,
+            market_idx,
+            accLongFundingPerShare,
+            accShortFundingPerShare,
             meta
         );
     }
@@ -194,11 +200,20 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // --------------------------- ORDER CLOSE HANDLERS ---------------------------------
     // ----------------------------------------------------------------------------------
     // TODO: add work with oracle
-    function closePosition(address user, uint32 position_key, uint128 asset_price, Callback.CallMeta meta) external view onlyActive {
+    function closePosition(address user, uint32 position_key, uint market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive {
         tvm.rawReserve(_reserve(), 0);
 
+        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+
         address vex_acc = getVexesAccountAddress(user);
-        IVexesAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(position_key, asset_price, meta);
+        IVexesAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            position_key,
+            asset_price,
+            market_idx,
+            accLongFundingPerShare,
+            accShortFundingPerShare,
+            meta
+        );
     }
 
     function revert_closePosition(
@@ -246,17 +261,31 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDINGS ---------------------------------------------
     // ----------------------------------------------------------------------------------
-    function _updateFunding(uint market_idx) internal {
+    function _updateFunding(uint market_idx) internal returns (int256 accLongFundingPerShare, int256 accShortFundingPerShare) {
         Market _market = markets[market_idx];
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
-        (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
-
-        _market.accLongFundingPerShare -= _calculateFunding(long_rate_per_hour, _market.totalLongs, _market.lastFundingUpdateTime);
-        _market.accShortFundingPerShare -= _calculateFunding(short_rate_per_hour, _market.totalShorts, _market.lastFundingUpdateTime);
+        (_market.accLongFundingPerShare, _market.accShortFundingPerShare) = _getUpdatedFunding(_market);
         _market.lastFundingUpdateTime = now;
 
         markets[market_idx] = _market;
+        return (_market.accLongFundingPerShare, _market.accShortFundingPerShare);
+    }
+
+    function getUpdatedFunding(uint[] market_idx) public view returns (int256[] accLongFundingPerShare, int256[] accShortFundingPerShare) {
+        accLongFundingPerShare = new int256[](market_idx.length);
+        accShortFundingPerShare = new int256[](market_idx.length);
+        for (uint i = 0; i < market_idx.length; i++) {
+            (accLongFundingPerShare[i], accShortFundingPerShare[i]) = _getUpdatedFunding(markets[market_idx[i]]);
+        }
+    }
+
+    function _getUpdatedFunding(Market _market) internal pure returns (int256 accLongFundingPerShare, int256 accShortFundingPerShare) {
+        if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
+        (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
+
+        accLongFundingPerShare = _market.accLongFundingPerShare + _calculateFunding(long_rate_per_hour, _market.totalLongs, _market.lastFundingUpdateTime);
+        accShortFundingPerShare = _market.accShortFundingPerShare + _calculateFunding(short_rate_per_hour, _market.totalShorts, _market.lastFundingUpdateTime);
     }
 
     function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint32 last_update_time) internal pure returns (int256) {
@@ -268,8 +297,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
 
     // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
     function getFundingRates(uint market_idx) public view returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
-        Market _market = markets[market_idx];
-        return _getFundingRates(_market);
+        return _getFundingRates(markets[market_idx]);
     }
 
     // @notice If rate is positive - trader should pay, negative - receive payment
