@@ -86,6 +86,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             request.meta.call_id,
             user,
             request.marketIdx,
+            request.positionType,
             request.collateral,
             request.expectedPrice,
             request.leverage,
@@ -127,8 +128,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     ) external override onlyVexesAccount(user) {
         tvm.rawReserve(_reserve(), 0);
 
-        collateralReserve -= collateral;
-
         emit MarketOrderExecutionRevert(
             meta.call_id,
             user,
@@ -136,6 +135,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         );
 
         if (collateral > 0) {
+            collateralReserve -= collateral;
             // too high slippage
             _transfer(
                 usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
@@ -147,18 +147,31 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     }
 
     function finish_executeMarketOrder(
-        address user, uint32 request_key, uint128 open_price, uint128 open_fee, Callback.CallMeta meta
+        address user,
+        uint32 request_key,
+        IVexesAccount.Position opened_position,
+        Callback.CallMeta meta
     ) external override onlyVexesAccount(user) {
         tvm.rawReserve(_reserve(), 0);
 
-        _collectOpenFee(open_fee);
-        collateralReserve -= open_fee;
+        _collectOpenFee(opened_position.openFee);
+        collateralReserve -= opened_position.openFee;
+
+        uint128 position_size = math.muldiv(
+            opened_position.initialCollateral - opened_position.openFee,
+            opened_position.leverage,
+            LEVERAGE_BASE
+        );
+
+        _addPositionToMarket(opened_position.marketIdx, position_size, opened_position.positionType);
 
         emit MarketOrderExecution(
             meta.call_id,
             user,
-            open_price,
-            open_fee,
+            position_size,
+            opened_position.positionType,
+            opened_position.openPrice,
+            opened_position.openFee,
             request_key
         );
 
@@ -234,6 +247,8 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;
 
+        _removePositionToMarket(position_view.marketIdx, position_view.positionSize, position_view.positionType);
+
         if (position_view.liquidate) {
             _increaseInsuranceFund(collateral);
 
@@ -258,6 +273,28 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     //    function liquidatePositions()
 
 
+    // ----------------------------------------------------------------------------------
+    // --------------------------- POSITION LIMITS --------------------------------------
+    // ----------------------------------------------------------------------------------
+    function _addPositionToMarket(uint market_idx, uint128 position_size, PositionType position_type) internal {
+        if (position_type == PositionType.Long) {
+            markets[market_idx].totalLongs += position_size;
+            totalLongs += position_size;
+        } else {
+            markets[market_idx].totalShorts += position_size;
+            totalShorts += position_size;
+        }
+    }
+
+    function _removePositionToMarket(uint market_idx, uint128 position_size, PositionType position_type) internal {
+        if (position_type == PositionType.Long) {
+            markets[market_idx].totalLongs -= position_size;
+            totalLongs -= position_size;
+        } else {
+            markets[market_idx].totalShorts -= position_size;
+            totalShorts -= position_size;
+        }
+    }
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDINGS ---------------------------------------------
     // ----------------------------------------------------------------------------------
@@ -321,5 +358,4 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             }
         }
     }
-
 }

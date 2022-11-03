@@ -41,6 +41,7 @@ interface IVexesAccount {
         uint marketIdx;
         IVexesVault.PositionType positionType;
         uint128 initialCollateral;
+        uint128 positionSize;
         uint128 openPrice;
         uint128 closePrice;
         uint32 leverage;

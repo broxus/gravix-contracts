@@ -84,8 +84,9 @@ contract VexesAccount is VexesAccountHelpers {
         uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
         uint128 open_fee = math.muldiv(leveraged_position, request.openFeeRate, HUNDRED_PERCENT);
         int256 funding = request.positionType == IVexesVault.PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
+        leveraged_position = math.muldiv(request.collateral - open_fee, request.leverage, LEVERAGE_BASE);
 
-        positions[request_key] = Position(
+        Position opened_position = Position(
             request.marketIdx,
             request.positionType,
             request.collateral,
@@ -99,9 +100,10 @@ contract VexesAccount is VexesAccountHelpers {
             request.liquidationThresholdRate,
             now
         );
+        positions[request_key] = opened_position;
 
         IVexesVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, request_key, open_price, open_fee, meta
+            user, request_key, opened_position,  meta
         );
     }
 
@@ -167,21 +169,27 @@ contract VexesAccount is VexesAccountHelpers {
         int256 accShortFundingPerShare
     ) public view returns (PositionView position_view) {
         Position position = positions[position_key];
-
         bool is_long = position.positionType == IVexesVault.PositionType.Long;
+
         uint128 collateral = position.initialCollateral - position.openFee;
         uint128 leveraged_position = math.muldiv(collateral, position.leverage, LEVERAGE_BASE);
+
+        // borrow fee
         uint32 time_passed = now - position.createdAt;
         uint128 borrow_fee = math.muldiv(position.borrowBaseRatePerHour * time_passed, leveraged_position, HOUR);
+
+        // close price
         uint128 close_price = is_long ?
         math.muldiv(asset_price, (HUNDRED_PERCENT - position.spreadRate), HUNDRED_PERCENT) :
         math.muldiv(asset_price, (HUNDRED_PERCENT + position.spreadRate), HUNDRED_PERCENT);
-        // TODO: funding
+
+        // funding
         int256 new_acc_funding = is_long ? accLongFundingPerShare : accShortFundingPerShare;
         int256 funding_debt = math.muldiv(leveraged_position, position.accFundingPerShare, SCALING_FACTOR);
         // if funding_fee > 0, trader pays
         int256 funding_fee = math.muldiv(leveraged_position, new_acc_funding, SCALING_FACTOR) - funding_debt;
 
+        // pnl (no funding and borrow fees)
         // (close_price/open_price - 1)
         int256 pnl = int256(math.muldiv(close_price, SCALING_FACTOR, position.openPrice) - SCALING_FACTOR);
         // * (-1) for shorts
@@ -189,6 +197,7 @@ contract VexesAccount is VexesAccountHelpers {
         // * collateral * leverage
         pnl = math.muldiv(math.muldiv(pnl, collateral, SCALING_FACTOR), position.leverage, LEVERAGE_BASE);
 
+        // liquidation price
         // collateral * 0.9
         int256 liq_price_dist = math.muldiv(collateral, (HUNDRED_PERCENT - position.liquidationThresholdRate),  HUNDRED_PERCENT);
         // - borrow_fee - funding_fee
@@ -200,6 +209,7 @@ contract VexesAccount is VexesAccountHelpers {
             uint128(math.max(position.openPrice - liq_price_dist, 0)) : // we know that liq price distance is lower than open price
             uint128(math.max(position.openPrice + liq_price_dist, 0));
 
+        // close fee
         int256 updated_position = math.muldiv(
             math.muldiv(close_price, SCALING_FACTOR, position.openPrice),
             leveraged_position,
@@ -219,6 +229,7 @@ contract VexesAccount is VexesAccountHelpers {
             position.marketIdx,
             position.positionType,
             position.initialCollateral,
+            leveraged_position,
             position.openPrice,
             close_price,
             position.leverage,
@@ -234,7 +245,7 @@ contract VexesAccount is VexesAccountHelpers {
     }
 
     // TODO: up
-    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external override {}
+    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external override onlyVexesVault {}
 
 
     function onCodeUpgrade(TvmCell upgrade_data) private {

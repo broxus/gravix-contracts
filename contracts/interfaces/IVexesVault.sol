@@ -89,6 +89,7 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint32 call_id,
         address user,
         uint marketIdx,
+        PositionType request_type,
         uint128 collateral,
         uint128 expected_price,
         uint32 leverage,
@@ -96,7 +97,15 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint32 request_key
     );
     event MarketOrderExecutionRevert(uint32 call_id, address user, uint32 request_key);
-    event MarketOrderExecution(uint32 call_id, address user, uint128 open_price, uint128 open_fee, uint32 request_key);
+    event MarketOrderExecution(
+        uint32 call_id,
+        address user,
+        uint128 position_size,
+        PositionType position_type,
+        uint128 open_price,
+        uint128 open_fee,
+        uint32 request_key
+    );
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 request_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
@@ -110,7 +119,10 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key) external;
     function revert_executeMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
     function finish_executeMarketOrder(
-        address user, uint32 request_key, uint128 open_price, uint128 open_fee, Callback.CallMeta meta
+        address user,
+        uint32 request_key,
+        IVexesAccount.Position opened_position,
+        Callback.CallMeta meta
     ) external;
     function revert_cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view;
     function finish_cancelMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
