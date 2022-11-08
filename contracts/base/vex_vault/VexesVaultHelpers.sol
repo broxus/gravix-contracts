@@ -187,6 +187,11 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         _;
     }
 
+    modifier onlyMarketManager() {
+        require (msg.sender == owner || msg.sender == marketManager, Errors.NOT_OWNER);
+        _;
+    }
+
     modifier onlyActive() {
         require (!paused || msg.sender == owner, Errors.NOT_ACTIVE);
         _;

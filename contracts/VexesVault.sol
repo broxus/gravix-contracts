@@ -26,12 +26,13 @@ import {DateTime as DateTimeLib} from "./libraries/DateTime.sol";
 
 
 contract VexesVault is VexesVaultBase {
-    constructor(address _owner, address _usdt, address _stvUsdt) public {
+    constructor(address _owner, address _market_manager, address _usdt, address _stvUsdt) public {
         require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
         require (tvm.pubkey() == msg.pubkey(), Errors.WRONG_PUBKEY);
 
         tvm.accept();
         owner = _owner;
+        marketManager = _market_manager;
         usdt = _usdt;
         stvUsdt = _stvUsdt;
 

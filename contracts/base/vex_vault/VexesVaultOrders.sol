@@ -18,7 +18,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER REQUEST HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
-    // TODO: NOI ограничения
     function _handleMarketOrderRequest(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
     ) internal returns (bool request_saved) {

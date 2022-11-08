@@ -44,64 +44,125 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         if (now < _dateTimeToTimestamp(from_dt) || now > _dateTimeToTimestamp(to_dt)) return false;
         return true;
     }
-    //
-    //
-    //
-    //    function addMarket(
-    //        uint external_id,
-    //        Fees fees,
-    //        uint32 max_leverage,
-    //        mapping (uint8 => TimeInterval) working_hours, // TODO: validate
-    //        Callback.CallMeta meta
-    //    ) external onlyOwner {
-    //        tvm.rawReserve(_reserve(), 0);
-    //
-    //        mapping (uint32 => DateTimeInterval) empty;
-    //        markets[marketCount] = Market(
-    //            external_id, 0, 0, max_leverage, fees, working_hours, empty, false
-    //        );
-    //        marketCount += 1;
-    //
-    //        // TODO: add event
-    //    }
 
-    //    function setMarketsWorkingHours(
-    //        uint[] idx,
-    //        mapping (uint8 => TimeInterval)[] working_hours, // TODO: validate
-    //        Callback.CallMeta meta
-    //    ) external onlyOwner {
-    //
-    //    }
-    //
-    //    function addMarketsWeekends(
-    //        uint[] idx,
-    //        DateTimeInterval[] weekends, // TODO: validate
-    //        Callback.CallMeta meta
-    //    ) external onlyOwner {
-    //
-    //    }
-    //
-    //    function clearMarketsWeekends(uint[] idx, Callback.CallMeta meta) external onlyOwner {
-    //
-    //    }
-    //
-    //    function getMarkets() external view returns (mapping (uint => Market) _markets) {
-    //        return markets;
-    //    }
-    //
-    //    function setMarketsPause(uint[] idx, bool[] pause_state, Callback.CallMeta meta) external onlyOwner {
-    //        tvm.rawReserve(_reserve(), 0);
-    //
-    //        for (uint i = 0; i < idx.length; i++) {
-    //            markets[idx[i]].paused = pause_state[idx[i]];
-    //            // TODO: add event
-    //        }
-    //    }
-    //
-    //    function setPause(bool pause_state, Callback.CallMeta meta) external onlyOwner {
-    //        tvm.rawReserve(_reserve(), 0);
-    //
-    //        paused = pause_state;
-    //        // TODO: add event
-    //    }
+    // TODO: validate working_hours
+    function addMarkets(
+        MarketConfig[] new_markets,
+        Callback.CallMeta meta
+    ) external onlyOwner {
+        tvm.rawReserve(_reserve(), 0);
+
+        for (MarketConfig _market_config : new_markets) {
+            require (_market_config.maxLeverage >= LEVERAGE_BASE, Errors.BAD_INPUT);
+            require (_market_config.fees.fundingBaseRatePerHour < HUNDRED_PERCENT);
+            require (_market_config.fees.borrowBaseRatePerHour < HUNDRED_PERCENT);
+            require (_market_config.fees.spreadRate < HUNDRED_PERCENT);
+            require (_market_config.fees.closeFeeRate < HUNDRED_PERCENT);
+            require (_market_config.fees.openFeeRate < HUNDRED_PERCENT);
+
+            Market new_market;
+            new_market.externalId = _market_config.externalId;
+            new_market.maxTotalLongs = _market_config.maxLongs;
+            new_market.maxTotalShorts = _market_config.maxShorts;
+            new_market.noiWeight = _market_config.noiWeight;
+            new_market.maxLeverage = _market_config.maxLeverage;
+            new_market.depth = _market_config.depth;
+            new_market.fees = _market_config.fees;
+            new_market.scheduleEnabled = _market_config.scheduleEnabled;
+
+            workingHours[marketCount] = _market_config.workingHours;
+            markets[marketCount] = new_market;
+            marketCount += 1;
+
+            emit NewMarket(meta.call_id, _market_config);
+        }
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function setMarketsPause(uint[] market_idx, bool[] pause, Callback.CallMeta meta) external onlyMarketManager {
+        tvm.rawReserve(_reserve(), 0);
+        require (market_idx.length == pause.length, Errors.BAD_INPUT);
+
+        for (uint i = 0; i < market_idx.length; i++) {
+            require (markets.exists(market_idx[i]), Errors.BAD_INPUT);
+
+            markets[market_idx[i]].paused = pause[i];
+
+            emit MarketPause(meta.call_id, market_idx[i], pause[i]);
+        }
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function setMarketsWorkingHours(
+        uint[] market_idx,
+        mapping (uint8 => TimeInterval)[] working_hours,
+        Callback.CallMeta meta
+    ) external onlyMarketManager {
+        tvm.rawReserve(_reserve(), 0);
+        require (market_idx.length == working_hours.length, Errors.BAD_INPUT);
+
+        for (uint i = 0; i < market_idx.length; i++) {
+            require (markets.exists(market_idx[i]), Errors.BAD_INPUT);
+
+            workingHours[market_idx[i]] = working_hours[i];
+
+            emit MarketScheduleUpdate(meta.call_id, market_idx[i], working_hours[i]);
+        }
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function addMarketsWeekends(
+        uint[] market_idx,
+        DateTimeInterval[] new_weekends, // TODO: validate
+        Callback.CallMeta meta
+    ) external onlyMarketManager {
+        tvm.rawReserve(_reserve(), 0);
+        require (market_idx.length == new_weekends.length, Errors.BAD_INPUT);
+
+        for (uint i = 0; i < market_idx.length; i++) {
+            require (markets.exists(market_idx[i]), Errors.BAD_INPUT);
+
+            DateTimeInterval _new_weekend = new_weekends[i];
+            uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
+
+            optional(uint32, DateTimeInterval) _opt = weekends[market_idx[i]].max();
+            if (_opt.hasValue()) {
+                (, DateTimeInterval _last_weekend) = _opt.get();
+                uint32 _last_weekend_end = _dateTimeToTimestamp(_last_weekend.to);
+
+                require (_new_weekend_start >= _last_weekend_end, Errors.BAD_INPUT);
+            }
+
+            weekends[market_idx[i]][_new_weekend_start] = _new_weekend;
+            emit MarketWeekends(meta.call_id, market_idx[i], _new_weekend);
+        }
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function clearMarketsWeekends(uint[] market_idx, Callback.CallMeta meta) external onlyMarketManager {
+        tvm.rawReserve(_reserve(), 0);
+
+        for (uint i = 0; i < market_idx.length; i++) {
+            delete weekends[market_idx[i]];
+            emit MarketWeekendsCleared(meta.call_id, market_idx[i]);
+        }
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function getMarketSchedule(uint market_idx) external view returns (mapping (uint8 => TimeInterval)) {
+        return workingHours[market_idx];
+    }
+
+    function getMarketWeekends(uint market_idx) external view returns (mapping (uint32 => DateTimeInterval)) {
+        return weekends[market_idx];
+    }
+
+    function getMarkets() external view returns (mapping (uint => Market) _markets) {
+        return markets;
+    }
 }

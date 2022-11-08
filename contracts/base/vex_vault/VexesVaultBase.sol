@@ -15,7 +15,7 @@ abstract contract VexesVaultBase is VexesVaultOrders {
 
         owner = new_owner;
         emit NewOwner(meta.call_id, new_owner);
-        meta.send_gas_to.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function receiveTokenWalletAddress(address wallet) external override {

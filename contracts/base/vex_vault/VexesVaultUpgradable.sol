@@ -20,7 +20,7 @@ abstract contract VexesVaultUpgradable is VexesVaultHelpers {
 
         platformCode = code;
         emit PlatformCodeInstall(meta.call_id);
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function installOrUpdateVexesAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner {
@@ -29,7 +29,7 @@ abstract contract VexesVaultUpgradable is VexesVaultHelpers {
         vexesAccountCode = code;
         vexesAccountVersion += 1;
         emit VexesAccountCodeUpdate(meta.call_id, vexesAccountVersion - 1, vexesAccountVersion);
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function upgradeVexesAccount(Callback.CallMeta meta) external view {
@@ -71,7 +71,7 @@ abstract contract VexesVaultUpgradable is VexesVaultHelpers {
         emit VexesAccountDeploy(user);
 
         tvm.rawReserve(_reserve(), 0);
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function deployVexesAccount(address user) public view returns (address) {

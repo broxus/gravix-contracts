@@ -84,6 +84,18 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         Callback.CallMeta meta;
     }
 
+    struct MarketConfig {
+        uint externalId;
+        uint128 maxLongs;
+        uint128 maxShorts;
+        uint16 noiWeight;
+        uint32 maxLeverage;
+        uint128 depth;
+        Fees fees;
+        bool scheduleEnabled;
+        mapping (uint8 => TimeInterval) workingHours;
+    }
+
     event NewOwner(uint32 call_id, address new_owner);
     event PlatformCodeInstall(uint32 call_id);
     event VexesAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
@@ -111,6 +123,16 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint128 open_fee,
         uint32 request_key
     );
+    event NewMarket(
+        uint32 call_id,
+        MarketConfig market
+    );
+    event MarketScheduleUpdate(uint32 call_id, uint market_idx, mapping (uint8 => TimeInterval));
+    event MarketWeekends(uint32 call_id, uint market_idx, DateTimeInterval weekend);
+    event MarketWeekendsCleared(uint32 call_id, uint market_idx);
+    event MarketPause(uint32 call_id, uint market_idx, bool new_state);
+
+
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 request_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
