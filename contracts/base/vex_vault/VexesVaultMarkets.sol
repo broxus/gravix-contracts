@@ -104,14 +104,34 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         require (market_idx.length == working_hours.length, Errors.BAD_INPUT);
 
         for (uint i = 0; i < market_idx.length; i++) {
-            require (markets.exists(market_idx[i]), Errors.BAD_INPUT);
-
-            workingHours[market_idx[i]] = working_hours[i];
-
-            emit MarketScheduleUpdate(meta.call_id, market_idx[i], working_hours[i]);
+            _setMarketWorkingHours(market_idx[i], working_hours[i], meta);
         }
 
         _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function setMarketsCommonWorkingHours(
+        uint[] market_idx,
+        mapping (uint8 => TimeInterval) working_hours, // TODO: validate
+        Callback.CallMeta meta
+    ) external onlyMarketManager {
+        tvm.rawReserve(_reserve(), 0);
+
+        for (uint i = 0; i < market_idx.length; i++) {
+            _setMarketWorkingHours(market_idx[i], working_hours, meta);
+        }
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function _setMarketWorkingHours(
+        uint market_idx,
+        mapping (uint8 => TimeInterval) working_hours, // TODO: validate
+        Callback.CallMeta meta
+    ) internal {
+        require (markets.exists(market_idx), Errors.BAD_INPUT);
+        workingHours[market_idx] = working_hours;
+        emit MarketScheduleUpdate(meta.call_id, market_idx, working_hours);
     }
 
     function addMarketsWeekends(
@@ -123,34 +143,54 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         require (market_idx.length == new_weekends.length, Errors.BAD_INPUT);
 
         for (uint i = 0; i < market_idx.length; i++) {
-            require (markets.exists(market_idx[i]), Errors.BAD_INPUT);
-
-            DateTimeInterval _new_weekend = new_weekends[i];
-            uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
-            uint32 _new_weekend_end = _dateTimeToTimestamp(_new_weekend.to);
-
-            optional(uint32, DateTimeInterval) _opt = weekends[market_idx[i]].prevOrEq(_new_weekend_start);
-            if (_opt.hasValue()) {
-                (, DateTimeInterval _prev_weekend) = _opt.get();
-                uint32 _prev_weekend_end = _dateTimeToTimestamp(_prev_weekend.to);
-
-                require (_new_weekend_start >= _prev_weekend_end, Errors.BAD_INPUT);
-            }
-
-            optional(uint32, DateTimeInterval) _opt2 = weekends[market_idx[i]].next(_new_weekend_start);
-            if (_opt2.hasValue()) {
-                (uint32 _next_weekend_start,) = _opt2.get();
-                
-                require (_next_weekend_start >= _new_weekend_end, Errors.BAD_INPUT);
-            }
-
-            weekends[market_idx[i]][_new_weekend_start] = _new_weekend;
-            emit MarketWeekends(meta.call_id, market_idx[i], _new_weekend);
+            _addMarketWeekends(market_idx[i], new_weekends[i], meta);
         }
 
         _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
+    function addMarketsCommonWeekends(
+        uint[] market_idx,
+        DateTimeInterval new_weekends, // TODO: validate
+        Callback.CallMeta meta
+    ) external onlyMarketManager {
+        tvm.rawReserve(_reserve(), 0);
+
+        for (uint i = 0; i < market_idx.length; i++) {
+            _addMarketWeekends(market_idx[i], new_weekends, meta);
+        }
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function _addMarketWeekends(
+        uint market_idx,
+        DateTimeInterval _new_weekend, // TODO: validate
+        Callback.CallMeta meta
+    ) internal {
+        require (markets.exists(market_idx), Errors.BAD_INPUT);
+
+        uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
+        uint32 _new_weekend_end = _dateTimeToTimestamp(_new_weekend.to);
+
+        optional(uint32, DateTimeInterval) _opt = weekends[market_idx].prevOrEq(_new_weekend_start);
+        if (_opt.hasValue()) {
+            (, DateTimeInterval _prev_weekend) = _opt.get();
+            uint32 _prev_weekend_end = _dateTimeToTimestamp(_prev_weekend.to);
+
+            require (_new_weekend_start >= _prev_weekend_end, Errors.BAD_INPUT);
+        }
+
+        optional(uint32, DateTimeInterval) _opt2 = weekends[market_idx].next(_new_weekend_start);
+        if (_opt2.hasValue()) {
+            (uint32 _next_weekend_start,) = _opt2.get();
+
+            require (_next_weekend_start >= _new_weekend_end, Errors.BAD_INPUT);
+        }
+
+        weekends[market_idx][_new_weekend_start] = _new_weekend;
+        emit MarketWeekends(meta.call_id, market_idx, _new_weekend);
+    }
+    
     function clearMarketsWeekends(uint[] market_idx, Callback.CallMeta meta) external onlyMarketManager {
         tvm.rawReserve(_reserve(), 0);
 
