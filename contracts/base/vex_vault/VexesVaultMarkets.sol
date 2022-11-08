@@ -97,7 +97,7 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
     function setMarketsWorkingHours(
         uint[] market_idx,
-        mapping (uint8 => TimeInterval)[] working_hours,
+        mapping (uint8 => TimeInterval)[] working_hours, // TODO: validate
         Callback.CallMeta meta
     ) external onlyMarketManager {
         tvm.rawReserve(_reserve(), 0);
@@ -127,13 +127,21 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
             DateTimeInterval _new_weekend = new_weekends[i];
             uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
+            uint32 _new_weekend_end = _dateTimeToTimestamp(_new_weekend.to);
 
-            optional(uint32, DateTimeInterval) _opt = weekends[market_idx[i]].max();
+            optional(uint32, DateTimeInterval) _opt = weekends[market_idx[i]].prevOrEq(_new_weekend_start);
             if (_opt.hasValue()) {
-                (, DateTimeInterval _last_weekend) = _opt.get();
-                uint32 _last_weekend_end = _dateTimeToTimestamp(_last_weekend.to);
+                (, DateTimeInterval _prev_weekend) = _opt.get();
+                uint32 _prev_weekend_end = _dateTimeToTimestamp(_prev_weekend.to);
 
-                require (_new_weekend_start >= _last_weekend_end, Errors.BAD_INPUT);
+                require (_new_weekend_start >= _prev_weekend_end, Errors.BAD_INPUT);
+            }
+
+            optional(uint32, DateTimeInterval) _opt2 = weekends[market_idx[i]].next(_new_weekend_start);
+            if (_opt2.hasValue()) {
+                (uint32 _next_weekend_start,) = _opt2.get();
+                
+                require (_next_weekend_start >= _new_weekend_end, Errors.BAD_INPUT);
             }
 
             weekends[market_idx[i]][_new_weekend_start] = _new_weekend;
