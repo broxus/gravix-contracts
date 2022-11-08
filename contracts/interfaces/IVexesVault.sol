@@ -48,6 +48,11 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint128 totalLongs;
         uint128 totalShorts;
 
+        uint128 maxTotalLongs;
+        uint128 maxTotalShorts;
+
+        uint16 noiWeight; // 100 -> 1x
+
         int256 accLongFundingPerShare;
         int256 accShortFundingPerShare;
         uint32 lastFundingUpdateTime;
@@ -117,7 +122,9 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     function receiveTokenWalletAddress(address wallet) external;
     function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view;
     function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key) external;
-    function revert_executeMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
+    function revert_executeMarketOrder(
+        address user, uint32 request_key, uint market_idx, uint128 collateral, uint128 position_size, PositionType position_type, Callback.CallMeta meta
+    ) external;
     function finish_executeMarketOrder(
         address user,
         uint32 request_key,

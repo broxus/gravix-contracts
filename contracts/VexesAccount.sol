@@ -47,19 +47,27 @@ contract VexesAccount is VexesAccountHelpers {
 
     function process_executeMarketOrder(
         uint32 request_key,
-        uint128 asset_price,
         uint market_idx,
-        int256 accLongFundingPerShare,
-        int256 accShortFundingPerShare,
+        uint128 position_size,
+        IVexesVault.PositionType position_type,
+        uint128 asset_price,
+        int256 accFundingPerShare,
         Callback.CallMeta meta
     ) external override onlyVexesVault {
         tvm.rawReserve(_reserve(), 0);
 
         MarketOrderRequest request = marketOrderRequests[request_key];
+        uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
-        if (!marketOrderRequests.exists(request_key) || request.marketIdx != market_idx) {
+        // TODO: recheck what we got from oracle?
+        if (
+            !marketOrderRequests.exists(request_key) ||
+            request.marketIdx != market_idx ||
+            request.positionType != position_type ||
+            position_size != leveraged_position
+        ) {
             IVexesVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, 0, meta
+                user, request_key, market_idx, 0, position_size, position_type, meta
             );
             return;
         }
@@ -76,14 +84,12 @@ contract VexesAccount is VexesAccountHelpers {
 
         if (open_price < min_price || open_price > max_price) {
             IVexesVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, request.collateral, meta
+                user, request_key, market_idx, request.collateral, position_size, position_type, meta
             );
             return;
         }
 
-        uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
         uint128 open_fee = math.muldiv(leveraged_position, request.openFeeRate, HUNDRED_PERCENT);
-        int256 funding = request.positionType == IVexesVault.PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
         leveraged_position = math.muldiv(request.collateral - open_fee, request.leverage, LEVERAGE_BASE);
 
         Position opened_position = Position(
@@ -93,7 +99,7 @@ contract VexesAccount is VexesAccountHelpers {
             open_fee,
             open_price,
             request.leverage,
-            funding,
+            accFundingPerShare,
             request.borrowBaseRatePerHour,
             request.spreadRate,
             request.closeFeeRate,
@@ -193,7 +199,7 @@ contract VexesAccount is VexesAccountHelpers {
         // (close_price/open_price - 1)
         int256 pnl = int256(math.muldiv(close_price, SCALING_FACTOR, position.openPrice) - SCALING_FACTOR);
         // * (-1) for shorts
-        pnl = is_long ? pnl : (-1 * pnl);
+        pnl = is_long ? pnl : -pnl;
         // * collateral * leverage
         pnl = math.muldiv(math.muldiv(pnl, collateral, SCALING_FACTOR), position.leverage, LEVERAGE_BASE);
 

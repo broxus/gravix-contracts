@@ -44,16 +44,6 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         );
     }
 
-
-    function validateOrderRequestParams(uint market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
-        if (!markets.exists(market_idx)) return false;
-        Market _market = markets[market_idx];
-
-        if (leverage > _market.maxLeverage) return false;
-        if (max_slippage > HUNDRED_PERCENT) return false;
-        return true;
-    }
-
     function _timeToDateTime(uint year, uint month, uint day, Time time) internal pure returns (DateTime dt) {
         return DateTime(uint16(year), uint8(month), uint8(day), time.hour, time.minute);
     }

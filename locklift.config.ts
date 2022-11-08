@@ -1,4 +1,4 @@
-import { LockliftConfig } from "locklift/config";
+import { LockliftConfig } from "locklift";
 import { FactorySource } from "./build/factorySource";
 import {GiverWallet, SimpleGiver, TestnetGiver} from "./giverSettings";
 import * as dotenv from "dotenv";

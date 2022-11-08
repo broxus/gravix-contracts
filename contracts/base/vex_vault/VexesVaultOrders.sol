@@ -31,8 +31,16 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         ) = decodeMarketOrderRequestPayload(order_params_payload);
 
         if (!validateOrderRequestParams(market_idx, leverage, max_slippage_rate)) return false;
+        if (checkPositionAllowed(market_idx, math.muldiv(collateral, leverage, LEVERAGE_BASE), position_type) > 0) return false;
         if (!marketOpen(market_idx)) return false;
         _marketOrderRequest(user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, meta);
+        return true;
+    }
+
+    function validateOrderRequestParams(uint market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+        if (!markets.exists(market_idx)) return false;
+        if (leverage > markets[market_idx].maxLeverage) return false;
+        if (max_slippage > HUNDRED_PERCENT) return false;
         return true;
     }
 
@@ -105,26 +113,43 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         address user,
         uint32 request_key,
         uint market_idx,
+        uint128 position_size,
+        PositionType position_type,
         uint128 asset_price,
         Callback.CallMeta meta
-    ) external onlyActive {
+    ) external onlyActive { // TODO: remove active ?
         tvm.rawReserve(_reserve(), 0);
 
-        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+        uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size, position_type);
 
         address vex_acc = getVexesAccountAddress(user);
-        IVexesAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            request_key,
-            asset_price,
-            market_idx,
-            accLongFundingPerShare,
-            accShortFundingPerShare,
-            meta
-        );
+        if (_error == 0) {
+            (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+            int256 funding = position_type == PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
+
+            IVexesAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                request_key,
+                market_idx,
+                position_size,
+                position_type,
+                asset_price,
+                funding,
+                meta
+            );
+        } else {
+            // order cant be executed now, some limits reached and etc.
+            IVexesAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
+        }
     }
 
     function revert_executeMarketOrder(
-        address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta
+        address user,
+        uint32 request_key,
+        uint market_idx,
+        uint128 collateral,
+        uint128 position_size,
+        PositionType position_type,
+        Callback.CallMeta meta
     ) external override onlyVexesAccount(user) {
         tvm.rawReserve(_reserve(), 0);
 
@@ -133,6 +158,8 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             user,
             request_key
         );
+
+        _removePositionFromMarket(market_idx, position_size, position_type);
 
         if (collateral > 0) {
             collateralReserve -= collateral;
@@ -163,8 +190,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             LEVERAGE_BASE
         );
 
-        _addPositionToMarket(opened_position.marketIdx, position_size, opened_position.positionType);
-
         emit MarketOrderExecution(
             meta.call_id,
             user,
@@ -179,7 +204,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     }
 
     // ----------------------------------------------------------------------------------
-    // --------------------------- ORDER REQUEST CANCEL HANDLERS ------------------------
+    // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
     function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view onlyActive {
         tvm.rawReserve(_reserve(), 0);
@@ -207,7 +232,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         emit CancelMarketOrder(meta.call_id, user, request_key);
         _transfer(usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
     }
-
 
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CLOSE HANDLERS ---------------------------------
@@ -247,7 +271,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;
 
-        _removePositionToMarket(position_view.marketIdx, position_view.positionSize, position_view.positionType);
+        _removePositionFromMarket(position_view.marketIdx, position_view.positionSize, position_view.positionType);
 
         if (position_view.liquidate) {
             _increaseInsuranceFund(collateral);
@@ -260,6 +284,8 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
 
             if (pnl_with_fees < 0) _increaseInsuranceFund(uint128(math.abs(pnl_with_fees)));
             if (pnl_with_fees > 0) _decreaseInsuranceFund(uint128(pnl_with_fees));
+
+            emit ClosePosition(meta.call_id, user, position_key, position_view);
 
             // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
             uint128 user_net_usdt = uint128(collateral + pnl_with_fees - position_view.closeFee);
@@ -276,24 +302,96 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- POSITION LIMITS --------------------------------------
     // ----------------------------------------------------------------------------------
-    function _addPositionToMarket(uint market_idx, uint128 position_size, PositionType position_type) internal {
-        if (position_type == PositionType.Long) {
-            markets[market_idx].totalLongs += position_size;
-            totalLongs += position_size;
-        } else {
-            markets[market_idx].totalShorts += position_size;
-            totalShorts += position_size;
-        }
+    function checkPositionAllowed(uint market_idx, uint128 position_size, PositionType position_type) public view returns (uint16) {
+        (,,,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size, position_type);
+        return _error;
     }
 
-    function _removePositionToMarket(uint market_idx, uint128 position_size, PositionType position_type) internal {
+    function _marketNOI(Market _market) internal pure returns (uint128) {
+        return _market.totalLongs > _market.totalShorts ?
+            _market.totalLongs - _market.totalShorts :
+            _market.totalShorts - _market.totalLongs;
+    }
+
+    // @dev Will not apply changes if _error > 0
+    function _addPositionToMarketOrReturnErr(
+        uint market_idx, uint128 position_size, PositionType position_type
+    ) internal returns (uint16) {
+        (
+            Market _market,
+            uint128 _totalLongs,
+            uint128 _totalShorts,
+            uint128 _totalNOI,
+            uint16 _error
+        ) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size, position_type);
+        if (_error == 0) {
+            markets[market_idx] = _market;
+            totalLongs = _totalLongs;
+            totalShorts = _totalShorts;
+            totalNOI = _totalNOI;
+        }
+        return _error;
+    }
+
+    function _calculatePositionImpactAndCheckAllowed(
+        uint market_idx, uint128 position_size, PositionType position_type
+    ) internal view returns (Market _market, uint128 _totalLongs, uint128 _totalShorts, uint128 _totalNOI, uint16 _error) {
+        (
+            _market,
+            _totalLongs,
+            _totalShorts,
+            _totalNOI
+        ) = _calculatePositionImpact(market_idx, position_size, position_type);
+        // market limits
+        if (_market.totalShorts > _market.maxTotalShorts || _market.totalLongs > _market.maxTotalLongs) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
+        // common platform limit
+        if (math.muldiv(_totalNOI, SCALING_FACTOR, poolBalance) >= SCALING_FACTOR) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
+        return (_market, _totalLongs, _totalShorts, _totalNOI, _error);
+    }
+
+    function _calculatePositionImpact(
+        uint market_idx, uint128 position_size, PositionType position_type
+    ) internal view returns (Market _market, uint128 _totalLongs, uint128 _totalShorts, uint128 _totalNOI) {
+        _market = markets[market_idx];
+        _totalLongs = totalLongs;
+        _totalShorts = totalShorts;
+        _totalNOI = totalNOI;
+
+        uint128 noi_before = _marketNOI(_market);
+
         if (position_type == PositionType.Long) {
-            markets[market_idx].totalLongs -= position_size;
+            _market.totalLongs += position_size;
+            _totalLongs += position_size;
+        } else {
+            _market.totalShorts += position_size;
+            _totalShorts += position_size;
+        }
+
+        uint128 noi_after = _marketNOI(_market);
+
+        if (noi_after > noi_before) _totalNOI += math.muldiv(noi_after - noi_before, _market.noiWeight, WEIGHT_BASE);
+        if (noi_after < noi_before) _totalNOI -= math.muldiv(noi_before - noi_after, _market.noiWeight, WEIGHT_BASE);
+    }
+
+    function _removePositionFromMarket(uint market_idx, uint128 position_size, PositionType position_type) internal {
+        Market _market = markets[market_idx];
+
+        uint128 noi_before = _marketNOI(_market);
+
+        if (position_type == PositionType.Long) {
+            _market.totalLongs -= position_size;
             totalLongs -= position_size;
         } else {
-            markets[market_idx].totalShorts -= position_size;
+            _market.totalShorts -= position_size;
             totalShorts -= position_size;
         }
+
+        uint128 noi_after = _marketNOI(_market);
+
+        if (noi_after > noi_before) totalNOI += math.muldiv(noi_after - noi_before, _market.noiWeight, WEIGHT_BASE);
+        if (noi_after < noi_before) totalNOI -= math.muldiv(noi_before - noi_after, _market.noiWeight, WEIGHT_BASE);
+
+        markets[market_idx] = _market;
     }
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDINGS ---------------------------------------------

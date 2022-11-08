@@ -28,13 +28,20 @@ abstract contract VexesVaultStorage is IVexesVault {
     uint128 totalLongs;
     uint128 totalShorts;
 
+    // total net open interest across all markets according to weights
+    // market noi - abs of (sum of all open longs - sum of all open shorts)
+    uint128 totalNOI;
+
     bool paused;
 
     uint128 constant SCALING_FACTOR = 10**18;
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
-    uint32 constant LEVERAGE_BASE = 100;
+    uint8 constant LEVERAGE_BASE = 100; // 100 -> 1x
+    uint8 constant WEIGHT_BASE = 100; // 100 -> 1x
+
     uint64 constant HUNDRED_PERCENT = 1_000_000_000_000; // 100%, this allows precision up to 0.0000000001%
     uint32 constant HOUR = 3600;
+
     uint64 liquidationThresholdRate = 100_000_000_000; // 10%
 
     uint64[2] openFeeDistributionSchema = [HUNDRED_PERCENT, 0];

@@ -15,8 +15,13 @@ library Errors {
     uint16 constant EMERGENCY = 1008;
     uint16 constant NOT_TOKEN_ROOT = 1009;
 
+    // VAULT
     uint16 constant NOT_VEX_ACCOUNT = 2000;
     uint16 constant ALREADY_INITIALIZED = 2001;
 
+    uint16 constant MARKET_POSITIONS_LIMIT_REACHED = 2002;
+    uint16 constant PLATFORM_POSITIONS_LIMIT_REACHED = 2003;
+
+    // ACCOUNT
     uint16 constant NOT_VAULT = 3000;
 }

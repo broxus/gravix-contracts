@@ -20,7 +20,6 @@ interface IVexesAccount {
         uint64 borrowBaseRatePerHour; // %
     }
 
-    // TODO: funding acc share ?
     struct Position {
         uint marketIdx;
         IVexesVault.PositionType positionType;
@@ -62,10 +61,11 @@ interface IVexesAccount {
     function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
     function process_executeMarketOrder(
         uint32 request_key,
-        uint128 asset_price,
         uint market_idx,
-        int256 accLongFundingPerShare,
-        int256 accShortFundingPerShare,
+        uint128 position_size,
+        IVexesVault.PositionType position_type,
+        uint128 asset_price,
+        int256 accFundingPerShare,
         Callback.CallMeta meta
     ) external;
     function process_closePosition(
