@@ -80,10 +80,9 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     function finish_requestMarketOrder(
         uint32 request_nonce,
         address user,
-        uint32 request_key
-    ) external override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+        uint32 request_key,
+        Callback.CallMeta meta
+    ) external override onlyVexesAccount(user) reserveAndSuccessCallback(meta) {
         PendingMarketOrderRequest request = pending_market_requests[request_nonce];
         delete pending_market_requests[request_nonce];
 
@@ -100,8 +99,6 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             request.maxSlippageRate,
             request_key
         );
-
-        _sendCallbackOrGas(user, request.meta.nonce, true, request.meta.send_gas_to);
     }
 
     // ----------------------------------------------------------------------------------
@@ -116,9 +113,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         PositionType position_type,
         uint128 asset_price,
         Callback.CallMeta meta
-    ) external onlyActive { // TODO: remove active ?
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external onlyActive reserve { // TODO: remove active ?
         uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size, position_type);
 
         address vex_acc = getVexesAccountAddress(user);
@@ -149,9 +144,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         uint128 position_size,
         PositionType position_type,
         Callback.CallMeta meta
-    ) external override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external override onlyVexesAccount(user) reserve {
         emit MarketOrderExecutionRevert(
             meta.call_id,
             user,
@@ -177,9 +170,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         uint32 request_key,
         IVexesAccount.Position opened_position,
         Callback.CallMeta meta
-    ) external override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external override onlyVexesAccount(user) reserveAndSuccessCallback(meta) {
         _collectOpenFee(opened_position.openFee);
         collateralReserve -= opened_position.openFee;
 
@@ -198,34 +189,25 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             opened_position.openFee,
             request_key
         );
-
-        _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
     }
 
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
-    function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view onlyActive {
-        tvm.rawReserve(_reserve(), 0);
-
+    function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view onlyActive reserve {
         address vex_acc = getVexesAccountAddress(user);
         IVexesAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
     }
 
     function revert_cancelMarketOrder(
         address user, uint32 request_key, Callback.CallMeta meta
-    ) external view override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external view override onlyVexesAccount(user) reserveAndFailCallback(meta) {
         emit CancelMarketOrderRevert(meta.call_id, user, request_key);
-        _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
     }
 
     function finish_cancelMarketOrder(
         address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta
-    ) external override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external override onlyVexesAccount(user) reserve {
         collateralReserve -= collateral;
 
         emit CancelMarketOrder(meta.call_id, user, request_key);
@@ -238,9 +220,8 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // TODO: force close admin method
 
     // TODO: add work with oracle
-    function closePosition(address user, uint32 position_key, uint market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive {
+    function closePosition(address user, uint32 position_key, uint market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive reserve {
         require (marketOpen(market_idx), Errors.MARKET_CLOSED);
-        tvm.rawReserve(_reserve(), 0);
 
         (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
 
@@ -257,18 +238,13 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
 
     function revert_closePosition(
         address user, uint32 position_key, Callback.CallMeta meta
-    ) external view override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external view override onlyVexesAccount(user) reserveAndFailCallback(meta) {
         emit ClosePositionRevert(meta.call_id, user, position_key);
-        _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
     }
 
     function finish_closePosition(
         address user, uint32 position_key, IVexesAccount.PositionView position_view, Callback.CallMeta meta
-    ) external override onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external override onlyVexesAccount(user) reserve {
         // we already deducted open fee when position was opened
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;

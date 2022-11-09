@@ -152,7 +152,7 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
 
     function receiveTokenWalletAddress(address wallet) external;
     function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view;
-    function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key) external;
+    function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key, Callback.CallMeta meta) external;
     function revert_executeMarketOrder(
         address user, uint32 request_key, uint market_idx, uint128 collateral, uint128 position_size, PositionType position_type, Callback.CallMeta meta
     ) external;

@@ -10,54 +10,38 @@ import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
 abstract contract VexesVaultBase is VexesVaultOrders {
-    function transferOwnership(address new_owner, Callback.CallMeta meta) external onlyOwner {
-        tvm.rawReserve(_reserve(), 0);
-
+    function transferOwnership(address new_owner, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         owner = new_owner;
         emit NewOwner(meta.call_id, new_owner);
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function setMarketManager(address new_manager, Callback.CallMeta meta) external onlyOwner {
-        tvm.rawReserve(_reserve(), 0);
-
+    function setMarketManager(address new_manager, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         marketManager = new_manager;
         emit NewMarketManager(meta.call_id, new_manager);
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner {
-        tvm.rawReserve(_reserve(), 0);
-
+    function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         paused = new_state;
         emit Pause(meta.call_id, new_state);
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function setLiquidationThresholdRate(uint64 new_rate, Callback.CallMeta meta) external onlyOwner {
+    function setLiquidationThresholdRate(uint64 new_rate, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         require (new_rate < HUNDRED_PERCENT, Errors.BAD_INPUT);
-        tvm.rawReserve(_reserve(), 0);
 
         liquidationThresholdRate = new_rate;
         emit LiquidationRateUpdate(meta.call_id, new_rate);
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function setOpenCloseFeeDistributionSchema(
         uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema, Callback.CallMeta meta
-    ) external onlyOwner {
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
         require (new_open_fee_schema[0] + new_open_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
         require (new_close_fee_schema[0] + new_close_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
-        tvm.rawReserve(_reserve(), 0);
 
         openFeeDistributionSchema = new_open_fee_schema;
         closeFeeDistributionSchema = new_close_fee_schema;
 
         emit OpenCloseFeeSchemaUpdate(meta.call_id, new_open_fee_schema, new_close_fee_schema);
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function receiveTokenWalletAddress(address wallet) external override {
@@ -72,9 +56,8 @@ abstract contract VexesVaultBase is VexesVaultOrders {
         address,
         address remainingGasTo,
         TvmCell payload
-    ) external override {
+    ) external override reserve {
         require (msg.sender == usdtWallet || msg.sender == stvUsdtWallet, Errors.NOT_TOKEN_WALLET);
-        tvm.rawReserve(_reserve(), 0);
 
         (
             Action action,
@@ -111,10 +94,9 @@ abstract contract VexesVaultBase is VexesVaultOrders {
         address wallet,
         address,
         TvmCell payload
-    ) external override {
+    ) external override reserve {
         require (wallet == stvUsdtWallet, Errors.NOT_TOKEN_WALLET);
         require (msg.sender == stvUsdt, Errors.NOT_TOKEN_ROOT);
-        tvm.rawReserve(_reserve(), 0);
 
         _handleStvUsdtBurn(amount, payload);
     }

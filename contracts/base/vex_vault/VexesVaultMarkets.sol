@@ -48,9 +48,7 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
     function addMarkets(
         MarketConfig[] new_markets,
         Callback.CallMeta meta
-    ) external onlyOwner {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
         for (MarketConfig _market_config : new_markets) {
             require (validateMarketConfig(_market_config), Errors.BAD_INPUT);
 
@@ -70,13 +68,11 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
             emit NewMarket(meta.call_id, _market_config);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function setMarketsConfigs(mapping (uint => MarketConfig) new_configs, Callback.CallMeta meta) external onlyOwner {
-        tvm.rawReserve(_reserve(), 0);
-
+    function setMarketsConfigs(
+        mapping (uint => MarketConfig) new_configs, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
         for ((uint market_idx, MarketConfig config) : new_configs) {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
             require (validateMarketConfig(config), Errors.BAD_INPUT);
@@ -96,8 +92,6 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
             emit MarketConfigUpdate(meta.call_id, market_idx, config);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function validateMarketConfig(MarketConfig config) public pure returns (bool correct) {
@@ -114,44 +108,34 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         }
     }
 
-    function setMarketsPause(mapping (uint => bool) pause, Callback.CallMeta meta) external onlyMarketManager {
-        tvm.rawReserve(_reserve(), 0);
-
+    function setMarketsPause(
+        mapping (uint => bool) pause, Callback.CallMeta meta
+    ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for ((uint market_idx, bool new_state) : pause) {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
 
             markets[market_idx].paused = new_state;
             emit MarketPause(meta.call_id, market_idx, new_state);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function setMarketsWorkingHours(
         mapping (uint => mapping (uint8 => TimeInterval)) market_to_working_hours,
         Callback.CallMeta meta
-    ) external onlyMarketManager {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for ((uint market_idx, mapping (uint8 => TimeInterval) working_hours) : market_to_working_hours) {
             _setMarketWorkingHours(market_idx, working_hours, meta);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function setMarketsCommonWorkingHours(
         uint[] market_idx,
         mapping (uint8 => TimeInterval) working_hours,
         Callback.CallMeta meta
-    ) external onlyMarketManager {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for (uint i = 0; i < market_idx.length; i++) {
             _setMarketWorkingHours(market_idx[i], working_hours, meta);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function _setMarketWorkingHours(
@@ -174,28 +158,22 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         uint[] market_idx,
         DateTimeInterval[] new_weekends,
         Callback.CallMeta meta
-    ) external onlyMarketManager {
-        tvm.rawReserve(_reserve(), 0);
+    ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         require (market_idx.length == new_weekends.length, Errors.BAD_INPUT);
 
         for (uint i = 0; i < market_idx.length; i++) {
             _addMarketWeekends(market_idx[i], new_weekends[i], meta);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function addMarketsCommonWeekends(
         uint[] market_idx,
         DateTimeInterval new_weekends,
         Callback.CallMeta meta
-    ) external onlyMarketManager {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for (uint i = 0; i < market_idx.length; i++) {
             _addMarketWeekends(market_idx[i], new_weekends, meta);
         }
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function _addMarketWeekends(
@@ -228,15 +206,13 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         emit MarketWeekends(meta.call_id, market_idx, _new_weekend);
     }
     
-    function clearMarketsWeekends(uint[] market_idx, Callback.CallMeta meta) external onlyMarketManager {
-        tvm.rawReserve(_reserve(), 0);
-
+    function clearMarketsWeekends(
+        uint[] market_idx, Callback.CallMeta meta
+    ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for (uint i = 0; i < market_idx.length; i++) {
             delete weekends[market_idx[i]];
             emit MarketWeekendsCleared(meta.call_id, market_idx[i]);
         }
-
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function validateTimeInterval(TimeInterval val) public pure returns (bool correct) {

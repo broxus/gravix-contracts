@@ -14,37 +14,29 @@ import {RPlatform as Platform} from "../../Platform.sol";
 
 abstract contract VexesVaultUpgradable is VexesVaultHelpers {
     // TODO: this may be removed ?
-    function installPlatformCode(TvmCell code, Callback.CallMeta meta) external onlyOwner {
+    function installPlatformCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         require(platformCode.toSlice().empty(), Errors.ALREADY_INITIALIZED);
-
-        tvm.rawReserve(_reserve(), 0);
 
         platformCode = code;
         emit PlatformCodeInstall(meta.call_id);
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function installOrUpdateVexesAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner {
-        tvm.rawReserve(_reserve(), 0);
-
+    function installOrUpdateVexesAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         vexesAccountCode = code;
         vexesAccountVersion += 1;
         emit VexesAccountCodeUpdate(meta.call_id, vexesAccountVersion - 1, vexesAccountVersion);
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function upgradeVexesAccount(Callback.CallMeta meta) external view {
+    function upgradeVexesAccount(Callback.CallMeta meta) external view reserve {
         require (msg.value >= Gas.VEX_ACC_UPGRADE_VALUE, Errors.LOW_MSG_VALUE);
 
-        tvm.rawReserve(_reserve(), 0);
         _upgradeVexesAccount(msg.sender, 0, meta);
     }
 
     // admin hook, no need for call_id or nonce
-    function forceUpgradeVexesAccounts(address[] users, Callback.CallMeta meta) external view onlyOwner {
+    function forceUpgradeVexesAccounts(address[] users, Callback.CallMeta meta) external view onlyOwner reserve {
         require (msg.value >= Gas.VEX_ACC_UPGRADE_VALUE * (users.length + 1), Errors.LOW_MSG_VALUE);
 
-        tvm.rawReserve(_reserve(), 0);
         for (uint i = 0; i < users.length; i++) {
             _upgradeVexesAccount(users[i], Gas.VEX_ACC_UPGRADE_VALUE, meta);
         }
@@ -61,21 +53,15 @@ abstract contract VexesVaultUpgradable is VexesVaultHelpers {
         uint32 old_version,
         uint32 new_version,
         Callback.CallMeta meta
-    ) external view onlyVexesAccount(user) {
-        tvm.rawReserve(_reserve(), 0);
-
+    ) external view onlyVexesAccount(user) reserveAndSuccessCallback(meta) {
         emit VexesAccountUpgrade(meta.call_id, user, old_version, new_version);
-        _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
     }
 
-    function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view override onlyVexesAccount(user) {
+    function onVexesAccountDeploy(address user, Callback.CallMeta meta) external view override onlyVexesAccount(user) reserveAndSuccessCallback(meta) {
         emit VexesAccountDeploy(user);
-
-        tvm.rawReserve(_reserve(), 0);
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
-    function deployVexesAccount(address user) public view returns (address) {
+    function deployVexesAccount(address user) internal view returns (address) {
         TvmBuilder constructor_params;
 
         constructor_params.store(vexesAccountVersion); // 32

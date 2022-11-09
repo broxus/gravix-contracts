@@ -41,7 +41,7 @@ contract VexesAccount is VexesAccountHelpers {
         );
 
         IVexesVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            request_nonce, user, _nonce
+            request_nonce, user, _nonce, pending_request.meta
         );
     }
 

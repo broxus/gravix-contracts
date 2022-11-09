@@ -226,6 +226,23 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         return math.max(address(this).balance - msg.value, CONTRACT_MIN_BALANCE);
     }
 
+    modifier reserve() {
+        tvm.rawReserve(_reserve(), 0);
+        _;
+    }
+
+    modifier reserveAndSuccessCallback(Callback.CallMeta meta) {
+        tvm.rawReserve(_reserve(), 0);
+        _;
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    modifier reserveAndFailCallback(Callback.CallMeta meta) {
+        tvm.rawReserve(_reserve(), 0);
+        _;
+        _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
+    }
+
     modifier onlyOwner() {
         require(msg.sender == owner, Errors.NOT_OWNER);
         _;
