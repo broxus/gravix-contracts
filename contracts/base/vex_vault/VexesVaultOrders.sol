@@ -66,7 +66,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             max_slippage_rate,
             _market.fees.openFeeRate,
             _market.fees.closeFeeRate,
-            _market.fees.spreadRate,
+            _market.fees.baseSpreadRate,
             liquidationThresholdRate,
             _market.fees.borrowBaseRatePerHour,
             meta
@@ -121,6 +121,13 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
             int256 funding = position_type == PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
 
+            Market market = markets[market_idx];
+            // calculate dynamic spread multiplier
+            uint128 min_positions = math.min(market.totalShorts, market.totalLongs);
+            uint128 dynamic_spread = position_type == PositionType.Long ?
+                math.muldiv(market.totalLongs - min_positions, market.fees.baseDynamicSpreadRate, market.depth) :
+                math.muldiv(market.totalShorts - min_positions, market.fees.baseDynamicSpreadRate, market.depth);
+
             IVexesAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 request_key,
                 market_idx,
@@ -128,6 +135,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
                 position_type,
                 asset_price,
                 funding,
+                dynamic_spread,
                 meta
             );
         } else {

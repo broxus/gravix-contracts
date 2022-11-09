@@ -37,7 +37,8 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         // fee and rates in %
         uint64 openFeeRate;
         uint64 closeFeeRate;
-        uint64 spreadRate; // TODO: different spread on shorts/longs
+        uint64 baseSpreadRate;
+        uint64 baseDynamicSpreadRate;
         uint64 borrowBaseRatePerHour;
         uint64 fundingBaseRatePerHour;
     }
@@ -78,7 +79,7 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint32 maxSlippageRate; // %
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
-        uint64 spreadRate; // %
+        uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
         Callback.CallMeta meta;

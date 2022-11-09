@@ -35,7 +35,7 @@ contract VexesAccount is VexesAccountHelpers {
             pending_request.maxSlippageRate,
             pending_request.openFeeRate,
             pending_request.closeFeeRate,
-            pending_request.spreadRate,
+            pending_request.baseSpreadRate,
             pending_request.liquidationThresholdRate,
             pending_request.borrowBaseRatePerHour
         );
@@ -52,6 +52,7 @@ contract VexesAccount is VexesAccountHelpers {
         IVexesVault.PositionType position_type,
         uint128 asset_price,
         int256 accFundingPerShare,
+        uint128 dynamic_spread,
         Callback.CallMeta meta
     ) external override onlyVexesVault {
         tvm.rawReserve(_reserve(), 0);
@@ -78,9 +79,8 @@ contract VexesAccount is VexesAccountHelpers {
         uint128 min_price = request.expectedPrice - allowed_delta;
         uint128 max_price = request.expectedPrice + allowed_delta;
 
-        uint128 open_price = request.positionType == IVexesVault.PositionType.Long ?
-        math.muldiv(asset_price, (HUNDRED_PERCENT + request.spreadRate), HUNDRED_PERCENT) :
-        math.muldiv(asset_price, (HUNDRED_PERCENT - request.spreadRate), HUNDRED_PERCENT);
+        // add base + dynamic spread
+        uint128 open_price = applyOpenSpread(asset_price, request.positionType, request.baseSpreadRate + dynamic_spread);
 
         if (open_price < min_price || open_price > max_price) {
             IVexesVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -101,7 +101,7 @@ contract VexesAccount is VexesAccountHelpers {
             request.leverage,
             accFundingPerShare,
             request.borrowBaseRatePerHour,
-            request.spreadRate,
+            request.baseSpreadRate,
             request.closeFeeRate,
             request.liquidationThresholdRate,
             now
@@ -156,16 +156,31 @@ contract VexesAccount is VexesAccountHelpers {
         );
     }
 
+    function applyOpenSpread(uint128 price, IVexesVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
+        new_price = _type == IVexesVault.PositionType.Long ?
+            math.muldiv(price, (HUNDRED_PERCENT + spread), HUNDRED_PERCENT) :
+            math.muldiv(price, (HUNDRED_PERCENT - spread), HUNDRED_PERCENT);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
+    }
+
+    function applyCloseSpread(uint128 price, IVexesVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
+        new_price = _type == IVexesVault.PositionType.Long ?
+            math.muldiv(price, (HUNDRED_PERCENT - spread), HUNDRED_PERCENT) :
+            math.muldiv(price, (HUNDRED_PERCENT + spread), HUNDRED_PERCENT);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
+    }
+
     function getPositionsView(
         uint32[] positions_keys,
         uint128[] assets_prices,
         int256[] accLongFundingPerShare,
         int256[] accShortFundingPerShare
-    ) external view returns (PositionView[] positions_views) {
+    ) external view responsible returns (PositionView[] positions_views) {
         require (positions_keys.length == assets_prices.length, Errors.BAD_INPUT);
         for (uint i = 0; i < positions_keys.length; i++) {
             positions_views.push(getPositionView(positions_keys[i], assets_prices[i], accLongFundingPerShare[i], accShortFundingPerShare[i]));
         }
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }positions_views;
     }
 
     function getPositionView(
@@ -173,7 +188,7 @@ contract VexesAccount is VexesAccountHelpers {
         uint128 asset_price,
         int256 accLongFundingPerShare,
         int256 accShortFundingPerShare
-    ) public view returns (PositionView position_view) {
+    ) public view responsible returns (PositionView position_view) {
         Position position = positions[position_key];
         bool is_long = position.positionType == IVexesVault.PositionType.Long;
 
@@ -185,9 +200,7 @@ contract VexesAccount is VexesAccountHelpers {
         uint128 borrow_fee = math.muldiv(position.borrowBaseRatePerHour * time_passed, leveraged_position, HOUR);
 
         // close price
-        uint128 close_price = is_long ?
-        math.muldiv(asset_price, (HUNDRED_PERCENT - position.spreadRate), HUNDRED_PERCENT) :
-        math.muldiv(asset_price, (HUNDRED_PERCENT + position.spreadRate), HUNDRED_PERCENT);
+        uint128 close_price = applyCloseSpread(asset_price, position.positionType, position.baseSpreadRate);
 
         // funding
         int256 new_acc_funding = is_long ? accLongFundingPerShare : accShortFundingPerShare;
@@ -231,7 +244,7 @@ contract VexesAccount is VexesAccountHelpers {
 //        bool liquidate = current_collateral <= liq_threshold;
         bool liquidate = is_long ? asset_price <= liq_price : asset_price >= liq_price;
 
-        return PositionView(
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }PositionView(
             position.marketIdx,
             position.positionType,
             position.initialCollateral,

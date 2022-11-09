@@ -15,7 +15,7 @@ interface IVexesAccount {
         uint64 maxSlippageRate; // %
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
-        uint64 spreadRate; // %
+        uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
     }
@@ -29,7 +29,7 @@ interface IVexesAccount {
         uint32 leverage;
         int256 accFundingPerShare;
         uint64 borrowBaseRatePerHour; // % per hour
-        uint64 spreadRate; // %
+        uint64 baseSpreadRate; // %
         uint64 closeFeeRate; // %
         uint64 liquidationThresholdRate; // %
         uint32 createdAt; // %
@@ -66,6 +66,7 @@ interface IVexesAccount {
         IVexesVault.PositionType position_type,
         uint128 asset_price,
         int256 accFundingPerShare,
+        uint128 dynamic_spread,
         Callback.CallMeta meta
     ) external;
     function process_closePosition(

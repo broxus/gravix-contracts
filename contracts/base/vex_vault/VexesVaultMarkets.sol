@@ -98,7 +98,8 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         correct = correct && config.maxLeverage >= LEVERAGE_BASE;
         correct = correct && config.fees.fundingBaseRatePerHour < HUNDRED_PERCENT;
         correct = correct && config.fees.borrowBaseRatePerHour < HUNDRED_PERCENT;
-        correct = correct && config.fees.spreadRate < HUNDRED_PERCENT;
+        correct = correct && config.fees.baseSpreadRate < HUNDRED_PERCENT;
+        correct = correct && config.fees.baseDynamicSpreadRate < HUNDRED_PERCENT;
         correct = correct && config.fees.closeFeeRate < HUNDRED_PERCENT;
         correct = correct && config.fees.openFeeRate < HUNDRED_PERCENT;
 
