@@ -57,7 +57,7 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         int256 accShortFundingPerShare;
         uint32 lastFundingUpdateTime;
 
-        uint32 maxLeverage; // 100x = 10_000, e.g multiplied by base (100)
+        uint32 maxLeverage; // 100 -> 1x
         uint128 depth;
 
         Fees fees;
@@ -127,10 +127,17 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint32 call_id,
         MarketConfig market
     );
+    event MarketConfigUpdate(
+        uint32 call_id,
+        uint market_idx,
+        MarketConfig market
+    );
     event MarketScheduleUpdate(uint32 call_id, uint market_idx, mapping (uint8 => TimeInterval));
     event MarketWeekends(uint32 call_id, uint market_idx, DateTimeInterval weekend);
     event MarketWeekendsCleared(uint32 call_id, uint market_idx);
     event MarketPause(uint32 call_id, uint market_idx, bool new_state);
+    event NewMarketManager(uint32 call_id, address new_manager);
+    event Pause(uint32 call_id, bool new_state);
 
 
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);

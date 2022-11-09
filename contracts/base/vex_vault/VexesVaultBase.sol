@@ -18,6 +18,23 @@ abstract contract VexesVaultBase is VexesVaultOrders {
         _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
+    function setMarketManager(address new_manager, Callback.CallMeta meta) external onlyOwner {
+        tvm.rawReserve(_reserve(), 0);
+
+        marketManager = new_manager;
+        emit NewMarketManager(meta.call_id, new_manager);
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner {
+        tvm.rawReserve(_reserve(), 0);
+
+        paused = new_state;
+        emit Pause(meta.call_id, new_state);
+
+        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+    }
+
     function receiveTokenWalletAddress(address wallet) external override {
         if (msg.sender == usdt) usdtWallet = wallet;
         if (msg.sender == stvUsdt) stvUsdtWallet = wallet;

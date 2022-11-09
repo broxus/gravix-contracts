@@ -21,6 +21,7 @@ library Errors {
 
     uint16 constant MARKET_POSITIONS_LIMIT_REACHED = 2002;
     uint16 constant PLATFORM_POSITIONS_LIMIT_REACHED = 2003;
+    uint16 constant MARKET_CLOSED = 2004;
 
     // ACCOUNT
     uint16 constant NOT_VAULT = 3000;

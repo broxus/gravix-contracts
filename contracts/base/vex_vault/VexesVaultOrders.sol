@@ -235,8 +235,11 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CLOSE HANDLERS ---------------------------------
     // ----------------------------------------------------------------------------------
+    // TODO: force close admin method
+
     // TODO: add work with oracle
     function closePosition(address user, uint32 position_key, uint market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive {
+        require (marketOpen(market_idx), Errors.MARKET_CLOSED);
         tvm.rawReserve(_reserve(), 0);
 
         (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
