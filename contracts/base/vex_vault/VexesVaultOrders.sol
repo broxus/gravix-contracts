@@ -18,6 +18,26 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER REQUEST HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
+    function getDynamicSpread(
+        uint128 position_size,
+        uint market_idx,
+        PositionType position_type
+    ) public view responsible returns (uint64 dynamic_spread) {
+        uint128 new_noi;
+
+        Market market = markets[market_idx];
+        // calculate dynamic dynamic_spread multiplier
+        if (position_type == PositionType.Long) {
+            uint128 new_longs_total = market.totalLongs + position_size / 2;
+            new_noi = new_longs_total - math.min(market.totalShorts, new_longs_total);
+        } else {
+            uint128 new_shorts_total = market.totalShorts + position_size / 2;
+            new_noi = new_shorts_total - math.min(market.totalShorts, new_shorts_total);
+        }
+        dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depth));
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;
+    }
+
     function _handleMarketOrderRequest(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
     ) internal returns (bool request_saved) {
@@ -121,12 +141,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
             (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
             int256 funding = position_type == PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
 
-            Market market = markets[market_idx];
-            // calculate dynamic spread multiplier
-            uint128 min_positions = math.min(market.totalShorts, market.totalLongs);
-            uint128 dynamic_spread = position_type == PositionType.Long ?
-                math.muldiv(market.totalLongs - min_positions, market.fees.baseDynamicSpreadRate, market.depth) :
-                math.muldiv(market.totalShorts - min_positions, market.fees.baseDynamicSpreadRate, market.depth);
+            uint64 dynamic_spread = getDynamicSpread(position_size, market_idx, position_type);
 
             IVexesAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 request_key,
@@ -134,8 +149,8 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
                 position_size,
                 position_type,
                 asset_price,
-                funding,
                 dynamic_spread,
+                funding,
                 meta
             );
         } else {
@@ -153,11 +168,7 @@ abstract contract VexesVaultOrders is VexesVaultMarkets {
         PositionType position_type,
         Callback.CallMeta meta
     ) external override onlyVexesAccount(user) reserve {
-        emit MarketOrderExecutionRevert(
-            meta.call_id,
-            user,
-            request_key
-        );
+        emit MarketOrderExecutionRevert(meta.call_id, user, request_key);
 
         _removePositionFromMarket(market_idx, position_size, position_type);
 

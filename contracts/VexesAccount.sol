@@ -51,8 +51,8 @@ contract VexesAccount is VexesAccountHelpers {
         uint128 position_size,
         IVexesVault.PositionType position_type,
         uint128 asset_price,
+        uint64 dynamic_spread,
         int256 accFundingPerShare,
-        uint128 dynamic_spread,
         Callback.CallMeta meta
     ) external override onlyVexesVault {
         tvm.rawReserve(_reserve(), 0);
