@@ -17,6 +17,50 @@ import {RPlatform as Platform} from "../../Platform.sol";
 
 
 abstract contract VexesVaultHelpers is VexesVaultStorage {
+    function getDetails() external view responsible returns (
+        address _owner,
+        address _marketManager,
+        address _usdt,
+        address _usdtWallet,
+        address _stvUsdt,
+        address _stvUsdtWallet,
+        uint128 _poolBalance, // liquidity deposits
+        uint128 _stvUsdtSupply, // amount of minted stvUsdt
+        uint128 _targetPrice,
+        uint128 _insuranceFund, // collected fees, pnl and etc.
+        uint128 _collateralReserve, // sum of all usdt provided as a collateral for open order
+        uint128 _totalLongs,
+        uint128 _totalShorts,
+        uint128 _totalNOI,
+        bool _paused,
+        uint64 _liquidationThresholdRate,
+        uint64[2] _openFeeDistributionSchema,
+        uint64[2] _closeFeeDistributionSchema,
+        uint32 _marketCount
+    ) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
+            owner,
+            marketManager,
+            usdt,
+            usdtWallet,
+            stvUsdt,
+            stvUsdtWallet,
+            poolBalance, // liquidity deposits
+            stvUsdtSupply, // amount of minted stvUsdt
+            targetPrice,
+            insuranceFund, // collected fees, pnl and etc.
+            collateralReserve, // sum of all usdt provided as a collateral for open order
+            totalLongs,
+            totalShorts,
+            totalNOI,
+            paused,
+            liquidationThresholdRate,
+            openFeeDistributionSchema,
+            closeFeeDistributionSchema,
+            marketCount
+        );
+    }
+
     function _sendCallbackOrGas(address callback_receiver, uint32 nonce, bool success, address send_gas_to) internal pure {
         if (nonce > 0) {
             if (success) {

@@ -5,7 +5,8 @@ import "../../interfaces/IVexesVault.sol";
 
 
 abstract contract VexesVaultStorage is IVexesVault {
-//    uint32 static deploy_nonce;
+    uint32 static deploy_nonce;
+
     address owner;
     address marketManager;
 

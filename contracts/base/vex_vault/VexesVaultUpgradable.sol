@@ -13,6 +13,7 @@ import {RPlatform as Platform} from "../../Platform.sol";
 
 
 abstract contract VexesVaultUpgradable is VexesVaultHelpers {
+    // TODO: this may be removed ?
     function installPlatformCode(TvmCell code, Callback.CallMeta meta) external onlyOwner {
         require(platformCode.toSlice().empty(), Errors.ALREADY_INITIALIZED);
 

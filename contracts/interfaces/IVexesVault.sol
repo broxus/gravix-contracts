@@ -37,7 +37,7 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         // fee and rates in %
         uint64 openFeeRate;
         uint64 closeFeeRate;
-        uint64 spreadRate;
+        uint64 spreadRate; // TODO: different spread on shorts/longs
         uint64 borrowBaseRatePerHour;
         uint64 fundingBaseRatePerHour;
     }
@@ -138,6 +138,8 @@ interface IVexesVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     event MarketPause(uint32 call_id, uint market_idx, bool new_state);
     event NewMarketManager(uint32 call_id, address new_manager);
     event Pause(uint32 call_id, bool new_state);
+    event LiquidationRateUpdate(uint32 call_id, uint64 new_rate);
+    event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
 
 
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);

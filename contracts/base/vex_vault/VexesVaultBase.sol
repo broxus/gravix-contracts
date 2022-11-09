@@ -32,7 +32,32 @@ abstract contract VexesVaultBase is VexesVaultOrders {
         paused = new_state;
         emit Pause(meta.call_id, new_state);
 
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function setLiquidationThresholdRate(uint64 new_rate, Callback.CallMeta meta) external onlyOwner {
+        require (new_rate < HUNDRED_PERCENT, Errors.BAD_INPUT);
+        tvm.rawReserve(_reserve(), 0);
+
+        liquidationThresholdRate = new_rate;
+        emit LiquidationRateUpdate(meta.call_id, new_rate);
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function setOpenCloseFeeDistributionSchema(
+        uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema, Callback.CallMeta meta
+    ) external onlyOwner {
+        require (new_open_fee_schema[0] + new_open_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
+        require (new_close_fee_schema[0] + new_close_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
+        tvm.rawReserve(_reserve(), 0);
+
+        openFeeDistributionSchema = new_open_fee_schema;
+        closeFeeDistributionSchema = new_close_fee_schema;
+
+        emit OpenCloseFeeSchemaUpdate(meta.call_id, new_open_fee_schema, new_close_fee_schema);
+
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
     }
 
     function receiveTokenWalletAddress(address wallet) external override {

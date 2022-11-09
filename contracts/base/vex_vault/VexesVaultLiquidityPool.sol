@@ -54,26 +54,38 @@ abstract contract VexesVaultLiquidityPool is VexesVaultUpgradable {
         _transfer(usdtWallet, usdt_amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
     }
 
-    function usdtToStvUsdt(uint128 usdt_amount) public view returns (uint128 stv_amount) {
-        if (stvUsdtSupply == 0) return usdt_amount;
-        (uint128 in_price,) = stvUsdtPrice();
-        return math.muldiv(usdt_amount, SCALING_FACTOR, in_price);
+    function usdtToStvUsdt(uint128 usdt_amount) public view responsible returns (uint128 stv_amount) {
+        if (stvUsdtSupply == 0) {
+            stv_amount = usdt_amount;
+        } else {
+            (uint128 in_price,) = stvUsdtPrice();
+            stv_amount = math.muldiv(usdt_amount, SCALING_FACTOR, in_price);
+        }
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stv_amount;
     }
 
-    function stvUsdtToUsdt(uint128 stv_amount) public view returns (uint128 usdt_amount) {
-        if (stvUsdtSupply == 0) return stv_amount;
-        (,uint128 out_price) = stvUsdtPrice();
-        return math.muldiv(stv_amount, out_price, SCALING_FACTOR);
+    function stvUsdtToUsdt(uint128 stv_amount) public view responsible returns (uint128 usdt_amount) {
+        if (stvUsdtSupply == 0) {
+            usdt_amount = stv_amount;
+        } else {
+            (,uint128 out_price) = stvUsdtPrice();
+            usdt_amount = math.muldiv(stv_amount, out_price, SCALING_FACTOR);
+        }
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }usdt_amount;
     }
 
     // @dev Prices are multiplied by 10**18
     // in price could be higher in case of under collateralization
-    function stvUsdtPrice() public view returns (uint128 in_price, uint128 out_price) {
-        if (stvUsdtSupply == 0) return (SCALING_FACTOR, SCALING_FACTOR);
-        // out price is current real price
-        out_price = math.muldiv(poolBalance, SCALING_FACTOR, stvUsdtSupply);
-        // if we are in undercollateralized state
-        in_price = targetPrice > 0 ? targetPrice : out_price;
+    function stvUsdtPrice() public view responsible returns (uint128 in_price, uint128 out_price) {
+        if (stvUsdtSupply == 0) {
+            (in_price, out_price) = (SCALING_FACTOR, SCALING_FACTOR);
+        } else {
+            // out price is current real price
+            out_price = math.muldiv(poolBalance, SCALING_FACTOR, stvUsdtSupply);
+            // if we are in undercollateralized state
+            in_price = targetPrice > 0 ? targetPrice : out_price;
+        }
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(in_price, out_price);
     }
 
     function poolDebt() public view returns (uint128) {

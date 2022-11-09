@@ -247,19 +247,19 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         return _dateTimeToTimestamp(val.to) > _dateTimeToTimestamp(val.from);
     }
 
-    function getMarketSchedule(uint market_idx) external view returns (mapping (uint8 => TimeInterval)) {
-        return workingHours[market_idx];
+    function getMarketSchedule(uint market_idx) external view responsible returns (mapping (uint8 => TimeInterval)) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }workingHours[market_idx];
     }
 
-    function getMarketWeekends(uint market_idx) external view returns (mapping (uint32 => DateTimeInterval)) {
-        return weekends[market_idx];
+    function getMarketWeekends(uint market_idx) external view responsible returns (mapping (uint32 => DateTimeInterval)) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }weekends[market_idx];
     }
 
-    function getMarket(uint market_idx) external view returns (Market) {
-        return markets[market_idx];
+    function getMarket(uint market_idx) external view responsible returns (Market) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }markets[market_idx];
     }
 
-    function getMarkets() external view returns (mapping (uint => Market) _markets) {
-        return markets;
+    function getMarkets() external view responsible returns (mapping (uint => Market) _markets) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }markets;
     }
 }
