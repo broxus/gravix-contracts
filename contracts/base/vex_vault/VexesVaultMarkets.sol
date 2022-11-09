@@ -97,7 +97,7 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
     function setMarketsWorkingHours(
         uint[] market_idx,
-        mapping (uint8 => TimeInterval)[] working_hours, // TODO: validate
+        mapping (uint8 => TimeInterval)[] working_hours,
         Callback.CallMeta meta
     ) external onlyMarketManager {
         tvm.rawReserve(_reserve(), 0);
@@ -112,7 +112,7 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
     function setMarketsCommonWorkingHours(
         uint[] market_idx,
-        mapping (uint8 => TimeInterval) working_hours, // TODO: validate
+        mapping (uint8 => TimeInterval) working_hours,
         Callback.CallMeta meta
     ) external onlyMarketManager {
         tvm.rawReserve(_reserve(), 0);
@@ -126,17 +126,23 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
     function _setMarketWorkingHours(
         uint market_idx,
-        mapping (uint8 => TimeInterval) working_hours, // TODO: validate
+        mapping (uint8 => TimeInterval) working_hours,
         Callback.CallMeta meta
     ) internal {
         require (markets.exists(market_idx), Errors.BAD_INPUT);
+
+        for ((uint8 key, TimeInterval interval) : working_hours) {
+            require (key >= DateTimeLib.DOW_MON && key <= DateTimeLib.DOW_SUN, Errors.BAD_INPUT);
+            require (validateTimeInterval(interval), Errors.BAD_INPUT);
+        }
+
         workingHours[market_idx] = working_hours;
         emit MarketScheduleUpdate(meta.call_id, market_idx, working_hours);
     }
 
     function addMarketsWeekends(
         uint[] market_idx,
-        DateTimeInterval[] new_weekends, // TODO: validate
+        DateTimeInterval[] new_weekends,
         Callback.CallMeta meta
     ) external onlyMarketManager {
         tvm.rawReserve(_reserve(), 0);
@@ -151,7 +157,7 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
     function addMarketsCommonWeekends(
         uint[] market_idx,
-        DateTimeInterval new_weekends, // TODO: validate
+        DateTimeInterval new_weekends,
         Callback.CallMeta meta
     ) external onlyMarketManager {
         tvm.rawReserve(_reserve(), 0);
@@ -164,10 +170,11 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
 
     function _addMarketWeekends(
         uint market_idx,
-        DateTimeInterval _new_weekend, // TODO: validate
+        DateTimeInterval _new_weekend,
         Callback.CallMeta meta
     ) internal {
         require (markets.exists(market_idx), Errors.BAD_INPUT);
+        require (validateDateTimeInterval(_new_weekend));
 
         uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
         uint32 _new_weekend_end = _dateTimeToTimestamp(_new_weekend.to);
@@ -200,6 +207,14 @@ abstract contract VexesVaultMarkets is VexesVaultLiquidityPool {
         }
 
         _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+    }
+
+    function validateTimeInterval(TimeInterval val) public pure returns (bool correct) {
+        return val.to.hour > val.from.hour || (val.to.hour == val.from.hour && val.to.minute > val.from.minute);
+    }
+
+    function validateDateTimeInterval(DateTimeInterval val) public pure returns (bool correct) {
+        return _dateTimeToTimestamp(val.to) > _dateTimeToTimestamp(val.from);
     }
 
     function getMarketSchedule(uint market_idx) external view returns (mapping (uint8 => TimeInterval)) {
