@@ -1,10 +1,10 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "../../interfaces/IVexesVault.sol";
+import "../../interfaces/IVexexVault.sol";
 
 
-abstract contract VexesVaultStorage is IVexesVault {
+abstract contract VexexVaultStorage is IVexexVault {
     uint32 static deploy_nonce;
 
     address owner;
@@ -16,9 +16,9 @@ abstract contract VexesVaultStorage is IVexesVault {
     address stvUsdtWallet;
 
     TvmCell platformCode;
-    TvmCell vexesAccountCode;
-    uint32 vexesAccountVersion;
-    uint32 vexesVaultVersion;
+    TvmCell vexexAccountCode;
+    uint32 vexexAccountVersion;
+    uint32 vexexVaultVersion;
 
     // liquidity pool staff
     uint128 poolBalance; // liquidity deposits

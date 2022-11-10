@@ -10,13 +10,13 @@ import "../../libraries/Callback.sol";
 import "../../libraries/PlatformTypes.sol";
 import "../../libraries/Errors.sol";
 import "../../interfaces/ICallbackReceiver.sol";
-import "../../interfaces/IVexesAccount.sol";
-import "./VexesVaultStorage.sol";
+import "../../interfaces/IVexexAccount.sol";
+import "./VexexVaultStorage.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 import {RPlatform as Platform} from "../../Platform.sol";
 
 
-abstract contract VexesVaultHelpers is VexesVaultStorage {
+abstract contract VexexVaultHelpers is VexexVaultStorage {
     function getDetails() external view responsible returns (
         address _owner,
         address _marketManager,
@@ -78,11 +78,11 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
     }
 
     function _setupTokenWallets() internal view {
-        ITokenRoot(usdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexesVault.receiveTokenWalletAddress }(
+        ITokenRoot(usdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexexVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
-        ITokenRoot(stvUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexesVault.receiveTokenWalletAddress }(
+        ITokenRoot(stvUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexexVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
@@ -162,9 +162,9 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         }
     }
 
-    function getVexesAccountAddress(address user) public view responsible returns (address) {
+    function getVexexAccountAddress(address user) public view responsible returns (address) {
         return { value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false } address(
-            tvm.hash(_buildInitData(_buildVexesAccountParams(user)))
+            tvm.hash(_buildInitData(_buildVexexAccountParams(user)))
         );
     }
 
@@ -196,7 +196,7 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         );
     }
 
-    function _buildVexesAccountParams(address user) internal pure returns (TvmCell) {
+    function _buildVexexAccountParams(address user) internal pure returns (TvmCell) {
         TvmBuilder builder;
         builder.store(user);
         return builder.toCell();
@@ -207,7 +207,7 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
             contr: Platform,
             varInit: {
                 root: address(this),
-                platformType: PlatformTypes.VexesAccount,
+                platformType: PlatformTypes.VexexAccount,
                 initialData: _initialData,
                 platformCode: platformCode
             },
@@ -216,8 +216,8 @@ abstract contract VexesVaultHelpers is VexesVaultStorage {
         });
     }
 
-    modifier onlyVexesAccount(address user) {
-        address vex_account_addr = getVexesAccountAddress(user);
+    modifier onlyVexexAccount(address user) {
+        address vex_account_addr = getVexexAccountAddress(user);
         require (msg.sender == vex_account_addr, Errors.NOT_VEX_ACCOUNT);
         _;
     }

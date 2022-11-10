@@ -6,11 +6,11 @@ import "broxus-token-contracts/contracts/interfaces/ITokenRootUpgradeable.sol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
-import "../../interfaces/IVexesAccount.sol";
-import "./VexesVaultUpgradable.sol";
+import "../../interfaces/IVexexAccount.sol";
+import "./VexexVaultUpgradable.sol";
 
 
-abstract contract VexesVaultLiquidityPool is VexesVaultUpgradable {
+abstract contract VexexVaultLiquidityPool is VexexVaultUpgradable {
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDITY POOL ---------------------------------------
     // ----------------------------------------------------------------------------------

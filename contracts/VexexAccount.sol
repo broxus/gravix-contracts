@@ -1,0 +1,80 @@
+pragma ever-solidity ^0.62.0;
+
+
+import "broxus-token-contracts/contracts/interfaces/ITokenRootUpgradeable.sol";
+import "broxus-token-contracts/contracts/interfaces/ITokenWalletUpgradeable.sol";
+import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
+import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
+import "./libraries/Gas.sol";
+import "./libraries/Callback.sol";
+import "./base/vex_account/VexexAccountBase.sol";
+
+
+contract VexexAccount is VexexAccountBase {
+    // Cant be deployed directly
+    constructor() public { revert(); }
+
+    function onDeployRetry(TvmCell, TvmCell, address sendGasTo) external view onlyVexexVault functionID(0x23dc4360){
+        tvm.rawReserve(_reserve(), 0);
+        sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
+    }
+
+    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external override onlyVexexVault {
+        if (new_version == currentVersion) {
+            tvm.rawReserve(_reserve(), 0);
+            meta.send_gas_to.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
+            return;
+        }
+
+        uint8 _tmp;
+        TvmBuilder main_builder;
+        main_builder.store(vault); // address 267
+        main_builder.store(_tmp); // 8
+        main_builder.store(meta.send_gas_to); // address 267
+
+        main_builder.storeRef(platform_code); // ref
+
+        TvmBuilder initial;
+        initial.store(user);
+
+        main_builder.storeRef(initial); // ref 2
+
+        TvmBuilder params;
+        params.store(new_version);
+        params.store(currentVersion);
+
+        main_builder.storeRef(params); // ref3
+
+        TvmCell storage_data = abi.encode(marketOrderRequests, positions);
+        TvmCell data = abi.encode(meta.call_id, meta.nonce, storage_data);
+
+        main_builder.storeRef(data); // ref3
+
+        tvm.setcode(new_code);
+        // run onCodeUpgrade from new code
+        tvm.setCurrentCode(new_code);
+        onCodeUpgrade(main_builder.toCell());
+    }
+
+
+    function onCodeUpgrade(TvmCell upgrade_data) private {
+        tvm.resetStorage();
+        tvm.rawReserve(_reserve(), 0);
+
+        TvmSlice s = upgrade_data.toSlice();
+        (address root_, , address send_gas_to) = s.decode(address, uint8, address);
+        vault = root_;
+
+        platform_code = s.loadRef();
+
+        TvmSlice initialData = s.loadRefAsSlice();
+        user = initialData.decode(address);
+
+        TvmSlice params = s.loadRefAsSlice();
+        (currentVersion,) = params.decode(uint32, uint32);
+
+        IVexexVault(vault).onVexexAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user, Callback.CallMeta(0, 0, send_gas_to)
+        );
+    }
+}

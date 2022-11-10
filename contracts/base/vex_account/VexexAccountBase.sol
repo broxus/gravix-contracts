@@ -7,15 +7,15 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
-import "../../interfaces/IVexesVault.sol";
-import "./VexesAccountHelpers.sol";
+import "../../interfaces/IVexexVault.sol";
+import "./VexexAccountHelpers.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
-abstract contract VexesAccountBase is VexesAccountHelpers {
+abstract contract VexexAccountBase is VexexAccountHelpers {
     function process_requestMarketOrder(
-        uint32 request_nonce, IVexesVault.PendingMarketOrderRequest pending_request
-    ) external override onlyVexesVault reserve {
+        uint32 request_nonce, IVexexVault.PendingMarketOrderRequest pending_request
+    ) external override onlyVexexVault reserve {
         _nonce += 1;
         marketOrderRequests[_nonce] = MarketOrderRequest(
             pending_request.marketIdx,
@@ -31,7 +31,7 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
             pending_request.borrowBaseRatePerHour
         );
 
-        IVexesVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IVexexVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             request_nonce, user, _nonce, pending_request.meta
         );
     }
@@ -40,12 +40,12 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
         uint32 request_key,
         uint market_idx,
         uint128 position_size,
-        IVexesVault.PositionType position_type,
+        IVexexVault.PositionType position_type,
         uint128 asset_price,
         uint64 dynamic_spread,
         int256 accFundingPerShare,
         Callback.CallMeta meta
-    ) external override onlyVexesVault reserve {
+    ) external override onlyVexexVault reserve {
         MarketOrderRequest request = marketOrderRequests[request_key];
         uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
@@ -56,7 +56,7 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
             request.positionType != position_type ||
             position_size != leveraged_position
         ) {
-            IVexesVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IVexexVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, market_idx, 0, position_size, position_type, meta
             );
             return;
@@ -72,14 +72,13 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
         uint128 open_price = applyOpenSpread(asset_price, request.positionType, request.baseSpreadRate + dynamic_spread);
 
         if (open_price < min_price || open_price > max_price) {
-            IVexesVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IVexexVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, market_idx, request.collateral, position_size, position_type, meta
             );
             return;
         }
 
         uint128 open_fee = math.muldiv(leveraged_position, request.openFeeRate, HUNDRED_PERCENT);
-        leveraged_position = math.muldiv(request.collateral - open_fee, request.leverage, LEVERAGE_BASE);
 
         Position opened_position = Position(
             request.marketIdx,
@@ -97,14 +96,14 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
         );
         positions[request_key] = opened_position;
 
-        IVexesVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IVexexVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, request_key, opened_position,  meta
         );
     }
 
-    function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external override onlyVexesVault reserve {
+    function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external override onlyVexexVault reserve {
         if (!marketOrderRequests.exists(request_key)) {
-            IVexesVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IVexexVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, meta
             );
             return;
@@ -113,7 +112,7 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
         MarketOrderRequest _request = marketOrderRequests[request_key];
         delete marketOrderRequests[request_key];
 
-        IVexesVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IVexexVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, request_key, _request.collateral, meta
         );
     }
@@ -125,9 +124,9 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
         int256 accLongFundingPerShare,
         int256 accShortFundingPerShare,
         Callback.CallMeta meta
-    ) external override onlyVexesVault reserve {
+    ) external override onlyVexexVault reserve {
         if (!positions.exists(position_key) || positions[position_key].marketIdx != market_idx) {
-            IVexesVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IVexexVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, position_key, meta
             );
             return;
@@ -136,7 +135,7 @@ abstract contract VexesAccountBase is VexesAccountHelpers {
         PositionView position_view = getPositionView(position_key, asset_price, accLongFundingPerShare, accShortFundingPerShare);
         delete positions[position_key];
 
-        IVexesVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IVexexVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, position_key, position_view, meta
         );
     }
