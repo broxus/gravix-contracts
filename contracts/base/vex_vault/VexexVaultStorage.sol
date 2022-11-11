@@ -60,7 +60,4 @@ abstract contract VexexVaultStorage is IVexexVault {
     mapping (uint32 => mapping (uint32 => DateTimeInterval)) weekends;
 
     mapping (uint32 => Oracle) oracles;
-
-    uint32 request_nonce = 0;
-    mapping (uint32 => PendingMarketOrderRequest) pending_market_requests;
 }

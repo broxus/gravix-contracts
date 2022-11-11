@@ -108,11 +108,10 @@ abstract contract VexexVaultBase is VexexVaultOrders {
         // if processing failed - contract was not deployed. Deploy and try again
         if (functionId == tvm.functionId(IVexexAccount.process_requestMarketOrder)) {
             tvm.rawReserve(_reserve(), 0);
-            uint32 _request_nonce = slice.decode(uint32);
-            PendingMarketOrderRequest request = pending_market_requests[_request_nonce];
+            PendingMarketOrderRequest request = slice.decode(PendingMarketOrderRequest);
 
             address vex_acc = deployVexexAccount(request.user);
-            IVexexAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(_request_nonce, request);
+            IVexexAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
         }
     }
 }

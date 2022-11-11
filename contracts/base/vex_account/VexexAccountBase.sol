@@ -14,7 +14,7 @@ import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 abstract contract VexexAccountBase is VexexAccountHelpers {
     function process_requestMarketOrder(
-        uint32 request_nonce, IVexexVault.PendingMarketOrderRequest pending_request
+        IVexexVault.PendingMarketOrderRequest pending_request
     ) external override onlyVexexVault reserve {
         _nonce += 1;
         marketOrderRequests[_nonce] = MarketOrderRequest(
@@ -32,7 +32,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         );
 
         IVexexVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            request_nonce, user, _nonce, pending_request.meta
+            pending_request, _nonce
         );
     }
 

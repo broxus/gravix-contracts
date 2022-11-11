@@ -20,7 +20,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     // ----------------------------------------------------------------------------------
     function _handleMarketOrderRequest(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
-    ) internal returns (bool request_saved) {
+    ) internal view returns (bool request_saved) {
         (
             uint32 market_idx,
             PositionType position_type,
@@ -52,9 +52,8 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         uint128 expected_price,
         uint32 max_slippage_rate, // %
         Callback.CallMeta meta
-    ) internal {
+    ) internal view {
         Market _market = markets[market_idx];
-        request_nonce += 1;
 
         PendingMarketOrderRequest new_request = PendingMarketOrderRequest(
             user,
@@ -71,26 +70,20 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
             _market.fees.borrowBaseRatePerHour,
             meta
         );
-        pending_market_requests[request_nonce] = new_request;
 
         address vex_acc = getVexexAccountAddress(user);
-        IVexexAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_nonce, new_request);
+        IVexexAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(new_request);
     }
 
     function finish_requestMarketOrder(
-        uint32 request_nonce,
-        address user,
-        uint32 request_key,
-        Callback.CallMeta meta
-    ) external override onlyVexexAccount(user) reserveAndSuccessCallback(meta) {
-        PendingMarketOrderRequest request = pending_market_requests[request_nonce];
-        delete pending_market_requests[request_nonce];
-
+        PendingMarketOrderRequest request,
+        uint32 request_key
+    ) external override onlyVexexAccount(request.user) reserve {
         collateralReserve += request.collateral;
 
         emit MarketOrderRequest(
             request.meta.call_id,
-            user,
+            request.user,
             request.marketIdx,
             request.positionType,
             request.collateral,
@@ -100,8 +93,17 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
             request_key
         );
 
-        // TODO: call oracle
+        _sendOracleRequest(
+            request.user,
+            request_key,
+            request.marketIdx,
+            request.collateral,
+            request.leverage,
+            request.positionType,
+            request.meta
+        );
     }
+    
     // ----------------------------------------------------------------------------------
     // --------------------------- ORACLE REQUEST ---------------------------------------
     // ----------------------------------------------------------------------------------
@@ -116,6 +118,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     ) internal view {
         OracleType price_source = markets[market_idx].priceSource;
         Oracle oracle = oracles[market_idx];
+
 
         new OracleProxy{
             stateInit: _buildOracleProxyInitData(user, request_key),

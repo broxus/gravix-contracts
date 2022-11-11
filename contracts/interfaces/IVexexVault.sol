@@ -184,7 +184,7 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint128 asset_price,
         Callback.CallMeta meta
     ) external;
-    function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key, Callback.CallMeta meta) external;
+    function finish_requestMarketOrder(PendingMarketOrderRequest request, uint32 request_key) external;
     function revert_executeMarketOrder(
         address user, uint32 request_key, uint32 market_idx, uint128 collateral, uint128 position_size, PositionType position_type, Callback.CallMeta meta
     ) external;

@@ -55,7 +55,6 @@ interface IVexexAccount {
     }
 
     function process_requestMarketOrder(
-        uint32 request_nonce,
         IVexexVault.PendingMarketOrderRequest pending_request
     ) external;
     function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
