@@ -43,8 +43,30 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
         uint64 fundingBaseRatePerHour;
     }
 
+    enum OracleType { ChainlinkProxy, Dex }
+    struct Pair {
+        address addr;
+        address leftRoot;
+        address rightRoot;
+    }
+
+    struct DexOracle {
+        address targetToken;
+        // 1st paur should contain target token, last pair should contain USDT
+        Pair[] path;
+    }
+
+    struct ChainlinkOracle {
+        address addr;
+    }
+
+    struct Oracle {
+        DexOracle dex;
+        ChainlinkOracle chainlink;
+    }
+
     struct Market {
-        uint externalId; // some unique identifier? Maybe needed for oracle authentication
+        OracleType priceSource;
 
         uint128 totalLongs;
         uint128 totalShorts;
@@ -71,7 +93,7 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
 
     struct PendingMarketOrderRequest {
         address user;
-        uint marketIdx;
+        uint32 marketIdx;
         PositionType positionType;
         uint128 collateral;
         uint128 expectedPrice;
@@ -86,7 +108,6 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     }
 
     struct MarketConfig {
-        uint externalId;
         uint128 maxLongs;
         uint128 maxShorts;
         uint16 noiWeight;
@@ -130,13 +151,13 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     );
     event MarketConfigUpdate(
         uint32 call_id,
-        uint market_idx,
+        uint32 market_idx,
         MarketConfig market
     );
-    event MarketScheduleUpdate(uint32 call_id, uint market_idx, mapping (uint8 => TimeInterval));
-    event MarketWeekends(uint32 call_id, uint market_idx, DateTimeInterval weekend);
-    event MarketWeekendsCleared(uint32 call_id, uint market_idx);
-    event MarketPause(uint32 call_id, uint market_idx, bool new_state);
+    event MarketScheduleUpdate(uint32 call_id, uint32 market_idx, mapping (uint8 => TimeInterval));
+    event MarketWeekends(uint32 call_id, uint32 market_idx, DateTimeInterval weekend);
+    event MarketWeekendsCleared(uint32 call_id, uint32 market_idx);
+    event MarketPause(uint32 call_id, uint32 market_idx, bool new_state);
     event NewMarketManager(uint32 call_id, address new_manager);
     event Pause(uint32 call_id, bool new_state);
     event LiquidationRateUpdate(uint32 call_id, uint64 new_rate);
@@ -153,9 +174,19 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
 
     function receiveTokenWalletAddress(address wallet) external;
     function onVexexAccountDeploy(address user, Callback.CallMeta meta) external view;
+    function oracle_executeMarketOrder(
+        address user,
+        uint32 request_key,
+        uint32 market_idx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType position_type,
+        uint128 asset_price,
+        Callback.CallMeta meta
+    ) external;
     function finish_requestMarketOrder(uint32 request_nonce, address user, uint32 request_key, Callback.CallMeta meta) external;
     function revert_executeMarketOrder(
-        address user, uint32 request_key, uint market_idx, uint128 collateral, uint128 position_size, PositionType position_type, Callback.CallMeta meta
+        address user, uint32 request_key, uint32 market_idx, uint128 collateral, uint128 position_size, PositionType position_type, Callback.CallMeta meta
     ) external;
     function finish_executeMarketOrder(
         address user,

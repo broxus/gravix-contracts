@@ -12,6 +12,7 @@ import "../../libraries/Errors.sol";
 import "../../interfaces/ICallbackReceiver.sol";
 import "../../interfaces/IVexexAccount.sol";
 import "./VexexVaultStorage.sol";
+import "../../OracleProxy.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 import {RPlatform as Platform} from "../../Platform.sol";
 
@@ -61,6 +62,22 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
         );
     }
 
+    function getCodes() external view responsible returns (
+        TvmCell _oracleProxyCode,
+        TvmCell _platformCode,
+        TvmCell _vexexAccountCode,
+        uint32 _vexexAccountVersion,
+        uint32 _vexexVaultVersion
+    ) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
+            oracleProxyCode,
+            platformCode,
+            vexexAccountCode,
+            vexexAccountVersion,
+            vexexVaultVersion
+        );
+    }
+
     function _sendCallbackOrGas(address callback_receiver, uint32 nonce, bool success, address send_gas_to) internal pure {
         if (nonce > 0) {
             if (success) {
@@ -97,7 +114,7 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
     }
 
     function encodeMarketOrderRequestPayload(
-        uint market_idx,
+        uint32 market_idx,
         PositionType position_type,
         uint32 leverage,
         uint128 expected_price,
@@ -113,7 +130,7 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
     function decodeMarketOrderRequestPayload(
         TvmCell action_payload
     ) public pure returns (
-        uint market_idx,
+        uint32 market_idx,
         PositionType position_type,
         uint32 leverage,
         uint128 expected_price,
@@ -122,7 +139,7 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
         TvmSlice slice = action_payload.toSlice();
         (
             market_idx, position_type, leverage, expected_price, max_slippage_rate
-        ) = slice.decode(uint, PositionType, uint32, uint128, uint32);
+        ) = slice.decode(uint32, PositionType, uint32, uint128, uint32);
     }
 
     function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
@@ -164,7 +181,13 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
 
     function getVexexAccountAddress(address user) public view responsible returns (address) {
         return { value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false } address(
-            tvm.hash(_buildInitData(_buildVexexAccountParams(user)))
+            tvm.hash(_buildVexexAccountInitData(_buildVexexAccountParams(user)))
+        );
+    }
+
+    function getOracleProxyAddress(address user, uint32 request_key) public view responsible returns (address) {
+        return { value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false } address(
+            tvm.hash(_buildOracleProxyInitData(user, request_key))
         );
     }
 
@@ -196,13 +219,26 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
         );
     }
 
+    function _buildOracleProxyInitData(address user, uint32 request_key) internal view returns (TvmCell) {
+        return tvm.buildStateInit({
+            contr: OracleProxy,
+            varInit: {
+                request_key: request_key,
+                user: user,
+                vault: address(this)
+            },
+            pubkey: 0,
+            code: oracleProxyCode
+        });
+    }
+
     function _buildVexexAccountParams(address user) internal pure returns (TvmCell) {
         TvmBuilder builder;
         builder.store(user);
         return builder.toCell();
     }
 
-    function _buildInitData(TvmCell _initialData) internal view returns (TvmCell) {
+    function _buildVexexAccountInitData(TvmCell _initialData) internal view returns (TvmCell) {
         return tvm.buildStateInit({
             contr: Platform,
             varInit: {
@@ -219,6 +255,12 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
     modifier onlyVexexAccount(address user) {
         address vex_account_addr = getVexexAccountAddress(user);
         require (msg.sender == vex_account_addr, Errors.NOT_VEX_ACCOUNT);
+        _;
+    }
+
+    modifier onlyOracleProxy(address user, uint32 request_key) {
+        address proxy = getOracleProxyAddress(user, request_key);
+        require (msg.sender == proxy, Errors.NOT_ORACLE_PROXY);
         _;
     }
 

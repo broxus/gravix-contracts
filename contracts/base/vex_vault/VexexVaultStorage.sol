@@ -15,6 +15,7 @@ abstract contract VexexVaultStorage is IVexexVault {
     address stvUsdt;
     address stvUsdtWallet;
 
+    TvmCell oracleProxyCode;
     TvmCell platformCode;
     TvmCell vexexAccountCode;
     uint32 vexexAccountVersion;
@@ -52,11 +53,13 @@ abstract contract VexexVaultStorage is IVexexVault {
     enum DistributionSchema { Pool, InsuranceFund }
 
     uint32 marketCount = 0;
-    mapping (uint => Market) markets;
+    mapping (uint32 => Market) markets;
     // 2.key - week day, if day is not presented in schedule - market doesnt work
-    mapping (uint => mapping (uint8 => TimeInterval)) workingHours;
+    mapping (uint32 => mapping (uint8 => TimeInterval)) workingHours;
     // 2.key - weekend interval start timestamp
-    mapping (uint => mapping (uint32 => DateTimeInterval)) weekends;
+    mapping (uint32 => mapping (uint32 => DateTimeInterval)) weekends;
+
+    mapping (uint32 => Oracle) oracles;
 
     uint32 request_nonce = 0;
     mapping (uint32 => PendingMarketOrderRequest) pending_market_requests;

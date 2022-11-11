@@ -68,7 +68,7 @@ abstract contract VexexVaultUpgradable is VexexVaultHelpers {
         constructor_params.store(vexexAccountVersion); // 32
 
         return new Platform{
-            stateInit: _buildInitData(_buildVexexAccountParams(user)),
+            stateInit: _buildVexexAccountInitData(_buildVexexAccountParams(user)),
             value: Gas.VEXEX_ACCOUNT_DEPLOY_VALUE
         }(vexexAccountCode, constructor_params.toCell(), user);
     }

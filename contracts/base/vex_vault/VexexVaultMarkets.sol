@@ -14,7 +14,7 @@ import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
 abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
-    function marketOpen(uint market_idx) public view returns (bool open) {
+    function marketOpen(uint32 market_idx) public view returns (bool open) {
         Market _market = markets[market_idx];
 
         if (_market.paused) return false;
@@ -45,6 +45,7 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
         return true;
     }
 
+    // TODO: oracle data
     function addMarkets(
         MarketConfig[] new_markets,
         Callback.CallMeta meta
@@ -53,7 +54,6 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
             require (validateMarketConfig(_market_config), Errors.BAD_INPUT);
 
             Market new_market;
-            new_market.externalId = _market_config.externalId;
             new_market.maxTotalLongs = _market_config.maxLongs;
             new_market.maxTotalShorts = _market_config.maxShorts;
             new_market.noiWeight = _market_config.noiWeight;
@@ -71,14 +71,13 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function setMarketsConfigs(
-        mapping (uint => MarketConfig) new_configs, Callback.CallMeta meta
+        mapping (uint32 => MarketConfig) new_configs, Callback.CallMeta meta
     ) external onlyOwner reserveAndSuccessCallback(meta) {
-        for ((uint market_idx, MarketConfig config) : new_configs) {
+        for ((uint32 market_idx, MarketConfig config) : new_configs) {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
             require (validateMarketConfig(config), Errors.BAD_INPUT);
 
             Market market = markets[market_idx];
-            market.externalId = config.externalId;
             market.maxTotalLongs = config.maxLongs;
             market.maxTotalShorts = config.maxShorts;
             market.noiWeight = config.noiWeight;
@@ -110,9 +109,9 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function setMarketsPause(
-        mapping (uint => bool) pause, Callback.CallMeta meta
+        mapping (uint32 => bool) pause, Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for ((uint market_idx, bool new_state) : pause) {
+        for ((uint32 market_idx, bool new_state) : pause) {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
 
             markets[market_idx].paused = new_state;
@@ -121,16 +120,16 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function setMarketsWorkingHours(
-        mapping (uint => mapping (uint8 => TimeInterval)) market_to_working_hours,
+        mapping (uint32 => mapping (uint8 => TimeInterval)) market_to_working_hours,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for ((uint market_idx, mapping (uint8 => TimeInterval) working_hours) : market_to_working_hours) {
+        for ((uint32 market_idx, mapping (uint8 => TimeInterval) working_hours) : market_to_working_hours) {
             _setMarketWorkingHours(market_idx, working_hours, meta);
         }
     }
 
     function setMarketsCommonWorkingHours(
-        uint[] market_idx,
+        uint32[] market_idx,
         mapping (uint8 => TimeInterval) working_hours,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
@@ -140,7 +139,7 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function _setMarketWorkingHours(
-        uint market_idx,
+        uint32 market_idx,
         mapping (uint8 => TimeInterval) working_hours,
         Callback.CallMeta meta
     ) internal {
@@ -156,7 +155,7 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function addMarketsWeekends(
-        uint[] market_idx,
+        uint32[] market_idx,
         DateTimeInterval[] new_weekends,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
@@ -168,7 +167,7 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function addMarketsCommonWeekends(
-        uint[] market_idx,
+        uint32[] market_idx,
         DateTimeInterval new_weekends,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
@@ -178,7 +177,7 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
 
     function _addMarketWeekends(
-        uint market_idx,
+        uint32 market_idx,
         DateTimeInterval _new_weekend,
         Callback.CallMeta meta
     ) internal {
@@ -208,7 +207,7 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
     }
     
     function clearMarketsWeekends(
-        uint[] market_idx, Callback.CallMeta meta
+        uint32[] market_idx, Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for (uint i = 0; i < market_idx.length; i++) {
             delete weekends[market_idx[i]];
@@ -224,19 +223,27 @@ abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
         return _dateTimeToTimestamp(val.to) > _dateTimeToTimestamp(val.from);
     }
 
-    function getMarketSchedule(uint market_idx) external view responsible returns (mapping (uint8 => TimeInterval)) {
+    function getMarketSchedule(uint32 market_idx) external view responsible returns (mapping (uint8 => TimeInterval)) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }workingHours[market_idx];
     }
 
-    function getMarketWeekends(uint market_idx) external view responsible returns (mapping (uint32 => DateTimeInterval)) {
+    function getMarketWeekends(uint32 market_idx) external view responsible returns (mapping (uint32 => DateTimeInterval)) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }weekends[market_idx];
     }
 
-    function getMarket(uint market_idx) external view responsible returns (Market) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }markets[market_idx];
+    function getMarket(uint32 market_idx) external view responsible returns (Market _market) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } markets[market_idx];
     }
 
-    function getMarkets() external view responsible returns (mapping (uint => Market) _markets) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }markets;
+    function getMarkets() external view responsible returns (mapping (uint32 => Market) _markets) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } markets;
+    }
+
+    function getOracles() external view responsible returns (mapping (uint32 => Oracle) _oracles) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracles;
+    }
+
+    function getOracle(uint32 market_idx) external view responsible returns (Oracle _oracle) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracles[market_idx];
     }
 }

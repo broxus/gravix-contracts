@@ -38,7 +38,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
 
     function process_executeMarketOrder(
         uint32 request_key,
-        uint market_idx,
+        uint32 market_idx,
         uint128 position_size,
         IVexexVault.PositionType position_type,
         uint128 asset_price,
@@ -49,13 +49,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         MarketOrderRequest request = marketOrderRequests[request_key];
         uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
-        // TODO: recheck what we got from oracle?
-        if (
-            !marketOrderRequests.exists(request_key) ||
-            request.marketIdx != market_idx ||
-            request.positionType != position_type ||
-            position_size != leveraged_position
-        ) {
+        if (!marketOrderRequests.exists(request_key)) {
             IVexexVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, market_idx, 0, position_size, position_type, meta
             );
@@ -120,7 +114,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
     function process_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        uint market_idx,
+        uint32 market_idx,
         int256 accLongFundingPerShare,
         int256 accShortFundingPerShare,
         Callback.CallMeta meta

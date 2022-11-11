@@ -22,7 +22,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
     ) internal returns (bool request_saved) {
         (
-            uint market_idx,
+            uint32 market_idx,
             PositionType position_type,
             uint32 leverage,
             uint128 expected_price,
@@ -36,7 +36,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         return true;
     }
 
-    function validateOrderRequestParams(uint market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+    function validateOrderRequestParams(uint32 market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
         if (!markets.exists(market_idx)) return false;
         if (leverage > markets[market_idx].maxLeverage) return false;
         if (max_slippage > HUNDRED_PERCENT) return false;
@@ -45,7 +45,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
 
     function _marketOrderRequest(
         address user,
-        uint market_idx,
+        uint32 market_idx,
         PositionType position_type,
         uint128 collateral,
         uint32 leverage,
@@ -99,6 +99,32 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
             request.maxSlippageRate,
             request_key
         );
+
+        // TODO: call oracle
+    }
+    // ----------------------------------------------------------------------------------
+    // --------------------------- ORACLE REQUEST ---------------------------------------
+    // ----------------------------------------------------------------------------------
+    function _sendOracleRequest(
+        address user,
+        uint32 request_key,
+        uint32 market_idx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType position_type,
+        Callback.CallMeta meta
+    ) internal view {
+        OracleType price_source = markets[market_idx].priceSource;
+        Oracle oracle = oracles[market_idx];
+
+        new OracleProxy{
+            stateInit: _buildOracleProxyInitData(user, request_key),
+            value: 0,
+            flag: MsgFlag.ALL_NOT_RESERVED
+        }(
+            usdt, market_idx, collateral, leverage,
+            position_type, price_source, oracle, meta
+        );
     }
 
     // ----------------------------------------------------------------------------------
@@ -106,7 +132,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     // ----------------------------------------------------------------------------------
     function getDynamicSpread(
         uint128 position_size,
-        uint market_idx,
+        uint32 market_idx,
         PositionType position_type
     ) public view responsible returns (uint64 dynamic_spread) {
         uint128 new_noi;
@@ -124,17 +150,19 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;
     }
 
-    // TODO: authorization for oracle
-    function executeOrder(
+    function oracle_executeMarketOrder(
         address user,
         uint32 request_key,
-        uint market_idx,
-        uint128 position_size,
+        uint32 market_idx,
+        uint128 collateral,
+        uint32 leverage,
         PositionType position_type,
         uint128 asset_price,
         Callback.CallMeta meta
-    ) external onlyActive reserve { // TODO: remove active ?
+    ) external override onlyOracleProxy(user, request_key) reserve {
+        uint128 position_size = math.muldiv(collateral, leverage, LEVERAGE_BASE);
         uint64 dynamic_spread = getDynamicSpread(position_size, market_idx, position_type);
+
         uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size, position_type);
 
         address vex_acc = getVexexAccountAddress(user);
@@ -161,7 +189,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     function revert_executeMarketOrder(
         address user,
         uint32 request_key,
-        uint market_idx,
+        uint32 market_idx,
         uint128 collateral,
         uint128 position_size,
         PositionType position_type,
@@ -240,7 +268,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     // TODO: force close admin method
 
     // TODO: add work with oracle
-    function closePosition(address user, uint32 position_key, uint market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive reserve {
+    function closePosition(address user, uint32 position_key, uint32 market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
         require (marketOpen(market_idx), Errors.MARKET_CLOSED);
 
@@ -301,7 +329,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- POSITION LIMITS --------------------------------------
     // ----------------------------------------------------------------------------------
-    function checkPositionAllowed(uint market_idx, uint128 position_size, PositionType position_type) public view returns (uint16) {
+    function checkPositionAllowed(uint32 market_idx, uint128 position_size, PositionType position_type) public view returns (uint16) {
         (,,,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size, position_type);
         return _error;
     }
@@ -314,7 +342,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
 
     // @dev Will not apply changes if _error > 0
     function _addPositionToMarketOrReturnErr(
-        uint market_idx, uint128 position_size, PositionType position_type
+        uint32 market_idx, uint128 position_size, PositionType position_type
     ) internal returns (uint16) {
         (
             Market _market,
@@ -333,7 +361,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     }
 
     function _calculatePositionImpactAndCheckAllowed(
-        uint market_idx, uint128 position_size, PositionType position_type
+        uint32 market_idx, uint128 position_size, PositionType position_type
     ) internal view returns (Market _market, uint128 _totalLongs, uint128 _totalShorts, uint128 _totalNOI, uint16 _error) {
         (
             _market,
@@ -349,7 +377,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     }
 
     function _calculatePositionImpact(
-        uint market_idx, uint128 position_size, PositionType position_type
+        uint32 market_idx, uint128 position_size, PositionType position_type
     ) internal view returns (Market _market, uint128 _totalLongs, uint128 _totalShorts, uint128 _totalNOI) {
         _market = markets[market_idx];
         _totalLongs = totalLongs;
@@ -372,7 +400,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         if (noi_after < noi_before) _totalNOI -= math.muldiv(noi_before - noi_after, _market.noiWeight, WEIGHT_BASE);
     }
 
-    function _removePositionFromMarket(uint market_idx, uint128 position_size, PositionType position_type) internal {
+    function _removePositionFromMarket(uint32 market_idx, uint128 position_size, PositionType position_type) internal {
         Market _market = markets[market_idx];
 
         uint128 noi_before = _marketNOI(_market);
@@ -395,7 +423,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDINGS ---------------------------------------------
     // ----------------------------------------------------------------------------------
-    function _updateFunding(uint market_idx) internal returns (int256 accLongFundingPerShare, int256 accShortFundingPerShare) {
+    function _updateFunding(uint32 market_idx) internal returns (int256 accLongFundingPerShare, int256 accShortFundingPerShare) {
         Market _market = markets[market_idx];
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
@@ -406,7 +434,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         return (_market.accLongFundingPerShare, _market.accShortFundingPerShare);
     }
 
-    function getUpdatedFunding(uint[] market_idx) public view returns (int256[] accLongFundingPerShare, int256[] accShortFundingPerShare) {
+    function getUpdatedFunding(uint32[] market_idx) public view returns (int256[] accLongFundingPerShare, int256[] accShortFundingPerShare) {
         accLongFundingPerShare = new int256[](market_idx.length);
         accShortFundingPerShare = new int256[](market_idx.length);
         for (uint i = 0; i < market_idx.length; i++) {
@@ -430,7 +458,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     }
 
     // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
-    function getFundingRates(uint market_idx) public view returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
+    function getFundingRates(uint32 market_idx) public view returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
         return _getFundingRates(markets[market_idx]);
     }
 

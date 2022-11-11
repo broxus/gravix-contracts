@@ -7,7 +7,7 @@ import "./IVexexVault.sol";
 
 interface IVexexAccount {
     struct MarketOrderRequest {
-        uint marketIdx;
+        uint32 marketIdx;
         IVexexVault.PositionType positionType;
         uint128 collateral;
         uint128 expectedPrice;
@@ -21,7 +21,7 @@ interface IVexexAccount {
     }
 
     struct Position {
-        uint marketIdx;
+        uint32 marketIdx;
         IVexexVault.PositionType positionType;
         uint128 initialCollateral;
         uint128 openFee; // amount of usdt taken when position was opened
@@ -37,7 +37,7 @@ interface IVexexAccount {
 
 
     struct PositionView {
-        uint marketIdx;
+        uint32 marketIdx;
         IVexexVault.PositionType positionType;
         uint128 initialCollateral;
         uint128 positionSize;
@@ -61,7 +61,7 @@ interface IVexexAccount {
     function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
     function process_executeMarketOrder(
         uint32 request_key,
-        uint market_idx,
+        uint32 market_idx,
         uint128 position_size,
         IVexexVault.PositionType position_type,
         uint128 asset_price,
@@ -72,7 +72,7 @@ interface IVexexAccount {
     function process_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        uint market_idx,
+        uint32 market_idx,
         int256 accLongFundingPerShare,
         int256 accShortFundingPerShare,
         Callback.CallMeta meta
