@@ -141,7 +141,7 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
             market_idx, position_type, leverage, expected_price, max_slippage_rate
         ) = slice.decode(uint32, PositionType, uint32, uint128, uint32);
     }
-
+    
     function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
         TvmCell empty;
         return encodeTokenTransferPayload(Action.LiquidityDeposit, nonce, call_id, empty);

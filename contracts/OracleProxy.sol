@@ -31,7 +31,6 @@ contract OracleProxy is IOnRateCallback {
 
     uint128 constant DEX_ORACLE_REQUEST_VALUE = 0.1 ever;
     uint128 constant SCALING_FACTOR = 10**18;
-    uint128 constant USDT_DECIMALS = 10**6;
 
     constructor (
         address _usdt,
@@ -105,6 +104,7 @@ contract OracleProxy is IOnRateCallback {
 
         pair_reserves[msg.sender] = _reserves;
 
+        // TODO: rewrite on prices instead of reserves. This require correct work with decimals in oracles
         if (pair_reserves.keys().length == dex.path.length) {
             // ok, we got all reserves we need
             address target_token = dex.targetToken;
@@ -127,9 +127,9 @@ contract OracleProxy is IOnRateCallback {
             }
             // path should resolve in USDT
             require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
-            // convert to USDT decimals
-            // USDT has less decimals then common tokens, so that we need to multiply by difference to get correct price
-            price = math.muldiv(price, USDT_DECIMALS * 10**3, SCALING_FACTOR);
+            // convert to final price using standard token decimals
+            // we assume that
+            price = math.muldiv(price, 10**9, SCALING_FACTOR);
             _sendCallback(price);
         }
     }
