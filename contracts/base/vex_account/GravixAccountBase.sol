@@ -7,15 +7,15 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
-import "../../interfaces/IVexexVault.sol";
-import "./VexexAccountHelpers.sol";
+import "../../interfaces/IGravixVault.sol";
+import "./GravixAccountHelpers.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
-abstract contract VexexAccountBase is VexexAccountHelpers {
+abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_requestMarketOrder(
-        IVexexVault.PendingMarketOrderRequest pending_request
-    ) external override onlyVexexVault reserve {
+        IGravixVault.PendingMarketOrderRequest pending_request
+    ) external override onlyGravixVault reserve {
         _nonce += 1;
         marketOrderRequests[_nonce] = MarketOrderRequest(
             pending_request.marketIdx,
@@ -31,7 +31,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
             pending_request.borrowBaseRatePerHour
         );
 
-        IVexexVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             pending_request, _nonce
         );
     }
@@ -40,17 +40,17 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         uint32 request_key,
         uint32 market_idx,
         uint128 position_size,
-        IVexexVault.PositionType position_type,
+        IGravixVault.PositionType position_type,
         uint128 asset_price,
         uint64 dynamic_spread,
         int256 accFundingPerShare,
         Callback.CallMeta meta
-    ) external override onlyVexexVault reserve {
+    ) external override onlyGravixVault reserve {
         MarketOrderRequest request = marketOrderRequests[request_key];
         uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
         if (!marketOrderRequests.exists(request_key)) {
-            IVexexVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, market_idx, 0, position_size, position_type, meta
             );
             return;
@@ -66,7 +66,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         uint128 open_price = applyOpenSpread(asset_price, request.positionType, request.baseSpreadRate + dynamic_spread);
 
         if (open_price < min_price || open_price > max_price) {
-            IVexexVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, market_idx, request.collateral, position_size, position_type, meta
             );
             return;
@@ -90,14 +90,14 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         );
         positions[request_key] = opened_position;
 
-        IVexexVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, request_key, opened_position,  meta
         );
     }
 
-    function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external override onlyVexexVault reserve {
+    function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external override onlyGravixVault reserve {
         if (!marketOrderRequests.exists(request_key)) {
-            IVexexVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, meta
             );
             return;
@@ -106,7 +106,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         MarketOrderRequest _request = marketOrderRequests[request_key];
         delete marketOrderRequests[request_key];
 
-        IVexexVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, request_key, _request.collateral, meta
         );
     }
@@ -118,9 +118,9 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         int256 accLongFundingPerShare,
         int256 accShortFundingPerShare,
         Callback.CallMeta meta
-    ) external override onlyVexexVault reserve {
+    ) external override onlyGravixVault reserve {
         if (!positions.exists(position_key) || positions[position_key].marketIdx != market_idx) {
-            IVexexVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, position_key, meta
             );
             return;
@@ -129,7 +129,7 @@ abstract contract VexexAccountBase is VexexAccountHelpers {
         PositionView position_view = getPositionView(position_key, asset_price, accLongFundingPerShare, accShortFundingPerShare);
         delete positions[position_key];
 
-        IVexexVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, position_key, position_view, meta
         );
     }

@@ -2,7 +2,7 @@ pragma ever-solidity ^0.62.0;
 
 
 import "./interfaces/IOnRateCallback.sol";
-import "./interfaces/IVexexVault.sol";
+import "./interfaces/IGravixVault.sol";
 import "./interfaces/ITWAPOracle.sol";
 import "./libraries/Callback.sol";
 import "./libraries/Errors.sol";
@@ -20,9 +20,9 @@ contract OracleProxy is IOnRateCallback {
     uint32 market_idx;
     uint128 collateral;
     uint32 leverage;
-    IVexexVault.PositionType position_type;
-    IVexexVault.OracleType price_source;
-    IVexexVault.Oracle oracle;
+    IGravixVault.PositionType position_type;
+    IGravixVault.OracleType price_source;
+    IGravixVault.Oracle oracle;
     Callback.CallMeta meta;
 
     // dex oracle utility staff
@@ -37,9 +37,9 @@ contract OracleProxy is IOnRateCallback {
         uint32 _market_idx,
         uint128 _collateral,
         uint32 _leverage,
-        IVexexVault.PositionType _position_type,
-        IVexexVault.OracleType _price_source,
-        IVexexVault.Oracle _oracle,
+        IGravixVault.PositionType _position_type,
+        IGravixVault.OracleType _price_source,
+        IGravixVault.Oracle _oracle,
         Callback.CallMeta _meta
     ) public {
         require (msg.sender == vault, Errors.BAD_SENDER);
@@ -57,7 +57,7 @@ contract OracleProxy is IOnRateCallback {
     }
 
     function _collectPrice() internal view {
-        if (price_source == IVexexVault.OracleType.ChainlinkProxy) {
+        if (price_source == IGravixVault.OracleType.ChainlinkProxy) {
             _collectPriceFromChainlink();
         } else {
             _collectPriceFromDex();
@@ -65,10 +65,10 @@ contract OracleProxy is IOnRateCallback {
     }
 
     function _collectPriceFromDex() internal view {
-        IVexexVault.DexOracle dex = oracle.dex;
+        IGravixVault.DexOracle dex = oracle.dex;
 
         for (uint i = 0; i < dex.path.length; i++) {
-            IVexexVault.Pair pair = dex.path[i];
+            IGravixVault.Pair pair = dex.path[i];
             TvmCell request_payload = abi.encode(i);
 
             ITWAPOracle(pair.addr).rate{value: DEX_ORACLE_REQUEST_VALUE}(
@@ -80,7 +80,7 @@ contract OracleProxy is IOnRateCallback {
     function _collectPriceFromChainlink() internal view {}
 
     function _sendCallback(uint128 price) internal view {
-        IVexexVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             request_key,
             market_idx,
@@ -99,7 +99,7 @@ contract OracleProxy is IOnRateCallback {
         TvmCell _payload
     ) external override {
         uint idx = abi.decode(_payload, (uint));
-        IVexexVault.DexOracle dex = oracle.dex;
+        IGravixVault.DexOracle dex = oracle.dex;
         require (msg.sender == dex.path[idx].addr, Errors.BAD_SENDER);
 
         pair_reserves[msg.sender] = _reserves;
@@ -110,7 +110,7 @@ contract OracleProxy is IOnRateCallback {
             address target_token = dex.targetToken;
             uint128 price = SCALING_FACTOR; // 1 * 10**18
 
-            for (IVexexVault.Pair pair : dex.path) {
+            for (IGravixVault.Pair pair : dex.path) {
                 uint128 pair_price;
                 uint128[] reserves = pair_reserves[pair.addr];
 

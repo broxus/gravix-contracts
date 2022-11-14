@@ -8,13 +8,13 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
-import "../../interfaces/IVexexAccount.sol";
-import "./VexexVaultMarkets.sol";
+import "../../interfaces/IGravixAccount.sol";
+import "./GravixVaultMarkets.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
 
-abstract contract VexexVaultOrders is VexexVaultMarkets {
+abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER REQUEST HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
@@ -71,14 +71,14 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
             meta
         );
 
-        address vex_acc = getVexexAccountAddress(user);
-        IVexexAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(new_request);
+        address vex_acc = getGravixAccountAddress(user);
+        IGravixAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(new_request);
     }
 
     function finish_requestMarketOrder(
         PendingMarketOrderRequest request,
         uint32 request_key
-    ) external override onlyVexexAccount(request.user) reserve {
+    ) external override onlyGravixAccount(request.user) reserve {
         collateralReserve += request.collateral;
 
         emit MarketOrderRequest(
@@ -168,12 +168,12 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
 
         uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size, position_type);
 
-        address vex_acc = getVexexAccountAddress(user);
+        address vex_acc = getGravixAccountAddress(user);
         if (_error == 0) {
             (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
             int256 funding = position_type == PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
 
-            IVexexAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 request_key,
                 market_idx,
                 position_size,
@@ -185,7 +185,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
             );
         } else {
             // order cant be executed now, some limits reached and etc.
-            IVexexAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
+            IGravixAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
         }
     }
 
@@ -197,7 +197,7 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
         uint128 position_size,
         PositionType position_type,
         Callback.CallMeta meta
-    ) external override onlyVexexAccount(user) reserve {
+    ) external override onlyGravixAccount(user) reserve {
         emit MarketOrderExecutionRevert(meta.call_id, user, request_key);
 
         _removePositionFromMarket(market_idx, position_size, position_type);
@@ -217,9 +217,9 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     function finish_executeMarketOrder(
         address user,
         uint32 request_key,
-        IVexexAccount.Position opened_position,
+        IGravixAccount.Position opened_position,
         Callback.CallMeta meta
-    ) external override onlyVexexAccount(user) reserveAndSuccessCallback(meta) {
+    ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
         _collectOpenFee(opened_position.openFee);
         collateralReserve -= opened_position.openFee;
 
@@ -246,19 +246,19 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
     function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
-        address vex_acc = getVexexAccountAddress(user);
-        IVexexAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
+        address vex_acc = getGravixAccountAddress(user);
+        IGravixAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
     }
 
     function revert_cancelMarketOrder(
         address user, uint32 request_key, Callback.CallMeta meta
-    ) external view override onlyVexexAccount(user) reserveAndFailCallback(meta) {
+    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
         emit CancelMarketOrderRevert(meta.call_id, user, request_key);
     }
 
     function finish_cancelMarketOrder(
         address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta
-    ) external override onlyVexexAccount(user) reserve {
+    ) external override onlyGravixAccount(user) reserve {
         collateralReserve -= collateral;
 
         emit CancelMarketOrder(meta.call_id, user, request_key);
@@ -277,8 +277,8 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
 
         (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
 
-        address vex_acc = getVexexAccountAddress(user);
-        IVexexAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        address vex_acc = getGravixAccountAddress(user);
+        IGravixAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key,
             asset_price,
             market_idx,
@@ -290,13 +290,13 @@ abstract contract VexexVaultOrders is VexexVaultMarkets {
 
     function revert_closePosition(
         address user, uint32 position_key, Callback.CallMeta meta
-    ) external view override onlyVexexAccount(user) reserveAndFailCallback(meta) {
+    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
         emit ClosePositionRevert(meta.call_id, user, position_key);
     }
 
     function finish_closePosition(
-        address user, uint32 position_key, IVexexAccount.PositionView position_view, Callback.CallMeta meta
-    ) external override onlyVexexAccount(user) reserve {
+        address user, uint32 position_key, IGravixAccount.PositionView position_view, Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;

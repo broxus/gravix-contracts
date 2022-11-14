@@ -8,12 +8,12 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
-import "../../interfaces/IVexexAccount.sol";
-import "./VexexVaultLiquidityPool.sol";
+import "../../interfaces/IGravixAccount.sol";
+import "./GravixVaultLiquidityPool.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
-abstract contract VexexVaultMarkets is VexexVaultLiquidityPool {
+abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
     function marketOpen(uint32 market_idx) public view returns (bool open) {
         Market _market = markets[market_idx];
 

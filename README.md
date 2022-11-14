@@ -1,4 +1,4 @@
-# vexex-contracts
+# gravix-contracts
 
 
 
@@ -15,14 +15,14 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
-git remote add origin https://gitlab.broxus.com/vexex/vexex-contracts.git
+git remote add origin https://gitlab.broxus.com/gravix/gravix-contracts.git
 git branch -M master
 git push -uf origin master
 ```
 
 ## Integrate with your tools
 
-- [ ] [Set up project integrations](https://gitlab.broxus.com/vexex/vexex-contracts/-/settings/integrations)
+- [ ] [Set up project integrations](https://gitlab.broxus.com/gravix/gravix-contracts/-/settings/integrations)
 
 ## Collaborate with your team
 

@@ -1,7 +1,7 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "./VexexAccountStorage.sol";
+import "./GravixAccountStorage.sol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
@@ -9,20 +9,20 @@ import "../../libraries/PlatformTypes.sol";
 import "../../libraries/Errors.sol";
 
 
-abstract contract VexexAccountHelpers is VexexAccountStorage {
+abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getDetails() external view responsible returns (uint32 _currentVersion, address _vault, address _user) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user);
     }
 
-    function applyOpenSpread(uint128 price, IVexexVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
-        new_price = _type == IVexexVault.PositionType.Long ?
+    function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
+        new_price = _type == IGravixVault.PositionType.Long ?
             math.muldiv(price, (HUNDRED_PERCENT + spread), HUNDRED_PERCENT) :
             math.muldiv(price, (HUNDRED_PERCENT - spread), HUNDRED_PERCENT);
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
     }
 
-    function applyCloseSpread(uint128 price, IVexexVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
-        new_price = _type == IVexexVault.PositionType.Long ?
+    function applyCloseSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
+        new_price = _type == IGravixVault.PositionType.Long ?
             math.muldiv(price, (HUNDRED_PERCENT - spread), HUNDRED_PERCENT) :
             math.muldiv(price, (HUNDRED_PERCENT + spread), HUNDRED_PERCENT);
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
@@ -48,7 +48,7 @@ abstract contract VexexAccountHelpers is VexexAccountStorage {
         int256 accShortFundingPerShare
     ) public view responsible returns (PositionView position_view) {
         Position position = positions[position_key];
-        bool is_long = position.positionType == IVexexVault.PositionType.Long;
+        bool is_long = position.positionType == IGravixVault.PositionType.Long;
 
         uint128 collateral = position.initialCollateral - position.openFee;
         uint128 leveraged_position = math.muldiv(collateral, position.leverage, LEVERAGE_BASE);
@@ -132,7 +132,7 @@ abstract contract VexexAccountHelpers is VexexAccountStorage {
         _;
     }
 
-    modifier onlyVexexVault() {
+    modifier onlyGravixVault() {
         require (msg.sender == vault, Errors.NOT_VAULT);
         _;
     }

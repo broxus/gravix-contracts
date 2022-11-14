@@ -10,14 +10,14 @@ import "../../libraries/Callback.sol";
 import "../../libraries/PlatformTypes.sol";
 import "../../libraries/Errors.sol";
 import "../../interfaces/ICallbackReceiver.sol";
-import "../../interfaces/IVexexAccount.sol";
-import "./VexexVaultStorage.sol";
+import "../../interfaces/IGravixAccount.sol";
+import "./GravixVaultStorage.sol";
 import "../../OracleProxy.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 import {RPlatform as Platform} from "../../Platform.sol";
 
 
-abstract contract VexexVaultHelpers is VexexVaultStorage {
+abstract contract GravixVaultHelpers is GravixVaultStorage {
     function getDetails() external view responsible returns (
         address _owner,
         address _marketManager,
@@ -65,16 +65,16 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
     function getCodes() external view responsible returns (
         TvmCell _oracleProxyCode,
         TvmCell _platformCode,
-        TvmCell _vexexAccountCode,
-        uint32 _vexexAccountVersion,
-        uint32 _vexexVaultVersion
+        TvmCell _GravixAccountCode,
+        uint32 _GravixAccountVersion,
+        uint32 _GravixVaultVersion
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             oracleProxyCode,
             platformCode,
-            vexexAccountCode,
-            vexexAccountVersion,
-            vexexVaultVersion
+            GravixAccountCode,
+            GravixAccountVersion,
+            GravixVaultVersion
         );
     }
 
@@ -95,11 +95,11 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
     }
 
     function _setupTokenWallets() internal view {
-        ITokenRoot(usdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexexVault.receiveTokenWalletAddress }(
+        ITokenRoot(usdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
-        ITokenRoot(stvUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IVexexVault.receiveTokenWalletAddress }(
+        ITokenRoot(stvUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
@@ -179,9 +179,9 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
         }
     }
 
-    function getVexexAccountAddress(address user) public view responsible returns (address) {
+    function getGravixAccountAddress(address user) public view responsible returns (address) {
         return { value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false } address(
-            tvm.hash(_buildVexexAccountInitData(_buildVexexAccountParams(user)))
+            tvm.hash(_buildGravixAccountInitData(_buildGravixAccountParams(user)))
         );
     }
 
@@ -232,18 +232,18 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
         });
     }
 
-    function _buildVexexAccountParams(address user) internal pure returns (TvmCell) {
+    function _buildGravixAccountParams(address user) internal pure returns (TvmCell) {
         TvmBuilder builder;
         builder.store(user);
         return builder.toCell();
     }
 
-    function _buildVexexAccountInitData(TvmCell _initialData) internal view returns (TvmCell) {
+    function _buildGravixAccountInitData(TvmCell _initialData) internal view returns (TvmCell) {
         return tvm.buildStateInit({
             contr: Platform,
             varInit: {
                 root: address(this),
-                platformType: PlatformTypes.VexexAccount,
+                platformType: PlatformTypes.GravixAccount,
                 initialData: _initialData,
                 platformCode: platformCode
             },
@@ -252,8 +252,8 @@ abstract contract VexexVaultHelpers is VexexVaultStorage {
         });
     }
 
-    modifier onlyVexexAccount(address user) {
-        address vex_account_addr = getVexexAccountAddress(user);
+    modifier onlyGravixAccount(address user) {
+        address vex_account_addr = getGravixAccountAddress(user);
         require (msg.sender == vex_account_addr, Errors.NOT_VEX_ACCOUNT);
         _;
     }

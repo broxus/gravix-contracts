@@ -4,12 +4,12 @@ pragma ever-solidity ^0.62.0;
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
-import "../../interfaces/IVexexAccount.sol";
-import "./VexexVaultOrders.sol";
+import "../../interfaces/IGravixAccount.sol";
+import "./GravixVaultOrders.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
 
 
-abstract contract VexexVaultBase is VexexVaultOrders {
+abstract contract GravixVaultBase is GravixVaultOrders {
     function transferOwnership(address new_owner, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         owner = new_owner;
         emit NewOwner(meta.call_id, new_owner);
@@ -106,12 +106,12 @@ abstract contract VexexVaultBase is VexexVaultOrders {
 
         uint32 functionId = slice.decode(uint32);
         // if processing failed - contract was not deployed. Deploy and try again
-        if (functionId == tvm.functionId(IVexexAccount.process_requestMarketOrder)) {
+        if (functionId == tvm.functionId(IGravixAccount.process_requestMarketOrder)) {
             tvm.rawReserve(_reserve(), 0);
             PendingMarketOrderRequest request = slice.decode(PendingMarketOrderRequest);
 
-            address vex_acc = deployVexexAccount(request.user);
-            IVexexAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
+            address vex_acc = deployGravixAccount(request.user);
+            IGravixAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
         }
     }
 }

@@ -7,19 +7,19 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "./libraries/Gas.sol";
 import "./libraries/Callback.sol";
-import "./base/vex_account/VexexAccountBase.sol";
+import "./base/vex_account/GravixAccountBase.sol";
 
 
-contract VexexAccount is VexexAccountBase {
+contract GravixAccount is GravixAccountBase {
     // Cant be deployed directly
     constructor() public { revert(); }
 
-    function onDeployRetry(TvmCell, TvmCell, address sendGasTo) external view onlyVexexVault functionID(0x23dc4360){
+    function onDeployRetry(TvmCell, TvmCell, address sendGasTo) external view onlyGravixVault functionID(0x23dc4360){
         tvm.rawReserve(_reserve(), 0);
         sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
     }
 
-    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external override onlyVexexVault {
+    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external override onlyGravixVault {
         if (new_version == currentVersion) {
             tvm.rawReserve(_reserve(), 0);
             meta.send_gas_to.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
@@ -73,7 +73,7 @@ contract VexexAccount is VexexAccountBase {
         TvmSlice params = s.loadRefAsSlice();
         (currentVersion,) = params.decode(uint32, uint32);
 
-        IVexexVault(vault).onVexexAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, Callback.CallMeta(0, 0, send_gas_to)
         );
     }

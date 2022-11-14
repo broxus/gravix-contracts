@@ -20,12 +20,12 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "./libraries/Gas.sol";
 import "./libraries/Callback.sol";
-import "./base/vex_vault/VexexVaultBase.sol";
-import "./interfaces/IVexexAccount.sol";
+import "./base/vex_vault/GravixVaultBase.sol";
+import "./interfaces/IGravixAccount.sol";
 import {DateTime as DateTimeLib} from "./libraries/DateTime.sol";
 
 
-contract VexexVault is VexexVaultBase {
+contract GravixVault is GravixVaultBase {
     constructor(address _owner, address _market_manager, address _usdt, address _stvUsdt) public {
         require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
         require (tvm.pubkey() == msg.pubkey(), Errors.WRONG_PUBKEY);

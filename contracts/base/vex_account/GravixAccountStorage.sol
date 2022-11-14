@@ -1,11 +1,11 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "../../interfaces/IVexexAccount.sol";
+import "../../interfaces/IGravixAccount.sol";
 
 
 
-abstract contract VexexAccountStorage is IVexexAccount {
+abstract contract GravixAccountStorage is IGravixAccount {
     uint32 currentVersion;
 
     address vault;

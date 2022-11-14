@@ -1,10 +1,10 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "../../interfaces/IVexexVault.sol";
+import "../../interfaces/IGravixVault.sol";
 
 
-abstract contract VexexVaultStorage is IVexexVault {
+abstract contract GravixVaultStorage is IGravixVault {
     uint32 static deploy_nonce;
 
     address owner;
@@ -17,9 +17,9 @@ abstract contract VexexVaultStorage is IVexexVault {
 
     TvmCell oracleProxyCode;
     TvmCell platformCode;
-    TvmCell vexexAccountCode;
-    uint32 vexexAccountVersion;
-    uint32 vexexVaultVersion;
+    TvmCell GravixAccountCode;
+    uint32 GravixAccountVersion;
+    uint32 GravixVaultVersion;
 
     // liquidity pool staff
     uint128 poolBalance; // liquidity deposits

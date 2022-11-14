@@ -1,7 +1,7 @@
 
 
 async function main() {
-    const data = await locklift.factory.getContractArtifacts('VexexVault');
+    const data = await locklift.factory.getContractArtifacts('GravixVault');
     const buf = Buffer.from(data.code, 'base64'); // Ta-da
     console.log(buf.length);
 }

@@ -2,13 +2,13 @@ pragma ever-solidity ^0.62.0;
 
 
 import "../libraries/Callback.sol";
-import "./IVexexVault.sol";
+import "./IGravixVault.sol";
 
 
-interface IVexexAccount {
+interface IGravixAccount {
     struct MarketOrderRequest {
         uint32 marketIdx;
-        IVexexVault.PositionType positionType;
+        IGravixVault.PositionType positionType;
         uint128 collateral;
         uint128 expectedPrice;
         uint32 leverage;
@@ -22,7 +22,7 @@ interface IVexexAccount {
 
     struct Position {
         uint32 marketIdx;
-        IVexexVault.PositionType positionType;
+        IGravixVault.PositionType positionType;
         uint128 initialCollateral;
         uint128 openFee; // amount of usdt taken when position was opened
         uint128 openPrice;
@@ -38,7 +38,7 @@ interface IVexexAccount {
 
     struct PositionView {
         uint32 marketIdx;
-        IVexexVault.PositionType positionType;
+        IGravixVault.PositionType positionType;
         uint128 initialCollateral;
         uint128 positionSize;
         uint128 openPrice;
@@ -55,14 +55,14 @@ interface IVexexAccount {
     }
 
     function process_requestMarketOrder(
-        IVexexVault.PendingMarketOrderRequest pending_request
+        IGravixVault.PendingMarketOrderRequest pending_request
     ) external;
     function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
     function process_executeMarketOrder(
         uint32 request_key,
         uint32 market_idx,
         uint128 position_size,
-        IVexexVault.PositionType position_type,
+        IGravixVault.PositionType position_type,
         uint128 asset_price,
         uint64 dynamic_spread,
         int256 accFundingPerShare,

@@ -3,11 +3,11 @@ pragma ever-solidity ^0.62.0;
 
 import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
 import "broxus-token-contracts/contracts/interfaces/IAcceptTokensBurnCallback.sol";
-import "./IVexexAccount.sol";
+import "./IGravixAccount.sol";
 import "../libraries/Callback.sol";
 
 
-interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
+interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
     enum Action { MarketOrderRequest, LiquidityDeposit, LiquidityWithdraw }
 
     struct Time {
@@ -120,9 +120,9 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
 
     event NewOwner(uint32 call_id, address new_owner);
     event PlatformCodeInstall(uint32 call_id);
-    event VexexAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
-    event VexexAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
-    event VexexAccountDeploy(address user);
+    event GravixAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
+    event GravixAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
+    event GravixAccountDeploy(address user);
     event ActionRevert(uint32 call_id, address user);
     event MarketOrderRequest(
         uint32 call_id,
@@ -167,13 +167,13 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 request_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
-    event ClosePosition(uint32 call_id, address user, uint32 position_key, IVexexAccount.PositionView position_view);
-    event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IVexexAccount.PositionView position_view);
+    event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
+    event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);
     event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stv_usdt_amount_out);
     event LiquidityPoolWithdraw(uint32 call_id, address user, uint128 usdt_amount_out, uint128 stv_usdt_amount_in);
 
     function receiveTokenWalletAddress(address wallet) external;
-    function onVexexAccountDeploy(address user, Callback.CallMeta meta) external view;
+    function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view;
     function oracle_executeMarketOrder(
         address user,
         uint32 request_key,
@@ -191,13 +191,13 @@ interface IVexexVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallbac
     function finish_executeMarketOrder(
         address user,
         uint32 request_key,
-        IVexexAccount.Position opened_position,
+        IGravixAccount.Position opened_position,
         Callback.CallMeta meta
     ) external;
     function revert_cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view;
     function finish_cancelMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
     function revert_closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view;
     function finish_closePosition(
-        address user, uint32 position_key, IVexexAccount.PositionView order_view, Callback.CallMeta meta
+        address user, uint32 position_key, IGravixAccount.PositionView order_view, Callback.CallMeta meta
     ) external;
 }

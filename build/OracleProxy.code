@@ -1,0 +1,890 @@
+.version sol 0.62.0
+
+.macro constructor
+DROP
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7_with_init_storage$
+}
+GETGLOB 6
+THROWIF 51
+OVER
+PUSHCONT {
+	LDREF
+	ENDS
+	CTOS
+}
+IF
+LDMSGADDR
+LDU 32
+LDU 128
+LDU 32
+LDU 8
+OVER
+GTINT 1
+THROWIF 73
+LDU 8
+OVER
+GTINT 1
+THROWIF 73
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+LDU 32
+LDDICT
+ROTREV
+PAIR
+XCHG S1, S2
+PAIR
+SWAP
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+SWAP
+SINGLE
+XCHG S1, S2
+PAIR
+SWAP
+LDU 32
+LDU 32
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+ROLLREV 3
+TRIPLE
+SWAP
+ENDS
+.loc ../contracts/OracleProxy.sol, 45
+GETGLOB 9
+GETGLOB 12
+SDEQ
+THROWIFNOT 1007
+.loc ../contracts/OracleProxy.sol, 47
+ROLL 7
+SETGLOB 13
+.loc ../contracts/OracleProxy.sol, 48
+ROLL 6
+SETGLOB 14
+.loc ../contracts/OracleProxy.sol, 49
+ROLL 5
+SETGLOB 15
+.loc ../contracts/OracleProxy.sol, 50
+ROLL 4
+SETGLOB 16
+.loc ../contracts/OracleProxy.sol, 51
+ROLL 3
+SETGLOB 17
+.loc ../contracts/OracleProxy.sol, 52
+ROT
+SETGLOB 18
+.loc ../contracts/OracleProxy.sol, 53
+SWAP
+SETGLOB 19
+.loc ../contracts/OracleProxy.sol, 54
+SETGLOB 20
+.loc ../contracts/OracleProxy.sol, 56
+CALLREF {
+	CALL $_collectPrice_86ca321f_internal_macro$
+}
+.loc ../contracts/OracleProxy.sol, 0
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.globl	_collectPrice_86ca321f_internal
+.type	_collectPrice_86ca321f_internal, @function
+CALL $_collectPrice_86ca321f_internal_macro$
+
+.macro _collectPrice_86ca321f_internal_macro
+.loc ../contracts/OracleProxy.sol, 60
+GETGLOB 18
+IFREFELSEREF
+{
+	CALL $_collectPriceFromDex_607ca09b_internal_macro$
+}
+{
+	CALL $_collectPriceFromChainlink_10fb7f82_internal_macro$
+}
+.loc ../contracts/OracleProxy.sol, 0
+
+.globl	_collectPriceFromDex_607ca09b_internal
+.type	_collectPriceFromDex_607ca09b_internal, @function
+CALL $_collectPriceFromDex_607ca09b_internal_macro$
+
+.macro _collectPriceFromDex_607ca09b_internal_macro
+.loc ../contracts/OracleProxy.sol, 68
+GETGLOB 19
+FIRST
+.loc ../contracts/OracleProxy.sol, 70
+PUSHINT 0
+PUSHCONT {
+	PUSH2 S0, S1
+	INDEX2 1, 0
+	LESS
+}
+PUSHCONT {
+	.loc ../contracts/OracleProxy.sol, 71
+	PUSH2 S0, S1
+	INDEX2 1, 1
+	PUSHINT 32
+	DICTUGETREF
+	THROWIFNOT 50
+	CTOS
+	CALLREF {
+		LDMSGADDR
+		LDREF
+		ENDS
+		CTOS
+		LDMSGADDR
+		LDREF
+		ENDS
+		CTOS
+		LDMSGADDR
+		ENDS
+		TRIPLE
+	}
+	.loc ../contracts/OracleProxy.sol, 72
+	OVER
+	NEWC
+	STU 256
+	ENDC
+	.loc ../contracts/OracleProxy.sol, 74
+	MYADDR
+	NOW
+	DUP
+	DEC
+	UFITS 32
+	ROLL 4
+	FIRST
+	NEWC
+	STSLICECONST x62_
+	STSLICE
+	PUSHINT 2803819077499249229031122585109857988247553
+	STUR 143
+	ROLLREV 4
+	NEWC
+	STSLICECONST x5668c911
+	STU 32
+	STU 32
+	STSLICE
+	STREF
+	STBREFR
+	ENDC
+	PUSHINT 0
+	SENDRAWMSG
+	.loc ../contracts/OracleProxy.sol, 70
+	INC
+	.loc ../contracts/OracleProxy.sol, 0
+}
+WHILE
+DROP2
+.loc ../contracts/OracleProxy.sol, 0
+
+.globl	_collectPriceFromChainlink_10fb7f82_internal
+.type	_collectPriceFromChainlink_10fb7f82_internal, @function
+CALL $_collectPriceFromChainlink_10fb7f82_internal_macro$
+
+.macro _collectPriceFromChainlink_10fb7f82_internal_macro
+.loc ../contracts/OracleProxy.sol, 0
+
+.globl	_sendCallback_af038cfa_internal
+.type	_sendCallback_af038cfa_internal, @function
+CALL $_sendCallback_af038cfa_internal_macro$
+
+.macro _sendCallback_af038cfa_internal_macro
+.loc ../contracts/OracleProxy.sol, 83
+GETGLOB 20
+SWAP
+GETGLOB 17
+GETGLOB 16
+GETGLOB 15
+GETGLOB 14
+GETGLOB 10
+GETGLOB 11
+GETGLOB 12
+NEWC
+STSLICECONST x62_
+STSLICE
+PUSHINT 1
+STUR 111
+ROLLREV 8
+NEWC
+STSLICECONST x5635f594
+STSLICE
+STU 32
+STU 32
+STU 128
+STU 32
+STU 8
+STU 128
+SWAP
+UNTRIPLE
+REVERSE 4, 0
+STU 32
+ROTREV
+NEWC
+STU 32
+STSLICE
+STBREFR
+STBREFR
+ENDC
+PUSHPOW2 7
+SENDRAWMSG
+.loc ../contracts/OracleProxy.sol, 0
+
+.macro onRateCallback
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/OracleProxy.sol, 96
+OVER
+PUSHCONT {
+	LDREF
+	ENDS
+	CTOS
+	LDI 1
+	SWAP
+	NULLSWAPIFNOT
+	PUSHCONT {
+		LDU 256
+		LDU 256
+		LDU 32
+		LDU 32
+		ROLLREV 4
+		TUPLE 4
+	}
+	IF
+}
+PUSHCONT {
+	LDI 1
+	SWAP
+	NULLSWAPIFNOT
+	PUSHCONT {
+		LDU 256
+		LDU 256
+		LDU 32
+		LDU 32
+		ROLLREV 4
+		TUPLE 4
+	}
+	IF
+}
+IFELSE
+SWAP
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDREF
+ENDS
+.loc ../contracts/OracleProxy.sol, 0
+CALLREF {
+	CALL $onRateCallback_0f5cc1db_internal_macro$
+}
+DROP
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro onRateCallback_0f5cc1db_internal_macro
+.loc ../contracts/OracleProxy.sol, 101
+DUP
+CTOS
+LDU 256
+ENDS
+.loc ../contracts/OracleProxy.sol, 102
+GETGLOB 19
+FIRST
+.loc ../contracts/OracleProxy.sol, 103
+GETGLOB 9
+BLKPUSH 2, 2
+INDEX2 1, 1
+PUSHINT 32
+DICTUGETREF
+THROWIFNOT 50
+CTOS
+CALLREF {
+	LDMSGADDR
+	LDREF
+	ENDS
+	CTOS
+	LDMSGADDR
+	LDREF
+	ENDS
+	CTOS
+	LDMSGADDR
+	ENDS
+	TRIPLE
+}
+FIRST
+SDEQ
+THROWIFNOT 1007
+.loc ../contracts/OracleProxy.sol, 105
+GETGLOB 9
+GETGLOB 21
+NEWC
+PUSH S6
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+ROTREV
+PUSHINT 267
+DICTSETB
+SETGLOB 21
+.loc ../contracts/OracleProxy.sol, 108
+PUSHINT 0
+NEWDICT
+PAIR
+GETGLOB 21
+DUP
+PUSHINT 267
+DICTMIN
+NULLSWAPIFNOT
+PUSHCONT {
+	SWAP
+	LDU 32
+	PLDDICT
+	PAIR
+	PAIR
+}
+IF
+PUSHCONT {
+	DUP
+	ISNULL
+	NOT
+}
+PUSHCONT {
+	PUSH2 S2, S0
+	FIRST
+	SWAP
+	UNPAIR
+	OVER
+	INC
+	ROLLREV 3
+	PUSHINT 32
+	DICTUSET
+	PAIR
+	POP S3
+	FIRST
+	OVER
+	PUSHINT 267
+	DICTGETNEXT
+	NULLSWAPIFNOT
+	PUSHCONT {
+		SWAP
+		LDU 32
+		PLDDICT
+		PAIR
+		PAIR
+	}
+	IF
+}
+WHILE
+DROP2
+FIRST
+OVER
+INDEX2 1, 0
+EQUAL
+PUSHCONT {
+	.loc ../contracts/OracleProxy.sol, 110
+	DUP
+	FIRST
+	.loc ../contracts/OracleProxy.sol, 111
+	PUSHINT 1000000000000000000
+	.loc ../contracts/OracleProxy.sol, 113
+	PUSH S2
+	INDEX2 1, 1
+	PUSHINT 0
+	NULL
+	PUSHCONT {
+		PUSH2 S1, S2
+		PUSHINT 32
+		DICTUGETREF
+		NULLSWAPIFNOT
+		IFREF {
+			CTOS
+			CALLREF {
+				LDMSGADDR
+				LDREF
+				ENDS
+				CTOS
+				LDMSGADDR
+				LDREF
+				ENDS
+				CTOS
+				LDMSGADDR
+				ENDS
+				TRIPLE
+			}
+		}
+		DUP
+		POP S2
+		ISNULL
+		NOT
+	}
+	PUSHCONT {
+		.loc ../contracts/OracleProxy.sol, 114
+		PUSHINT 0
+		.loc ../contracts/OracleProxy.sol, 115
+		OVER
+		FIRST
+		GETGLOB 21
+		PUSHINT 267
+		DICTGET
+		PUSHCONT {
+			LDU 32
+			PLDDICT
+		}
+		PUSHCONT {
+			PUSHINT 0
+			NEWDICT
+		}
+		IFELSE
+		PAIR
+		.loc ../contracts/OracleProxy.sol, 117
+		PUSH S2
+		SECOND
+		PUSH S7
+		SDEQ
+		PUSHCONT {
+			.loc ../contracts/OracleProxy.sol, 118
+			PUSHINT 1
+			OVER
+			SECOND
+			PUSHINT 32
+			DICTUGET
+			THROWIFNOT 50
+			PLDU 128
+			PUSHINT 1000000000000000000
+			PUSHINT 0
+			PUSH S3
+			SECOND
+			PUSHINT 32
+			DICTUGET
+			THROWIFNOT 50
+			PLDU 128
+			MULDIV
+			UFITS 128
+			POP S2
+			.loc ../contracts/OracleProxy.sol, 119
+			PUSH S2
+			THIRD
+			POP S7
+		}
+		PUSHCONT {
+			PUSH S2
+			THIRD
+			PUSH S7
+			SDEQ
+			PUSHCONT {
+				.loc ../contracts/OracleProxy.sol, 121
+				PUSHINT 0
+				OVER
+				SECOND
+				PUSHINT 32
+				DICTUGET
+				THROWIFNOT 50
+				PLDU 128
+				PUSHINT 1000000000000000000
+				PUSHINT 1
+				PUSH S3
+				SECOND
+				PUSHINT 32
+				DICTUGET
+				THROWIFNOT 50
+				PLDU 128
+				MULDIV
+				UFITS 128
+				POP S2
+				.loc ../contracts/OracleProxy.sol, 122
+				PUSH S2
+				SECOND
+				POP S7
+			}
+			PUSHCONT {
+				.loc ../contracts/OracleProxy.sol, 124
+				PUSHINT 4000
+				THROWANY
+			}
+			IFELSE
+		}
+		IFELSE
+		.loc ../contracts/OracleProxy.sol, 126
+		DROP
+		PUXC S4, S-1
+		PUSHINT 1000000000000000000
+		MULDIV
+		UFITS 128
+		POP S4
+		.loc ../contracts/OracleProxy.sol, 0
+		OVER
+		INC
+		POP S2
+	}
+	WHILE
+	BLKDROP 3
+	.loc ../contracts/OracleProxy.sol, 129
+	PUSHINT 4000
+	ROT
+	GETGLOB 13
+	SDEQ
+	THROWANYIFNOT
+	.loc ../contracts/OracleProxy.sol, 132
+	PUSHINT 1000000000
+	PUSHINT 1000000000000000000
+	MULDIV
+	UFITS 128
+	.loc ../contracts/OracleProxy.sol, 133
+	CALLREF {
+		CALL $_sendCallback_af038cfa_internal_macro$
+	}
+	.loc ../contracts/OracleProxy.sol, 0
+}
+IF
+.loc ../contracts/OracleProxy.sol, 0
+BLKDROP 5
+
+.macro c4_to_c7
+PUSHROOT
+CTOS
+LDU 256 ; pubkey c4
+LDU 64 ; pubkey timestamp c4
+LDU 1 ; ctor flag
+NIP
+LDU 32
+LDMSGADDR
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+LDU 32
+LDU 128
+LDU 32
+LDU 8
+OVER
+GTINT 1
+THROWIF 73
+LDU 8
+OVER
+GTINT 1
+THROWIF 73
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+LDU 32
+LDDICT
+ROTREV
+PAIR
+XCHG S1, S2
+PAIR
+SWAP
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+SWAP
+SINGLE
+XCHG S1, S2
+PAIR
+SWAP
+LDU 32
+LDU 32
+LDREF
+ENDS
+CTOS
+LDMSGADDR
+ROLLREV 3
+TRIPLE
+SWAP
+LDDICT
+ENDS
+SETGLOB 21
+SETGLOB 20
+SETGLOB 19
+SETGLOB 18
+SETGLOB 17
+SETGLOB 16
+SETGLOB 15
+SETGLOB 14
+SETGLOB 13
+SETGLOB 12
+SETGLOB 11
+SETGLOB 10
+SETGLOB 3
+SETGLOB 2
+
+.macro c4_to_c7_with_init_storage
+PUSHROOT
+CTOS
+SBITS
+GTINT 1
+PUSHCONT {
+	PUSHINT 0
+	PUSHROOT
+	CTOS
+	PLDDICT ; D
+	PUSHINT 1
+	OVER
+	PUSHINT 64
+	DICTUGET
+	ZEROSWAPIFNOT
+	PUSHCONT {
+		PLDU 32
+	}
+	IF
+	PUSHINT 2
+	PUSH S2
+	PUSHINT 64
+	DICTUGET
+	PUSHCONT {
+		PUSHREFSLICE {
+			.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+		}
+	}
+	IFNOT
+	PUSHINT 3
+	PUSH S3
+	PUSHINT 64
+	DICTUGET
+	PUSHCONT {
+		PUSHREFSLICE {
+			.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+		}
+	}
+	IFNOT
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	PUSHINT 0
+	BLKPUSH 4, 0
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	PUSHINT 0
+	NEWDICT
+	PAIR
+	PAIR
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	SINGLE
+	PAIR
+	PUSHINT 0
+	DUP
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	TRIPLE
+	NEWDICT
+	SETGLOB 21
+	SETGLOB 20
+	SETGLOB 19
+	SETGLOB 18
+	SETGLOB 17
+	SETGLOB 16
+	SETGLOB 15
+	SETGLOB 14
+	SETGLOB 13
+	SETGLOB 12
+	SETGLOB 11
+	SETGLOB 10
+	PUSHINT 64
+	DICTUGET
+	THROWIFNOT 61
+	PLDU 256
+	SETGLOB 2
+	PUSHINT 0 ; timestamp
+	SETGLOB 3
+}
+IFREFELSE {
+	CALL $c4_to_c7$
+}
+
+.macro c7_to_c4
+GETGLOB 21
+GETGLOB 20
+GETGLOB 19
+GETGLOB 18
+GETGLOB 17
+GETGLOB 16
+GETGLOB 15
+GETGLOB 14
+GETGLOB 13
+GETGLOB 12
+GETGLOB 11
+GETGLOB 10
+GETGLOB 3
+GETGLOB 2
+NEWC
+STU 256
+STU 64
+STONE
+STU 32
+STSLICE
+ROLLREV 10
+NEWC
+STSLICE
+ROLLREV 9
+NEWC
+STSLICE
+STU 32
+STU 128
+STU 32
+STU 8
+STU 8
+SWAP
+UNPAIR
+ROTREV
+UNPAIR
+XCHG S2
+ROLLREV 5
+NEWC
+STSLICE
+SWAP
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+SWAP
+UNSINGLE
+SWAP
+ROLLREV 3
+NEWC
+STSLICE
+SWAP
+UNTRIPLE
+REVERSE 4, 0
+STU 32
+STU 32
+ROTREV
+NEWC
+STSLICE
+STDICT
+STBREFR
+STBREFR
+STBREFR
+STBREFR
+STBREFR
+ENDC
+POPROOT
+
+.macro upd_only_time_in_c4
+PUSHROOT
+CTOS
+LDU 256
+LDU 64
+NIP
+GETGLOB 3
+ROT
+NEWC
+STU 256
+STU 64
+STSLICE
+ENDC
+POPROOT
+
+.internal-alias :main_internal, 0
+.internal :main_internal
+PUSHROOT
+CTOS
+SBITS
+NEQINT 1
+SETGLOB 6
+PUSH S2
+CTOS
+LDU 4 ; bounced tail
+LDMSGADDR ; bounced src tail
+DROP
+SETGLOB 9
+MODPOW2 1
+IFRET
+OVER
+SEMPTY ; isEmpty
+IFJMPREF {
+	GETGLOB 6
+	THROWIFNOT 76
+}
+OVER
+LDUQ 32  ; [funcId] body' ok
+THROWIFNOT 60
+OVER
+IFNOTJMPREF {
+	GETGLOB 6
+	THROWIFNOT 76
+}
+SWAP
+CALLREF {
+	CALL $public_function_selector$
+}
+THROW 60
+
+.internal-alias :main_external, -1
+.internal :main_external
+PUSHROOT
+CTOS
+SBITS
+NEQINT 1
+SETGLOB 6
+PUSHREFSLICE {
+	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+}
+SETGLOB 9
+OVER
+CALLREF {
+	CALL $c4_to_c7_with_init_storage$
+}
+LDU 1 ; haveSign msgSlice
+SWAP
+PUSHCONT {
+	PUSHPOW2 9
+	LDSLICEX ; signatureSlice msgSlice
+	DUP
+	HASHSU ; signatureSlice msgSlice hashMsgSlice
+	ROT
+	GETGLOB 2
+	CHKSIGNU ; msgSlice isSigned
+	THROWIFNOT 40
+}
+IF
+LDU 64 ; timestamp msgSlice
+SWAP
+CALL $replay_protection_macro$
+LDU 32 ; funcId body
+SWAP
+CALLREF {
+	CALL $public_function_selector$
+}
+THROW 60
+
+.macro public_function_selector
+DUP
+PUSHINT 1235995617
+EQUAL
+IFJMPREF {
+	CALL $onRateCallback$
+}
+DUP
+PUSHINT 1966911130
+EQUAL
+IFJMPREF {
+	CALL $constructor$
+}
+
