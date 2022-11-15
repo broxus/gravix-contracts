@@ -23,10 +23,10 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         address _marketManager,
         address _usdt,
         address _usdtWallet,
-        address _stvUsdt,
-        address _stvUsdtWallet,
+        address _stgUsdt,
+        address _stgUsdtWallet,
         uint128 _poolBalance, // liquidity deposits
-        uint128 _stvUsdtSupply, // amount of minted stvUsdt
+        uint128 _stgUsdtSupply, // amount of minted stgUsdt
         uint128 _targetPrice,
         uint128 _insuranceFund, // collected fees, pnl and etc.
         uint128 _collateralReserve, // sum of all usdt provided as a collateral for open order
@@ -44,10 +44,10 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             marketManager,
             usdt,
             usdtWallet,
-            stvUsdt,
-            stvUsdtWallet,
+            stgUsdt,
+            stgUsdtWallet,
             poolBalance, // liquidity deposits
-            stvUsdtSupply, // amount of minted stvUsdt
+            stgUsdtSupply, // amount of minted stgUsdt
             targetPrice,
             insuranceFund, // collected fees, pnl and etc.
             collateralReserve, // sum of all usdt provided as a collateral for open order
@@ -99,7 +99,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
-        ITokenRoot(stvUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
+        ITokenRoot(stgUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );

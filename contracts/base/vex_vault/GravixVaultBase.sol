@@ -46,7 +46,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
 
     function receiveTokenWalletAddress(address wallet) external override {
         if (msg.sender == usdt) usdtWallet = wallet;
-        if (msg.sender == stvUsdt) stvUsdtWallet = wallet;
+        if (msg.sender == stgUsdt) stgUsdtWallet = wallet;
     }
 
     function onAcceptTokensTransfer(
@@ -57,7 +57,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         address remainingGasTo,
         TvmCell payload
     ) external override reserve {
-        require (msg.sender == usdtWallet || msg.sender == stvUsdtWallet, Errors.NOT_TOKEN_WALLET);
+        require (msg.sender == usdtWallet || msg.sender == stgUsdtWallet, Errors.NOT_TOKEN_WALLET);
 
         (
             Action action,
@@ -74,9 +74,9 @@ abstract contract GravixVaultBase is GravixVaultOrders {
             } else if (!exception && action == Action.LiquidityDeposit) {
                 _handleUsdtDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
             }
-        } else if (msg.sender == stvUsdtWallet) {
+        } else if (msg.sender == stgUsdtWallet) {
             if (!exception && action == Action.LiquidityWithdraw) {
-                _handleStvUsdtDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
+                _handleStgUsdtDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
             }
         }
 
@@ -95,10 +95,10 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         address,
         TvmCell payload
     ) external override reserve {
-        require (wallet == stvUsdtWallet, Errors.NOT_TOKEN_WALLET);
-        require (msg.sender == stvUsdt, Errors.NOT_TOKEN_ROOT);
+        require (wallet == stgUsdtWallet, Errors.NOT_TOKEN_WALLET);
+        require (msg.sender == stgUsdt, Errors.NOT_TOKEN_ROOT);
 
-        _handleStvUsdtBurn(amount, payload);
+        _handleStgUsdtBurn(amount, payload);
     }
 
     onBounce(TvmSlice slice) external view {

@@ -108,6 +108,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     }
 
     struct MarketConfig {
+        OracleType priceSource;
         uint128 maxLongs;
         uint128 maxShorts;
         uint16 noiWeight;
@@ -162,15 +163,15 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event Pause(uint32 call_id, bool new_state);
     event LiquidationRateUpdate(uint32 call_id, uint64 new_rate);
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
-
+    event OracleUpdate(uint32 call_id, uint32 market_idx, Oracle oracle);
 
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 request_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
     event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);
-    event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stv_usdt_amount_out);
-    event LiquidityPoolWithdraw(uint32 call_id, address user, uint128 usdt_amount_out, uint128 stv_usdt_amount_in);
+    event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stg_usdt_amount_out);
+    event LiquidityPoolWithdraw(uint32 call_id, address user, uint128 usdt_amount_out, uint128 stg_usdt_amount_in);
 
     function receiveTokenWalletAddress(address wallet) external;
     function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view;

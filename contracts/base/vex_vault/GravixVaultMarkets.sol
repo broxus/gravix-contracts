@@ -54,6 +54,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
             require (validateMarketConfig(_market_config), Errors.BAD_INPUT);
 
             Market new_market;
+            new_market.priceSource = _market_config.priceSource;
             new_market.maxTotalLongs = _market_config.maxLongs;
             new_market.maxTotalShorts = _market_config.maxShorts;
             new_market.noiWeight = _market_config.noiWeight;
@@ -78,6 +79,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
             require (validateMarketConfig(config), Errors.BAD_INPUT);
 
             Market market = markets[market_idx];
+            market.priceSource = config.priceSource;
             market.maxTotalLongs = config.maxLongs;
             market.maxTotalShorts = config.maxShorts;
             market.noiWeight = config.noiWeight;
@@ -90,6 +92,17 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
             markets[market_idx] = market;
 
             emit MarketConfigUpdate(meta.call_id, market_idx, config);
+        }
+    }
+
+    function setOracles(
+        mapping (uint32 => Oracle) new_oracles, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        for ((uint32 market_idx, Oracle oracle) : new_oracles) {
+            require (markets.exists(market_idx), Errors.BAD_INPUT);
+
+            oracles[market_idx] = oracle;
+            emit OracleUpdate(meta.call_id, market_idx, oracle);
         }
     }
 

@@ -17,71 +17,71 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     function _handleUsdtDeposit(
         address user, uint128 amount, Callback.CallMeta meta
     ) internal {
-        uint128 mint_amount = usdtToStvUsdt(amount);
+        uint128 mint_amount = usdtToStgUsdt(amount);
 
         poolBalance += amount;
-        stvUsdtSupply += mint_amount;
+        stgUsdtSupply += mint_amount;
 
         emit LiquidityPoolDeposit(meta.call_id, user, amount, mint_amount);
 
-        ITokenRoot(stvUsdt).mint{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        ITokenRoot(stgUsdt).mint{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             mint_amount, user, Gas.TOKEN_WALLET_DEPLOY_VALUE / 2, meta.send_gas_to, true, _makeCell(meta.nonce)
         );
     }
 
-    function _handleStvUsdtDeposit(address user, uint128 amount, Callback.CallMeta meta) internal view {
+    function _handleStgUsdtDeposit(address user, uint128 amount, Callback.CallMeta meta) internal view {
         TvmBuilder builder;
         builder.store(user);
         builder.store(meta);
-        IBurnableTokenWallet(stvUsdtWallet).burn{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IBurnableTokenWallet(stgUsdtWallet).burn{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             amount, meta.send_gas_to, address(this), builder.toCell()
         );
     }
 
-    function _handleStvUsdtBurn(uint128 stv_usdt_amount, TvmCell payload) internal {
+    function _handleStgUsdtBurn(uint128 stg_usdt_amount, TvmCell payload) internal {
         TvmSlice slice = payload.toSlice();
 
         address user = slice.decode(address);
         Callback.CallMeta meta = slice.decode(Callback.CallMeta);
 
-        uint128 usdt_amount = stvUsdtToUsdt(stv_usdt_amount);
+        uint128 usdt_amount = stgUsdtToUsdt(stg_usdt_amount);
 
         poolBalance -= usdt_amount;
-        stvUsdtSupply -= stv_usdt_amount;
+        stgUsdtSupply -= stg_usdt_amount;
 
-        emit LiquidityPoolWithdraw(meta.call_id, user, usdt_amount, stv_usdt_amount);
+        emit LiquidityPoolWithdraw(meta.call_id, user, usdt_amount, stg_usdt_amount);
 
         _transfer(usdtWallet, usdt_amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
     }
 
-    function usdtToStvUsdt(uint128 usdt_amount) public view responsible returns (uint128 stv_amount) {
-        if (stvUsdtSupply == 0) {
-            stv_amount = usdt_amount;
+    function usdtToStgUsdt(uint128 usdt_amount) public view responsible returns (uint128 stg_amount) {
+        if (stgUsdtSupply == 0) {
+            stg_amount = usdt_amount;
         } else {
-            (uint128 in_price,) = stvUsdtPrice();
-            stv_amount = math.muldiv(usdt_amount, SCALING_FACTOR, in_price);
+            (uint128 in_price,) = stgUsdtPrice();
+            stg_amount = math.muldiv(usdt_amount, SCALING_FACTOR, in_price);
         }
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stv_amount;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stg_amount;
     }
 
-    function stvUsdtToUsdt(uint128 stv_amount) public view responsible returns (uint128 usdt_amount) {
-        if (stvUsdtSupply == 0) {
-            usdt_amount = stv_amount;
+    function stgUsdtToUsdt(uint128 stg_amount) public view responsible returns (uint128 usdt_amount) {
+        if (stgUsdtSupply == 0) {
+            usdt_amount = stg_amount;
         } else {
-            (,uint128 out_price) = stvUsdtPrice();
-            usdt_amount = math.muldiv(stv_amount, out_price, SCALING_FACTOR);
+            (,uint128 out_price) = stgUsdtPrice();
+            usdt_amount = math.muldiv(stg_amount, out_price, SCALING_FACTOR);
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }usdt_amount;
     }
 
     // @dev Prices are multiplied by 10**18
     // in price could be higher in case of under collateralization
-    function stvUsdtPrice() public view responsible returns (uint128 in_price, uint128 out_price) {
-        if (stvUsdtSupply == 0) {
+    function stgUsdtPrice() public view responsible returns (uint128 in_price, uint128 out_price) {
+        if (stgUsdtSupply == 0) {
             (in_price, out_price) = (SCALING_FACTOR, SCALING_FACTOR);
         } else {
             // out price is current real price
-            out_price = math.muldiv(poolBalance, SCALING_FACTOR, stvUsdtSupply);
+            out_price = math.muldiv(poolBalance, SCALING_FACTOR, stgUsdtSupply);
             // if we are in undercollateralized state
             in_price = targetPrice > 0 ? targetPrice : out_price;
         }
@@ -89,7 +89,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function poolDebt() public view returns (uint128) {
-        uint128 target_balance = math.muldiv(stvUsdtSupply, targetPrice, SCALING_FACTOR);
+        uint128 target_balance = math.muldiv(stgUsdtSupply, targetPrice, SCALING_FACTOR);
         return poolBalance >= target_balance ? 0 : target_balance - poolBalance;
     }
     // ----------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             uint128 delta = amount - insuranceFund;
             // we just ran out of insurance fund, save target price
             if (targetPrice == 0) {
-                (targetPrice,) = stvUsdtPrice();
+                (targetPrice,) = stgUsdtPrice();
             }
             poolBalance -= delta;
             insuranceFund = 0;

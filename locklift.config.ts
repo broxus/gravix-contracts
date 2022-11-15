@@ -36,7 +36,7 @@ const config: LockliftConfig = {
   },
   networks: {
     local: {
-      // Specify connection settings for https://github.com/broxus/everscale-standalone-client/
+      // Specify connection settings for https://github.com/broxus/everscale-client/
       connection: {
         group: "localnet",
         // @ts-ignore
@@ -67,7 +67,7 @@ const config: LockliftConfig = {
       },
     },
     test: {
-      // Specify connection settings for https://github.com/broxus/everscale-standalone-client/
+      // Specify connection settings for https://github.com/broxus/everscale-client/
       connection: "testnet",
       // This giver is default local-node giverV2
       giver: {

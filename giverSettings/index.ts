@@ -1,5 +1,5 @@
 import { Address, Contract, Giver, ProviderRpcClient, Transaction } from "locklift";
-import { Ed25519KeyPair } from "everscale-standalone-client";
+import { Ed25519KeyPair } from "locklift/everscale-client";
 
 // Reimplements this class if you need to use custom giver contract
 export class SimpleGiver implements Giver {

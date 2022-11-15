@@ -128,7 +128,6 @@ contract OracleProxy is IOnRateCallback {
             // path should resolve in USDT
             require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
             // convert to final price using standard token decimals
-            // we assume that
             price = math.muldiv(price, 10**9, SCALING_FACTOR);
             _sendCallback(price);
         }

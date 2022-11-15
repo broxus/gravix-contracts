@@ -12,18 +12,18 @@ abstract contract GravixVaultStorage is IGravixVault {
 
     address usdt;
     address usdtWallet;
-    address stvUsdt;
-    address stvUsdtWallet;
+    address stgUsdt;
+    address stgUsdtWallet;
 
-    TvmCell oracleProxyCode;
-    TvmCell platformCode;
-    TvmCell GravixAccountCode;
+    TvmCell static oracleProxyCode;
+    TvmCell static platformCode;
+    TvmCell static GravixAccountCode;
     uint32 GravixAccountVersion;
     uint32 GravixVaultVersion;
 
     // liquidity pool staff
     uint128 poolBalance; // liquidity deposits
-    uint128 stvUsdtSupply; // amount of minted stvUsdt
+    uint128 stgUsdtSupply; // amount of minted stgUsdt
     uint128 targetPrice;
 
     uint128 insuranceFund; // collected fees, pnl and etc.
