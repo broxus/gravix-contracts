@@ -94,7 +94,7 @@ contract OracleProxy is IOnRateCallback {
 
     // dex oracle callback
     function onRateCallback(
-        optional(Rate),
+        optional(ITWAPOracle.Rate),
         uint128[] _reserves,
         TvmCell _payload
     ) external override {
@@ -104,7 +104,7 @@ contract OracleProxy is IOnRateCallback {
 
         pair_reserves[msg.sender] = _reserves;
 
-        // TODO: rewrite on prices instead of reserves. This require correct work with decimals in oracles
+        // TODO: rewrite on prices instead of reserves? This require correct work with decimals in oracles
         if (pair_reserves.keys().length == dex.path.length) {
             // ok, we got all reserves we need
             address target_token = dex.targetToken;

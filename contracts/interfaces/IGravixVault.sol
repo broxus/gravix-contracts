@@ -33,16 +33,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         DateTime to;
     }
 
-    struct Fees {
-        // fee and rates in %
-        uint64 openFeeRate;
-        uint64 closeFeeRate;
-        uint64 baseSpreadRate;
-        uint64 baseDynamicSpreadRate;
-        uint64 borrowBaseRatePerHour;
-        uint64 fundingBaseRatePerHour;
-    }
-
     enum OracleType { ChainlinkProxy, Dex }
     struct Pair {
         address addr;
@@ -63,6 +53,16 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     struct Oracle {
         DexOracle dex;
         ChainlinkOracle chainlink;
+    }
+
+    struct Fees {
+        // fee and rates in %
+        uint64 openFeeRate;
+        uint64 closeFeeRate;
+        uint64 baseSpreadRate;
+        uint64 baseDynamicSpreadRate;
+        uint64 borrowBaseRatePerHour;
+        uint64 fundingBaseRatePerHour;
     }
 
     struct Market {

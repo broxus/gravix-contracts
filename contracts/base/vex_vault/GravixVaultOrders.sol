@@ -119,7 +119,6 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         OracleType price_source = markets[market_idx].priceSource;
         Oracle oracle = oracles[market_idx];
 
-
         new OracleProxy{
             stateInit: _buildOracleProxyInitData(user, request_key),
             value: 0,
@@ -133,6 +132,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER EXECUTE HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
+    // TODO: add method for re-executing stucked order (possible when using bridge)
+
     function getDynamicSpread(
         uint128 position_size,
         uint32 market_idx,

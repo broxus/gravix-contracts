@@ -45,7 +45,6 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         return true;
     }
 
-    // TODO: oracle data
     function addMarkets(
         MarketConfig[] new_markets,
         Callback.CallMeta meta
@@ -107,7 +106,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
     }
 
     function validateMarketConfig(MarketConfig config) public pure returns (bool correct) {
-        correct = correct && config.maxLeverage >= LEVERAGE_BASE;
+        correct = true && config.maxLeverage >= LEVERAGE_BASE;
         correct = correct && config.fees.fundingBaseRatePerHour < HUNDRED_PERCENT;
         correct = correct && config.fees.borrowBaseRatePerHour < HUNDRED_PERCENT;
         correct = correct && config.fees.baseSpreadRate < HUNDRED_PERCENT;
