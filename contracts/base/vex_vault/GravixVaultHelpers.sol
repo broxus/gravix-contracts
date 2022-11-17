@@ -185,9 +185,9 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         );
     }
 
-    function getOracleProxyAddress(address user, uint32 request_key) public view responsible returns (address) {
+    function getOracleProxyAddress(uint64 nonce) public view responsible returns (address) {
         return { value: 0, flag: MsgFlag.REMAINING_GAS, bounce: false } address(
-            tvm.hash(_buildOracleProxyInitData(user, request_key))
+            tvm.hash(_buildOracleProxyInitData(nonce))
         );
     }
 
@@ -219,13 +219,12 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         );
     }
 
-    function _buildOracleProxyInitData(address user, uint32 request_key) internal view returns (TvmCell) {
+    function _buildOracleProxyInitData(uint64 nonce) internal view returns (TvmCell) {
         return tvm.buildStateInit({
             contr: OracleProxy,
             varInit: {
-                request_key: request_key,
-                user: user,
-                vault: address(this)
+                vault: address(this),
+                nonce: nonce
             },
             pubkey: 0,
             code: oracleProxyCode
@@ -258,8 +257,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         _;
     }
 
-    modifier onlyOracleProxy(address user, uint32 request_key) {
-        address proxy = getOracleProxyAddress(user, request_key);
+    modifier onlyOracleProxy(uint64 nonce) {
+        address proxy = getOracleProxyAddress(nonce);
         require (msg.sender == proxy, Errors.NOT_ORACLE_PROXY);
         _;
     }

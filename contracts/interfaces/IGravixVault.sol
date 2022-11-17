@@ -146,6 +146,12 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 open_fee,
         uint32 request_key
     );
+    event OraclePriceRequested(
+        uint32 call_id,
+        address user,
+        uint32 request_key,
+        uint32 market_idx
+    );
     event NewMarket(
         uint32 call_id,
         MarketConfig market
@@ -176,6 +182,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function receiveTokenWalletAddress(address wallet) external;
     function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view;
     function oracle_executeMarketOrder(
+        uint64 nonce,
         address user,
         uint32 request_key,
         uint32 market_idx,
@@ -186,6 +193,18 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function finish_requestMarketOrder(PendingMarketOrderRequest request, uint32 request_key) external;
+    function revert_executeMarketOrderManually(
+        address user, uint32 request_key, Callback.CallMeta meta
+    ) external view;
+    function finish_executeMarketOrderManually(
+        address user,
+        uint32 request_key,
+        uint32 market_idx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType position_type,
+        Callback.CallMeta meta
+    ) external view;
     function revert_executeMarketOrder(
         address user, uint32 request_key, uint32 market_idx, uint128 collateral, uint128 position_size, PositionType position_type, Callback.CallMeta meta
     ) external;
@@ -198,6 +217,17 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function revert_cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view;
     function finish_cancelMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
     function revert_closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view;
+    function oracle_closePosition(
+        uint64 nonce,
+        address user,
+        uint32 position_key,
+        uint32 market_idx,
+        uint128 asset_price,
+        Callback.CallMeta meta
+    ) external;
+    function process1_closePosition(
+        address user, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+    ) external view;
     function finish_closePosition(
         address user, uint32 position_key, IGravixAccount.PositionView order_view, Callback.CallMeta meta
     ) external;

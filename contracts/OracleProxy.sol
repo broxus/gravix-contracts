@@ -10,34 +10,40 @@ import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 
 
 contract OracleProxy is IOnRateCallback {
-    uint32 static request_key;
-    address static user;
     address static vault;
+    uint64 static nonce;
 
     address usdt;
+    uint32 request_key;
+    address user;
 
     // data that our vault need on callback to finalize trade
     uint32 market_idx;
     uint128 collateral;
     uint32 leverage;
     IGravixVault.PositionType position_type;
+
+    // TODO: add callback type for open/close callbacks
+
     IGravixVault.OracleType price_source;
     IGravixVault.Oracle oracle;
     Callback.CallMeta meta;
 
+    enum CallbackType { Execute, Close }
+    CallbackType callbackType;
     // dex oracle utility staff
     // pair addr => current reserves
     mapping (address => uint128[]) pair_reserves;
 
     uint128 constant DEX_ORACLE_REQUEST_VALUE = 0.1 ever;
     uint128 constant SCALING_FACTOR = 10**18;
+    uint128 constant CONTRACT_MIN_BALANCE = 0.1 ever;
 
     constructor (
         address _usdt,
+        address _user,
+        uint32 _request_key,
         uint32 _market_idx,
-        uint128 _collateral,
-        uint32 _leverage,
-        IGravixVault.PositionType _position_type,
         IGravixVault.OracleType _price_source,
         IGravixVault.Oracle _oracle,
         Callback.CallMeta _meta
@@ -45,15 +51,33 @@ contract OracleProxy is IOnRateCallback {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
         usdt = _usdt;
+        user = _user;
+        request_key = _request_key;
         market_idx = _market_idx;
-        collateral = _collateral;
-        leverage = _leverage;
-        position_type = _position_type;
         price_source = _price_source;
         oracle = _oracle;
         meta = _meta;
 
         _collectPrice();
+    }
+
+    function setExecuteCallback(
+        uint128 _collateral,
+        uint32 _leverage,
+        IGravixVault.PositionType _position_type
+    ) external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+
+        collateral = _collateral;
+        leverage = _leverage;
+        position_type = _position_type;
+        callbackType = CallbackType.Execute;
+    }
+
+    function setCloseCallback() external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+
+        callbackType = CallbackType.Close;
     }
 
     function _collectPrice() internal view {
@@ -80,16 +104,28 @@ contract OracleProxy is IOnRateCallback {
     function _collectPriceFromChainlink() internal view {}
 
     function _sendCallback(uint128 price) internal view {
-        IGravixVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user,
-            request_key,
-            market_idx,
-            collateral,
-            leverage,
-            position_type,
-            price,
-            meta
-        );
+        if (callbackType == CallbackType.Execute) {
+            IGravixVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                nonce,
+                user,
+                request_key,
+                market_idx,
+                collateral,
+                leverage,
+                position_type,
+                price,
+                meta
+            );
+        } else {
+            IGravixVault(vault).oracle_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                nonce,
+                user,
+                request_key,
+                market_idx,
+                price,
+                meta
+            );
+        }
     }
 
     // dex oracle callback

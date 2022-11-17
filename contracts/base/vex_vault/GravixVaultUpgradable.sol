@@ -8,6 +8,7 @@ import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
 import "../../libraries/Errors.sol";
+import "../../libraries/Callback.sol";
 import "./GravixVaultHelpers.sol";
 import {RPlatform as Platform} from "../../Platform.sol";
 
@@ -61,7 +62,14 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         emit GravixAccountDeploy(user);
     }
 
-    function deployGravixAccount(address user) internal view returns (address) {
+    function deployGravixAccount(
+        address user, Callback.CallMeta meta
+    ) external view responsible reserveAndSuccessCallback(meta) returns (address account) {
+        require (msg.value > Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE, Errors.LOW_MSG_VALUE);
+        account = _deployGravixAccount(user);
+    }
+
+    function _deployGravixAccount(address user) internal view returns (address) {
         TvmBuilder constructor_params;
 
         constructor_params.store(GravixAccountVersion); // 32
@@ -69,7 +77,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
 
         return new Platform{
             stateInit: _buildGravixAccountInitData(_buildGravixAccountParams(user)),
-            value: Gas.Gravix_ACCOUNT_DEPLOY_VALUE
+            value: Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
         }(GravixAccountCode, constructor_params.toCell(), user);
     }
 }

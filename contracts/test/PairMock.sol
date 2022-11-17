@@ -16,13 +16,14 @@ contract PairMock is ITWAPOracle {
         tvm.accept();
     }
 
-    function setRateAndReserves(
-        Rate new_rate,
-        uint128[] new_reserves
-    ) external {
+    function setReserves(uint128[] new_reserves) external {
+        tvm.accept();
+        _reserves = new_reserves;
+    }
+
+    function setRate(Rate new_rate) external {
         tvm.accept();
         _rate = new_rate;
-        _reserves = new_reserves;
     }
 
     /// @notice Get observation by timestamp
@@ -62,7 +63,7 @@ contract PairMock is ITWAPOracle {
         TvmCell _payload
     ) external view override {
         IOnRateCallback(_callbackTo)
-            .onRateCallback{ value: 0, flag: MsgFlag.ALL_NOT_RESERVED }
+            .onRateCallback{ value: 0, flag: MsgFlag.REMAINING_GAS }
             (_rate, _reserves, _payload);
     }
 

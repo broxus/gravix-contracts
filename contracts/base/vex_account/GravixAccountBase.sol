@@ -10,14 +10,15 @@ import "../../libraries/Callback.sol";
 import "../../interfaces/IGravixVault.sol";
 import "./GravixAccountHelpers.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
+import "locklift/src/console.sol";
 
 
 abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_requestMarketOrder(
         IGravixVault.PendingMarketOrderRequest pending_request
     ) external override onlyGravixVault reserve {
-        _nonce += 1;
-        marketOrderRequests[_nonce] = MarketOrderRequest(
+        request_counter += 1;
+        marketOrderRequests[request_counter] = MarketOrderRequest(
             pending_request.marketIdx,
             pending_request.positionType,
             pending_request.collateral,
@@ -32,7 +33,29 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
 
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            pending_request, _nonce
+            pending_request, request_counter
+        );
+    }
+
+    function process_executeMarketOrderManually(
+        uint32 request_key, Callback.CallMeta meta
+    ) external view override onlyGravixVault reserve {
+        if (!marketOrderRequests.exists(request_key)) {
+            IGravixVault(vault).revert_executeMarketOrderManually{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, request_key, meta
+            );
+            return;
+        }
+
+        MarketOrderRequest request = marketOrderRequests[request_key];
+        IGravixVault(vault).finish_executeMarketOrderManually{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            request_key,
+            request.marketIdx,
+            request.collateral,
+            request.leverage,
+            request.positionType,
+            meta
         );
     }
 
@@ -66,6 +89,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 open_price = applyOpenSpread(asset_price, request.positionType, request.baseSpreadRate + dynamic_spread);
 
         if (open_price < min_price || open_price > max_price) {
+            console.log(format('Min {}, max {}, open {}', min_price, max_price, open_price));
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, market_idx, request.collateral, position_size, position_type, meta
             );
@@ -112,14 +136,29 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     }
 
     function process_closePosition(
+        uint32 position_key, Callback.CallMeta meta
+    ) external view override onlyGravixVault reserve {
+        if (!positions.exists(position_key)) {
+            IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, position_key, meta
+            );
+            return;
+        }
+
+        Position position = positions[position_key];
+        IGravixVault(vault).process1_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user, position_key, position.marketIdx, meta
+        );
+    }
+
+    function process2_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        uint32 market_idx,
         int256 accLongFundingPerShare,
         int256 accShortFundingPerShare,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
-        if (!positions.exists(position_key) || positions[position_key].marketIdx != market_idx) {
+        if (!positions.exists(position_key)) {
             IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, position_key, meta
             );

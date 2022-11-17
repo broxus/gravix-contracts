@@ -9,8 +9,10 @@ import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
 import "../../interfaces/IGravixAccount.sol";
+import "../../interfaces/IOracleProxy.sol";
 import "./GravixVaultMarkets.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
+import "locklift/src/console.sol";
 
 
 
@@ -20,7 +22,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     function _handleMarketOrderRequest(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
-    ) internal view returns (bool request_saved) {
+    ) internal view returns (bool success) {
         (
             uint32 market_idx,
             PositionType position_type,
@@ -93,7 +95,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             request_key
         );
 
-        _sendOracleRequest(
+        _sendOpenOrderOracleRequest(
             request.user,
             request_key,
             request.marketIdx,
@@ -107,7 +109,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORACLE REQUEST ---------------------------------------
     // ----------------------------------------------------------------------------------
-    function _sendOracleRequest(
+    function _sendOpenOrderOracleRequest(
         address user,
         uint32 request_key,
         uint32 market_idx,
@@ -116,45 +118,84 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         PositionType position_type,
         Callback.CallMeta meta
     ) internal view {
+        address proxy = _deployOracleProxy(user, request_key, market_idx, meta);
+        IOracleProxy(proxy).setExecuteCallback{value: 0.1 ever}(collateral, leverage, position_type);
+    }
+
+    function _sendCloseOrderOracleRequest(
+        address user,
+        uint32 position_key,
+        uint32 market_idx,
+        Callback.CallMeta meta
+    ) internal view {
+        address proxy = _deployOracleProxy(user, position_key, market_idx, meta);
+        IOracleProxy(proxy).setCloseCallback{value: 0.1 ever}();
+    }
+
+    function _deployOracleProxy(
+        address user,
+        uint32 request_key,
+        uint32 market_idx,
+        Callback.CallMeta meta
+    ) internal view returns (address) {
         OracleType price_source = markets[market_idx].priceSource;
         Oracle oracle = oracles[market_idx];
 
-        new OracleProxy{
-            stateInit: _buildOracleProxyInitData(user, request_key),
+        emit OraclePriceRequested(meta.call_id, user, request_key, market_idx);
+        return new OracleProxy{
+            stateInit: _buildOracleProxyInitData(tx.timestamp),
             value: 0,
             flag: MsgFlag.ALL_NOT_RESERVED
         }(
-            usdt, market_idx, collateral, leverage,
-            position_type, price_source, oracle, meta
+            usdt, user, request_key, market_idx, price_source, oracle, meta
         );
     }
 
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER EXECUTE HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
-    // TODO: add method for re-executing stucked order (possible when using bridge)
+    // TODO: support for chainlink oracle
+    // @notice Execute order manually if oracle didnt send callback for any reason
+    function executeMarketOrderManually(
+        uint32 request_key,
+        Callback.CallMeta meta
+    ) external view reserve {
+        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
-    function getDynamicSpread(
-        uint128 position_size,
+        address vex_acc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(vex_acc).process_executeMarketOrderManually{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            request_key, meta
+        );
+    }
+
+    function revert_executeMarketOrderManually(
+        address user, uint32 request_key, Callback.CallMeta meta
+    ) external view override reserveAndFailCallback(meta) {
+        emit MarketOrderExecutionRevert(meta.call_id, user, request_key);
+    }
+
+    function finish_executeMarketOrderManually(
+        address user,
+        uint32 request_key,
         uint32 market_idx,
-        PositionType position_type
-    ) public view responsible returns (uint64 dynamic_spread) {
-        uint128 new_noi;
-
-        Market market = markets[market_idx];
-        // calculate dynamic dynamic_spread multiplier
-        if (position_type == PositionType.Long) {
-            uint128 new_longs_total = market.totalLongs + position_size / 2;
-            new_noi = new_longs_total - math.min(market.totalShorts, new_longs_total);
-        } else {
-            uint128 new_shorts_total = market.totalShorts + position_size / 2;
-            new_noi = new_shorts_total - math.min(market.totalShorts, new_shorts_total);
-        }
-        dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depth));
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;
+        uint128 collateral,
+        uint32 leverage,
+        PositionType position_type,
+        Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserve {
+        _sendOpenOrderOracleRequest(
+            user,
+            request_key,
+            market_idx,
+            collateral,
+            leverage,
+            position_type,
+            meta
+        );
     }
 
     function oracle_executeMarketOrder(
+        uint64 nonce,
         address user,
         uint32 request_key,
         uint32 market_idx,
@@ -163,7 +204,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         PositionType position_type,
         uint128 asset_price,
         Callback.CallMeta meta
-    ) external override onlyOracleProxy(user, request_key) reserve {
+    ) external override onlyOracleProxy(nonce) reserve {
         uint128 position_size = math.muldiv(collateral, leverage, LEVERAGE_BASE);
         uint64 dynamic_spread = getDynamicSpread(position_size, market_idx, position_type);
 
@@ -241,6 +282,25 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         );
     }
 
+    function getDynamicSpread(
+        uint128 position_size,
+        uint32 market_idx,
+        PositionType position_type
+    ) public view responsible returns (uint64 dynamic_spread) {
+        uint128 new_noi;
+
+        Market market = markets[market_idx];
+        // calculate dynamic dynamic_spread multiplier
+        if (position_type == PositionType.Long) {
+            uint128 new_longs_total = market.totalLongs + position_size / 2;
+            new_noi = new_longs_total - math.min(market.totalShorts, new_longs_total);
+        } else {
+            uint128 new_shorts_total = market.totalShorts + position_size / 2;
+            new_noi = new_shorts_total - math.min(market.totalShorts, new_shorts_total);
+        }
+        dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depth));
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;
+    }
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
@@ -271,18 +331,42 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // TODO: force close admin method
 
-    // TODO: add work with oracle
-    function closePosition(address user, uint32 position_key, uint32 market_idx, uint128 asset_price, Callback.CallMeta meta) external onlyActive reserve {
+    function closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
-        require (marketOpen(market_idx), Errors.MARKET_CLOSED);
-
-        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
 
         address vex_acc = getGravixAccountAddress(user);
         IGravixAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            position_key, meta
+        );
+    }
+
+    function process1_closePosition(
+        address user, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+    ) external view override reserve {
+        // soft fail
+        if (!marketOpen(market_idx)) {
+            emit ClosePositionRevert(meta.call_id, user, position_key);
+            _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
+            return;
+        }
+
+        _sendCloseOrderOracleRequest(user, position_key, market_idx, meta);
+    }
+
+    function oracle_closePosition(
+        uint64 nonce,
+        address user,
+        uint32 position_key,
+        uint32 market_idx,
+        uint128 asset_price,
+        Callback.CallMeta meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+
+        address vex_acc = getGravixAccountAddress(user);
+        IGravixAccount(vex_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key,
             asset_price,
-            market_idx,
             accLongFundingPerShare,
             accShortFundingPerShare,
             meta
@@ -302,7 +386,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;
 
-        _removePositionFromMarket(position_view.marketIdx, position_view.positionSize, position_view.positionType);
+        // we added exactly this amount when opened order
+        uint128 initial_position_size = math.muldiv(position_view.initialCollateral, position_view.leverage, LEVERAGE_BASE);
+        _removePositionFromMarket(position_view.marketIdx, initial_position_size, position_view.positionType);
 
         if (position_view.liquidate) {
             _increaseInsuranceFund(collateral);

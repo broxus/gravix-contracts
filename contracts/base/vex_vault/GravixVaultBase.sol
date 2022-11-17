@@ -7,6 +7,7 @@ import "../../libraries/Callback.sol";
 import "../../interfaces/IGravixAccount.sol";
 import "./GravixVaultOrders.sol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
+import "locklift/src/console.sol";
 
 
 abstract contract GravixVaultBase is GravixVaultOrders {
@@ -70,7 +71,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
 
         if (msg.sender == usdtWallet) {
             if (!exception && action == Action.MarketOrderRequest) {
-                exception = exception && _handleMarketOrderRequest(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
+                exception = exception || !_handleMarketOrderRequest(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
             } else if (!exception && action == Action.LiquidityDeposit) {
                 _handleUsdtDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
             }
@@ -110,7 +111,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
             tvm.rawReserve(_reserve(), 0);
             PendingMarketOrderRequest request = slice.decode(PendingMarketOrderRequest);
 
-            address vex_acc = deployGravixAccount(request.user);
+            address vex_acc = _deployGravixAccount(request.user);
             IGravixAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
         }
     }

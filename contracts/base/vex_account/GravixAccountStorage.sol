@@ -16,8 +16,8 @@ abstract contract GravixAccountStorage is IGravixAccount {
     mapping (uint32 => MarketOrderRequest) public marketOrderRequests;
     mapping (uint32 => Position) public positions;
 
-    uint32 _nonce = 0;
-    uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
+    uint32 request_counter = 0;
+    uint128 constant CONTRACT_MIN_BALANCE = 0.5 ever;
     uint128 constant SCALING_FACTOR = 10**18;
     uint64 constant HUNDRED_PERCENT = 1_000_000_000_000; // 100%, this allows precision up to 0.0000000001%
     uint8 constant LEVERAGE_BASE = 100;
