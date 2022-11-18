@@ -161,46 +161,6 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER EXECUTE HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
-    // TODO: support for chainlink oracle
-    // @notice Execute order manually if oracle didnt send callback for any reason
-    function executeMarketOrderManually(
-        uint32 request_key,
-        Callback.CallMeta meta
-    ) external view reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
-
-        address vex_acc = getGravixAccountAddress(msg.sender);
-        IGravixAccount(vex_acc).process_executeMarketOrderManually{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            request_key, meta
-        );
-    }
-
-    function revert_executeMarketOrderManually(
-        address user, uint32 request_key, Callback.CallMeta meta
-    ) external view override reserveAndFailCallback(meta) {
-        emit MarketOrderExecutionRevert(meta.call_id, user, request_key);
-    }
-
-    function finish_executeMarketOrderManually(
-        address user,
-        uint32 request_key,
-        uint32 market_idx,
-        uint128 collateral,
-        uint32 leverage,
-        PositionType position_type,
-        Callback.CallMeta meta
-    ) external view override onlyGravixAccount(user) reserve {
-        _sendOpenOrderOracleRequest(
-            user,
-            request_key,
-            market_idx,
-            collateral,
-            leverage,
-            position_type,
-            meta
-        );
-    }
-
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,

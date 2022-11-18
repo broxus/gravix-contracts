@@ -37,28 +37,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_executeMarketOrderManually(
-        uint32 request_key, Callback.CallMeta meta
-    ) external view override onlyGravixVault reserve {
-        if (!marketOrderRequests.exists(request_key)) {
-            IGravixVault(vault).revert_executeMarketOrderManually{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, meta
-            );
-            return;
-        }
-
-        MarketOrderRequest request = marketOrderRequests[request_key];
-        IGravixVault(vault).finish_executeMarketOrderManually{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user,
-            request_key,
-            request.marketIdx,
-            request.collateral,
-            request.leverage,
-            request.positionType,
-            meta
-        );
-    }
-
     function process_executeMarketOrder(
         uint32 request_key,
         uint32 market_idx,

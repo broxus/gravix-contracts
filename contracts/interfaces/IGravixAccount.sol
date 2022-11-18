@@ -58,9 +58,6 @@ interface IGravixAccount {
         IGravixVault.PendingMarketOrderRequest pending_request
     ) external;
     function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
-    function process_executeMarketOrderManually(
-        uint32 request_key, Callback.CallMeta meta
-    ) external view;
     function process_executeMarketOrder(
         uint32 request_key,
         uint32 market_idx,
