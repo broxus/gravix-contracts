@@ -119,7 +119,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external override onlyGravixVault reserve {
+    function process_cancelMarketOrder(
+        uint32 request_key, Callback.CallMeta meta
+    ) external override onlyGravixVault reserve {
         if (!marketOrderRequests.exists(request_key)) {
             IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, request_key, meta
@@ -133,6 +135,34 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, request_key, _request.collateral, meta
         );
+    }
+
+    function process_liquidatePositions(
+        address liquidator,
+        uint32 position_key,
+        uint128 asset_price,
+        int256 accLongFundingPerShare,
+        int256 accShortFundingPerShare,
+        Callback.CallMeta meta
+    ) external override onlyGravixVault reserve {
+        if (!positions.exists(position_key)) {
+            IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, liquidator, position_key, meta
+            );
+            return;
+        }
+
+        PositionView position_view = getPositionView(position_key, asset_price, accLongFundingPerShare, accShortFundingPerShare);
+        if (position_view.liquidate) {
+            delete positions[position_key];
+            IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, liquidator, position_key, position_view, meta
+            );
+        } else {
+            IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, liquidator, position_key, meta
+            );
+        }
     }
 
     function process_closePosition(

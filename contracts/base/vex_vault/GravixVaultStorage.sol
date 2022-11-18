@@ -19,6 +19,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     TvmCell static platformCode;
     TvmCell static GravixAccountCode;
     uint32 GravixAccountVersion;
+    uint32 oracleProxyVersion;
     uint32 GravixVaultVersion;
 
     // liquidity pool staff

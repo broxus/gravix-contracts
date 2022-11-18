@@ -89,6 +89,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         bool paused;
     }
 
+    struct PositionIdx {
+        address user;
+        uint32 positionKey;
+    }
+
     enum PositionType { Long, Short }
 
     struct PendingMarketOrderRequest {
@@ -120,8 +125,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     }
 
     event NewOwner(uint32 call_id, address new_owner);
-    event PlatformCodeInstall(uint32 call_id);
     event GravixAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
+    event OracleProxyCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
     event GravixAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
     event GravixAccountDeploy(address user);
     event ActionRevert(uint32 call_id, address user);
@@ -148,8 +153,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     );
     event OraclePriceRequested(
         uint32 call_id,
-        address user,
-        uint32 request_key,
         uint32 market_idx
     );
     event NewMarket(
@@ -176,6 +179,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
     event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);
+    event LiquidatePositionRevert(uint32 call_id, address liquidator, address user, uint32 position_key);
     event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stg_usdt_amount_out);
     event LiquidityPoolWithdraw(uint32 call_id, address user, uint128 usdt_amount_out, uint128 stg_usdt_amount_in);
 
@@ -230,5 +234,14 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     ) external view;
     function finish_closePosition(
         address user, uint32 position_key, IGravixAccount.PositionView order_view, Callback.CallMeta meta
+    ) external;
+    function oracle_liquidatePositions(
+        uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+    ) external;
+    function revert_liquidatePositions(
+        address user, address liquidator, uint32 position_key, Callback.CallMeta meta
+    ) external view;
+    function finish_liquidatePositions(
+        address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view, Callback.CallMeta meta
     ) external;
 }

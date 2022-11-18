@@ -81,5 +81,13 @@ interface IGravixAccount {
         int256 accShortFundingPerShare,
         Callback.CallMeta meta
     ) external;
+    function process_liquidatePositions(
+        address liquidator,
+        uint32 position_key,
+        uint128 asset_price,
+        int256 accLongFundingPerShare,
+        int256 accShortFundingPerShare,
+        Callback.CallMeta meta
+    ) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
 }

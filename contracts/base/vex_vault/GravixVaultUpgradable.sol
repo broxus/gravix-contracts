@@ -14,18 +14,16 @@ import {RPlatform as Platform} from "../../Platform.sol";
 
 
 abstract contract GravixVaultUpgradable is GravixVaultHelpers {
-    // TODO: this may be removed ?
-    function installPlatformCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
-        require(platformCode.toSlice().empty(), Errors.ALREADY_INITIALIZED);
-
-        platformCode = code;
-        emit PlatformCodeInstall(meta.call_id);
-    }
-
-    function installOrUpdateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         GravixAccountCode = code;
         GravixAccountVersion += 1;
         emit GravixAccountCodeUpdate(meta.call_id, GravixAccountVersion - 1, GravixAccountVersion);
+    }
+
+    function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        oracleProxyCode = code;
+        oracleProxyVersion += 1;
+        emit OracleProxyCodeUpdate(meta.call_id, oracleProxyVersion - 1, oracleProxyVersion);
     }
 
     function upgradeGravixAccount(Callback.CallMeta meta) external view reserve {

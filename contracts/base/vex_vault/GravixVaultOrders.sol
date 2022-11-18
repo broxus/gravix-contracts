@@ -118,8 +118,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         PositionType position_type,
         Callback.CallMeta meta
     ) internal view {
-        address proxy = _deployOracleProxy(user, request_key, market_idx, meta);
-        IOracleProxy(proxy).setExecuteCallback{value: 0.1 ever}(collateral, leverage, position_type);
+        address proxy = _deployOracleProxy(market_idx, 0, meta);
+        IOracleProxy(proxy).setExecuteCallback{value: 0.1 ever}(user, request_key, collateral, leverage, position_type);
     }
 
     function _sendCloseOrderOracleRequest(
@@ -128,26 +128,33 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 market_idx,
         Callback.CallMeta meta
     ) internal view {
-        address proxy = _deployOracleProxy(user, position_key, market_idx, meta);
-        IOracleProxy(proxy).setCloseCallback{value: 0.1 ever}();
+        address proxy = _deployOracleProxy(market_idx, 0, meta);
+        IOracleProxy(proxy).setCloseCallback{value: 0.1 ever}(user, position_key);
     }
 
-    function _deployOracleProxy(
-        address user,
-        uint32 request_key,
+    function _sendLiquidationOracleRequest(
+        address liquidator,
         uint32 market_idx,
+        PositionIdx[] positions,
         Callback.CallMeta meta
-    ) internal view returns (address) {
+    ) internal view {
+        // TODO: calculate deploy gas value
+        address proxy = _deployOracleProxy(market_idx, Gas.ORACLE_PROXY_DEPLOY, meta);
+        uint128 callback_value = uint128(positions.length) * Gas.LIQUIDATION_VALUE;
+        IOracleProxy(proxy).setLiquidationCallback{value: callback_value, flag: MsgFlag.SENDER_PAYS_FEES}(liquidator, positions);
+    }
+
+    function _deployOracleProxy(uint32 market_idx, uint128 deploy_value, Callback.CallMeta meta) internal view returns (address) {
         OracleType price_source = markets[market_idx].priceSource;
         Oracle oracle = oracles[market_idx];
 
-        emit OraclePriceRequested(meta.call_id, user, request_key, market_idx);
+        emit OraclePriceRequested(meta.call_id, market_idx);
         return new OracleProxy{
             stateInit: _buildOracleProxyInitData(tx.timestamp),
-            value: 0,
-            flag: MsgFlag.ALL_NOT_RESERVED
+            value: deploy_value,
+            flag: deploy_value == 0 ? MsgFlag.ALL_NOT_RESERVED : MsgFlag.SENDER_PAYS_FEES
         }(
-            usdt, user, request_key, market_idx, price_source, oracle, meta
+            usdt, market_idx, price_source, oracle, meta
         );
     }
 
@@ -329,8 +336,22 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CLOSE HANDLERS ---------------------------------
     // ----------------------------------------------------------------------------------
-    // TODO: force close admin method
+    // TODO: chainlink oracle data
+    function forceClosePositions(
+        address[] users, uint32[] position_keys, Callback.CallMeta meta
+    ) external view onlyOwner reserve {
+        require (users.length == position_keys.length, Errors.BAD_INPUT);
+        require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
+        for (uint i = 0; i < users.length; i++) {
+            address vex_acc = getGravixAccountAddress(users[i]);
+            IGravixAccount(vex_acc).process_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
+                position_keys[i], meta
+            );
+        }
+    }
+
+    // TODO: chainlink oracle data
     function closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
@@ -413,8 +434,61 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDATION ------------------------------------------
     // ----------------------------------------------------------------------------------
-    //    function liquidatePositions()
+    // @notice 1.5 ever for every market + 1.5 ever for every position
+    // @dev Aggregate by market to minimize requests to oracle
+    function liquidatePositions(mapping (uint32 => PositionIdx[]) liquidations, Callback.CallMeta meta) external view reserve {
+        // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
+        for ((uint32 market_idx, PositionIdx[] positions) : liquidations) {
+            _sendLiquidationOracleRequest(msg.sender, market_idx, positions, meta);
+        }
+        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+    }
 
+    function revert_liquidatePositions(
+        address user, address liquidator, uint32 position_key, Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
+        emit LiquidatePositionRevert(meta.call_id, liquidator, user, position_key);
+    }
+
+    function oracle_liquidatePositions(
+        uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+
+        for (PositionIdx position: positions) {
+            address vex_acc = getGravixAccountAddress(position.user);
+            // reserve 0.05 ever here to cover computation costs of this txn
+            IGravixAccount(vex_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.05 ever}(
+                liquidator,
+                position.positionKey,
+                asset_price,
+                accLongFundingPerShare,
+                accShortFundingPerShare,
+                meta
+            );
+        }
+        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+    }
+
+    function finish_liquidatePositions(
+        address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view, Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        // we already deducted open fee when position was opened
+        uint128 collateral = position_view.initialCollateral - position_view.openFee;
+        collateralReserve -= collateral;
+
+        // we added exactly this amount when opened order
+        uint128 initial_position_size = math.muldiv(position_view.initialCollateral, position_view.leverage, LEVERAGE_BASE);
+        _removePositionFromMarket(position_view.marketIdx, initial_position_size, position_view.positionType);
+
+        // TODO: send part to liquidator
+        liquidator = user;
+
+        _increaseInsuranceFund(collateral);
+
+        emit LiquidatePosition(meta.call_id, user, user, position_key, position_view);
+        _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
+    }
 
     // ----------------------------------------------------------------------------------
     // --------------------------- POSITION LIMITS --------------------------------------
