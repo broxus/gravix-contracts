@@ -30,9 +30,6 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 insuranceFund; // collected fees, pnl and etc.
     uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders
 
-    uint128 totalLongs;
-    uint128 totalShorts;
-
     // total net open interest across all markets according to weights
     // market noi - abs of (sum of all open longs - sum of all open shorts)
     uint128 totalNOI;
@@ -40,6 +37,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     bool paused;
 
     uint128 constant SCALING_FACTOR = 10**18;
+    uint128 constant USDT_DECIMALS = 10**6;
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
     uint8 constant LEVERAGE_BASE = 100; // 100 -> 1x
     uint8 constant WEIGHT_BASE = 100; // 100 -> 1x

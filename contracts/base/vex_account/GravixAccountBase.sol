@@ -40,19 +40,19 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_executeMarketOrder(
         uint32 request_key,
         uint32 market_idx,
-        uint128 position_size,
+        uint128 position_size_asset,
         IGravixVault.PositionType position_type,
         uint128 asset_price,
         uint64 dynamic_spread,
-        int256 accFundingPerShare,
+        int256 accUSDFundingPerShare,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         MarketOrderRequest request = marketOrderRequests[request_key];
-        uint128 leveraged_position = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
+        uint128 leveraged_position_usd = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
         if (!marketOrderRequests.exists(request_key)) {
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, market_idx, 0, position_size, position_type, meta
+                user, request_key, market_idx, 0, position_size_asset, asset_price, position_type, meta
             );
             return;
         }
@@ -69,12 +69,12 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (open_price < min_price || open_price > max_price) {
             console.log(format('Min {}, max {}, open {}', min_price, max_price, open_price));
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, market_idx, request.collateral, position_size, position_type, meta
+                user, request_key, market_idx, request.collateral, position_size_asset, asset_price, position_type, meta
             );
             return;
         }
 
-        uint128 open_fee = math.muldiv(leveraged_position, request.openFeeRate, HUNDRED_PERCENT);
+        uint128 open_fee = math.muldiv(leveraged_position_usd, request.openFeeRate, HUNDRED_PERCENT);
 
         Position opened_position = Position(
             request.marketIdx,
@@ -82,8 +82,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.collateral,
             open_fee,
             open_price,
+            asset_price,
             request.leverage,
-            accFundingPerShare,
+            accUSDFundingPerShare,
             request.borrowBaseRatePerHour,
             request.baseSpreadRate,
             request.closeFeeRate,
@@ -119,8 +120,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         address liquidator,
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongFundingPerShare,
-        int256 accShortFundingPerShare,
+        int256 accLongUSDFundingPerShare,
+        int256 accShortUSDFundingPerShare,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         if (!positions.exists(position_key)) {
@@ -130,11 +131,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        PositionView position_view = getPositionView(position_key, asset_price, accLongFundingPerShare, accShortFundingPerShare);
+        PositionView position_view = getPositionView(position_key, asset_price, accLongUSDFundingPerShare, accShortUSDFundingPerShare);
         if (position_view.liquidate) {
             delete positions[position_key];
             IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, liquidator, position_key, position_view, meta
+                user, liquidator, position_key, asset_price, position_view, meta
             );
         } else {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -162,8 +163,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process2_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongFundingPerShare,
-        int256 accShortFundingPerShare,
+        int256 accLongUSDFundingPerShare,
+        int256 accShortUSDFundingPerShare,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         if (!positions.exists(position_key)) {
@@ -173,11 +174,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        PositionView position_view = getPositionView(position_key, asset_price, accLongFundingPerShare, accShortFundingPerShare);
+        PositionView position_view = getPositionView(position_key, asset_price, accLongUSDFundingPerShare, accShortUSDFundingPerShare);
         delete positions[position_key];
 
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, position_view, meta
+            user, position_key, asset_price, position_view, meta
         );
     }
 }

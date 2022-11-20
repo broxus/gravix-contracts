@@ -54,11 +54,11 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
 
             Market new_market;
             new_market.priceSource = _market_config.priceSource;
-            new_market.maxTotalLongs = _market_config.maxLongs;
-            new_market.maxTotalShorts = _market_config.maxShorts;
+            new_market.maxTotalLongsUSD = _market_config.maxLongsUSD;
+            new_market.maxTotalShortsUSD = _market_config.maxShortsUSD;
             new_market.noiWeight = _market_config.noiWeight;
             new_market.maxLeverage = _market_config.maxLeverage;
-            new_market.depth = _market_config.depth;
+            new_market.depthAsset = _market_config.depthAsset;
             new_market.fees = _market_config.fees;
             new_market.scheduleEnabled = _market_config.scheduleEnabled;
 
@@ -79,11 +79,11 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
 
             Market market = markets[market_idx];
             market.priceSource = config.priceSource;
-            market.maxTotalLongs = config.maxLongs;
-            market.maxTotalShorts = config.maxShorts;
+            market.maxTotalLongsUSD = config.maxLongsUSD;
+            market.maxTotalShortsUSD = config.maxShortsUSD;
             market.noiWeight = config.noiWeight;
             market.maxLeverage = config.maxLeverage;
-            market.depth = config.depth;
+            market.depthAsset = config.depthAsset;
             market.fees = config.fees;
             market.scheduleEnabled = config.scheduleEnabled;
 

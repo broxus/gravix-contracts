@@ -32,7 +32,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         ) = decodeMarketOrderRequestPayload(order_params_payload);
 
         if (!validateOrderRequestParams(market_idx, leverage, max_slippage_rate)) return false;
-        if (checkPositionAllowed(market_idx, math.muldiv(collateral, leverage, LEVERAGE_BASE), position_type) > 0) return false;
+        if (checkPositionAllowed(
+            market_idx,
+            collateral,
+            leverage,
+            expected_price,
+            position_type) > 0
+        ) return false;
         if (!marketOpen(market_idx)) return false;
         _marketOrderRequest(user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, meta);
         return true;
@@ -172,20 +178,20 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        uint128 position_size = math.muldiv(collateral, leverage, LEVERAGE_BASE);
-        uint64 dynamic_spread = getDynamicSpread(position_size, market_idx, position_type);
+        uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, asset_price);
+        uint64 dynamic_spread = getDynamicSpread(position_size_asset, market_idx, position_type);
 
-        uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size, position_type);
+        uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size_asset, asset_price, position_type);
 
         address vex_acc = getGravixAccountAddress(user);
         if (_error == 0) {
-            (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
-            int256 funding = position_type == PositionType.Long ? accLongFundingPerShare : accShortFundingPerShare;
+            (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
+            int256 funding = position_type == PositionType.Long ? accLongUSDFundingPerShare : accShortUSDFundingPerShare;
 
             IGravixAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 request_key,
                 market_idx,
-                position_size,
+                position_size_asset,
                 position_type,
                 asset_price,
                 dynamic_spread,
@@ -203,13 +209,14 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 request_key,
         uint32 market_idx,
         uint128 collateral,
-        uint128 position_size,
+        uint128 position_size_asset,
+        uint128 asset_price,
         PositionType position_type,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         emit MarketOrderExecutionRevert(meta.call_id, user, request_key);
 
-        _removePositionFromMarket(market_idx, position_size, position_type);
+        _removePositionFromMarket(market_idx, position_size_asset, asset_price, position_type);
 
         if (collateral > 0) {
             collateralReserve -= collateral;
@@ -226,31 +233,34 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function finish_executeMarketOrder(
         address user,
         uint32 request_key,
-        IGravixAccount.Position opened_position,
+        IGravixAccount.Position new_pos,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        _collectOpenFee(opened_position.openFee);
-        collateralReserve -= opened_position.openFee;
+        _collectOpenFee(new_pos.openFee);
+        collateralReserve -= new_pos.openFee;
 
-        uint128 position_size = math.muldiv(
-            opened_position.initialCollateral - opened_position.openFee,
-            opened_position.leverage,
-            LEVERAGE_BASE
-        );
+        uint128 position_size_asset_raw = calculatePositionAssetSize(new_pos.initialCollateral, new_pos.leverage, new_pos.markPrice);
+        _removePositionFromMarket(new_pos.marketIdx, position_size_asset_raw, new_pos.markPrice, new_pos.positionType);
+
+        uint128 position_size_asset = calculatePositionAssetSize(new_pos.initialCollateral - new_pos.openFee, new_pos.leverage, new_pos.openPrice);
+        _addPositionToMarket(new_pos.marketIdx, position_size_asset, new_pos.markPrice, new_pos.positionType);
 
         emit MarketOrderExecution(
             meta.call_id,
             user,
-            position_size,
-            opened_position.positionType,
-            opened_position.openPrice,
-            opened_position.openFee,
+            new_pos.positionType,
+            new_pos.openPrice,
+            new_pos.openFee,
             request_key
         );
     }
 
+    function calculatePositionAssetSize(uint128 collateral, uint32 leverage, uint128 asset_price) public pure returns (uint128 position_size_asset) {
+        return math.muldiv(math.muldiv(collateral, leverage, LEVERAGE_BASE), USDT_DECIMALS, asset_price);
+    }
+
     function getDynamicSpread(
-        uint128 position_size,
+        uint128 position_size_asset,
         uint32 market_idx,
         PositionType position_type
     ) public view responsible returns (uint64 dynamic_spread) {
@@ -259,13 +269,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         Market market = markets[market_idx];
         // calculate dynamic dynamic_spread multiplier
         if (position_type == PositionType.Long) {
-            uint128 new_longs_total = market.totalLongs + position_size / 2;
-            new_noi = new_longs_total - math.min(market.totalShorts, new_longs_total);
+            uint128 new_longs_total = market.totalLongsAsset + position_size_asset / 2;
+            new_noi = new_longs_total - math.min(market.totalShortsAsset, new_longs_total);
         } else {
-            uint128 new_shorts_total = market.totalShorts + position_size / 2;
-            new_noi = new_shorts_total - math.min(market.totalShorts, new_shorts_total);
+            uint128 new_shorts_total = market.totalShortsAsset + position_size_asset / 2;
+            new_noi = new_shorts_total - math.min(market.totalShortsAsset, new_shorts_total);
         }
-        dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depth));
+        dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depthAsset));
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;
     }
     // ----------------------------------------------------------------------------------
@@ -342,14 +352,14 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+        (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
 
         address vex_acc = getGravixAccountAddress(user);
         IGravixAccount(vex_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key,
             asset_price,
-            accLongFundingPerShare,
-            accShortFundingPerShare,
+            accLongUSDFundingPerShare,
+            accShortUSDFundingPerShare,
             meta
         );
     }
@@ -361,15 +371,19 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function finish_closePosition(
-        address user, uint32 position_key, IGravixAccount.PositionView position_view, Callback.CallMeta meta
+        address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView position_view, Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;
 
-        // we added exactly this amount when opened order
-        uint128 initial_position_size = math.muldiv(position_view.initialCollateral, position_view.leverage, LEVERAGE_BASE);
-        _removePositionFromMarket(position_view.marketIdx, initial_position_size, position_view.positionType);
+        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.leverage, position_view.openPrice);
+        _removePositionFromMarket(
+            position_view.marketIdx,
+            initial_position_size_asset,
+            asset_price,
+            position_view.positionType
+        );
 
         if (position_view.liquidate) {
             _increaseInsuranceFund(collateral);
@@ -413,7 +427,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        (int256 accLongFundingPerShare, int256 accShortFundingPerShare) = _updateFunding(market_idx);
+        (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
 
         for (PositionIdx position: positions) {
             address vex_acc = getGravixAccountAddress(position.user);
@@ -422,8 +436,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 liquidator,
                 position.positionKey,
                 asset_price,
-                accLongFundingPerShare,
-                accShortFundingPerShare,
+                accLongUSDFundingPerShare,
+                accShortUSDFundingPerShare,
                 meta
             );
         }
@@ -431,15 +445,25 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function finish_liquidatePositions(
-        address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view, Callback.CallMeta meta
+        address user,
+        address liquidator,
+        uint32 position_key,
+        uint128 asset_price,
+        IGravixAccount.PositionView position_view,
+        Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
         uint128 collateral = position_view.initialCollateral - position_view.openFee;
         collateralReserve -= collateral;
 
         // we added exactly this amount when opened order
-        uint128 initial_position_size = math.muldiv(position_view.initialCollateral, position_view.leverage, LEVERAGE_BASE);
-        _removePositionFromMarket(position_view.marketIdx, initial_position_size, position_view.positionType);
+        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.leverage, position_view.openPrice);
+        _removePositionFromMarket(
+            position_view.marketIdx,
+            initial_position_size_asset,
+            asset_price,
+            position_view.positionType
+        );
 
         // TODO: send part to liquidator
         liquidator = user;
@@ -453,132 +477,135 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- POSITION LIMITS --------------------------------------
     // ----------------------------------------------------------------------------------
-    function checkPositionAllowed(uint32 market_idx, uint128 position_size, PositionType position_type) public view returns (uint16) {
-        (,,,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size, position_type);
+    function checkPositionAllowed(
+        uint32 market_idx,
+        uint128 collateral,
+        uint32 leverage,
+        uint128 cur_asset_price,
+        PositionType position_type
+    ) public view returns (uint16) {
+        uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, cur_asset_price);
+        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size_asset, cur_asset_price, position_type);
         return _error;
     }
 
     function _marketNOI(Market _market) internal pure returns (uint128) {
-        return _market.totalLongs > _market.totalShorts ?
-            _market.totalLongs - _market.totalShorts :
-            _market.totalShorts - _market.totalLongs;
+        return _market.totalLongsAsset > _market.totalShortsAsset ?
+            _market.totalLongsAsset - _market.totalShortsAsset :
+            _market.totalShortsAsset - _market.totalLongsAsset;
     }
 
     // @dev Will not apply changes if _error > 0
     function _addPositionToMarketOrReturnErr(
-        uint32 market_idx, uint128 position_size, PositionType position_type
+        uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type
     ) internal returns (uint16) {
         (
             Market _market,
-            uint128 _totalLongs,
-            uint128 _totalShorts,
             uint128 _totalNOI,
             uint16 _error
-        ) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size, position_type);
+        ) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size_asset, cur_asset_price, position_type);
         if (_error == 0) {
             markets[market_idx] = _market;
-            totalLongs = _totalLongs;
-            totalShorts = _totalShorts;
             totalNOI = _totalNOI;
         }
         return _error;
     }
 
     function _calculatePositionImpactAndCheckAllowed(
-        uint32 market_idx, uint128 position_size, PositionType position_type
-    ) internal view returns (Market _market, uint128 _totalLongs, uint128 _totalShorts, uint128 _totalNOI, uint16 _error) {
-        (
-            _market,
-            _totalLongs,
-            _totalShorts,
-            _totalNOI
-        ) = _calculatePositionImpact(market_idx, position_size, position_type);
+        uint32 market_idx,
+        uint128 position_size_asset,
+        uint128 cur_asset_price,
+        PositionType position_type
+    ) internal view returns (Market _market, uint128 _totalNOI, uint16 _error) {
+        (_market, _totalNOI) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
+
+        uint128 shorts_usd = math.muldiv(_market.totalShortsAsset, cur_asset_price, USDT_DECIMALS);
+        uint128 longs_usd = math.muldiv(_market.totalLongsAsset, cur_asset_price, USDT_DECIMALS);
         // market limits
-        if (_market.totalShorts > _market.maxTotalShorts || _market.totalLongs > _market.maxTotalLongs) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
+        if (shorts_usd > _market.maxTotalShortsUSD || longs_usd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         // common platform limit
+        // TODO: param
         if (math.muldiv(_totalNOI, SCALING_FACTOR, poolBalance) >= SCALING_FACTOR) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
-        return (_market, _totalLongs, _totalShorts, _totalNOI, _error);
+        return (_market, _totalNOI, _error);
     }
 
+    // @param asset_price - asset price on moment of update, required for TNOI calculation
     function _calculatePositionImpact(
-        uint32 market_idx, uint128 position_size, PositionType position_type
-    ) internal view returns (Market _market, uint128 _totalLongs, uint128 _totalShorts, uint128 _totalNOI) {
+        uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type, bool remove
+    ) internal view returns (Market _market, uint128 _totalNOI) {
         _market = markets[market_idx];
-        _totalLongs = totalLongs;
-        _totalShorts = totalShorts;
         _totalNOI = totalNOI;
 
-        uint128 noi_before = _marketNOI(_market);
+        uint128 noi_asset_before = _marketNOI(_market);
+        uint128 noi_usd_before = math.muldiv(noi_asset_before, _market.lastNoiUpdatePrice, USDT_DECIMALS);
 
         if (position_type == PositionType.Long) {
-            _market.totalLongs += position_size;
-            _totalLongs += position_size;
+            _market.totalLongsAsset = remove ? (_market.totalLongsAsset - position_size_asset) : (_market.totalLongsAsset + position_size_asset);
         } else {
-            _market.totalShorts += position_size;
-            _totalShorts += position_size;
+            _market.totalShortsAsset = remove ? (_market.totalShortsAsset - position_size_asset) : (_market.totalShortsAsset + position_size_asset);
         }
 
-        uint128 noi_after = _marketNOI(_market);
+        uint128 noi_asset_after = _marketNOI(_market);
+        uint128 noi_usd_after = math.muldiv(noi_asset_after, cur_asset_price, USDT_DECIMALS);
 
-        if (noi_after > noi_before) _totalNOI += math.muldiv(noi_after - noi_before, _market.noiWeight, WEIGHT_BASE);
-        if (noi_after < noi_before) _totalNOI -= math.muldiv(noi_before - noi_after, _market.noiWeight, WEIGHT_BASE);
+        _totalNOI -= math.muldiv(noi_usd_before, _market.noiWeight, WEIGHT_BASE);
+        _totalNOI += math.muldiv(noi_usd_after, _market.noiWeight, WEIGHT_BASE);
+
+        _market.lastNoiUpdatePrice = cur_asset_price;
     }
 
-    function _removePositionFromMarket(uint32 market_idx, uint128 position_size, PositionType position_type) internal {
-        Market _market = markets[market_idx];
 
-        uint128 noi_before = _marketNOI(_market);
+    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation
+    function _addPositionToMarket(uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type) internal {
+        (
+            markets[market_idx],
+            totalNOI
+        ) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
+    }
 
-        if (position_type == PositionType.Long) {
-            _market.totalLongs -= position_size;
-            totalLongs -= position_size;
-        } else {
-            _market.totalShorts -= position_size;
-            totalShorts -= position_size;
-        }
-
-        uint128 noi_after = _marketNOI(_market);
-
-        if (noi_after > noi_before) totalNOI += math.muldiv(noi_after - noi_before, _market.noiWeight, WEIGHT_BASE);
-        if (noi_after < noi_before) totalNOI -= math.muldiv(noi_before - noi_after, _market.noiWeight, WEIGHT_BASE);
-
-        markets[market_idx] = _market;
+    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation
+    function _removePositionFromMarket(uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type) internal {
+        (
+            markets[market_idx],
+            totalNOI
+        ) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, true);
     }
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDINGS ---------------------------------------------
     // ----------------------------------------------------------------------------------
-    function _updateFunding(uint32 market_idx) internal returns (int256 accLongFundingPerShare, int256 accShortFundingPerShare) {
+    function _updateFunding(uint32 market_idx, uint128 asset_price) internal returns (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) {
         Market _market = markets[market_idx];
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
-        (_market.accLongFundingPerShare, _market.accShortFundingPerShare) = _getUpdatedFunding(_market);
+        (_market.accLongUSDFundingPerShare, _market.accShortUSDFundingPerShare) = _getUpdatedFunding(_market, asset_price);
         _market.lastFundingUpdateTime = now;
 
         markets[market_idx] = _market;
-        return (_market.accLongFundingPerShare, _market.accShortFundingPerShare);
+        return (_market.accLongUSDFundingPerShare, _market.accShortUSDFundingPerShare);
     }
 
-    function getUpdatedFunding(uint32[] market_idx) public view returns (int256[] accLongFundingPerShare, int256[] accShortFundingPerShare) {
-        accLongFundingPerShare = new int256[](market_idx.length);
-        accShortFundingPerShare = new int256[](market_idx.length);
+    function getUpdatedFunding(uint32[] market_idx, uint128[] assets_prices) public view returns (int256[] accLongUSDFundingPerShare, int256[] accShortUSDFundingPerShare) {
+        accLongUSDFundingPerShare = new int256[](market_idx.length);
+        accShortUSDFundingPerShare = new int256[](market_idx.length);
         for (uint i = 0; i < market_idx.length; i++) {
-            (accLongFundingPerShare[i], accShortFundingPerShare[i]) = _getUpdatedFunding(markets[market_idx[i]]);
+            (accLongUSDFundingPerShare[i], accShortUSDFundingPerShare[i]) = _getUpdatedFunding(markets[market_idx[i]], assets_prices[i]);
         }
     }
 
-    function _getUpdatedFunding(Market _market) internal pure returns (int256 accLongFundingPerShare, int256 accShortFundingPerShare) {
+    function _getUpdatedFunding(Market _market, uint128 asset_price) internal pure returns (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) {
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
         (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
 
-        accLongFundingPerShare = _market.accLongFundingPerShare + _calculateFunding(long_rate_per_hour, _market.totalLongs, _market.lastFundingUpdateTime);
-        accShortFundingPerShare = _market.accShortFundingPerShare + _calculateFunding(short_rate_per_hour, _market.totalShorts, _market.lastFundingUpdateTime);
+        accLongUSDFundingPerShare = _market.accLongUSDFundingPerShare + _calculateFunding(long_rate_per_hour, _market.totalLongsAsset, asset_price, _market.lastFundingUpdateTime);
+        accShortUSDFundingPerShare = _market.accShortUSDFundingPerShare + _calculateFunding(short_rate_per_hour, _market.totalShortsAsset, asset_price, _market.lastFundingUpdateTime);
     }
 
-    function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint32 last_update_time) internal pure returns (int256) {
+    function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
         if (rate_per_hour == 0 || total_position == 0) return 0;
-        int256 funding = math.muldiv(rate_per_hour, int256(total_position), HUNDRED_PERCENT);
-        funding = math.muldiv(funding, (now - last_update_time), HOUR);
-        return math.muldiv(funding, SCALING_FACTOR, total_position);
+        int256 funding_asset = math.muldiv(rate_per_hour, int256(total_position), HUNDRED_PERCENT);
+        funding_asset = math.muldiv(funding_asset, (now - last_update_time), HOUR);
+        int256 funding_usd = math.muldiv(funding_asset, asset_price, USDT_DECIMALS);
+        return math.muldiv(funding_usd, SCALING_FACTOR, total_position);
     }
 
     // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
@@ -588,22 +615,22 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
     // @notice If rate is positive - trader should pay, negative - receive payment
     function _getFundingRates(Market _market) internal pure returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
-        uint128 noi = uint128(math.abs(int256(_market.totalLongs) - _market.totalShorts));
+        uint128 noi = uint128(math.abs(int256(_market.totalLongsAsset) - _market.totalShortsAsset));
         uint128 funding_rate_per_hour = math.muldiv(
             _market.fees.fundingBaseRatePerHour,
-            math.muldiv(noi, SCALING_FACTOR, _market.depth),
+            math.muldiv(noi, SCALING_FACTOR, _market.depthAsset),
             SCALING_FACTOR
         );
 
-        if (_market.totalLongs >= _market.totalShorts) {
+        if (_market.totalLongsAsset >= _market.totalShortsAsset) {
             long_rate_per_hour = int128(funding_rate_per_hour);
-            if (_market.totalShorts > 0) {
-                short_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalLongs, _market.totalShorts));
+            if (_market.totalShortsAsset > 0) {
+                short_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalLongsAsset, _market.totalShortsAsset));
             }
         } else {
             short_rate_per_hour = int128(funding_rate_per_hour);
-            if (_market.totalLongs > 0) {
-                long_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalShorts, _market.totalLongs));
+            if (_market.totalLongsAsset > 0) {
+                long_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalShortsAsset, _market.totalLongsAsset));
             }
         }
     }

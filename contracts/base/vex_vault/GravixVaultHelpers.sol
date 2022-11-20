@@ -30,8 +30,6 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint128 _targetPrice,
         uint128 _insuranceFund, // collected fees, pnl and etc.
         uint128 _collateralReserve, // sum of all usdt provided as a collateral for open order
-        uint128 _totalLongs,
-        uint128 _totalShorts,
         uint128 _totalNOI,
         bool _paused,
         uint64 _liquidationThresholdRate,
@@ -51,8 +49,6 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             targetPrice,
             insuranceFund, // collected fees, pnl and etc.
             collateralReserve, // sum of all usdt provided as a collateral for open order
-            totalLongs,
-            totalShorts,
             totalNOI,
             paused,
             liquidationThresholdRate,

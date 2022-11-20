@@ -26,8 +26,9 @@ interface IGravixAccount {
         uint128 initialCollateral;
         uint128 openFee; // amount of usdt taken when position was opened
         uint128 openPrice;
+        uint128 markPrice;
         uint32 leverage;
-        int256 accFundingPerShare;
+        int256 accUSDFundingPerShare;
         uint64 borrowBaseRatePerHour; // % per hour
         uint64 baseSpreadRate; // %
         uint64 closeFeeRate; // %
@@ -65,7 +66,7 @@ interface IGravixAccount {
         IGravixVault.PositionType position_type,
         uint128 asset_price,
         uint64 dynamic_spread,
-        int256 accFundingPerShare,
+        int256 accUSDFundingPerShare,
         Callback.CallMeta meta
     ) external;
     function process_closePosition(
@@ -74,16 +75,16 @@ interface IGravixAccount {
     function process2_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongFundingPerShare,
-        int256 accShortFundingPerShare,
+        int256 accLongUSDFundingPerShare,
+        int256 accShortUSDFundingPerShare,
         Callback.CallMeta meta
     ) external;
     function process_liquidatePositions(
         address liquidator,
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongFundingPerShare,
-        int256 accShortFundingPerShare,
+        int256 accLongUSDFundingPerShare,
+        int256 accShortUSDFundingPerShare,
         Callback.CallMeta meta
     ) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
