@@ -44,11 +44,11 @@
 			"inputs": [
 				{"name":"request_key","type":"uint32"},
 				{"name":"market_idx","type":"uint32"},
-				{"name":"position_size","type":"uint128"},
+				{"name":"position_size_asset","type":"uint128"},
 				{"name":"position_type","type":"uint8"},
 				{"name":"asset_price","type":"uint128"},
 				{"name":"dynamic_spread","type":"uint64"},
-				{"name":"accFundingPerShare","type":"int256"},
+				{"name":"accUSDFundingPerShare","type":"int256"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -64,13 +64,34 @@
 			]
 		},
 		{
+			"name": "process_liquidatePositions",
+			"inputs": [
+				{"name":"liquidator","type":"address"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"asset_price","type":"uint128"},
+				{"name":"accLongUSDFundingPerShare","type":"int256"},
+				{"name":"accShortUSDFundingPerShare","type":"int256"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "process_closePosition",
 			"inputs": [
 				{"name":"position_key","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "process2_closePosition",
+			"inputs": [
+				{"name":"position_key","type":"uint32"},
 				{"name":"asset_price","type":"uint128"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"accLongFundingPerShare","type":"int256"},
-				{"name":"accShortFundingPerShare","type":"int256"},
+				{"name":"accLongUSDFundingPerShare","type":"int256"},
+				{"name":"accShortUSDFundingPerShare","type":"int256"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -117,11 +138,11 @@
 				{"name":"answerId","type":"uint32"},
 				{"name":"positions_keys","type":"uint32[]"},
 				{"name":"assets_prices","type":"uint128[]"},
-				{"name":"accLongFundingPerShare","type":"int256[]"},
-				{"name":"accShortFundingPerShare","type":"int256[]"}
+				{"name":"accLongUSDFundingPerShare","type":"int256[]"},
+				{"name":"accShortUSDFundingPerShare","type":"int256[]"}
 			],
 			"outputs": [
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"positionSize","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"openFee","type":"uint128"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"createdAt","type":"uint32"}],"name":"positions_views","type":"tuple[]"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"positionSizeUSD","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"openFee","type":"uint128"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"createdAt","type":"uint32"}],"name":"positions_views","type":"tuple[]"}
 			]
 		},
 		{
@@ -130,11 +151,11 @@
 				{"name":"answerId","type":"uint32"},
 				{"name":"position_key","type":"uint32"},
 				{"name":"asset_price","type":"uint128"},
-				{"name":"accLongFundingPerShare","type":"int256"},
-				{"name":"accShortFundingPerShare","type":"int256"}
+				{"name":"accLongUSDFundingPerShare","type":"int256"},
+				{"name":"accShortUSDFundingPerShare","type":"int256"}
 			],
 			"outputs": [
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"positionSize","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"openFee","type":"uint128"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"createdAt","type":"uint32"}],"name":"position_view","type":"tuple"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"positionSizeUSD","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"openFee","type":"uint128"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"createdAt","type":"uint32"}],"name":"position_view","type":"tuple"}
 			]
 		},
 		{
@@ -150,7 +171,7 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"positions","type":"map(uint32,tuple)"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"positions","type":"map(uint32,tuple)"}
 			]
 		}
 	],
@@ -167,7 +188,7 @@
 		{"name":"user","type":"address"},
 		{"name":"platform_code","type":"cell"},
 		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"}],"name":"marketOrderRequests","type":"map(uint32,tuple)"},
-		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"positions","type":"map(uint32,tuple)"},
-		{"name":"_nonce","type":"uint32"}
+		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"positions","type":"map(uint32,tuple)"},
+		{"name":"request_counter","type":"uint32"}
 	]
 }

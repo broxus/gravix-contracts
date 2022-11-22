@@ -8,12 +8,39 @@
 			"inputs": [
 				{"name":"_usdt","type":"address"},
 				{"name":"_market_idx","type":"uint32"},
-				{"name":"_collateral","type":"uint128"},
-				{"name":"_leverage","type":"uint32"},
-				{"name":"_position_type","type":"uint8"},
 				{"name":"_price_source","type":"uint8"},
 				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"addr","type":"address"}],"name":"chainlink","type":"tuple"}],"name":"_oracle","type":"tuple"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"_meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setExecuteCallback",
+			"inputs": [
+				{"name":"_user","type":"address"},
+				{"name":"_request_key","type":"uint32"},
+				{"name":"_collateral","type":"uint128"},
+				{"name":"_leverage","type":"uint32"},
+				{"name":"_position_type","type":"uint8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setCloseCallback",
+			"inputs": [
+				{"name":"_user","type":"address"},
+				{"name":"_request_key","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setLiquidationCallback",
+			"inputs": [
+				{"name":"_liquidator","type":"address"},
+				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"_positions","type":"tuple[]"}
 			],
 			"outputs": [
 			]
@@ -30,9 +57,8 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"request_key","type":"uint32"},
-		{"key":2,"name":"user","type":"address"},
-		{"key":3,"name":"vault","type":"address"}
+		{"key":1,"name":"vault","type":"address"},
+		{"key":2,"name":"nonce","type":"uint64"}
 	],
 	"events": [
 	],
@@ -40,17 +66,21 @@
 		{"name":"_pubkey","type":"uint256"},
 		{"name":"_timestamp","type":"uint64"},
 		{"name":"_constructorFlag","type":"bool"},
-		{"name":"request_key","type":"uint32"},
-		{"name":"user","type":"address"},
 		{"name":"vault","type":"address"},
+		{"name":"nonce","type":"uint64"},
 		{"name":"usdt","type":"address"},
 		{"name":"market_idx","type":"uint32"},
-		{"name":"collateral","type":"uint128"},
-		{"name":"leverage","type":"uint32"},
-		{"name":"position_type","type":"uint8"},
 		{"name":"price_source","type":"uint8"},
 		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"addr","type":"address"}],"name":"chainlink","type":"tuple"}],"name":"oracle","type":"tuple"},
 		{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"},
+		{"name":"request_key","type":"uint32"},
+		{"name":"user","type":"address"},
+		{"name":"collateral","type":"uint128"},
+		{"name":"leverage","type":"uint32"},
+		{"name":"position_type","type":"uint8"},
+		{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
+		{"name":"liquidator","type":"address"},
+		{"name":"callbackType","type":"uint8"},
 		{"name":"pair_reserves","type":"map(address,uint128[])"}
 	]
 }
