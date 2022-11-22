@@ -38,21 +38,15 @@ interface IGravixAccount {
 
 
     struct PositionView {
-        uint32 marketIdx;
-        IGravixVault.PositionType positionType;
-        uint128 initialCollateral;
-        uint128 positionSize;
-        uint128 openPrice;
+        Position position;
+        uint128 positionSizeUSD;
         uint128 closePrice;
-        uint32 leverage;
         uint128 borrowFee;
         int256 fundingFee;
-        uint128 openFee;
         uint128 closeFee;
         uint128 liquidationPrice;
         int256 pnl;
         bool liquidate;
-        uint32 createdAt;
     }
 
     function process_requestMarketOrder(

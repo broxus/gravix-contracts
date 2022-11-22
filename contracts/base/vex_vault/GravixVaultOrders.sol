@@ -218,9 +218,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         _removePositionFromMarket(market_idx, position_size_asset, asset_price, position_type);
 
+        // too high slippage
         if (collateral > 0) {
             collateralReserve -= collateral;
-            // too high slippage
             _transfer(
                 usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
             );
@@ -322,10 +322,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     // TODO: chainlink oracle data
-    function closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
+    function closePosition(uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
-        address vex_acc = getGravixAccountAddress(user);
+        address vex_acc = getGravixAccountAddress(msg.sender);
         IGravixAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key, meta
         );
@@ -374,15 +374,15 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView position_view, Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
-        uint128 collateral = position_view.initialCollateral - position_view.openFee;
+        uint128 collateral = position_view.position.initialCollateral - position_view.position.openFee;
         collateralReserve -= collateral;
 
-        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.leverage, position_view.openPrice);
+        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.position.leverage, position_view.position.openPrice);
         _removePositionFromMarket(
-            position_view.marketIdx,
+            position_view.position.marketIdx,
             initial_position_size_asset,
             asset_price,
-            position_view.positionType
+            position_view.position.positionType
         );
 
         if (position_view.liquidate) {
@@ -453,24 +453,25 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
-        uint128 collateral = position_view.initialCollateral - position_view.openFee;
+        uint128 collateral = position_view.position.initialCollateral - position_view.position.openFee;
         collateralReserve -= collateral;
 
         // we added exactly this amount when opened order
-        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.leverage, position_view.openPrice);
+        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.position.leverage, position_view.position.openPrice);
         _removePositionFromMarket(
-            position_view.marketIdx,
+            position_view.position.marketIdx,
             initial_position_size_asset,
             asset_price,
-            position_view.positionType
+            position_view.position.positionType
         );
 
-        // TODO: send part to liquidator
-        liquidator = user;
+        uint128 liquidator_reward = math.muldiv(collateral, liquidatorRewardShare, HUNDRED_PERCENT);
 
-        _increaseInsuranceFund(collateral);
+        _increaseInsuranceFund(collateral - liquidator_reward);
 
-        emit LiquidatePosition(meta.call_id, user, user, position_key, position_view);
+        emit LiquidatePosition(meta.call_id, user, liquidator, position_key, position_view);
+
+        _transfer(usdtWallet, liquidator_reward, liquidator, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
         _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
     }
 
@@ -481,11 +482,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 market_idx,
         uint128 collateral,
         uint32 leverage,
-        uint128 cur_asset_price,
+        uint128 asset_price,
         PositionType position_type
     ) public view returns (uint16) {
-        uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, cur_asset_price);
-        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size_asset, cur_asset_price, position_type);
+        uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, asset_price);
+        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size_asset, asset_price, position_type);
         return _error;
     }
 
@@ -524,8 +525,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         // market limits
         if (shorts_usd > _market.maxTotalShortsUSD || longs_usd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         // common platform limit
-        // TODO: param
-        if (math.muldiv(_totalNOI, SCALING_FACTOR, poolBalance) >= SCALING_FACTOR) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
+        if (math.muldiv(poolBalance, maxPoolUtilRatio, HUNDRED_PERCENT) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
         return (_market, _totalNOI, _error);
     }
 

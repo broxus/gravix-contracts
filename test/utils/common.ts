@@ -2,6 +2,7 @@ import {Token} from "./wrappers/token";
 import {Address, Contract, getRandomNonce, toNano, WalletTypes, zeroAddress} from "locklift";
 import {Account} from 'locklift/everscale-client'
 import {GravixVault} from "./wrappers/vault";
+import Bignumber from "bignumber.js";
 
 const logger = require("mocha-logger");
 const {expect} = require("chai");
@@ -12,13 +13,21 @@ export function isNumeric(value: string) {
 }
 
 
-export const isValidTonAddress = (address: string) => /^(?:-1|0):[0-9a-fA-F]{64}$/.test(address);
+export const isValidEverAddress = (address: string) => /^(?:-1|0):[0-9a-fA-F]{64}$/.test(address);
 
 
 export async function sleep(ms = 1000) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+export function bn(num: number | string) {
+    return new Bignumber(num);
+}
+
+export function toUSD(num: Bignumber | number) {
+    const val = num.toString();
+    return bn(val).div(10**6).toFixed(4);
+}
 
 export async function tryIncreaseTime(seconds: number) {
     // @ts-ignore
@@ -140,7 +149,7 @@ export const deployUser = async function (initial_balance = 100): Promise<Accoun
 }
 
 
-export const setupTokenRoot = async function (token_name: string, token_symbol: string, owner: Account) {
+export const setupTokenRoot = async function (token_name: string, token_symbol: string, owner: Account, decimals=9) {
     const signer = await locklift.keystore.getSigner('0');
     const TokenPlatform = await locklift.factory.getContractArtifacts('TokenWalletPlatform');
 
@@ -150,7 +159,7 @@ export const setupTokenRoot = async function (token_name: string, token_symbol: 
         initParams: {
             name_: token_name,
             symbol_: token_symbol,
-            decimals_: 9,
+            decimals_: decimals,
             rootOwner_: owner.address,
             walletCode_: TokenWallet.code,
             randomNonce_: getRandomNonce(),
@@ -203,4 +212,20 @@ export const setupVault = async function (owner: Account, market_manager: Accoun
 
     logger.log(`Gravix Vault address: ${_root.address.toString()}`);
     return new GravixVault(_root, owner);
+}
+
+export const setupPairMock = async function () {
+    const signer = await locklift.keystore.getSigner('0');
+
+    const {contract: mock, tx} = await locklift.tracing.trace(locklift.factory.deployContract({
+        contract: 'PairMock',
+        initParams: {
+            deploy_nonce: getRandomNonce()
+        },
+        publicKey: signer?.publicKey as string,
+        constructorParams: {},
+        value: toNano(1)
+    }));
+
+    return mock;
 }

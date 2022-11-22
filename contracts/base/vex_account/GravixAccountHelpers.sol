@@ -7,6 +7,7 @@ import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";
 import "../../libraries/PlatformTypes.sol";
 import "../../libraries/Errors.sol";
+import "locklift/src/console.sol";
 
 
 abstract contract GravixAccountHelpers is GravixAccountStorage {
@@ -70,12 +71,11 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
 
         // pnl (no funding and borrow fees)
         // (close_price/open_price - 1)
-        int256 pnl = int256(math.muldiv(close_price, SCALING_FACTOR, position.openPrice) - SCALING_FACTOR);
+        int256 pnl = int256(math.muldiv(close_price, SCALING_FACTOR, position.openPrice)) - SCALING_FACTOR;
         // * (-1) for shorts
         pnl = is_long ? pnl : -pnl;
         // * collateral * leverage
         pnl = math.muldiv(math.muldiv(pnl, collateral, SCALING_FACTOR), position.leverage, LEVERAGE_BASE);
-
         // liquidation price
         // collateral * 0.9
         int256 liq_price_dist = math.muldiv(collateral, (HUNDRED_PERCENT - position.liquidationThresholdRate),  HUNDRED_PERCENT);
@@ -85,7 +85,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         liq_price_dist = math.muldiv(math.muldiv(position.openPrice, liq_price_dist, collateral), LEVERAGE_BASE, position.leverage);
 
         uint128 liq_price = is_long ?
-            uint128(math.max(position.openPrice - liq_price_dist, 0)) : // we know that liq price distance is lower than open price
+            uint128(math.max(position.openPrice - liq_price_dist, 0)) :
             uint128(math.max(position.openPrice + liq_price_dist, 0));
 
         // close fee
@@ -106,21 +106,15 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         bool liquidate = is_long ? asset_price <= liq_price : asset_price >= liq_price;
 
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }PositionView(
-            position.marketIdx,
-            position.positionType,
-            position.initialCollateral,
+            position,
             leveraged_position_usd,
-            position.openPrice,
             close_price,
-            position.leverage,
             borrow_fee_usd,
             funding_fee_usd,
-            position.openFee,
             close_fee,
             liq_price,
             pnl,
-            liquidate,
-            position.createdAt
+            liquidate
         );
     }
 

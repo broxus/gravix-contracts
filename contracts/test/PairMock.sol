@@ -10,7 +10,7 @@ contract PairMock is ITWAPOracle {
     uint32 static deploy_nonce;
 
     Rate public _rate;
-    uint128[] _reserves;
+    uint128[] public _reserves;
 
     constructor() public {
         tvm.accept();

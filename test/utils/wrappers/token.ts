@@ -44,6 +44,18 @@ export class Token {
         return await TokenWallet.from_addr(addr, user);
     }
 
+    async transferOwnership(newOwner: Account) {
+        await locklift.tracing.trace(this.contract.methods.transferOwnership({
+            newOwner: newOwner.address,
+            remainingGasTo: this.owner.address,
+            callbacks: []
+        }).send({
+            from: this.owner.address,
+            amount: toNano(2)
+        }));
+        this.owner = newOwner;
+    }
+
     async mint(mint_amount: any, user: Account) {
         await locklift.tracing.trace(this.contract.methods.mint({
             amount: mint_amount,
