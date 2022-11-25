@@ -7,7 +7,7 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "./libraries/Gas.sol";
 import "./libraries/Callback.sol";
-import "./base/vex_account/GravixAccountBase.sol";
+import "./base/gravix_account/GravixAccountBase.sol";
 
 
 contract GravixAccount is GravixAccountBase {
@@ -45,7 +45,7 @@ contract GravixAccount is GravixAccountBase {
 
         main_builder.storeRef(params); // ref3
 
-        TvmCell storage_data = abi.encode(marketOrderRequests, positions);
+        TvmCell storage_data = abi.encode(marketOrders, positions);
         TvmCell data = abi.encode(meta.call_id, meta.nonce, storage_data);
 
         main_builder.storeRef(data); // ref3

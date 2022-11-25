@@ -8,7 +8,7 @@ import "../libraries/Callback.sol";
 
 
 interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
-    enum Action { MarketOrderRequest, LiquidityDeposit, LiquidityWithdraw }
+    enum Action {MarketOrder, LiquidityDeposit, LiquidityWithdraw }
 
     struct Time {
         uint8 hour;
@@ -97,7 +97,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     enum PositionType { Long, Short }
 
-    struct PendingMarketOrderRequest {
+    struct PendingMarketOrder {
         address user;
         uint32 marketIdx;
         PositionType positionType;
@@ -131,25 +131,23 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event GravixAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
     event GravixAccountDeploy(address user);
     event ActionRevert(uint32 call_id, address user);
-    event MarketOrderRequest(
+    event MarketOrder(
         uint32 call_id,
         address user,
         uint marketIdx,
-        PositionType request_type,
+        PositionType position_type,
         uint128 collateral,
         uint128 expected_price,
         uint32 leverage,
         uint32 max_slippage_rate,
-        uint32 request_key
+        uint32 position_key
     );
-    event MarketOrderExecutionRevert(uint32 call_id, address user, uint32 request_key);
+    event MarketOrderExecutionRevert(uint32 call_id, address user, uint32 position_key);
     event MarketOrderExecution(
         uint32 call_id,
         address user,
-        PositionType position_type,
-        uint128 open_price,
-        uint128 open_fee,
-        uint32 request_key
+        IGravixAccount.Position position,
+        uint32 position_key
     );
     event OraclePriceRequested(
         uint32 call_id,
@@ -174,8 +172,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
     event OracleUpdate(uint32 call_id, uint32 market_idx, Oracle oracle);
 
-    event CancelMarketOrderRevert(uint32 call_id, address user, uint32 request_key);
-    event CancelMarketOrder(uint32 call_id, address user, uint32 request_key);
+    event CancelMarketOrderRevert(uint32 call_id, address user, uint32 position_key);
+    event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
     event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);
@@ -188,7 +186,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
-        uint32 request_key,
+        uint32 position_key,
         uint32 market_idx,
         uint128 collateral,
         uint32 leverage,
@@ -196,18 +194,18 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 asset_price,
         Callback.CallMeta meta
     ) external;
-    function finish_requestMarketOrder(PendingMarketOrderRequest request, uint32 request_key) external;
+    function finish_requestMarketOrder(PendingMarketOrder request, uint32 position_key) external;
     function revert_executeMarketOrder(
-        address user, uint32 request_key, uint32 market_idx, uint128 collateral, uint128 position_size_usd, uint128 asset_price, PositionType position_type, Callback.CallMeta meta
+        address user, uint32 position_key, uint32 market_idx, uint128 collateral, uint128 position_size_usd, uint128 asset_price, PositionType position_type, Callback.CallMeta meta
     ) external;
     function finish_executeMarketOrder(
         address user,
-        uint32 request_key,
+        uint32 position_key,
         IGravixAccount.Position opened_position,
         Callback.CallMeta meta
     ) external;
-    function revert_cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view;
-    function finish_cancelMarketOrder(address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta) external;
+    function revert_cancelMarketOrder(address user, uint32 position_key, Callback.CallMeta meta) external view;
+    function finish_cancelMarketOrder(address user, uint32 position_key, uint128 collateral, Callback.CallMeta meta) external;
     function revert_closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view;
     function oracle_closePosition(
         uint64 nonce,

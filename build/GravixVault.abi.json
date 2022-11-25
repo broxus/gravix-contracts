@@ -103,7 +103,7 @@
 			]
 		},
 		{
-			"name": "validateOrderRequestParams",
+			"name": "validateOrderParams",
 			"inputs": [
 				{"name":"market_idx","type":"uint32"},
 				{"name":"leverage","type":"uint32"},
@@ -117,7 +117,7 @@
 			"name": "finish_requestMarketOrder",
 			"inputs": [
 				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}],"name":"request","type":"tuple"},
-				{"name":"request_key","type":"uint32"}
+				{"name":"position_key","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -127,7 +127,7 @@
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
 				{"name":"market_idx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
@@ -142,7 +142,7 @@
 			"name": "revert_executeMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
 				{"name":"market_idx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"position_size_asset","type":"uint128"},
@@ -157,7 +157,7 @@
 			"name": "finish_executeMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
 				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"new_pos","type":"tuple"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
@@ -191,7 +191,7 @@
 			"name": "cancelMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -201,7 +201,7 @@
 			"name": "revert_cancelMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -211,7 +211,7 @@
 			"name": "finish_cancelMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
@@ -684,7 +684,7 @@
 			]
 		},
 		{
-			"name": "encodeMarketOrderRequestPayload",
+			"name": "encodeMarketOrderPayload",
 			"inputs": [
 				{"name":"market_idx","type":"uint32"},
 				{"name":"position_type","type":"uint8"},
@@ -699,7 +699,7 @@
 			]
 		},
 		{
-			"name": "decodeMarketOrderRequestPayload",
+			"name": "decodeMarketOrderPayload",
 			"inputs": [
 				{"name":"action_payload","type":"cell"}
 			],
@@ -842,17 +842,17 @@
 			]
 		},
 		{
-			"name": "MarketOrderRequest",
+			"name": "MarketOrder",
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"marketIdx","type":"uint256"},
-				{"name":"request_type","type":"uint8"},
+				{"name":"position_type","type":"uint8"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"expected_price","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
 				{"name":"max_slippage_rate","type":"uint32"},
-				{"name":"request_key","type":"uint32"}
+				{"name":"position_key","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -862,7 +862,7 @@
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"}
+				{"name":"position_key","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -872,10 +872,8 @@
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_type","type":"uint8"},
-				{"name":"open_price","type":"uint128"},
-				{"name":"open_fee","type":"uint128"},
-				{"name":"request_key","type":"uint32"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},
+				{"name":"position_key","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -999,7 +997,7 @@
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"}
+				{"name":"position_key","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1009,7 +1007,7 @@
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"request_key","type":"uint32"}
+				{"name":"position_key","type":"uint32"}
 			],
 			"outputs": [
 			]

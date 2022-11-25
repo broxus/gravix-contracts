@@ -15,10 +15,10 @@ import "locklift/src/console.sol";
 
 abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_requestMarketOrder(
-        IGravixVault.PendingMarketOrderRequest pending_request
+        IGravixVault.PendingMarketOrder pending_request
     ) external override onlyGravixVault reserve {
         request_counter += 1;
-        marketOrderRequests[request_counter] = MarketOrderRequest(
+        marketOrders[request_counter] = MarketOrder(
             pending_request.marketIdx,
             pending_request.positionType,
             pending_request.collateral,
@@ -38,7 +38,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     }
 
     function process_executeMarketOrder(
-        uint32 request_key,
+        uint32 position_key,
         uint32 market_idx,
         uint128 position_size_asset,
         IGravixVault.PositionType position_type,
@@ -47,17 +47,17 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         int256 accUSDFundingPerShare,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
-        MarketOrderRequest request = marketOrderRequests[request_key];
+        MarketOrder request = marketOrders[position_key];
         uint128 leveraged_position_usd = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
-        if (!marketOrderRequests.exists(request_key)) {
+        if (!marketOrders.exists(position_key)) {
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, market_idx, 0, position_size_asset, asset_price, position_type, meta
+                user, position_key, market_idx, 0, position_size_asset, asset_price, position_type, meta
             );
             return;
         }
 
-        delete marketOrderRequests[request_key];
+        delete marketOrders[position_key];
 
         uint128 allowed_delta = math.muldiv(request.expectedPrice, request.maxSlippageRate, HUNDRED_PERCENT);
         uint128 min_price = request.expectedPrice - allowed_delta;
@@ -69,7 +69,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (open_price < min_price || open_price > max_price) {
             console.log(format('Min {}, max {}, open {}', min_price, max_price, open_price));
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, market_idx, request.collateral, position_size_asset, asset_price, position_type, meta
+                user, position_key, market_idx, request.collateral, position_size_asset, asset_price, position_type, meta
             );
             return;
         }
@@ -91,28 +91,28 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.liquidationThresholdRate,
             now
         );
-        positions[request_key] = opened_position;
+        positions[position_key] = opened_position;
 
         IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, request_key, opened_position,  meta
+            user, position_key, opened_position,  meta
         );
     }
 
     function process_cancelMarketOrder(
-        uint32 request_key, Callback.CallMeta meta
+        uint32 position_key, Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
-        if (!marketOrderRequests.exists(request_key)) {
+        if (!marketOrders.exists(position_key)) {
             IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, request_key, meta
+                user, position_key, meta
             );
             return;
         }
 
-        MarketOrderRequest _request = marketOrderRequests[request_key];
-        delete marketOrderRequests[request_key];
+        MarketOrder _request = marketOrders[position_key];
+        delete marketOrders[position_key];
 
         IGravixVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, request_key, _request.collateral, meta
+            user, position_key, _request.collateral, meta
         );
     }
 

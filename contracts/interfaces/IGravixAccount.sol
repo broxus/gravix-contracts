@@ -6,7 +6,7 @@ import "./IGravixVault.sol";
 
 
 interface IGravixAccount {
-    struct MarketOrderRequest {
+    struct MarketOrder {
         uint32 marketIdx;
         IGravixVault.PositionType positionType;
         uint128 collateral;
@@ -50,11 +50,11 @@ interface IGravixAccount {
     }
 
     function process_requestMarketOrder(
-        IGravixVault.PendingMarketOrderRequest pending_request
+        IGravixVault.PendingMarketOrder pending_request
     ) external;
-    function process_cancelMarketOrder(uint32 request_key, Callback.CallMeta meta) external;
+    function process_cancelMarketOrder(uint32 position_key, Callback.CallMeta meta) external;
     function process_executeMarketOrder(
-        uint32 request_key,
+        uint32 position_key,
         uint32 market_idx,
         uint128 position_size,
         IGravixVault.PositionType position_type,

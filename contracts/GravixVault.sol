@@ -20,7 +20,7 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallbac
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "./libraries/Gas.sol";
 import "./libraries/Callback.sol";
-import "./base/vex_vault/GravixVaultBase.sol";
+import "./base/gravix_vault/GravixVaultBase.sol";
 import "./interfaces/IGravixAccount.sol";
 import {DateTime as DateTimeLib} from "./libraries/DateTime.sol";
 

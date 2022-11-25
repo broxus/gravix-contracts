@@ -26,7 +26,7 @@ export function bn(num: number | string) {
 
 export function toUSD(num: Bignumber | number) {
     const val = num.toString();
-    return bn(val).div(10**6).toFixed(4);
+    return bn(val).div(10**6).toFixed(5);
 }
 
 export async function tryIncreaseTime(seconds: number) {

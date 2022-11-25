@@ -109,7 +109,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         return uint32(DateTimeLib.timestampFromDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, 0));
     }
 
-    function encodeMarketOrderRequestPayload(
+    function encodeMarketOrderPayload(
         uint32 market_idx,
         PositionType position_type,
         uint32 leverage,
@@ -120,10 +120,10 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     ) external pure returns (TvmCell payload) {
         TvmBuilder builder;
         builder.store(market_idx, position_type, leverage, expected_price, max_slippage);
-        return encodeTokenTransferPayload(Action.MarketOrderRequest, nonce, call_id, builder.toCell());
+        return encodeTokenTransferPayload(Action.MarketOrder, nonce, call_id, builder.toCell());
     }
 
-    function decodeMarketOrderRequestPayload(
+    function decodeMarketOrderPayload(
         TvmCell action_payload
     ) public pure returns (
         uint32 market_idx,
@@ -248,8 +248,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     modifier onlyGravixAccount(address user) {
-        address vex_account_addr = getGravixAccountAddress(user);
-        require (msg.sender == vex_account_addr, Errors.NOT_VEX_ACCOUNT);
+        address gravix_account_addr = getGravixAccountAddress(user);
+        require (msg.sender == gravix_account_addr, Errors.NOT_GRAVIX_ACCOUNT);
         _;
     }
 

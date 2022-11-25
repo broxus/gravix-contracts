@@ -13,7 +13,7 @@ abstract contract GravixAccountStorage is IGravixAccount {
 
     TvmCell platform_code;
 
-    mapping (uint32 => MarketOrderRequest) public marketOrderRequests;
+    mapping (uint32 => MarketOrder) public marketOrders;
     mapping (uint32 => Position) public positions;
 
     uint32 request_counter = 0;

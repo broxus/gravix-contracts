@@ -8,7 +8,7 @@ library Gas {
     uint128 constant MIN_MSG_VALUE = 1.5 ever;
 
     uint128 constant GRAVIX_ACCOUNT_DEPLOY_VALUE = 0.7 ever;
-    uint128 constant VEX_ACC_UPGRADE_VALUE = 1 ever;
+    uint128 constant GRAVIX_ACC_UPGRADE_VALUE = 1 ever;
     uint128 constant ORACLE_PROXY_DEPLOY = 1 ever;
     uint128 constant LIQUIDATION_VALUE = 1.5 ever;
 }

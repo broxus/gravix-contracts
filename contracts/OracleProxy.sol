@@ -21,7 +21,7 @@ contract OracleProxy is IOnRateCallback {
     Callback.CallMeta meta;
 
     // this is set for open/close
-    uint32 request_key;
+    uint32 position_key;
     address user;
 
     // this is set for open
@@ -63,7 +63,7 @@ contract OracleProxy is IOnRateCallback {
 
     function setExecuteCallback(
         address _user,
-        uint32 _request_key,
+        uint32 _position_key,
         uint128 _collateral,
         uint32 _leverage,
         IGravixVault.PositionType _position_type
@@ -71,18 +71,18 @@ contract OracleProxy is IOnRateCallback {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
         user = _user;
-        request_key = _request_key;
+        position_key = _position_key;
         collateral = _collateral;
         leverage = _leverage;
         position_type = _position_type;
         callbackType = CallbackType.Execute;
     }
 
-    function setCloseCallback(address _user, uint32 _request_key) external {
+    function setCloseCallback(address _user, uint32 _position_key) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
         user = _user;
-        request_key = _request_key;
+        position_key = _position_key;
         callbackType = CallbackType.Close;
     }
 
@@ -122,7 +122,7 @@ contract OracleProxy is IOnRateCallback {
             IGravixVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,
                 user,
-                request_key,
+                position_key,
                 market_idx,
                 collateral,
                 leverage,
@@ -134,7 +134,7 @@ contract OracleProxy is IOnRateCallback {
             IGravixVault(vault).oracle_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,
                 user,
-                request_key,
+                position_key,
                 market_idx,
                 price,
                 meta
@@ -185,7 +185,8 @@ contract OracleProxy is IOnRateCallback {
                 price = math.muldiv(price, pair_price, SCALING_FACTOR);
             }
             // path should resolve in USDT
-            require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
+            // TODO: uncomment for prod
+//            require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
             // convert to final price using standard token decimals
             price = math.muldiv(price, 10**9, SCALING_FACTOR);
             _sendCallback(price);

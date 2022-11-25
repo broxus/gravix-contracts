@@ -20,7 +20,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER REQUEST HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
-    function _handleMarketOrderRequest(
+    function _handleMarketOrder(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
     ) internal view returns (bool success) {
         (
@@ -29,9 +29,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             uint32 leverage,
             uint128 expected_price,
             uint32 max_slippage_rate
-        ) = decodeMarketOrderRequestPayload(order_params_payload);
+        ) = decodeMarketOrderPayload(order_params_payload);
 
-        if (!validateOrderRequestParams(market_idx, leverage, max_slippage_rate)) return false;
+        if (!validateOrderParams(market_idx, leverage, max_slippage_rate)) return false;
         if (checkPositionAllowed(
             market_idx,
             collateral,
@@ -40,18 +40,18 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             position_type) > 0
         ) return false;
         if (!marketOpen(market_idx)) return false;
-        _marketOrderRequest(user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, meta);
+        _marketOrder(user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, meta);
         return true;
     }
 
-    function validateOrderRequestParams(uint32 market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+    function validateOrderParams(uint32 market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
         if (!markets.exists(market_idx)) return false;
         if (leverage > markets[market_idx].maxLeverage) return false;
         if (max_slippage > HUNDRED_PERCENT) return false;
         return true;
     }
 
-    function _marketOrderRequest(
+    function _marketOrder(
         address user,
         uint32 market_idx,
         PositionType position_type,
@@ -63,7 +63,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     ) internal view {
         Market _market = markets[market_idx];
 
-        PendingMarketOrderRequest new_request = PendingMarketOrderRequest(
+        PendingMarketOrder new_request = PendingMarketOrder(
             user,
             market_idx,
             position_type,
@@ -79,17 +79,17 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             meta
         );
 
-        address vex_acc = getGravixAccountAddress(user);
-        IGravixAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(new_request);
+        address gravix_acc = getGravixAccountAddress(user);
+        IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(new_request);
     }
 
     function finish_requestMarketOrder(
-        PendingMarketOrderRequest request,
-        uint32 request_key
+        PendingMarketOrder request,
+        uint32 position_key
     ) external override onlyGravixAccount(request.user) reserve {
         collateralReserve += request.collateral;
 
-        emit MarketOrderRequest(
+        emit MarketOrder(
             request.meta.call_id,
             request.user,
             request.marketIdx,
@@ -98,12 +98,12 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             request.expectedPrice,
             request.leverage,
             request.maxSlippageRate,
-            request_key
+            position_key
         );
 
         _sendOpenOrderOracleRequest(
             request.user,
-            request_key,
+            position_key,
             request.marketIdx,
             request.collateral,
             request.leverage,
@@ -117,7 +117,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     function _sendOpenOrderOracleRequest(
         address user,
-        uint32 request_key,
+        uint32 position_key,
         uint32 market_idx,
         uint128 collateral,
         uint32 leverage,
@@ -125,7 +125,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         Callback.CallMeta meta
     ) internal view {
         address proxy = _deployOracleProxy(market_idx, 0, meta);
-        IOracleProxy(proxy).setExecuteCallback{value: 0.1 ever}(user, request_key, collateral, leverage, position_type);
+        IOracleProxy(proxy).setExecuteCallback{value: 0.1 ever}(user, position_key, collateral, leverage, position_type);
     }
 
     function _sendCloseOrderOracleRequest(
@@ -170,7 +170,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
-        uint32 request_key,
+        uint32 position_key,
         uint32 market_idx,
         uint128 collateral,
         uint32 leverage,
@@ -183,13 +183,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size_asset, asset_price, position_type);
 
-        address vex_acc = getGravixAccountAddress(user);
+        address gravix_acc = getGravixAccountAddress(user);
         if (_error == 0) {
             (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
             int256 funding = position_type == PositionType.Long ? accLongUSDFundingPerShare : accShortUSDFundingPerShare;
 
-            IGravixAccount(vex_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                request_key,
+            IGravixAccount(gravix_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                position_key,
                 market_idx,
                 position_size_asset,
                 position_type,
@@ -200,13 +200,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             );
         } else {
             // order cant be executed now, some limits reached and etc.
-            IGravixAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
+            IGravixAccount(gravix_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(position_key, meta);
         }
     }
 
     function revert_executeMarketOrder(
         address user,
-        uint32 request_key,
+        uint32 position_key,
         uint32 market_idx,
         uint128 collateral,
         uint128 position_size_asset,
@@ -214,7 +214,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         PositionType position_type,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
-        emit MarketOrderExecutionRevert(meta.call_id, user, request_key);
+        emit MarketOrderExecutionRevert(meta.call_id, user, position_key);
 
         _removePositionFromMarket(market_idx, position_size_asset, asset_price, position_type);
 
@@ -232,7 +232,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
     function finish_executeMarketOrder(
         address user,
-        uint32 request_key,
+        uint32 position_key,
         IGravixAccount.Position new_pos,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
@@ -248,10 +248,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         emit MarketOrderExecution(
             meta.call_id,
             user,
-            new_pos.positionType,
-            new_pos.openPrice,
-            new_pos.openFee,
-            request_key
+            new_pos,
+            position_key
         );
     }
 
@@ -281,25 +279,25 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
-    function cancelMarketOrder(address user, uint32 request_key, Callback.CallMeta meta) external view onlyActive reserve {
+    function cancelMarketOrder(address user, uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
-        address vex_acc = getGravixAccountAddress(user);
-        IGravixAccount(vex_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_key, meta);
+        address gravix_acc = getGravixAccountAddress(user);
+        IGravixAccount(gravix_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(position_key, meta);
     }
 
     function revert_cancelMarketOrder(
-        address user, uint32 request_key, Callback.CallMeta meta
+        address user, uint32 position_key, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit CancelMarketOrderRevert(meta.call_id, user, request_key);
+        emit CancelMarketOrderRevert(meta.call_id, user, position_key);
     }
 
     function finish_cancelMarketOrder(
-        address user, uint32 request_key, uint128 collateral, Callback.CallMeta meta
+        address user, uint32 position_key, uint128 collateral, Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         collateralReserve -= collateral;
 
-        emit CancelMarketOrder(meta.call_id, user, request_key);
+        emit CancelMarketOrder(meta.call_id, user, position_key);
         _transfer(usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
     }
 
@@ -314,8 +312,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            address vex_acc = getGravixAccountAddress(users[i]);
-            IGravixAccount(vex_acc).process_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
+            address gravix_acc = getGravixAccountAddress(users[i]);
+            IGravixAccount(gravix_acc).process_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
                 position_keys[i], meta
             );
         }
@@ -325,8 +323,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function closePosition(uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
-        address vex_acc = getGravixAccountAddress(msg.sender);
-        IGravixAccount(vex_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        address gravix_acc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(gravix_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key, meta
         );
     }
@@ -354,8 +352,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     ) external override onlyOracleProxy(nonce) reserve {
         (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
 
-        address vex_acc = getGravixAccountAddress(user);
-        IGravixAccount(vex_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        address gravix_acc = getGravixAccountAddress(user);
+        IGravixAccount(gravix_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key,
             asset_price,
             accLongUSDFundingPerShare,
@@ -430,9 +428,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
 
         for (PositionIdx position: positions) {
-            address vex_acc = getGravixAccountAddress(position.user);
+            address gravix_acc = getGravixAccountAddress(position.user);
             // reserve 0.05 ever here to cover computation costs of this txn
-            IGravixAccount(vex_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.05 ever}(
+            IGravixAccount(gravix_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.05 ever}(
                 liquidator,
                 position.positionKey,
                 asset_price,

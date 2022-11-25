@@ -27,24 +27,24 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     }
 
     function upgradeGravixAccount(Callback.CallMeta meta) external view reserve {
-        require (msg.value >= Gas.VEX_ACC_UPGRADE_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE, Errors.LOW_MSG_VALUE);
 
         _upgradeGravixAccount(msg.sender, 0, meta);
     }
 
     // admin hook, no need for call_id or nonce
     function forceUpgradeGravixAccounts(address[] users, Callback.CallMeta meta) external view onlyOwner reserve {
-        require (msg.value >= Gas.VEX_ACC_UPGRADE_VALUE * (users.length + 1), Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE * (users.length + 1), Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            _upgradeGravixAccount(users[i], Gas.VEX_ACC_UPGRADE_VALUE, meta);
+            _upgradeGravixAccount(users[i], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
         }
     }
 
     function _upgradeGravixAccount(address user, uint128 value, Callback.CallMeta meta) internal view {
-        address vex_acc = getGravixAccountAddress(user);
+        address gravix_acc = getGravixAccountAddress(user);
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
-        IGravixAccount(vex_acc).upgrade{ value: value, flag: flag }(GravixAccountCode, GravixAccountVersion, meta);
+        IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(GravixAccountCode, GravixAccountVersion, meta);
     }
 
     function onGravixAccountUpgrade(

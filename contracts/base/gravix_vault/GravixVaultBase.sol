@@ -70,8 +70,8 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
 
         if (msg.sender == usdtWallet) {
-            if (!exception && action == Action.MarketOrderRequest) {
-                exception = exception || !_handleMarketOrderRequest(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
+            if (!exception && action == Action.MarketOrder) {
+                exception = exception || !_handleMarketOrder(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
             } else if (!exception && action == Action.LiquidityDeposit) {
                 _handleUsdtDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
             }
@@ -109,10 +109,10 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         // if processing failed - contract was not deployed. Deploy and try again
         if (functionId == tvm.functionId(IGravixAccount.process_requestMarketOrder)) {
             tvm.rawReserve(_reserve(), 0);
-            PendingMarketOrderRequest request = slice.decode(PendingMarketOrderRequest);
+            PendingMarketOrder request = slice.decode(PendingMarketOrder);
 
-            address vex_acc = _deployGravixAccount(request.user);
-            IGravixAccount(vex_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
+            address gravix_acc = _deployGravixAccount(request.user);
+            IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
         }
     }
 }
