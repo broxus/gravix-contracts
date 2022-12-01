@@ -77,8 +77,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 lastNoiUpdatePrice;
         uint16 noiWeight; // 100 -> 1x
 
-        int256 accLongUSDFundingPerShare;
-        int256 accShortUSDFundingPerShare;
+        Funding funding;
         uint32 lastFundingUpdateTime;
 
         uint32 maxLeverage; // 100 -> 1x
@@ -125,6 +124,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         mapping (uint8 => TimeInterval) workingHours;
     }
 
+    struct Funding {
+        int256 accLongUSDFundingPerShare;
+        int256 accShortUSDFundingPerShare;
+    }
+
     event NewOwner(uint32 call_id, address new_owner);
     event GravixAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
     event OracleProxyCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
@@ -134,7 +138,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event MarketOrder(
         uint32 call_id,
         address user,
-        uint marketIdx,
+        uint32 market_idx,
         PositionType position_type,
         uint128 collateral,
         uint128 expected_price,

@@ -1,6 +1,5 @@
 pragma ever-solidity ^0.62.0;
 
-
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 import "../../libraries/Gas.sol";
 import "../../libraries/Callback.sol";

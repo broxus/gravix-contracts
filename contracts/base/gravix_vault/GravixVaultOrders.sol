@@ -185,8 +185,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         address gravix_acc = getGravixAccountAddress(user);
         if (_error == 0) {
-            (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
-            int256 funding = position_type == PositionType.Long ? accLongUSDFundingPerShare : accShortUSDFundingPerShare;
+            Funding _funding = _updateFunding(market_idx, asset_price);
+            int256 funding = position_type == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
 
             IGravixAccount(gravix_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 position_key,
@@ -350,14 +350,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
+        Funding _funding = _updateFunding(market_idx, asset_price);
 
         address gravix_acc = getGravixAccountAddress(user);
         IGravixAccount(gravix_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key,
             asset_price,
-            accLongUSDFundingPerShare,
-            accShortUSDFundingPerShare,
+            _funding,
             meta
         );
     }
@@ -425,7 +424,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) = _updateFunding(market_idx, asset_price);
+        Funding _funding = _updateFunding(market_idx, asset_price);
 
         for (PositionIdx position: positions) {
             address gravix_acc = getGravixAccountAddress(position.user);
@@ -434,8 +433,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 liquidator,
                 position.positionKey,
                 asset_price,
-                accLongUSDFundingPerShare,
-                accShortUSDFundingPerShare,
+                _funding,
                 meta
             );
         }
@@ -569,33 +567,33 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         ) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, true);
     }
     // ----------------------------------------------------------------------------------
-    // --------------------------- FUNDINGS ---------------------------------------------
+    // --------------------------- FUNDING ----------------------------------------------
     // ----------------------------------------------------------------------------------
-    function _updateFunding(uint32 market_idx, uint128 asset_price) internal returns (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) {
+    function _updateFunding(uint32 market_idx, uint128 asset_price) internal returns (Funding funding) {
         Market _market = markets[market_idx];
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
-        (_market.accLongUSDFundingPerShare, _market.accShortUSDFundingPerShare) = _getUpdatedFunding(_market, asset_price);
+        _market.funding = _getUpdatedFunding(_market, asset_price);
         _market.lastFundingUpdateTime = now;
 
         markets[market_idx] = _market;
-        return (_market.accLongUSDFundingPerShare, _market.accShortUSDFundingPerShare);
+        return _market.funding;
     }
 
-    function getUpdatedFunding(uint32[] market_idx, uint128[] assets_prices) public view returns (int256[] accLongUSDFundingPerShare, int256[] accShortUSDFundingPerShare) {
-        accLongUSDFundingPerShare = new int256[](market_idx.length);
-        accShortUSDFundingPerShare = new int256[](market_idx.length);
-        for (uint i = 0; i < market_idx.length; i++) {
-            (accLongUSDFundingPerShare[i], accShortUSDFundingPerShare[i]) = _getUpdatedFunding(markets[market_idx[i]], assets_prices[i]);
+    function getUpdatedFunding(mapping (uint32 => uint128) prices) external view returns (mapping (uint32 => Funding) funding) {
+        for ((uint32 market_idx, uint128 asset_price): prices) {
+            funding[market_idx] = _getUpdatedFunding(markets[market_idx], asset_price);
         }
+        return funding;
     }
 
-    function _getUpdatedFunding(Market _market, uint128 asset_price) internal pure returns (int256 accLongUSDFundingPerShare, int256 accShortUSDFundingPerShare) {
+    function _getUpdatedFunding(Market _market, uint128 asset_price) internal pure returns (Funding _funding) {
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
         (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
 
-        accLongUSDFundingPerShare = _market.accLongUSDFundingPerShare + _calculateFunding(long_rate_per_hour, _market.totalLongsAsset, asset_price, _market.lastFundingUpdateTime);
-        accShortUSDFundingPerShare = _market.accShortUSDFundingPerShare + _calculateFunding(short_rate_per_hour, _market.totalShortsAsset, asset_price, _market.lastFundingUpdateTime);
+        _funding.accLongUSDFundingPerShare = _market.funding.accLongUSDFundingPerShare + _calculateFunding(long_rate_per_hour, _market.totalLongsAsset, asset_price, _market.lastFundingUpdateTime);
+        _funding.accShortUSDFundingPerShare = _market.funding.accShortUSDFundingPerShare + _calculateFunding(short_rate_per_hour, _market.totalShortsAsset, asset_price, _market.lastFundingUpdateTime);
+        return _funding;
     }
 
     function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
@@ -631,5 +629,6 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 long_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalShortsAsset, _market.totalLongsAsset));
             }
         }
+        return (long_rate_per_hour, short_rate_per_hour);
     }
 }

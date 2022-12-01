@@ -67,7 +67,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 open_price = applyOpenSpread(asset_price, request.positionType, request.baseSpreadRate + dynamic_spread);
 
         if (open_price < min_price || open_price > max_price) {
-            console.log(format('Min {}, max {}, open {}', min_price, max_price, open_price));
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, position_key, market_idx, request.collateral, position_size_asset, asset_price, position_type, meta
             );
@@ -120,8 +119,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         address liquidator,
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongUSDFundingPerShare,
-        int256 accShortUSDFundingPerShare,
+        IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         if (!positions.exists(position_key)) {
@@ -131,7 +129,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        PositionView position_view = getPositionView(position_key, asset_price, accLongUSDFundingPerShare, accShortUSDFundingPerShare);
+        PositionView position_view = getPositionView(ViewInput(position_key, asset_price, funding));
         if (position_view.liquidate) {
             delete positions[position_key];
             IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -163,8 +161,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process2_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongUSDFundingPerShare,
-        int256 accShortUSDFundingPerShare,
+        IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         if (!positions.exists(position_key)) {
@@ -174,7 +171,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        PositionView position_view = getPositionView(position_key, asset_price, accLongUSDFundingPerShare, accShortUSDFundingPerShare);
+        PositionView position_view = getPositionView(ViewInput(position_key, asset_price, funding));
         delete positions[position_key];
 
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(

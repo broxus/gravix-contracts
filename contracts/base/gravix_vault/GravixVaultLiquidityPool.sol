@@ -59,7 +59,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             stg_amount = usdt_amount;
         } else {
             (uint128 in_price,) = stgUsdtPrice();
-            stg_amount = math.muldiv(usdt_amount, SCALING_FACTOR, in_price);
+            stg_amount = math.muldiv(usdt_amount, USDT_DECIMALS, in_price);
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stg_amount;
     }
@@ -69,19 +69,19 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             usdt_amount = stg_amount;
         } else {
             (,uint128 out_price) = stgUsdtPrice();
-            usdt_amount = math.muldiv(stg_amount, out_price, SCALING_FACTOR);
+            usdt_amount = math.muldiv(stg_amount, out_price, USDT_DECIMALS);
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }usdt_amount;
     }
 
-    // @dev Prices are multiplied by 10**18
+    // @dev Prices are multiplied by 10**6
     // in price could be higher in case of under collateralization
     function stgUsdtPrice() public view responsible returns (uint128 in_price, uint128 out_price) {
         if (stgUsdtSupply == 0) {
-            (in_price, out_price) = (SCALING_FACTOR, SCALING_FACTOR);
+            (in_price, out_price) = (USDT_DECIMALS, USDT_DECIMALS);
         } else {
             // out price is current real price
-            out_price = math.muldiv(poolBalance, SCALING_FACTOR, stgUsdtSupply);
+            out_price = math.muldiv(poolBalance, USDT_DECIMALS, stgUsdtSupply);
             // if we are in undercollateralized state
             in_price = targetPrice > 0 ? targetPrice : out_price;
         }
@@ -89,7 +89,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function poolDebt() public view returns (uint128) {
-        uint128 target_balance = math.muldiv(stgUsdtSupply, targetPrice, SCALING_FACTOR);
+        uint128 target_balance = math.muldiv(stgUsdtSupply, targetPrice, USDT_DECIMALS);
         return poolBalance >= target_balance ? 0 : target_balance - poolBalance;
     }
     // ----------------------------------------------------------------------------------

@@ -29,26 +29,16 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
     }
 
-    function getPositionsView(
-        uint32[] positions_keys,
-        uint128[] assets_prices,
-        int256[] accLongUSDFundingPerShare,
-        int256[] accShortUSDFundingPerShare
-    ) external view responsible returns (PositionView[] positions_views) {
-        require (positions_keys.length == assets_prices.length, Errors.BAD_INPUT);
-        for (uint i = 0; i < positions_keys.length; i++) {
-            positions_views.push(getPositionView(positions_keys[i], assets_prices[i], accLongUSDFundingPerShare[i], accShortUSDFundingPerShare[i]));
+    function getPositionsView(ViewInput[] inputs) external view responsible returns (PositionView[] positions_views) {
+        for (ViewInput input: inputs) {
+            positions_views.push(getPositionView(input));
         }
+
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }positions_views;
     }
 
-    function getPositionView(
-        uint32 position_key,
-        uint128 asset_price,
-        int256 accLongUSDFundingPerShare,
-        int256 accShortUSDFundingPerShare
-    ) public view responsible returns (PositionView position_view) {
-        Position position = positions[position_key];
+    function getPositionView(ViewInput input) public view responsible returns (PositionView position_view) {
+        Position position = positions[input.positionKey];
         bool is_long = position.positionType == IGravixVault.PositionType.Long;
 
         uint128 collateral = position.initialCollateral - position.openFee;
@@ -58,17 +48,15 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         // borrow fee
         uint32 time_passed = now - position.createdAt;
         uint128 borrow_fee_asset = math.muldiv(position.borrowBaseRatePerHour * time_passed, leveraged_position_asset, HOUR);
-        uint128 borrow_fee_usd = math.muldiv(borrow_fee_asset, asset_price, USDT_DECIMALS);
-
-        // close price
-        uint128 close_price = applyCloseSpread(asset_price, position.positionType, position.baseSpreadRate);
+        uint128 borrow_fee_usd = math.muldiv(borrow_fee_asset, input.assetPrice, USDT_DECIMALS);
 
         // funding
-        int256 new_acc_funding = is_long ? accLongUSDFundingPerShare : accShortUSDFundingPerShare;
+        int256 new_acc_funding = is_long ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
         int256 funding_debt = math.muldiv(leveraged_position_asset, position.accUSDFundingPerShare, SCALING_FACTOR);
         // if funding_fee > 0, trader pays
         int256 funding_fee_usd = math.muldiv(leveraged_position_asset, new_acc_funding, SCALING_FACTOR) - funding_debt;
-
+        // close price
+        uint128 close_price = applyCloseSpread(input.assetPrice, position.positionType, position.baseSpreadRate);
         // pnl (no funding and borrow fees)
         // (close_price/open_price - 1)
         int256 pnl = int256(math.muldiv(close_price, SCALING_FACTOR, position.openPrice)) - SCALING_FACTOR;
@@ -103,7 +91,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         //        int256 current_collateral = collateral - borrow_fee - funding_fee + pnl;
         //        uint128 liq_threshold = math.muldiv(collateral, position.liquidationThresholdRate, HUNDRED_PERCENT);
         //        bool liquidate = current_collateral <= liq_threshold;
-        bool liquidate = is_long ? asset_price <= liq_price : asset_price >= liq_price;
+        bool liquidate = is_long ? input.assetPrice <= liq_price : input.assetPrice >= liq_price;
 
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }PositionView(
             position,

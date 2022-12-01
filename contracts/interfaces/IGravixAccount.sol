@@ -49,6 +49,12 @@ interface IGravixAccount {
         bool liquidate;
     }
 
+    struct ViewInput {
+        uint32 positionKey;
+        uint128 assetPrice;
+        IGravixVault.Funding funding;
+    }
+
     function process_requestMarketOrder(
         IGravixVault.PendingMarketOrder pending_request
     ) external;
@@ -69,16 +75,14 @@ interface IGravixAccount {
     function process2_closePosition(
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongUSDFundingPerShare,
-        int256 accShortUSDFundingPerShare,
+        IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external;
     function process_liquidatePositions(
         address liquidator,
         uint32 position_key,
         uint128 asset_price,
-        int256 accLongUSDFundingPerShare,
-        int256 accShortUSDFundingPerShare,
+        IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
