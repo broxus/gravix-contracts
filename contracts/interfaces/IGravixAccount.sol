@@ -47,6 +47,7 @@ interface IGravixAccount {
         uint128 liquidationPrice;
         int256 pnl;
         bool liquidate;
+        uint32 viewTime;
     }
 
     struct ViewInput {

@@ -66,27 +66,6 @@ const config: LockliftConfig = {
         amount: 500
       },
     },
-    test: {
-      // Specify connection settings for https://github.com/broxus/everscale-client/
-      connection: "testnet",
-      // This giver is default local-node giverV2
-      giver: {
-        // Check if you need provide custom giver
-        giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
-        address: "0:a4053fd2e9798d0457c9e8f012cef203e49da863d76f36d52d5e2e62c326b217",
-        key: process.env.TESTNET_GIVER_KEY ?? "",
-      },
-      tracing: {
-        endpoint: 'https://net.ton.dev/graphql',
-      },
-
-      keys: {
-        // Use everdev to generate your phrase
-        // !!! Never commit it in your repos !!!
-        // phrase: "action inject penalty envelope rabbit element slim tornado dinner pizza off blood",
-        amount: 500
-      },
-    },
     main: {
       connection: "mainnetJrpc",
       giver: {

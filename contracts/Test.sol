@@ -1,8 +1,8 @@
-//pragma ever-solidity ^0.62.0;
-//
-//import "locklift/src/console.sol";
-//
-//
+//pragma ever-solidity ^0.60.0;
+////
+////import "locklift/src/console.sol";
+////
+////
 //contract Test {
 //    uint static nonce;
 //
@@ -10,7 +10,7 @@
 //        tvm.accept();
 //    }
 //
-//    function test2() external returns (uint128) {
+//    function test2() external pure returns (uint128) {
 //        tvm.accept();
 //
 //        uint128 qwe = 123123;

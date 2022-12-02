@@ -47,8 +47,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
 
         // borrow fee
         uint32 time_passed = now - position.createdAt;
-        uint128 borrow_fee_asset = math.muldiv(position.borrowBaseRatePerHour * time_passed, leveraged_position_asset, HOUR);
-        uint128 borrow_fee_usd = math.muldiv(borrow_fee_asset, input.assetPrice, USDT_DECIMALS);
+        uint128 borrow_fee_share = math.muldiv(position.borrowBaseRatePerHour, time_passed, HOUR);
+        uint128 borrow_fee_usd = math.muldiv(borrow_fee_share, leveraged_position_usd, HUNDRED_PERCENT);
 
         // funding
         int256 new_acc_funding = is_long ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
@@ -77,12 +77,11 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             uint128(math.max(position.openPrice + liq_price_dist, 0));
 
         // close fee
-        int256 updated_position = math.muldiv(leveraged_position_asset, close_price, USDT_DECIMALS);
-//        math.muldiv(
-//            math.muldiv(close_price, SCALING_FACTOR, position.openPrice),
-//            leveraged_position_usd,
-//            SCALING_FACTOR
-//        );
+        int256 updated_position = math.muldiv(
+            math.muldiv(close_price, SCALING_FACTOR, position.openPrice),
+            leveraged_position_usd,
+            SCALING_FACTOR
+        );
         updated_position -= math.min(funding_fee_usd + borrow_fee_usd, updated_position);
         // updated_position always positive
         uint128 close_fee = uint128(math.muldiv(updated_position, position.closeFeeRate, HUNDRED_PERCENT));
@@ -102,7 +101,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             close_fee,
             liq_price,
             pnl,
-            liquidate
+            liquidate,
+            now
         );
     }
 

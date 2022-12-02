@@ -271,7 +271,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             new_noi = new_longs_total - math.min(market.totalShortsAsset, new_longs_total);
         } else {
             uint128 new_shorts_total = market.totalShortsAsset + position_size_asset / 2;
-            new_noi = new_shorts_total - math.min(market.totalShortsAsset, new_shorts_total);
+            new_noi = new_shorts_total - math.min(market.totalLongsAsset, new_shorts_total);
         }
         dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depthAsset));
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;

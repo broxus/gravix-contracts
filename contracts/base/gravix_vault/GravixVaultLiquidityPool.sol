@@ -14,6 +14,9 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDITY POOL ---------------------------------------
     // ----------------------------------------------------------------------------------
+    // TODO: withdraw money from insurance fund
+
+
     function _handleUsdtDeposit(
         address user, uint128 amount, Callback.CallMeta meta
     ) internal {
