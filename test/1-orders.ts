@@ -1,14 +1,14 @@
-import {deployUser, setupPairMock, setupTokenRoot, setupVault, bn, toUSD} from "./utils/common";
+import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress} from "locklift";
-import chai, {expect, use} from "chai";
+import {Address, Contract, getRandomNonce, lockliftChai, zeroAddress} from "locklift";
+import chai, {expect} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {PairMockAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
-import {testMarketPosition} from "./utils/orders";
+import {closeOrder, openMarketOrder, setPrice, testMarketPosition} from "./utils/orders";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -19,7 +19,7 @@ describe("Testing main orders flow", async function () {
 
     let usdt_root: Token;
     let stg_root: Token;
-    const TOKEN_DECIMALS = 10**6;
+    const TOKEN_DECIMALS = 10 ** 6;
     const PERCENT_100 = bn(1_000_000_000_000);
     const SCALING_FACTOR = bn(10).pow(18);
     const LONG_POS = 0;
@@ -46,12 +46,12 @@ describe("Testing main orders flow", async function () {
         maxShortsUSD: 100_000 * TOKEN_DECIMALS, // 100k
         noiWeight: 100,
         maxLeverage: 10000, // 100x
-        depthAsset: 25_000 * TOKEN_DECIMALS, // 25k
+        depthAsset: 15 * TOKEN_DECIMALS, // 25k
         fees: {
             openFeeRate: 1000000000, // 0.1%
             closeFeeRate: 1000000000, // 0.1%
             baseSpreadRate: 1000000000, // 0.1%
-            baseDynamicSpreadRate: 500000000, // 0.05%
+            baseDynamicSpreadRate: 1000000000, // 0.1%
             borrowBaseRatePerHour: 0, // disable by default
             fundingBaseRatePerHour: 0 // disable by default
         },
@@ -136,12 +136,12 @@ describe("Testing main orders flow", async function () {
             expect(user_stg_bal.toString()).to.be.eq(deposit_amount.toString());
         });
 
-        describe('Basic scenarios: check open fee, pnl, close fee, spreads', async function() {
+        describe('Basic scenarios: open fee, pnl, close fee, spreads checked', async function () {
             const market_idx = 0;
             // TODO: Negative cases, e.g slippage, noi/hard limits, leverage, wrong market_idx
 
-            describe('Test long positions', async function() {
-                it('Pnl+, 1x leverage, open/close 1000$/1100$', async function() {
+            describe.skip('Test solo long positions', async function () {
+                it('Pnl+, 1x leverage, open/close 1000$/1100$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -156,7 +156,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl+, 10x leverage, open/close 1000$/1500$', async function() {
+                it('Pnl+, 10x leverage, open/close 1000$/1500$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -171,7 +171,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl+, 100x leverage, open/close 1000$/2000$', async function() {
+                it('Pnl+, 100x leverage, open/close 1000$/2000$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -186,7 +186,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl-, 1x leverage, open/close 1000$/500$', async function() {
+                it('Pnl-, 1x leverage, open/close 1000$/500$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -201,7 +201,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl-, 10x leverage, open/close 1000$/950$', async function() {
+                it('Pnl-, 10x leverage, open/close 1000$/950$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -216,7 +216,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl-, 100x leverage, open/close 1000$/995$', async function() {
+                it('Pnl-, 100x leverage, open/close 1000$/995$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -232,8 +232,8 @@ describe("Testing main orders flow", async function () {
                 });
             });
 
-            describe('Test short positions', async function() {
-                it('Pnl+, 1x leverage, open/close 1000$/900$', async function() {
+            describe.skip('Test solo short positions', async function () {
+                it('Pnl+, 1x leverage, open/close 1000$/900$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -248,7 +248,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl+, 10x leverage, open/close 1000$/650$', async function() {
+                it('Pnl+, 10x leverage, open/close 1000$/650$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -263,7 +263,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl+, 100x leverage, open/close 1000$/300$', async function() {
+                it('Pnl+, 100x leverage, open/close 1000$/300$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -278,7 +278,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl-, 1x leverage, open/close 1000$/1850$', async function() {
+                it('Pnl-, 1x leverage, open/close 1000$/1850$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -293,7 +293,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl-, 10x leverage, open/close 1000$/1050$', async function() {
+                it('Pnl-, 10x leverage, open/close 1000$/1050$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -308,7 +308,7 @@ describe("Testing main orders flow", async function () {
                     );
                 });
 
-                it('Pnl-, 100x leverage, open/close 1000$/1005$', async function() {
+                it('Pnl-, 100x leverage, open/close 1000$/1005$', async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -323,21 +323,140 @@ describe("Testing main orders flow", async function () {
                     );
                 });
             });
+
+            describe.skip('Mixed case', async function() {
+                let long_pos_key: number, long_pos2_key: number;
+                let short_pos_key: number, short_pos2_key: number;
+
+                it('Opening positions at 1000$', async function() {
+                    await setPrice(eth_usdt_mock, 1000 * TOKEN_DECIMALS);
+                    long_pos_key = await openMarketOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        market_idx,
+                        LONG_POS,
+                        100 * TOKEN_DECIMALS,
+                        100
+                    );
+                    short_pos_key = await openMarketOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        market_idx,
+                        SHORT_POS,
+                        100 * TOKEN_DECIMALS,
+                        100
+                    );
+                    long_pos2_key = await openMarketOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        market_idx,
+                        LONG_POS,
+                        100 * TOKEN_DECIMALS,
+                        100
+                    );
+                    short_pos2_key = await openMarketOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        market_idx,
+                        SHORT_POS,
+                        100 * TOKEN_DECIMALS,
+                        100
+                    );
+                });
+
+                it('Closing positions at 1100$/900$', async function() {
+                    await setPrice(eth_usdt_mock, 1100 * TOKEN_DECIMALS);
+                    await closeOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        long_pos_key
+                    );
+                    await closeOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        short_pos_key
+                    );
+
+                    await setPrice(eth_usdt_mock, 900 * TOKEN_DECIMALS);
+                    await closeOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        long_pos2_key
+                    );
+                    await closeOrder(
+                        vault,
+                        eth_usdt_mock,
+                        user,
+                        user_usdt_wallet,
+                        short_pos2_key
+                    );
+                });
+            });
+        });
+
+        describe('Advanced scenarios: funding and borrow fee checked', async function() {
+            const market_idx = 1;
+
+            it('Add new market', async function() {
+                let new_config = basic_config;
+                new_config.fees.borrowBaseRatePerHour = 1000000000; // 0.1% per hour
+                new_config.fees.fundingBaseRatePerHour = 0; // 0.1%
+
+                const oracle: Oracle = {
+                    chainlink: {addr: zeroAddress},
+                    dex: {
+                        targetToken: eth_addr,
+                        path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
+                    }
+                }
+
+                await locklift.tracing.trace(vault.addMarkets([new_config]));
+                await locklift.tracing.trace(vault.setOracles([[1, oracle]]));
+            });
+
+            it('Testing borrow fee', async function() {
+                await testMarketPosition(
+                    vault,
+                    eth_usdt_mock,
+                    user,
+                    user_usdt_wallet,
+                    market_idx,
+                    LONG_POS,
+                    100 * TOKEN_DECIMALS,
+                    100,
+                    1000 * TOKEN_DECIMALS,
+                    1100 * TOKEN_DECIMALS,
+                    86400 // 1 day
+                );
+
+                await testMarketPosition(
+                    vault,
+                    eth_usdt_mock,
+                    user,
+                    user_usdt_wallet,
+                    market_idx,
+                    SHORT_POS,
+                    100 * TOKEN_DECIMALS,
+                    100,
+                    1000 * TOKEN_DECIMALS,
+                    1100 * TOKEN_DECIMALS,
+                    86400 // 1 day
+                );
+            });
         });
     });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

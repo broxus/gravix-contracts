@@ -1,16 +1,15 @@
-import {Contract, toNano} from "locklift";
+import {Contract} from "locklift";
 import {Account} from 'locklift/everscale-client'
 import {GravixVault} from "./wrappers/vault";
 import BigNumber from "bignumber.js";
-import {GravixAccountAbi, PairMockAbi} from "../../build/factorySource";
-import {bn, toUSD} from "./common";
+import {PairMockAbi} from "../../build/factorySource";
+import {bn, toUSD, tryIncreaseTime} from "./common";
 import {TokenWallet} from "./wrappers/token_wallet";
-import {use} from "chai";
 
 const logger = require("mocha-logger");
 const {expect} = require("chai");
 
-const TOKEN_DECIMALS = 10**6;
+const TOKEN_DECIMALS = 10 ** 6;
 const PERCENT_100 = bn(1_000_000_000_000);
 const SCALING_FACTOR = bn(10).pow(18);
 const ptype = {0: 'long', 1: 'short'};
@@ -26,7 +25,7 @@ export async function setPrice(pair: Contract<PairMockAbi>, price: number) {
     await pair.methods.setReserves({
         // 1 eth and {price}$ in reserves
         // tokens in pairs have 9 decimals
-        new_reserves: [10**9, price]
+        new_reserves: [10 ** 9, price]
     }).sendExternal({publicKey: signer?.publicKey as string});
 }
 
@@ -43,12 +42,22 @@ export async function openMarketOrder(
 ) {
     const initial_price = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({market_idx: market_idx, answerId: 0}).call())._market;
-    let pool_balance = bn((await vault.contract.methods.getDetails({answerId: 0}).call())._poolBalance);
 
     const position = collateral * (leverage / 100);
     const position_in_asset = position * TOKEN_DECIMALS / initial_price;
-    const dynamic_spread = await vault.getDynamicSpread(market_idx, position_in_asset, pos_type);
+
+    let new_noi;
+    if (pos_type === 0) {
+        const new_longs_total = bn(market.totalLongsAsset).plus(position_in_asset/2);
+        new_noi = new_longs_total.minus(bn(market.totalShortsAsset));
+    } else {
+        const new_shorts_total = bn(market.totalShortsAsset).plus(position_in_asset/2);
+        new_noi = new_shorts_total.minus(bn(market.totalLongsAsset));
+    }
+    new_noi = new_noi.lt(0) ? bn(0) : new_noi;
+    const dynamic_spread = new_noi.times(market.fees.baseDynamicSpreadRate).idiv(market.depthAsset);
     const total_spread = bn(market.fees.baseSpreadRate).plus(dynamic_spread);
+
     const price_multiplier = pos_type == 0 ? PERCENT_100.plus(total_spread) : PERCENT_100.minus(total_spread);
     const expected_price = price_multiplier.times(initial_price).idiv(PERCENT_100);
 
@@ -65,6 +74,7 @@ export async function openMarketOrder(
     }).call()).value0;
     expect(res.toString()).to.be.eq('0');
 
+    const details_prev = await vault.details();
     const {traceTree} = await locklift.tracing.trace(vault.openPosition(
         user_wallet, collateral, market_idx, pos_type, leverage, expected_price.toString(), 0, 1
     ));
@@ -75,60 +85,81 @@ export async function openMarketOrder(
     const open_fee_expected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
 
     expect(traceTree).to
-        .emit("MarketOrderRequest")
+        .emit("MarketOrder")
         .withNamedArgs({
             call_id: '1',
             user: user.address,
             collateral: collateral.toString(),
             expected_price: expected_price.toFixed(),
             leverage: leverage.toString(),
-            request_type: pos_type.toString(),
+            position_type: pos_type.toString(),
             max_slippage_rate: '0',
-            marketIdx: market_idx.toString()
+            market_idx: market_idx.toString()
         })
         .and
         .emit("MarketOrderExecution")
         .withNamedArgs({
             call_id: '1',
             user: user.address,
-            position_type: pos_type.toString(),
-            open_price: expected_price.toFixed(),
-            open_fee: open_fee_expected.toString()
+            position: {
+                positionType: pos_type.toString(),
+                openPrice: expected_price.toFixed(),
+                openFee: open_fee_expected.toFixed()
+            }
         });
 
+    const event = await vault.getEvent('MarketOrderExecution');
+
     const details = await vault.details();
-    expect(details._collateralReserve).to.be.eq(bn(collateral).minus(open_fee_expected).toString());
-    expect(details._poolBalance).to.be.eq(pool_balance.plus(open_fee_expected).toString());
+    const col_up = bn(collateral).minus(open_fee_expected);
 
-    const up_collateral = bn(collateral).minus(open_fee_expected);
-    const up_position = up_collateral.times(leverage).idiv(100);
+    expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(col_up).toFixed());
+    expect(details._poolBalance).to.be.eq(bn(details_prev._poolBalance).plus(open_fee_expected).toFixed());
 
+    const pos_view = (await account.contract.methods.getPositionView({
+        answerId: 0,
+        input: {
+            positionKey: pos_key,
+            assetPrice: 0,
+            funding: {
+                accLongUSDFundingPerShare: 0,
+                accShortUSDFundingPerShare: 0
+            }
+        }
+    }).call()).position_view;
+
+    const leveraged_usd = bn(pos_view.position.initialCollateral)
+        .minus(pos_view.position.openFee)
+        .times(pos_view.position.leverage)
+        .idiv(100);
+
+    const time_passed = bn(pos_view.viewTime).minus(pos_view.position.createdAt);
+    const borrow_fee = time_passed
+        .times(pos_view.position.borrowBaseRatePerHour)
+        .idiv(3600)
+        .times(leveraged_usd)
+        .idiv(PERCENT_100)
+
+    const position_up = col_up.times(leverage).idiv(100);
     const liq_price_dist = expected_price
-        .multipliedBy(up_collateral)
-        .multipliedBy(0.9)
+        .multipliedBy(col_up.multipliedBy(0.9).integerValue().minus(borrow_fee))
         .integerValue()
-        .idiv(up_collateral)
+        .idiv(col_up)
         .times(100)
         .idiv(leverage)
 
     const liq_price = pos_type == 0 ? expected_price.minus(liq_price_dist) : expected_price.plus(liq_price_dist);
-    const pos_view = (await account.contract.methods.getPositionView({
-        answerId: 0,
-        position_key: pos_key,
-        asset_price: 0, // doesnt matter, we just need liq_price here
-        accLongUSDFundingPerShare: 0,
-        accShortUSDFundingPerShare: 0
-    }).call()).position_view;
 
     expect(pos_view.liquidationPrice.toString()).to.be.eq(liq_price.toString());
 
     logger.log(
-        `Opened ${ptype[pos_type]} position,`,
+        `Open ${ptype[pos_type]} position,`,
         `market price - ${toUSD(initial_price)}$,`,
         `open price - ${toUSD(expected_price)}\$,`,
         `liquidation price - ${toUSD(liq_price)}\$,`,
-        `collateral - ${toUSD(up_collateral)}\$,`,
-        `position size - ${toUSD(up_position)}\$,`,
+        `spread - ${total_spread.div(10 ** 10).toFixed(3)}\%,`,
+        `collateral - ${toUSD(col_up)}\$,`,
+        `position size - ${toUSD(position_up)}\$,`,
         `open fee - ${toUSD(open_fee_expected)}\$`
     );
 
@@ -148,51 +179,85 @@ export async function closeOrder(
 
     const pos_view1 = (await account.contract.methods.getPositionView({
         answerId: 0,
-        position_key: pos_key,
-        asset_price: finish_price,
-        accLongUSDFundingPerShare: 0,
-        accShortUSDFundingPerShare: 0
+        input: {
+            positionKey: pos_key,
+            assetPrice: finish_price,
+            funding: {
+                accLongUSDFundingPerShare: 0,
+                accShortUSDFundingPerShare: 0
+            }
+        }
     }).call()).position_view;
 
-    const pos_type = Number(pos_view1.position.positionType);
-    const market = (await vault.contract.methods.getMarket({market_idx: pos_view1.position.marketIdx, answerId: 0}).call())._market;
+    // @ts-ignore
+    const pos_type: 0 | 1 = Number(pos_view1.position.positionType);
+    const market = (await vault.contract.methods.getMarket({
+        market_idx: pos_view1.position.marketIdx,
+        answerId: 0
+    }).call())._market;
 
+    // const details_prev = await vault.details();
     const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, 1));
     // await traceTree1?.beautyPrint();
 
+    const event = await vault.getEvent('ClosePosition');
+    // @ts-ignore
+    const pos_view2 = event.position_view;
+
     const price_multiplier1 = pos_type == 0 ? PERCENT_100.minus(market.fees.baseSpreadRate) : PERCENT_100.plus(market.fees.baseSpreadRate);
     const expected_close_price = price_multiplier1.times(finish_price).idiv(PERCENT_100);
-    const leveraged_usd = bn(pos_view1.position.initialCollateral)
-        .minus(pos_view1.position.openFee)
-        .times(pos_view1.position.leverage)
+    const leveraged_usd = bn(pos_view2.position.initialCollateral)
+        .minus(pos_view2.position.openFee)
+        .times(pos_view2.position.leverage)
         .idiv(100);
-    const leveraged_asset = leveraged_usd.times(TOKEN_DECIMALS).idiv(pos_view1.position.openPrice);
+    const leveraged_asset = leveraged_usd.times(TOKEN_DECIMALS).idiv(pos_view2.position.openPrice);
 
-    const event = await vault.getEvent('ClosePosition');
     // console.log(event);
 
-    BigNumber.set({ ROUNDING_MODE: BigNumber.ROUND_FLOOR })
-    const expected_close_fee = leveraged_asset
-        .times(expected_close_price)
-        .idiv(TOKEN_DECIMALS)
-        .times(pos_view1.position.closeFeeRate)
-        .idiv(PERCENT_100);
+    const time_passed = bn(pos_view2.viewTime).minus(pos_view2.position.createdAt);
+    const borrow_fee = time_passed
+        .times(pos_view2.position.borrowBaseRatePerHour)
+        .idiv(3600)
+        .times(leveraged_usd)
+        .idiv(PERCENT_100)
+
+    expect(borrow_fee.toFixed()).to.be.eq(pos_view2.borrowFee);
+
+    const up_pos = expected_close_price
+        .times(SCALING_FACTOR)
+        .idiv(pos_view2.position.openPrice)
+        .times(leveraged_usd)
+        .idiv(SCALING_FACTOR)
+        .minus(borrow_fee)
+        .minus(0) // funding fee
+
+    const expected_close_fee = up_pos.lte(0) ? bn(0) : up_pos.times(pos_view2.position.closeFeeRate).idiv(PERCENT_100);
+    expect(expected_close_fee.toFixed()).to.be.eq(pos_view2.closeFee.toString());
 
     let expected_pnl = expected_close_price
         .times(SCALING_FACTOR)
-        .idiv(pos_view1.position.openPrice)
+        .idiv(pos_view2.position.openPrice)
         .minus(SCALING_FACTOR)
         .multipliedBy(pos_type == 0 ? 1 : -1)
-        .times(bn(pos_view1.position.initialCollateral).minus(pos_view1.position.openFee))
+        .times(bn(pos_view2.position.initialCollateral).minus(pos_view2.position.openFee))
         .div(SCALING_FACTOR)
-        .integerValue(BigNumber.ROUND_FLOOR) // js bignumber cant floor in idiv ;/
-        .times(pos_view1.position.leverage)
+        .integerValue(BigNumber.ROUND_FLOOR) // js bignumber cant floor in idiv correctly ;/
+        .times(pos_view2.position.leverage)
         .idiv(100);
 
-    expect(pos_view1.closePrice.toString()).to.be.eq(expected_close_price.toString());
-    expect(pos_view1.closeFee.toString()).to.be.eq(expected_close_fee.toString());
-    expect(pos_view1.pnl.toString()).to.be.eq(expected_pnl.toString());
-    expect(pos_view1.liquidate).to.be.false;
+    const col_up = bn(pos_view2.position.initialCollateral).minus(pos_view2.position.openFee);
+    const liq_price_dist = bn(pos_view2.position.openPrice)
+        .multipliedBy(col_up.multipliedBy(0.9).integerValue().minus(borrow_fee))
+        .idiv(col_up)
+        .times(100)
+        .idiv(pos_view2.position.leverage);
+
+    const liq_price = pos_type == 0 ? bn(pos_view2.position.openPrice).minus(liq_price_dist) : bn(pos_view2.position.openPrice).plus(liq_price_dist);
+    expect(liq_price.toFixed()).to.be.eq(pos_view2.liquidationPrice);
+
+    expect(pos_view2.closePrice.toString()).to.be.eq(expected_close_price.toString());
+    expect(pos_view2.pnl.toString()).to.be.eq(expected_pnl.toString());
+    expect(pos_view2.liquidate).to.be.false;
 
     expect(traceTree1).to
         .emit('ClosePosition')
@@ -200,11 +265,11 @@ export async function closeOrder(
             call_id: '1',
             user: user.address,
             position_view: {
-                closePrice: expected_close_price.toString(),
+                closePrice: expected_close_price.toFixed(),
                 fundingFee: '0',
-                borrowFee: '0',
-                closeFee: expected_close_fee.toString(),
-                pnl: expected_pnl.toString()
+                borrowFee: borrow_fee.toFixed(),
+                closeFee: expected_close_fee.toFixed(),
+                pnl: expected_pnl.toFixed()
             }
         });
 
@@ -213,11 +278,11 @@ export async function closeOrder(
         .div(bn(pos_view1.position.initialCollateral).minus(pos_view1.position.openFee))
         .times(100);
 
-    const details1 = await vault.details();
-    expect(details1._totalNOI.toString()).to.be.eq('0');
+    // const details1 = await vault.details();
+    // expect(details1._totalNOI.toString()).to.be.eq('0');
 
     logger.log(
-        `Close position, market price - ${toUSD(finish_price)}$,`,
+        `Close ${ptype[pos_type]} position, market price - ${toUSD(finish_price)}$,`,
         `close price - ${toUSD(expected_close_price)}\$,`,
         `net pnl ${toUSD(net_pnl)}\$,`,
         `(${percent_diff.toFixed(2)}%),`,
@@ -236,7 +301,8 @@ export async function testMarketPosition(
     collateral: number,
     leverage: number,
     initial_price: number,
-    finish_price: number
+    finish_price: number,
+    ttl= 0
 ) {
     await setPrice(pair, initial_price);
     // OPEN POSITION
@@ -251,6 +317,10 @@ export async function testMarketPosition(
         leverage
     );
 
+    if (ttl > 0) {
+        await tryIncreaseTime(ttl);
+    }
+
     // CLOSE POSITION
     await setPrice(pair, finish_price);
     await closeOrder(
@@ -259,5 +329,5 @@ export async function testMarketPosition(
         user,
         user_wallet,
         pos_key
-    )
+    );
 }

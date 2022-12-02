@@ -1,8 +1,7 @@
 import {Address, Contract, toNano} from "locklift";
-import {FactorySource, GravixVaultAbi} from "../../../build/factorySource";
+import {GravixVaultAbi} from "../../../build/factorySource";
 import {Account} from 'locklift/everscale-client'
 import {TokenWallet} from "./token_wallet";
-import {use} from "chai";
 import {GravixAccount} from "./vault_acc";
 
 const logger = require("mocha-logger");
@@ -121,7 +120,7 @@ export class GravixVault {
         max_slippage: number,
         call_id=0
     ) {
-        const payload = (await this.contract.methods.encodeMarketOrderRequestPayload({
+        const payload = (await this.contract.methods.encodeMarketOrderPayload({
             market_idx: market_idx,
             position_type: position_type,
             leverage: leverage,
