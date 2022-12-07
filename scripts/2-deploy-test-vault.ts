@@ -45,6 +45,25 @@ const basic_config2: MarketConfig = {
     workingHours: []
 }
 
+const basic_config3: MarketConfig = {
+    priceSource: 0,
+    maxLongsUSD: 100000000000, // 100k
+    maxShortsUSD: 100000000000, // 100k
+    noiWeight: 100,
+    maxLeverage: 20000, // 200x
+    depthAsset: 750000000000, // 750k
+    fees: {
+        openFeeRate: 2000000000, // 0.2%
+        closeFeeRate: 2000000000, // 0.2%
+        baseSpreadRate: 2000000000, // 0.2%
+        baseDynamicSpreadRate: 2000000000, // 0.1%
+        borrowBaseRatePerHour: 50000000, // disable by default
+        fundingBaseRatePerHour: 100000000 // disable by default
+    },
+    scheduleEnabled: false,
+    workingHours: []
+}
+
 const oracle: Oracle = {
     chainlink: {addr: zeroAddress},
     dex: {
@@ -82,8 +101,13 @@ const oracle2: Oracle = {
     }
 }
 
+const empty_oracle: Oracle = {
+    chainlink: {addr: zeroAddress},
+    dex: {targetToken: zeroAddress, path: []}
+}
+
 const main = async () => {
-    const user = await deployUser(7);
+    const user = await deployUser(10);
     console.log('Deployed tmp admin');
 
     const stgUSDT = await setupTokenRoot('stgUSDT_test', 'stgUSDT_test', user, 6);
@@ -100,10 +124,10 @@ const main = async () => {
     await stgUSDT.transferOwnership({address: vault.address} as Account);
     console.log('Transferred stgUSDT ownership');
 
-    await locklift.tracing.trace(vault.addMarkets([basic_config, basic_config2]));
+    await locklift.tracing.trace(vault.addMarkets([basic_config, basic_config2, basic_config3]));
     console.log('Added market');
 
-    await locklift.tracing.trace(vault.setOracles([[0, oracle], [1, oracle2]]));
+    await locklift.tracing.trace(vault.setOracles([[0, oracle], [1, oracle2], [2, empty_oracle]]));
     console.log('Set oracle');
 
     await vault.contract.methods.transferOwnership(
@@ -117,6 +141,18 @@ const main = async () => {
 
     await vault.contract.methods.deployGravixAccount(
         {user: new Address('0:ef8635871613be03181667d967fceda1b4a1d98e6811552d2c31adfc2cbcf9b1'), meta: {call_id: 0, nonce: 0, send_gas_to: owner}, answerId: 0}
+    ).send({from: user.address, amount: toNano(1)});
+
+    await vault.contract.methods.deployGravixAccount(
+        {user: new Address('0:99f0fb098badc6ff5b974cb56b55e661f4a83dd4170a9b2be97766252e0a70e3'), meta: {call_id: 0, nonce: 0, send_gas_to: owner}, answerId: 0}
+    ).send({from: user.address, amount: toNano(1)});
+
+    await vault.contract.methods.deployGravixAccount(
+        {user: new Address('0:ab3b313998d4dde8027c8282fe18dcc0d6a9bc9ce3f9763cc90033b301a0f104'), meta: {call_id: 0, nonce: 0, send_gas_to: owner}, answerId: 0}
+    ).send({from: user.address, amount: toNano(1)});
+
+    await vault.contract.methods.deployGravixAccount(
+        {user: new Address('0:78a3b4adba6a3375ec3f5e785a83be68c9b90eef84021e59157d113b3dd567d7'), meta: {call_id: 0, nonce: 0, send_gas_to: owner}, answerId: 0}
     ).send({from: user.address, amount: toNano(1)});
 };
 main()

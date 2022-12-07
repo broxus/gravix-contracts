@@ -140,7 +140,7 @@ describe("Testing main orders flow", async function () {
             const market_idx = 0;
             // TODO: Negative cases, e.g slippage, noi/hard limits, leverage, wrong market_idx
 
-            describe.skip('Test solo long positions', async function () {
+            describe('Test solo long positions', async function () {
                 it('Pnl+, 1x leverage, open/close 1000$/1100$', async function () {
                     await testMarketPosition(
                         vault,
@@ -197,7 +197,7 @@ describe("Testing main orders flow", async function () {
                         100 * TOKEN_DECIMALS,
                         100,
                         1000 * TOKEN_DECIMALS,
-                        950 * TOKEN_DECIMALS
+                        500 * TOKEN_DECIMALS
                     );
                 });
 
@@ -212,7 +212,7 @@ describe("Testing main orders flow", async function () {
                         100 * TOKEN_DECIMALS,
                         1000,
                         1000 * TOKEN_DECIMALS,
-                        990 * TOKEN_DECIMALS
+                        950 * TOKEN_DECIMALS
                     );
                 });
 
@@ -232,7 +232,7 @@ describe("Testing main orders flow", async function () {
                 });
             });
 
-            describe.skip('Test solo short positions', async function () {
+            describe('Test solo short positions', async function () {
                 it('Pnl+, 1x leverage, open/close 1000$/900$', async function () {
                     await testMarketPosition(
                         vault,
@@ -324,7 +324,7 @@ describe("Testing main orders flow", async function () {
                 });
             });
 
-            describe.skip('Mixed case', async function() {
+            describe('Mixed case', async function() {
                 let long_pos_key: number, long_pos2_key: number;
                 let short_pos_key: number, short_pos2_key: number;
 

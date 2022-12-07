@@ -135,6 +135,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event GravixAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
     event GravixAccountDeploy(address user);
     event ActionRevert(uint32 call_id, address user);
+    event MaxPoolUtilRatioUpdate(uint32 call_id, uint64 new_ratio);
     event MarketOrder(
         uint32 call_id,
         address user,

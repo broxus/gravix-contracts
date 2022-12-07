@@ -6,7 +6,10 @@ const ora = require('ora');
 
 const main = async () => {
     const vault = await locklift.factory.getContractArtifacts('GravixVault');
-    console.log(vault.code);
+    console.log('Vault\n', vault.code);
+
+    const oracle = await locklift.factory.getContractArtifacts('OracleProxy');
+    console.log('\nOracle\n', oracle.code);
 };
 main()
     .then(() => process.exit(0))

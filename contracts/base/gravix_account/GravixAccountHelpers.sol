@@ -72,9 +72,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         // * open_price / collateral / leverage
         liq_price_dist = math.muldiv(math.muldiv(position.openPrice, liq_price_dist, collateral), LEVERAGE_BASE, position.leverage);
 
-        uint128 liq_price = is_long ?
-            uint128(math.max(position.openPrice - liq_price_dist, 0)) :
-            uint128(math.max(position.openPrice + liq_price_dist, 0));
+        int256 _liq_price_raw = is_long ?
+            math.muldiv(position.openPrice - liq_price_dist, HUNDRED_PERCENT, HUNDRED_PERCENT - position.baseSpreadRate) :
+            math.muldiv(position.openPrice + liq_price_dist, HUNDRED_PERCENT, HUNDRED_PERCENT + position.baseSpreadRate);
+        uint128 liq_price = uint128(math.max(_liq_price_raw, 0)); // price cant be negative
 
         // close fee
         int256 updated_position = math.muldiv(

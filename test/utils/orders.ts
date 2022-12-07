@@ -148,7 +148,10 @@ export async function openMarketOrder(
         .times(100)
         .idiv(leverage)
 
-    const liq_price = pos_type == 0 ? expected_price.minus(liq_price_dist) : expected_price.plus(liq_price_dist);
+    let liq_price = pos_type == 0 ? expected_price.minus(liq_price_dist) : expected_price.plus(liq_price_dist);
+    liq_price = pos_type == 0 ?
+        liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate)) :
+        liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
 
     expect(pos_view.liquidationPrice.toString()).to.be.eq(liq_price.toString());
 
@@ -252,7 +255,11 @@ export async function closeOrder(
         .times(100)
         .idiv(pos_view2.position.leverage);
 
-    const liq_price = pos_type == 0 ? bn(pos_view2.position.openPrice).minus(liq_price_dist) : bn(pos_view2.position.openPrice).plus(liq_price_dist);
+    let liq_price = pos_type == 0 ? bn(pos_view2.position.openPrice).minus(liq_price_dist) : bn(pos_view2.position.openPrice).plus(liq_price_dist);
+    liq_price = pos_type == 0 ?
+        liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate)) :
+        liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
+
     expect(liq_price.toFixed()).to.be.eq(pos_view2.liquidationPrice);
 
     expect(pos_view2.closePrice.toString()).to.be.eq(expected_close_price.toString());

@@ -32,6 +32,11 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit LiquidationRateUpdate(meta.call_id, new_rate);
     }
 
+    function setMaxPoolUtilRatio(uint64 new_ratio, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        maxPoolUtilRatio = new_ratio;
+        emit MaxPoolUtilRatioUpdate(meta.call_id, new_ratio);
+    }
+
     function setOpenCloseFeeDistributionSchema(
         uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema, Callback.CallMeta meta
     ) external onlyOwner reserveAndSuccessCallback(meta) {
