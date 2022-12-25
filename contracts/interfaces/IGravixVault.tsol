@@ -1,10 +1,10 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
-import "broxus-token-contracts/contracts/interfaces/IAcceptTokensBurnCallback.sol";
-import "./IGravixAccount.sol";
-import "../libraries/Callback.sol";
+import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
+import "broxus-token-contracts/contracts/interfaces/IAcceptTokensBurnCallback.tsol";
+import "./IGravixAccount.tsol";
+import "../libraries/Callback.tsol";
 
 
 interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
@@ -174,9 +174,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event MarketPause(uint32 call_id, uint32 market_idx, bool new_state);
     event NewMarketManager(uint32 call_id, address new_manager);
     event Pause(uint32 call_id, bool new_state);
+    event LiquidatorRewardShareUpdate(uint32 call_id, uint64 new_share);
     event LiquidationThresholdRateUpdate(uint32 call_id, uint64 new_rate);
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
-    event OracleUpdate(uint32 call_id, uint32 market_idx, Oracle oracle);
+    event NewOracle(uint32 call_id, address oracle);
+    event MarketOracleUpdate(uint32 call_id, uint32 market_idx, Oracle oracle);
 
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 position_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);

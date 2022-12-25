@@ -1,12 +1,12 @@
 pragma ever-solidity ^0.62.0;
 
-import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
-import "../../libraries/Gas.sol";
-import "../../libraries/Callback.sol";
-import "../../interfaces/IGravixAccount.sol";
-import "./GravixVaultOrders.sol";
-import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
-import "locklift/src/console.sol";
+import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import "../../libraries/Gas.tsol";
+import "../../libraries/Callback.tsol";
+import "../../interfaces/IGravixAccount.tsol";
+import "./GravixVaultOrders.tsol";
+import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
+import "locklift/src/console.tsol";
 
 
 abstract contract GravixVaultBase is GravixVaultOrders {
@@ -21,7 +21,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
     }
 
     function setOracle(address new_oracle, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
-        oracle = _oracle;
+        oracle = new_oracle;
         emit NewOracle(meta.call_id, new_oracle);
     }
 

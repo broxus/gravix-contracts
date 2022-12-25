@@ -2,15 +2,15 @@ pragma ever-solidity ^0.62.0;
 
 
 
-import "broxus-token-contracts/contracts/interfaces/ITokenRootUpgradeable.sol";
-import "broxus-token-contracts/contracts/interfaces/ITokenWalletUpgradeable.sol";
-import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.sol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
-import "../../libraries/Gas.sol";
-import "../../libraries/Callback.sol";
-import "../../interfaces/IGravixAccount.sol";
-import "./GravixVaultLiquidityPool.sol";
-import {DateTime as DateTimeLib} from "../../libraries/DateTime.sol";
+import "broxus-token-contracts/contracts/interfaces/ITokenRootUpgradeable.tsol";
+import "broxus-token-contracts/contracts/interfaces/ITokenWalletUpgradeable.tsol";
+import "broxus-token-contracts/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
+import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import "../../libraries/Gas.tsol";
+import "../../libraries/Callback.tsol";
+import "../../interfaces/IGravixAccount.tsol";
+import "./GravixVaultLiquidityPool.tsol";
+import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
 abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
@@ -101,7 +101,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
 
             oracles[market_idx] = oracle;
-            emit OracleUpdate(meta.call_id, market_idx, oracle);
+            emit MarketOracleUpdate(meta.call_id, market_idx, oracle);
         }
     }
 
