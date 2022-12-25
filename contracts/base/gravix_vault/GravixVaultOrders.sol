@@ -155,8 +155,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         Oracle oracle = oracles[market_idx];
 
         emit OraclePriceRequested(meta.call_id, market_idx);
+        // update random seed
+        rnd.shuffle();
         return new OracleProxy{
-            stateInit: _buildOracleProxyInitData(tx.timestamp),
+            stateInit: _buildOracleProxyInitData(rnd.next(uint64(2**64 - 1))),
             value: deploy_value,
             flag: deploy_value == 0 ? MsgFlag.ALL_NOT_RESERVED : MsgFlag.SENDER_PAYS_FEES
         }(
@@ -407,7 +409,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // @notice 1.5 ever for every market + 1.5 ever for every position
     // @dev Aggregate by market to minimize requests to oracle
-    function liquidatePositions(mapping (uint32 => PositionIdx[]) liquidations, Callback.CallMeta meta) external view reserve {
+    function liquidatePositions(mapping (uint32 => PositionIdx[]) liquidations, Callback.CallMeta meta) external view onlyActive reserve {
         // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
         for ((uint32 market_idx, PositionIdx[] positions) : liquidations) {
             _sendLiquidationOracleRequest(msg.sender, market_idx, positions, meta);
@@ -579,6 +581,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         markets[market_idx] = _market;
         return _market.funding;
     }
+
+    // TODO: function for updating funding without real deal
 
     function getUpdatedFunding(mapping (uint32 => uint128) prices) external view returns (mapping (uint32 => Funding) funding) {
         for ((uint32 market_idx, uint128 asset_price): prices) {

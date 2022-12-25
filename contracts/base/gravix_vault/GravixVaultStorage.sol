@@ -10,6 +10,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     address owner;
     address marketManager;
 
+    address oracle;
     address usdt;
     address usdtWallet;
     address stgUsdt;
@@ -26,7 +27,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 poolBalance; // liquidity deposits
     uint128 stgUsdtSupply; // amount of minted stgUsdt
     uint128 targetPrice;
-    uint64 maxPoolUtilRatio = 500_000_000_000; // 50%, multiplied by 1_000_000_000_000
+    uint64 maxPoolUtilRatio = 1_000_000_000_000; // 100%, multiplied by 1_000_000_000_000
 
     uint128 insuranceFund; // collected fees, pnl and etc.
     uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders

@@ -47,7 +47,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     }
 
     struct ChainlinkOracle {
-        address addr;
+        string ticker;
+        uint16 chainID;
     }
 
     struct Oracle {
@@ -173,7 +174,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event MarketPause(uint32 call_id, uint32 market_idx, bool new_state);
     event NewMarketManager(uint32 call_id, address new_manager);
     event Pause(uint32 call_id, bool new_state);
-    event LiquidationRateUpdate(uint32 call_id, uint64 new_rate);
+    event LiquidationThresholdRateUpdate(uint32 call_id, uint64 new_rate);
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
     event OracleUpdate(uint32 call_id, uint32 market_idx, Oracle oracle);
 

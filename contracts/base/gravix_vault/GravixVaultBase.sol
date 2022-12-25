@@ -20,6 +20,11 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit NewMarketManager(meta.call_id, new_manager);
     }
 
+    function setOracle(address new_oracle, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        oracle = _oracle;
+        emit NewOracle(meta.call_id, new_oracle);
+    }
+
     function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         paused = new_state;
         emit Pause(meta.call_id, new_state);
@@ -29,7 +34,14 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         require (new_rate < HUNDRED_PERCENT, Errors.BAD_INPUT);
 
         liquidationThresholdRate = new_rate;
-        emit LiquidationRateUpdate(meta.call_id, new_rate);
+        emit LiquidationThresholdRateUpdate(meta.call_id, new_rate);
+    }
+
+    function setLiquidatorRewardShare(uint64 new_share, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        require (new_share < HUNDRED_PERCENT, Errors.BAD_INPUT);
+
+        liquidatorRewardShare = new_share;
+        emit LiquidatorRewardShareUpdate(meta.call_id, new_share);
     }
 
     function setMaxPoolUtilRatio(uint64 new_ratio, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {

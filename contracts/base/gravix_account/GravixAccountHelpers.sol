@@ -78,8 +78,9 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         uint128 liq_price = uint128(math.max(_liq_price_raw, 0)); // price cant be negative
 
         // close fee
+        (uint128 num, uint128 den) = is_long ? (close_price, position.openPrice) : (position.openPrice, close_price);
         int256 updated_position = math.muldiv(
-            math.muldiv(close_price, SCALING_FACTOR, position.openPrice),
+            math.muldiv(num, SCALING_FACTOR, den),
             leveraged_position_usd,
             SCALING_FACTOR
         );

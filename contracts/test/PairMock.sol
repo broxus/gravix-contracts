@@ -64,7 +64,7 @@ contract PairMock is ITWAPOracle {
     ) external view override {
         IOnRateCallback(_callbackTo)
             .onRateCallback{ value: 0, flag: MsgFlag.REMAINING_GAS }
-            (_rate, _reserves, _payload);
+            (_rate, _reserves, msg.sender, _payload);
     }
 
     /// @notice Calculates expected amount using given params and TWAP

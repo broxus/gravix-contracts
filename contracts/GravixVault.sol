@@ -30,7 +30,8 @@ contract GravixVault is GravixVaultBase {
         address _owner,
         address _market_manager,
         address _usdt,
-        address _stg_usdt
+        address _stg_usdt,
+        address _oracle
     ) public {
         require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
         require (tvm.pubkey() == msg.pubkey(), Errors.WRONG_PUBKEY);
@@ -40,6 +41,7 @@ contract GravixVault is GravixVaultBase {
         marketManager = _market_manager;
         usdt = _usdt;
         stgUsdt = _stg_usdt;
+        oracle = _oracle;
 
         _setupTokenWallets();
     }

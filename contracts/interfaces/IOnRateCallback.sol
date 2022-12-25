@@ -10,10 +10,12 @@ interface IOnRateCallback {
     /// @notice Handle callback of rate call
     /// @param _rate Calculated rate or null if impossible to calculate
     /// @param _reserves Current pair's reserves
+    /// @param _callbackRequester Who requested rate
     /// @param _payload Any extra data from the previous call
     function onRateCallback(
         optional(ITWAPOracle.Rate) _rate,
         uint128[] _reserves,
+        address _callbackRequester,
         TvmCell _payload
     ) external;
 }

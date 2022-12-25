@@ -9,6 +9,7 @@ import "./libraries/Errors.sol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.sol";
 
 
+// TODO: rewrite for 3 smaller proxy?
 contract OracleProxy is IOnRateCallback {
     address static vault;
     uint64 static nonce;
@@ -155,8 +156,11 @@ contract OracleProxy is IOnRateCallback {
     function onRateCallback(
         optional(ITWAPOracle.Rate),
         uint128[] _reserves,
+        address _callbackRequester,
         TvmCell _payload
     ) external override {
+        require (_callbackRequester == address(this), Errors.BAD_SENDER);
+
         uint idx = abi.decode(_payload, (uint));
         IGravixVault.DexOracle dex = oracle.dex;
         require (msg.sender == dex.path[idx].addr, Errors.BAD_SENDER);
