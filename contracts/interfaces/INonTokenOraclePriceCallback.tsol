@@ -1,0 +1,16 @@
+pragma ton-solidity >= 0.62.0;
+
+
+import "./IEthereumEvent.tsol";
+
+
+interface INonTokenOraclePriceCallback  {
+    function makeRequest(
+        IEthereumEvent.EthereumEventOracleData _eventData, TvmCell _payload, string ticker, address _initializer
+    ) external;
+
+
+    function onCallbackConfirmed(TvmCell value, address callbackAddr, TvmCell payload) external; 
+    function onCallbackRejected(address callbackAddr, TvmCell payload) external; 
+
+}

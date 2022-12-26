@@ -7,9 +7,11 @@
 			"name": "constructor",
 			"inputs": [
 				{"name":"_usdt","type":"address"},
+				{"name":"_oracle","type":"address"},
 				{"name":"_market_idx","type":"uint32"},
 				{"name":"_price_source","type":"uint8"},
-				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"}],"name":"_oracle","type":"tuple"},
+				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"}],"name":"_oracle_config","type":"tuple"},
+				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"_event_data","type":"tuple"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -46,6 +48,25 @@
 			]
 		},
 		{
+			"name": "onPriceReceived",
+			"inputs": [
+				{"name":"price","type":"int256"},
+				{"name":"timestamp","type":"uint256"},
+				{"name":"value2","type":"uint256"},
+				{"name":"value3","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onPriceRejected",
+			"inputs": [
+				{"name":"value0","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "onRateCallback",
 			"inputs": [
 				{"components":[{"name":"price0To1","type":"uint256"},{"name":"price1To0","type":"uint256"},{"name":"fromTimestamp","type":"uint32"},{"name":"toTimestamp","type":"uint32"}],"name":"value0","type":"optional(tuple)"},
@@ -70,9 +91,11 @@
 		{"name":"vault","type":"address"},
 		{"name":"nonce","type":"uint64"},
 		{"name":"usdt","type":"address"},
+		{"name":"oracle","type":"address"},
 		{"name":"market_idx","type":"uint32"},
 		{"name":"price_source","type":"uint8"},
-		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"}],"name":"oracle","type":"tuple"},
+		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"}],"name":"oracle_config","type":"tuple"},
+		{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
 		{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"},
 		{"name":"position_key","type":"uint32"},
 		{"name":"user","type":"address"},

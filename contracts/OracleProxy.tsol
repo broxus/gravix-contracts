@@ -6,19 +6,23 @@ import "./interfaces/IGravixVault.tsol";
 import "./interfaces/ITWAPOracle.tsol";
 import "./libraries/Callback.tsol";
 import "./libraries/Errors.tsol";
+import "./interfaces/INonTokenOraclePriceCallback.tsol";
+import "./interfaces/IOnNonTokenPriceReceived.tsol";
+import "./interfaces/IEthereumEvent.tsol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
 
-// TODO: rewrite for 3 smaller proxy?
-contract OracleProxy is IOnRateCallback {
+contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
     address static vault;
     uint64 static nonce;
 
     // this always set
     address usdt;
+    address oracle;
     uint32 market_idx;
     IGravixVault.OracleType price_source;
-    IGravixVault.Oracle oracle;
+    IGravixVault.OracleConfig oracle_config;
+    IEthereumEvent.EthereumEventOracleData event_data;
     Callback.CallMeta meta;
 
     // this is set for open/close
@@ -46,20 +50,22 @@ contract OracleProxy is IOnRateCallback {
 
     constructor (
         address _usdt,
+        address _oracle,
         uint32 _market_idx,
         IGravixVault.OracleType _price_source,
-        IGravixVault.Oracle _oracle,
+        IGravixVault.OracleConfig _oracle_config,
+        IEthereumEvent.EthereumEventOracleData _event_data,
         Callback.CallMeta _meta
     ) public {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
         usdt = _usdt;
+        oracle = _oracle;
         market_idx = _market_idx;
         price_source = _price_source;
-        oracle = _oracle;
+        oracle_config = _oracle_config;
+        event_data = _event_data;
         meta = _meta;
-
-        _collectPrice();
     }
 
     function setExecuteCallback(
@@ -77,6 +83,7 @@ contract OracleProxy is IOnRateCallback {
         leverage = _leverage;
         position_type = _position_type;
         callbackType = CallbackType.Execute;
+        _collectPrice(user);
     }
 
     function setCloseCallback(address _user, uint32 _position_key) external {
@@ -85,6 +92,7 @@ contract OracleProxy is IOnRateCallback {
         user = _user;
         position_key = _position_key;
         callbackType = CallbackType.Close;
+        _collectPrice(user);
     }
 
     function setLiquidationCallback(address _liquidator, IGravixVault.PositionIdx[] _positions) external {
@@ -93,18 +101,19 @@ contract OracleProxy is IOnRateCallback {
         liquidator = _liquidator;
         positions = _positions;
         callbackType = CallbackType.Liquidation;
+        _collectPrice(liquidator);
     }
 
-    function _collectPrice() internal view {
+    function _collectPrice(address send_gas_to) internal view {
         if (price_source == IGravixVault.OracleType.ChainlinkProxy) {
-            _collectPriceFromChainlink();
+            _collectPriceFromChainlink(send_gas_to);
         } else {
             _collectPriceFromDex();
         }
     }
 
     function _collectPriceFromDex() internal view {
-        IGravixVault.DexOracle dex = oracle.dex;
+        IGravixVault.DexOracle dex = oracle_config.dex;
 
         for (uint i = 0; i < dex.path.length; i++) {
             IGravixVault.Pair pair = dex.path[i];
@@ -116,11 +125,17 @@ contract OracleProxy is IOnRateCallback {
         }
     }
 
-    function _collectPriceFromChainlink() internal view {}
+    function _collectPriceFromChainlink(address send_gas_to) internal view {
+        tvm.rawReserve(0, CONTRACT_MIN_BALANCE);
+        TvmCell empty; // we dont need any special payload, all data is here
+        INonTokenOraclePriceCallback(oracle).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            event_data, empty, oracle_config.chainlink.ticker, send_gas_to
+        );
+    }
 
     function _sendCallback(uint128 price) internal view {
         if (callbackType == CallbackType.Execute) {
-            IGravixVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).oracle_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED + MsgFlag.DESTROY_IF_ZERO}(
                 nonce,
                 user,
                 position_key,
@@ -132,7 +147,7 @@ contract OracleProxy is IOnRateCallback {
                 meta
             );
         } else if (callbackType == CallbackType.Close) {
-            IGravixVault(vault).oracle_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).oracle_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED + MsgFlag.DESTROY_IF_ZERO}(
                 nonce,
                 user,
                 position_key,
@@ -141,7 +156,7 @@ contract OracleProxy is IOnRateCallback {
                 meta
             );
         } else {
-            IGravixVault(vault).oracle_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).oracle_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED + MsgFlag.DESTROY_IF_ZERO}(
                 nonce,
                 liquidator,
                 market_idx,
@@ -149,6 +164,31 @@ contract OracleProxy is IOnRateCallback {
                 price,
                 meta
             );
+        }
+    }
+
+    function onPriceReceived(int256 price, uint256 timestamp, uint256, TvmCell) external override {
+        require (msg.sender == oracle, Errors.BAD_SENDER);
+        // all chainlink oracles have 8 decimals, gravix use 6
+        price = price / 100;
+        // too old event
+        if ((now - oracle_config.chainlink.ttl) > timestamp) {
+            _reject();
+        } else {
+            _sendCallback(uint128(price));
+        }
+    }
+
+    function onPriceRejected(TvmCell) external override {
+        require (msg.sender == oracle, Errors.BAD_SENDER);
+        _reject();
+    }
+
+    function _reject() internal view {
+        if (callbackType == CallbackType.Liquidation) {
+            liquidator.transfer(0, false, MsgFlag.ALL_NOT_RESERVED + MsgFlag.DESTROY_IF_ZERO);
+        } else {
+            user.transfer(0, false, MsgFlag.ALL_NOT_RESERVED + MsgFlag.DESTROY_IF_ZERO);
         }
     }
 
@@ -162,7 +202,7 @@ contract OracleProxy is IOnRateCallback {
         require (_callbackRequester == address(this), Errors.BAD_SENDER);
 
         uint idx = abi.decode(_payload, (uint));
-        IGravixVault.DexOracle dex = oracle.dex;
+        IGravixVault.DexOracle dex = oracle_config.dex;
         require (msg.sender == dex.path[idx].addr, Errors.BAD_SENDER);
 
         pair_reserves[msg.sender] = _reserves;

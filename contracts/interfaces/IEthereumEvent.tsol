@@ -1,0 +1,22 @@
+pragma ever-solidity ^0.62.0;
+
+
+import "./IBasicEvent.tsol";
+
+
+interface IEthereumEvent {
+  struct EthereumEventOracleData {
+    uint256 eventTransaction;
+    uint32 eventIndex;
+    TvmCell eventData;
+    uint32 eventBlockNumber;
+    uint256 eventBlock;
+  }
+
+  struct EthereumEventInitData {
+    EthereumEventOracleData oracleData;
+    address configuration;
+    address staking;
+    uint32 chainId;
+  }
+}

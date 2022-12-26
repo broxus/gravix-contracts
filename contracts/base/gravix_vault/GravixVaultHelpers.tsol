@@ -114,12 +114,13 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         PositionType position_type,
         uint32 leverage,
         uint128 expected_price,
-        uint32 max_slippage,
+        uint32 max_slippage_rate,
+        IEthereumEvent.EthereumEventOracleData event_data,
         uint32 nonce,
         uint32 call_id
     ) external pure returns (TvmCell payload) {
         TvmBuilder builder;
-        builder.store(market_idx, position_type, leverage, expected_price, max_slippage);
+        builder.store(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data);
         return encodeTokenTransferPayload(Action.MarketOrder, nonce, call_id, builder.toCell());
     }
 
@@ -130,12 +131,13 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         PositionType position_type,
         uint32 leverage,
         uint128 expected_price,
-        uint32 max_slippage_rate
+        uint32 max_slippage_rate,
+        IEthereumEvent.EthereumEventOracleData event_data
     ) {
         TvmSlice slice = action_payload.toSlice();
         (
-            market_idx, position_type, leverage, expected_price, max_slippage_rate
-        ) = slice.decode(uint32, PositionType, uint32, uint128, uint32);
+            market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data
+        ) = slice.decode(uint32, PositionType, uint32, uint128, uint32, IEthereumEvent.EthereumEventOracleData);
     }
     
     function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {

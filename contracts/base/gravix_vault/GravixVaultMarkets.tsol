@@ -94,14 +94,14 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         }
     }
 
-    function setOracles(
-        mapping (uint32 => Oracle) new_oracles, Callback.CallMeta meta
+    function setOracleConfigs(
+        mapping (uint32 => OracleConfig) new_oracles, Callback.CallMeta meta
     ) external onlyOwner reserveAndSuccessCallback(meta) {
-        for ((uint32 market_idx, Oracle oracle) : new_oracles) {
+        for ((uint32 market_idx, OracleConfig oracle_conf) : new_oracles) {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
 
-            oracles[market_idx] = oracle;
-            emit MarketOracleUpdate(meta.call_id, market_idx, oracle);
+            oracleConfigs[market_idx] = oracle_conf;
+            emit MarketOracleConfigUpdate(meta.call_id, market_idx, oracle_conf);
         }
     }
 
@@ -251,11 +251,11 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } markets;
     }
 
-    function getOracles() external view responsible returns (mapping (uint32 => Oracle) _oracles) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracles;
+    function getOracleConfigs() external view responsible returns (mapping (uint32 => OracleConfig) _oracle_configs) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracleConfigs;
     }
 
-    function getOracle(uint32 market_idx) external view responsible returns (Oracle _oracle) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracles[market_idx];
+    function getOracleConfig(uint32 market_idx) external view responsible returns (OracleConfig _oracle) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracleConfigs[market_idx];
     }
 }
