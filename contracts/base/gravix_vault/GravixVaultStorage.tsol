@@ -16,6 +16,10 @@ abstract contract GravixVaultStorage is IGravixVault {
     address stgUsdt;
     address stgUsdtWallet;
 
+    address treasury;
+    address projectFund;
+    address devFund;
+
     TvmCell static oracleProxyCode;
     TvmCell static platformCode;
     TvmCell static GravixAccountCode;
@@ -30,6 +34,11 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint64 maxPoolUtilRatio = 1_000_000_000_000; // 100%, multiplied by 1_000_000_000_000
 
     uint128 insuranceFund; // collected fees, pnl and etc.
+    uint128 insuranceFundLimit;
+    // 50%, 30%, 20%
+    uint64[3] insuranceFundOverflowDistributionSchema = [HUNDRED_PERCENT / 2, (HUNDRED_PERCENT * 3) / 10, HUNDRED_PERCENT / 5];
+    enum InsuranceFundOverflowDistributionSchema { Treasury, ProjectFund, DevFund }
+
     uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders
 
     // total net open interest across all markets according to weights
@@ -52,7 +61,7 @@ abstract contract GravixVaultStorage is IGravixVault {
 
     uint64[2] openFeeDistributionSchema = [HUNDRED_PERCENT, 0];
     uint64[2] closeFeeDistributionSchema = [0, HUNDRED_PERCENT];
-    enum DistributionSchema { Pool, InsuranceFund }
+    enum OpenFeeDistributionSchema { Pool, InsuranceFund }
 
     uint32 marketCount = 0;
     mapping (uint32 => Market) markets;

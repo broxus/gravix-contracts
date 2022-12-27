@@ -32,8 +32,18 @@ export interface Oracle {
         path: {addr: Address, leftRoot: Address, rightRoot: Address}[]
     },
     chainlink: {
-        addr: Address
+        ticker: string,
+        chainID: number,
+        ttl: number
     }
+}
+
+const empty_event = {
+    eventData: '',
+    eventBlock: 0,
+    eventIndex: 0,
+    eventTransaction: 0,
+    eventBlockNumber: 0
 }
 
 export class GravixVault {
@@ -81,7 +91,7 @@ export class GravixVault {
     }
 
     async setOracles(oracles: [number, Oracle][], call_id=0) {
-        return this.contract.methods.setOracles({
+        return this.contract.methods.setOracleConfigs({
             new_oracles: oracles, meta: {call_id: call_id, nonce: 0, send_gas_to: this.owner.address}
         }).send({
             from: this.owner.address,
@@ -125,7 +135,8 @@ export class GravixVault {
             position_type: position_type,
             leverage: leverage,
             expected_price: expected_price,
-            max_slippage: max_slippage,
+            max_slippage_rate: max_slippage,
+            event_data: empty_event,
             call_id: call_id,
             nonce: 0
         }).call()).payload;
@@ -138,7 +149,10 @@ export class GravixVault {
         call_id=0
     ) {
         return await this.contract.methods.closePosition(
-            {position_key: position_key, meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
+            {
+                position_key: position_key,
+                event_data: empty_event,
+                meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
         ).send({from: user.address, amount: toNano(2)});
     }
 }

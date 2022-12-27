@@ -14,8 +14,30 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDITY POOL ---------------------------------------
     // ----------------------------------------------------------------------------------
-    // TODO: withdraw money from insurance fund
+    function withdrawInsuranceFundOverflow(Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        require (insuranceFundLimit < insuranceFund, Errors.LOW_INSURANCE_FUND);
+        uint128 overflow = insuranceFundLimit - insuranceFund;
+        _decreaseInsuranceFund(overflow);
 
+        uint128 _treasury_amount = math.muldiv(
+            overflow,
+            insuranceFundOverflowDistributionSchema[uint256(InsuranceFundOverflowDistributionSchema.Treasury)],
+            HUNDRED_PERCENT
+        );
+        uint128 _project_fund_amount = math.muldiv(
+            overflow,
+            insuranceFundOverflowDistributionSchema[uint256(InsuranceFundOverflowDistributionSchema.ProjectFund)],
+            HUNDRED_PERCENT
+        );
+        uint128 _dev_fund_amount = overflow - _treasury_amount - _project_fund_amount;
+
+        TvmCell empty;
+        _transfer(usdtWallet, _treasury_amount, treasury, empty, meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
+        _transfer(usdtWallet, _project_fund_amount, projectFund, empty, meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
+        _transfer(usdtWallet, _dev_fund_amount, devFund, empty, meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
+
+        emit InsuranceFundWithdraw(meta.call_id, _treasury_amount, _project_fund_amount, _dev_fund_amount);
+    }
 
     function _handleUsdtDeposit(
         address user, uint128 amount, Callback.CallMeta meta
@@ -107,7 +129,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function _collectFeeWithSchema(uint64[2] fee_schema, uint128 amount) internal {
-        uint128 pool_fee = math.muldiv(amount, fee_schema[uint256(DistributionSchema.Pool)], HUNDRED_PERCENT);
+        uint128 pool_fee = math.muldiv(amount, fee_schema[uint256(OpenFeeDistributionSchema.Pool)], HUNDRED_PERCENT);
         uint128 fund_fee = amount - pool_fee;
 
         if (fund_fee > 0) _increaseInsuranceFund(fund_fee);

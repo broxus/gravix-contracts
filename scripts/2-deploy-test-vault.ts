@@ -5,7 +5,7 @@ import {MarketConfig, Oracle} from "../test/utils/wrappers/vault";
 
 const owner = new Address('0:311fe8e7bfeb6a2622aaba02c21569ac1e6f01c81c33f2623e5d8f1a5ba232d7');
 const usdt = new Address('0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b');
-
+const oracle_contract = new Address('0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b');
 
 const basic_config: MarketConfig = {
     priceSource: 1,
@@ -19,8 +19,8 @@ const basic_config: MarketConfig = {
         closeFeeRate: 1000000000, // 0.1%
         baseSpreadRate: 1000000000, // 0.1%
         baseDynamicSpreadRate: 1000000000, // 0.1%
-        borrowBaseRatePerHour: 50000000, // 0.005%de
-        fundingBaseRatePerHour: 100000000 // disable by default
+        borrowBaseRatePerHour: 50000000, // 0.005%
+        fundingBaseRatePerHour: 100000000
     },
     scheduleEnabled: false,
     workingHours: []
@@ -38,8 +38,8 @@ const basic_config2: MarketConfig = {
         closeFeeRate: 2000000000, // 0.2%
         baseSpreadRate: 2000000000, // 0.2%
         baseDynamicSpreadRate: 2000000000, // 0.1%
-        borrowBaseRatePerHour: 50000000, // disable by default
-        fundingBaseRatePerHour: 100000000 // disable by default
+        borrowBaseRatePerHour: 50000000,
+        fundingBaseRatePerHour: 100000000
     },
     scheduleEnabled: false,
     workingHours: []
@@ -57,15 +57,15 @@ const basic_config3: MarketConfig = {
         closeFeeRate: 2000000000, // 0.2%
         baseSpreadRate: 2000000000, // 0.2%
         baseDynamicSpreadRate: 2000000000, // 0.1%
-        borrowBaseRatePerHour: 50000000, // disable by default
-        fundingBaseRatePerHour: 100000000 // disable by default
+        borrowBaseRatePerHour: 50000000,
+        fundingBaseRatePerHour: 100000000
     },
     scheduleEnabled: false,
     workingHours: []
 }
 
 const oracle: Oracle = {
-    chainlink: {addr: zeroAddress},
+    chainlink: {ticker: '', chainID: 0, ttl: 0},
     dex: {
         // ever
         targetToken: new Address('0:a49cd4e158a9a15555e624759e2e4e766d22600b7800d891e46f9291f044a93d'),
@@ -81,7 +81,7 @@ const oracle: Oracle = {
 }
 
 const oracle2: Oracle = {
-    chainlink: {addr: zeroAddress},
+    chainlink: {ticker: '', chainID: 0, ttl: 0},
     dex: {
         // qube
         targetToken: new Address('0:9f20666ce123602fd7a995508aeaa0ece4f92133503c0dfbd609b3239f3901e2'),
@@ -102,7 +102,17 @@ const oracle2: Oracle = {
 }
 
 const empty_oracle: Oracle = {
-    chainlink: {addr: zeroAddress},
+    chainlink: {ticker: '', chainID: 0, ttl: 0},
+    dex: {targetToken: zeroAddress, path: []}
+}
+
+const btc_oracle: Oracle = {
+    chainlink: {ticker: 'BTC / USD', chainID: 137, ttl: 200},
+    dex: {targetToken: zeroAddress, path: []}
+}
+
+const eth_oracle: Oracle = {
+    chainlink: {ticker: 'ETH / USD', chainID: 137, ttl: 200},
     dex: {targetToken: zeroAddress, path: []}
 }
 
@@ -117,17 +127,24 @@ const main = async () => {
         user,
         {address: owner} as Account,
         usdt,
-        stgUSDT.address
+        stgUSDT.address,
+        oracle_contract
     );
     console.log('Deployed vault');
 
     await stgUSDT.transferOwnership({address: vault.address} as Account);
     console.log('Transferred stgUSDT ownership');
 
-    await locklift.tracing.trace(vault.addMarkets([basic_config, basic_config2, basic_config3]));
+    await locklift.tracing.trace(vault.addMarkets(
+        [basic_config, basic_config2, basic_config3, basic_config3, basic_config3]
+        )
+    );
     console.log('Added market');
 
-    await locklift.tracing.trace(vault.setOracles([[0, oracle], [1, oracle2], [2, empty_oracle]]));
+    await locklift.tracing.trace(vault.setOracles(
+        [[0, oracle], [1, oracle2], [2, empty_oracle], [3, btc_oracle], [4, eth_oracle]]
+        )
+    );
     console.log('Set oracle');
 
     await vault.contract.methods.transferOwnership(

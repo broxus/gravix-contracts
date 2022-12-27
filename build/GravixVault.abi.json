@@ -98,6 +98,51 @@
 			]
 		},
 		{
+			"name": "setTreasury",
+			"inputs": [
+				{"name":"new_treasury","type":"address"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setProjectFund",
+			"inputs": [
+				{"name":"new_project_fund","type":"address"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setDevFund",
+			"inputs": [
+				{"name":"new_dev_fund","type":"address"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setInsuranceFundLimit",
+			"inputs": [
+				{"name":"new_limit","type":"uint128"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setInsuranceFundOverflowDistributionSchema",
+			"inputs": [
+				{"name":"new_schema","type":"uint64[]"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "receiveTokenWalletAddress",
 			"inputs": [
 				{"name":"wallet","type":"address"}
@@ -571,6 +616,14 @@
 			]
 		},
 		{
+			"name": "withdrawInsuranceFundOverflow",
+			"inputs": [
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "usdtToStgUsdt",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
@@ -882,6 +935,15 @@
 			]
 		},
 		{
+			"name": "InsuranceFundLimitUpdate",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_limit","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "MarketOrder",
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
@@ -1051,6 +1113,53 @@
 			]
 		},
 		{
+			"name": "NewTreasury",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_treasury","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "NewProjectFund",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_project_fund","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "NewDevFund",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_dev_fund","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "InsuranceFundWithdraw",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"treasury","type":"uint128"},
+				{"name":"project_fund","type":"uint128"},
+				{"name":"dev_fund","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "InsuranceFundOverflowDistributionSchemaUpdate",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_schema","type":"uint64[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "CancelMarketOrderRevert",
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
@@ -1149,6 +1258,9 @@
 		{"name":"usdtWallet","type":"address"},
 		{"name":"stgUsdt","type":"address"},
 		{"name":"stgUsdtWallet","type":"address"},
+		{"name":"treasury","type":"address"},
+		{"name":"projectFund","type":"address"},
+		{"name":"devFund","type":"address"},
 		{"name":"oracleProxyCode","type":"cell"},
 		{"name":"platformCode","type":"cell"},
 		{"name":"GravixAccountCode","type":"cell"},
@@ -1160,6 +1272,8 @@
 		{"name":"targetPrice","type":"uint128"},
 		{"name":"maxPoolUtilRatio","type":"uint64"},
 		{"name":"insuranceFund","type":"uint128"},
+		{"name":"insuranceFundLimit","type":"uint128"},
+		{"name":"insuranceFundOverflowDistributionSchema","type":"uint64[]"},
 		{"name":"collateralReserve","type":"uint128"},
 		{"name":"totalNOI","type":"uint128"},
 		{"name":"paused","type":"bool"},

@@ -120,7 +120,7 @@ export async function openMarketOrder(
         answerId: 0,
         input: {
             positionKey: pos_key,
-            assetPrice: 0,
+            assetPrice: 1,
             funding: {
                 accLongUSDFundingPerShare: 0,
                 accShortUSDFundingPerShare: 0
@@ -207,7 +207,7 @@ export async function closeOrder(
     // @ts-ignore
     const pos_view2 = event.position_view;
 
-    const price_multiplier1 = pos_type == 0 ? PERCENT_100.minus(market.fees.baseSpreadRate) : PERCENT_100.plus(market.fees.baseSpreadRate);
+    const price_multiplier1 = pos_type === 0 ? PERCENT_100.minus(market.fees.baseSpreadRate) : PERCENT_100.plus(market.fees.baseSpreadRate);
     const expected_close_price = price_multiplier1.times(finish_price).idiv(PERCENT_100);
     const leveraged_usd = bn(pos_view2.position.initialCollateral)
         .minus(pos_view2.position.openFee)
@@ -226,9 +226,19 @@ export async function closeOrder(
 
     expect(borrow_fee.toFixed()).to.be.eq(pos_view2.borrowFee);
 
-    const up_pos = expected_close_price
-        .times(SCALING_FACTOR)
-        .idiv(pos_view2.position.openPrice)
+
+    let up_pos: BigNumber;
+    if (pos_type === 0) {
+        up_pos = expected_close_price
+            .times(SCALING_FACTOR)
+            .idiv(pos_view2.position.openPrice);
+    } else {
+        up_pos = bn(pos_view2.position.openPrice)
+            .times(SCALING_FACTOR)
+            .idiv(expected_close_price);
+    }
+
+    up_pos = up_pos
         .times(leveraged_usd)
         .idiv(SCALING_FACTOR)
         .minus(borrow_fee)
@@ -296,7 +306,6 @@ export async function closeOrder(
         `close fee - ${toUSD(expected_close_fee)}\$`
     );
 }
-
 
 export async function testMarketPosition(
     vault: GravixVault,

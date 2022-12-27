@@ -61,6 +61,41 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit OpenCloseFeeSchemaUpdate(meta.call_id, new_open_fee_schema, new_close_fee_schema);
     }
 
+    function setTreasury(
+        address new_treasury, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        treasury = new_treasury;
+        emit NewTreasury(meta.call_id, new_treasury);
+    }
+
+    function setProjectFund(
+        address new_project_fund, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        projectFund = new_project_fund;
+        emit NewProjectFund(meta.call_id, new_project_fund);
+    }
+
+    function setDevFund(
+        address new_dev_fund, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        devFund = new_dev_fund;
+        emit NewDevFund(meta.call_id, new_dev_fund);
+    }
+
+    function setInsuranceFundLimit(
+        uint128 new_limit, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        insuranceFundLimit = new_limit;
+        emit InsuranceFundLimitUpdate(meta.call_id, new_limit);
+    }
+
+    function setInsuranceFundOverflowDistributionSchema(
+        uint64[3] new_schema, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        insuranceFundOverflowDistributionSchema = new_schema;
+        emit InsuranceFundOverflowDistributionSchemaUpdate(meta.call_id, new_schema);
+    }
+
     function receiveTokenWalletAddress(address wallet) external override {
         if (msg.sender == usdt) usdtWallet = wallet;
         if (msg.sender == stgUsdt) stgUsdtWallet = wallet;

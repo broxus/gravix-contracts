@@ -145,6 +145,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event GravixAccountDeploy(address user);
     event ActionRevert(uint32 call_id, address user);
     event MaxPoolUtilRatioUpdate(uint32 call_id, uint64 new_ratio);
+    event InsuranceFundLimitUpdate(uint32 call_id, uint128 new_limit);
     event MarketOrder(
         uint32 call_id,
         address user,
@@ -187,6 +188,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
     event NewOracle(uint32 call_id, address oracle);
     event MarketOracleConfigUpdate(uint32 call_id, uint32 market_idx, OracleConfig oracle);
+    event NewTreasury(uint32 call_id, address new_treasury);
+    event NewProjectFund(uint32 call_id, address new_project_fund);
+    event NewDevFund(uint32 call_id, address new_dev_fund);
+    event InsuranceFundWithdraw(uint32 call_id, uint128 treasury, uint128 project_fund, uint128 dev_fund);
+    event InsuranceFundOverflowDistributionSchemaUpdate(uint32 call_id, uint64[3] new_schema);
 
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 position_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);

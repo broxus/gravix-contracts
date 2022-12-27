@@ -121,7 +121,8 @@ export const deployUsers = async function (count: number, initial_balance: numbe
         return await locklift.factory.accounts.addExistingAccount({
             publicKey: wallet[0].slice(2),
             type: WalletTypes.MsigAccount,
-            address: wallet[1],
+            mSigType: "SafeMultisig",
+            address: wallet[1]
         });
     }));
 }
@@ -132,6 +133,7 @@ export const deployUser = async function (initial_balance = 100): Promise<Accoun
 
     const {account: _user, tx} = await locklift.factory.accounts.addNewAccount({
         type: WalletTypes.MsigAccount,
+        mSigType: "SafeMultisig",
         contract: "TestWallet",
         //Value which will send to the new account from a giver
         value: toNano(initial_balance),
@@ -185,7 +187,7 @@ export const setupTokenRoot = async function (token_name: string, token_symbol: 
     return new Token(_root, owner);
 }
 
-export const setupVault = async function (owner: Account, market_manager: Account, usdt: Address, stg_usdt: Address) {
+export const setupVault = async function (owner: Account, market_manager: Account, usdt: Address, stg_usdt: Address, oracle: Address) {
     const signer = await locklift.keystore.getSigner('0');
 
     const OracleProxy = await locklift.factory.getContractArtifacts('OracleProxy');
@@ -205,7 +207,8 @@ export const setupVault = async function (owner: Account, market_manager: Accoun
             _owner: owner.address,
             _market_manager: market_manager.address,
             _usdt: usdt,
-            _stg_usdt: stg_usdt
+            _stg_usdt: stg_usdt,
+            _oracle: oracle
         },
         value: toNano(5)
     }))

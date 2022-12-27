@@ -78,12 +78,17 @@ describe("Testing main orders flow", async function () {
             user_usdt_wallet = await usdt_root.mint(1000000000 * TOKEN_DECIMALS, user);
         });
 
+        it('Deploy oracle', async function() {
+
+        });
+
         it('Deploy Gravix Vault', async function () {
             vault = await setupVault(
                 owner,
                 owner,
                 usdt_root.address,
-                stg_root.address
+                stg_root.address,
+                owner.address // TODO: change
             );
 
             // now transfer ownership of stgTOKEN to vault
@@ -102,7 +107,7 @@ describe("Testing main orders flow", async function () {
         it("Add market to vault", async function () {
             // eth market
             const oracle: Oracle = {
-                chainlink: {addr: zeroAddress},
+                chainlink: {chainID: 0, ticker: '', ttl: 0},
                 dex: {
                     targetToken: eth_addr,
                     path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -417,7 +422,7 @@ describe("Testing main orders flow", async function () {
                 new_config.fees.fundingBaseRatePerHour = 0; // 0.1%
 
                 const oracle: Oracle = {
-                    chainlink: {addr: zeroAddress},
+                    chainlink: {chainID: 0, ttl: 0, ticker: ''},
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
