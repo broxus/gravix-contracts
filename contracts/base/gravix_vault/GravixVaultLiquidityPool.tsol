@@ -21,12 +21,12 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
 
         uint128 _treasury_amount = math.muldiv(
             overflow,
-            insuranceFundOverflowDistributionSchema[uint256(InsuranceFundOverflowDistributionSchema.Treasury)],
+            insuranceFundOverflowDistributionSchema[uint128(InsuranceFundOverflowDistributionSchema.Treasury)],
             HUNDRED_PERCENT
         );
         uint128 _project_fund_amount = math.muldiv(
             overflow,
-            insuranceFundOverflowDistributionSchema[uint256(InsuranceFundOverflowDistributionSchema.ProjectFund)],
+            insuranceFundOverflowDistributionSchema[uint128(InsuranceFundOverflowDistributionSchema.ProjectFund)],
             HUNDRED_PERCENT
         );
         uint128 _dev_fund_amount = overflow - _treasury_amount - _project_fund_amount;

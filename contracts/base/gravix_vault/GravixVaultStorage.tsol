@@ -31,7 +31,6 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 poolBalance; // liquidity deposits
     uint128 stgUsdtSupply; // amount of minted stgUsdt
     uint128 targetPrice;
-    uint64 maxPoolUtilRatio = 1_000_000_000_000; // 100%, multiplied by 1_000_000_000_000
 
     uint128 insuranceFund; // collected fees, pnl and etc.
     uint128 insuranceFundLimit;
@@ -44,6 +43,9 @@ abstract contract GravixVaultStorage is IGravixVault {
     // total net open interest across all markets according to weights
     // market noi - abs of (sum of all open longs - sum of all open shorts)
     uint128 totalNOI;
+    bool totalNOILimitEnabled;
+    uint64 maxPoolUtilRatio = 1_000_000_000_000; // 100%, multiplied by 1_000_000_000_000
+    uint128 minPositionCollateral = 5 * USDT_DECIMALS; // 5$
 
     bool paused;
 

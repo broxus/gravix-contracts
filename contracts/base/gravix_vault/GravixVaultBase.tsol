@@ -49,6 +49,11 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit MaxPoolUtilRatioUpdate(meta.call_id, new_ratio);
     }
 
+    function setTotalNOILimit(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        totalNOILimitEnabled = new_state;
+        emit TotalNOILimit(meta.call_id, new_state);
+    }
+
     function setOpenCloseFeeDistributionSchema(
         uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema, Callback.CallMeta meta
     ) external onlyOwner reserveAndSuccessCallback(meta) {
@@ -96,11 +101,19 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit InsuranceFundOverflowDistributionSchemaUpdate(meta.call_id, new_schema);
     }
 
+    function setMinPositionCollateral(
+        uint128 new_val, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSuccessCallback(meta) {
+        minPositionCollateral = new_val;
+        emit MinPositionCollateralUpdate(meta.call_id, new_val);
+    }
+
     function receiveTokenWalletAddress(address wallet) external override {
         if (msg.sender == usdt) usdtWallet = wallet;
         if (msg.sender == stgUsdt) stgUsdtWallet = wallet;
     }
 
+    // TODO: method for adding insurance fund
     function onAcceptTokensTransfer(
         address,
         uint128 amount,

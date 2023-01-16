@@ -18,6 +18,7 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 
 abstract contract GravixVaultHelpers is GravixVaultStorage {
+    // TODO: Up
     function getDetails() external view responsible returns (
         address _owner,
         address _marketManager,
@@ -25,14 +26,21 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         address _usdtWallet,
         address _stgUsdt,
         address _stgUsdtWallet,
+        address _treasury,
+        address _projectFund,
+        address _devFund,
         uint128 _poolBalance, // liquidity deposits
         uint128 _stgUsdtSupply, // amount of minted stgUsdt
         uint128 _targetPrice,
+        uint64 _maxPoolUtilRatio,
         uint128 _insuranceFund, // collected fees, pnl and etc.
+        uint128 _insuranceFundLimit,
+        uint64[3] _insuranceFundOverflowDistributionSchema,
         uint128 _collateralReserve, // sum of all usdt provided as a collateral for open order
         uint128 _totalNOI,
         bool _paused,
         uint64 _liquidationThresholdRate,
+        uint64 _liquidatorRewardShare,
         uint64[2] _openFeeDistributionSchema,
         uint64[2] _closeFeeDistributionSchema,
         uint32 _marketCount
@@ -44,14 +52,21 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             usdtWallet,
             stgUsdt,
             stgUsdtWallet,
+            treasury,
+            projectFund,
+            devFund,
             poolBalance, // liquidity deposits
             stgUsdtSupply, // amount of minted stgUsdt
             targetPrice,
+            maxPoolUtilRatio,
             insuranceFund, // collected fees, pnl and etc.
+            insuranceFundLimit,
+            insuranceFundOverflowDistributionSchema,
             collateralReserve, // sum of all usdt provided as a collateral for open order
             totalNOI,
             paused,
             liquidationThresholdRate,
+            liquidatorRewardShare,
             openFeeDistributionSchema,
             closeFeeDistributionSchema,
             marketCount

@@ -32,7 +32,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             IEthereumEvent.EthereumEventOracleData event_data
         ) = decodeMarketOrderPayload(order_params_payload);
 
-        if (!validateOrderParams(market_idx, leverage, max_slippage_rate)) return false;
+        if (!validateOrderParams(market_idx, collateral, leverage, max_slippage_rate)) return false;
         if (checkPositionAllowed(
             market_idx,
             collateral,
@@ -47,7 +47,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         return true;
     }
 
-    function validateOrderParams(uint32 market_idx, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+    function validateOrderParams(uint32 market_idx, uint128 collateral, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+        if (collateral < minPositionCollateral) return false;
         if (!markets.exists(market_idx)) return false;
         if (leverage > markets[market_idx].maxLeverage) return false;
         if (max_slippage > HUNDRED_PERCENT) return false;
@@ -533,7 +534,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         // market limits
         if (shorts_usd > _market.maxTotalShortsUSD || longs_usd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         // common platform limit
-        if (math.muldiv(poolBalance, maxPoolUtilRatio, HUNDRED_PERCENT) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
+        if (totalNOILimitEnabled && math.muldiv(poolBalance, maxPoolUtilRatio, HUNDRED_PERCENT) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
         return (_market, _totalNOI, _error);
     }
 
