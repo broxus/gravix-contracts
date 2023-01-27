@@ -32,6 +32,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             IEthereumEvent.EthereumEventOracleData event_data
         ) = decodeMarketOrderPayload(order_params_payload);
 
+        // collateral has USDT decimals -> 6
+        // price has PRICE decimals -> 8
         if (!validateOrderParams(market_idx, collateral, leverage, max_slippage_rate)) return false;
         if (checkPositionAllowed(
             market_idx,
@@ -47,6 +49,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         return true;
     }
 
+    // @param market_idx - market id
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param max_slippage - max order price slippage, percent number, 10**12 - 100%
     function validateOrderParams(uint32 market_idx, uint128 collateral, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
         if (collateral < minPositionCollateral) return false;
         if (!markets.exists(market_idx)) return false;
@@ -55,6 +61,14 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         return true;
     }
 
+    // @param user - order maker
+    // @param market_idx - market id
+    // @param position_type - 0 - long, 1 - short
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param max_slippage_rate - max order price slippage, percent number, 10**12 - 100%
+    // @param event_data - EVM chain event data, required for chainlink proxy price feeds
+    // @param meta - meta info of txn
     function _marketOrder(
         address user,
         uint32 market_idx,
@@ -181,6 +195,15 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER EXECUTE HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
+    // @param nonce - oracle static parameter, required for addr calculation
+    // @param user - order maker
+    // @param position_key - unique(per user) position key
+    // @param market_idx - market id
+    // @param collateral - position collateral, 6 decimals number
+    // @param leverage - position leverage, 2 decimals number
+    // @param position_type - 0 - long, 1 - short
+    // @param asset_price - current asset price for this market, 8 decimals number
+    // @param meta - txn meta
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
@@ -267,8 +290,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         );
     }
 
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param asset_price - position price, 8 decimals number
     function calculatePositionAssetSize(uint128 collateral, uint32 leverage, uint128 asset_price) public pure returns (uint128 position_size_asset) {
-        return math.muldiv(math.muldiv(collateral, leverage, LEVERAGE_BASE), USDT_DECIMALS, asset_price);
+        return math.muldiv(math.muldiv(collateral, leverage, LEVERAGE_BASE), PRICE_DECIMALS, asset_price);
     }
 
     function getDynamicSpread(
@@ -354,6 +380,12 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         _sendCloseOrderOracleRequest(user, position_key, market_idx, event_data, meta);
     }
 
+    // @param nonce - oracle static parameter, required for addr calculation
+    // @param user - order maker
+    // @param position_key - unique(per user) position key
+    // @param market_idx - market id
+    // @param asset_price - current asset price for this market, 8 decimals number
+    // @param meta - txn meta
     function oracle_closePosition(
         uint64 nonce,
         address user,
@@ -488,6 +520,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- POSITION LIMITS --------------------------------------
     // ----------------------------------------------------------------------------------
+    // @param market_idx - market id
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param asset_price - position price, 8 decimals number
+    // @param position_type - 0 - long, 1 - short
     function checkPositionAllowed(
         uint32 market_idx,
         uint128 collateral,
@@ -507,6 +544,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     // @dev Will not apply changes if _error > 0
+    // @param market_idx - market id
+    // @param position_size_asset - position value in asset, 6 decimals number
+    // @param cur_asset_price - position price, 8 decimals number
+    // @param position_type - 0 - long, 1 - short
     function _addPositionToMarketOrReturnErr(
         uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type
     ) internal returns (uint16) {
@@ -522,6 +563,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         return _error;
     }
 
+    // @param market_idx - market id
+    // @param position_size_asset - position value in asset, 6 decimals number
+    // @param cur_asset_price - position price, 8 decimals number
+    // @param position_type - 0 - long, 1 - short
     function _calculatePositionImpactAndCheckAllowed(
         uint32 market_idx,
         uint128 position_size_asset,
@@ -530,8 +575,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     ) internal view returns (Market _market, uint128 _totalNOI, uint16 _error) {
         (_market, _totalNOI) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
 
-        uint128 shorts_usd = math.muldiv(_market.totalShortsAsset, cur_asset_price, USDT_DECIMALS);
-        uint128 longs_usd = math.muldiv(_market.totalLongsAsset, cur_asset_price, USDT_DECIMALS);
+        uint128 shorts_usd = math.muldiv(_market.totalShortsAsset, cur_asset_price, PRICE_DECIMALS);
+        uint128 longs_usd = math.muldiv(_market.totalLongsAsset, cur_asset_price, PRICE_DECIMALS);
         // market limits
         if (shorts_usd > _market.maxTotalShortsUSD || longs_usd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         // common platform limit
@@ -539,7 +584,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         return (_market, _totalNOI, _error);
     }
 
-    // @param asset_price - asset price on moment of update, required for TNOI calculation
+    // @param market_idx - market id
+    // @param position_size_asset - position value in asset, 6 decimals number
+    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    // @param position_type - 0 - long, 1 - short
+    // @param bool - whether position is removed or added
     function _calculatePositionImpact(
         uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type, bool remove
     ) internal view returns (Market _market, uint128 _totalNOI) {
@@ -547,7 +596,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         _totalNOI = totalNOI;
 
         uint128 noi_asset_before = _marketNOI(_market);
-        uint128 noi_usd_before = math.muldiv(noi_asset_before, _market.lastNoiUpdatePrice, USDT_DECIMALS);
+        uint128 noi_usd_before = math.muldiv(noi_asset_before, _market.lastNoiUpdatePrice, PRICE_DECIMALS);
 
         if (position_type == PositionType.Long) {
             _market.totalLongsAsset = remove ? (_market.totalLongsAsset - position_size_asset) : (_market.totalLongsAsset + position_size_asset);
@@ -556,7 +605,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }
 
         uint128 noi_asset_after = _marketNOI(_market);
-        uint128 noi_usd_after = math.muldiv(noi_asset_after, cur_asset_price, USDT_DECIMALS);
+        uint128 noi_usd_after = math.muldiv(noi_asset_after, cur_asset_price, PRICE_DECIMALS);
 
         _totalNOI -= math.muldiv(noi_usd_before, _market.noiWeight, WEIGHT_BASE);
         _totalNOI += math.muldiv(noi_usd_after, _market.noiWeight, WEIGHT_BASE);
@@ -565,7 +614,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
 
-    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation
+    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation, 8 decimals number
     function _addPositionToMarket(uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type) internal {
         (
             markets[market_idx],
@@ -573,7 +622,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         ) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
     }
 
-    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation
+    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation, 8 decimals number
     function _removePositionFromMarket(uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type) internal {
         (
             markets[market_idx],
@@ -583,6 +632,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDING ----------------------------------------------
     // ----------------------------------------------------------------------------------
+    // @param market_idx - market id
+    // @param asset_price - asset price, 8 decimals number
     function _updateFunding(uint32 market_idx, uint128 asset_price) internal returns (Funding funding) {
         Market _market = markets[market_idx];
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
@@ -612,11 +663,12 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         return _funding;
     }
 
+    // @param asset_price - asset price, 8 decimals number
     function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
         if (rate_per_hour == 0 || total_position == 0) return 0;
         int256 funding_asset = math.muldiv(rate_per_hour, int256(total_position), HUNDRED_PERCENT);
         funding_asset = math.muldiv(funding_asset, (now - last_update_time), HOUR);
-        int256 funding_usd = math.muldiv(funding_asset, asset_price, USDT_DECIMALS);
+        int256 funding_usd = math.muldiv(funding_asset, asset_price, PRICE_DECIMALS);
         return math.muldiv(funding_usd, SCALING_FACTOR, total_position);
     }
 

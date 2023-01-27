@@ -169,8 +169,6 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
 
     function onPriceReceived(int256 price, uint256 timestamp, uint256, TvmCell) external override {
         require (msg.sender == oracle, Errors.BAD_SENDER);
-        // all chainlink oracles have 8 decimals, gravix use 6
-        price = price / 100;
         // too old event
         if ((now - oracle_config.chainlink.ttl) > timestamp) {
             _reject();
@@ -232,7 +230,7 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
 //            require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
             // convert to final price using standard token decimals
             price = math.muldiv(price, 10**9, SCALING_FACTOR);
-            _sendCallback(price);
+            _sendCallback(price * 100); // add 2 decimals to get 8
         }
     }
 }

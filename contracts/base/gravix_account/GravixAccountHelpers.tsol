@@ -15,6 +15,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user);
     }
 
+    // @param price - 8 decimals number
     function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
         new_price = _type == IGravixVault.PositionType.Long ?
             math.muldiv(price, (HUNDRED_PERCENT + spread), HUNDRED_PERCENT) :
@@ -43,7 +44,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
 
         uint128 collateral = position.initialCollateral - position.openFee;
         uint128 leveraged_position_usd = math.muldiv(collateral, position.leverage, LEVERAGE_BASE);
-        uint128 leveraged_position_asset = math.muldiv(leveraged_position_usd, USDT_DECIMALS, position.openPrice);
+        uint128 leveraged_position_asset = math.muldiv(leveraged_position_usd, PRICE_DECIMALS, position.openPrice);
 
         // borrow fee
         uint32 time_passed = now - position.createdAt;

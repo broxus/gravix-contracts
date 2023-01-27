@@ -10,14 +10,15 @@ const logger = require("mocha-logger");
 const {expect} = require("chai");
 
 const TOKEN_DECIMALS = 10 ** 6;
+const PRICE_DECIMALS = 10 ** 8;
 const PERCENT_100 = bn(1_000_000_000_000);
 const SCALING_FACTOR = bn(10).pow(18);
 const ptype = {0: 'long', 1: 'short'};
 
 
-async function getPrice(pair: Contract<PairMockAbi>): Promise<string> {
+async function getPrice(pair: Contract<PairMockAbi>): Promise<number> {
     const reserves = (await pair.methods._reserves().call())._reserves;
-    return reserves[1];
+    return Number(reserves[1]) * 100; // 6 to 8 decimals
 }
 
 export async function setPrice(pair: Contract<PairMockAbi>, price: number) {
@@ -44,7 +45,7 @@ export async function openMarketOrder(
     const market = (await vault.contract.methods.getMarket({market_idx: market_idx, answerId: 0}).call())._market;
 
     const position = collateral * (leverage / 100);
-    const position_in_asset = position * TOKEN_DECIMALS / initial_price;
+    const position_in_asset = position * PRICE_DECIMALS / initial_price;
 
     let new_noi;
     if (pos_type === 0) {
@@ -61,6 +62,7 @@ export async function openMarketOrder(
     const price_multiplier = pos_type == 0 ? PERCENT_100.plus(total_spread) : PERCENT_100.minus(total_spread);
     const expected_price = price_multiplier.times(initial_price).idiv(PERCENT_100);
 
+    // console.log(expected_price.toFixed());
     // pre-deploy acc, because we dont have bounces yet
     // await locklift.tracing.trace(vault.deployGravixAccount(user));
 
@@ -157,9 +159,11 @@ export async function openMarketOrder(
 
     logger.log(
         `Open ${ptype[pos_type]} position,`,
-        `market price - ${toUSD(initial_price)}$,`,
-        `open price - ${toUSD(expected_price)}\$,`,
-        `liquidation price - ${toUSD(liq_price)}\$,`,
+        `market price - ${toUSD(initial_price / 100)}$,`,
+        // @ts-ignore
+        `open price - ${toUSD(expected_price / 100)}\$,`,
+        // @ts-ignore
+        `liquidation price - ${toUSD(liq_price / 100)}\$,`,
         `spread - ${total_spread.div(10 ** 10).toFixed(3)}\%,`,
         `collateral - ${toUSD(col_up)}\$,`,
         `position size - ${toUSD(position_up)}\$,`,
@@ -213,7 +217,7 @@ export async function closeOrder(
         .minus(pos_view2.position.openFee)
         .times(pos_view2.position.leverage)
         .idiv(100);
-    const leveraged_asset = leveraged_usd.times(TOKEN_DECIMALS).idiv(pos_view2.position.openPrice);
+    // const leveraged_asset = leveraged_usd.times(TOKEN_DECIMALS).idiv(pos_view2.position.openPrice);
 
     // console.log(event);
 
@@ -297,10 +301,10 @@ export async function closeOrder(
 
     // const details1 = await vault.details();
     // expect(details1._totalNOI.toString()).to.be.eq('0');
-
     logger.log(
-        `Close ${ptype[pos_type]} position, market price - ${toUSD(finish_price)}$,`,
-        `close price - ${toUSD(expected_close_price)}\$,`,
+        `Close ${ptype[pos_type]} position, market price - ${toUSD(finish_price / 100)}$,`,
+        // @ts-ignore
+        `close price - ${toUSD(expected_close_price / 100)}\$,`,
         `net pnl ${toUSD(net_pnl)}\$,`,
         `(${percent_diff.toFixed(2)}%),`,
         `close fee - ${toUSD(expected_close_fee)}\$`
