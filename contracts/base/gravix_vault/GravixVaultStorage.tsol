@@ -73,4 +73,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     mapping (uint32 => mapping (uint32 => DateTimeInterval)) weekends;
 
     mapping (uint32 => OracleConfig) oracleConfigs;
+
+    uint32 request_nonce = 0;
+    mapping (uint32 => PendingMarketOrder) pending_market_requests;
 }

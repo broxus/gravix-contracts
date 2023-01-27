@@ -101,7 +101,7 @@ export class GravixVault {
 
     async addLiquidity(from_wallet: TokenWallet, amount: number, call_id=0) {
         const payload = (await this.contract.methods.encodeLiquidityDeposit({nonce: 0, call_id: call_id}).call()).payload;
-        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(2));
+        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(5));
     }
 
     async details() {
@@ -140,7 +140,7 @@ export class GravixVault {
             call_id: call_id,
             nonce: 0
         }).call()).payload;
-        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(2));
+        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(5));
     }
 
     async closePosition(
@@ -153,6 +153,6 @@ export class GravixVault {
                 position_key: position_key,
                 event_data: empty_event,
                 meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
-        ).send({from: user.address, amount: toNano(2)});
+        ).send({from: user.address, amount: toNano(5)});
     }
 }

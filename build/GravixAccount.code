@@ -334,6 +334,7 @@ IFREF {
 .loc ../contracts/base/gravix_account/GravixAccountBase.tsol, 17
 OVER
 PUSHCONT {
+	LDU 32
 	LDREF
 	ENDS
 	CTOS
@@ -353,6 +354,7 @@ PUSHCONT {
 	CTOS
 }
 PUSHCONT {
+	LDU 32
 	LDMSGADDR
 	LDU 32
 	LDU 8
@@ -396,7 +398,7 @@ SWAP
 ENDS
 .loc ../contracts/base/gravix_account/GravixAccountBase.tsol, 0
 CALLREF {
-	CALL $process_requestMarketOrder_f4d1841e_internal_macro$
+	CALL $process_requestMarketOrder_26f5535d_internal_macro$
 }
 DROP
 CALLREF {
@@ -404,7 +406,7 @@ CALLREF {
 }
 THROW 0
 
-.macro process_requestMarketOrder_f4d1841e_internal_macro
+.macro process_requestMarketOrder_26f5535d_internal_macro
 .loc ../contracts/base/gravix_account/GravixAccountHelpers.tsol, 123
 PUSHINT 3000
 GETGLOB 9
@@ -522,6 +524,7 @@ ENDC
 PUSHPOW2 7
 SENDRAWMSG
 .loc ../contracts/base/gravix_account/GravixAccountBase.tsol, 0
+DROP
 
 .macro process_executeMarketOrder
 DROP
@@ -2891,7 +2894,7 @@ THROW 0
 
 .macro public_function_selector
 DUP
-PUSHINT 588065453
+PUSHINT 487403085
 LEQ
 IFJMPREF {
 	DUP
@@ -2899,6 +2902,12 @@ IFJMPREF {
 	EQUAL
 	IFJMPREF {
 		CALL $applyOpenSpread$
+	}
+	DUP
+	PUSHINT 179055965
+	EQUAL
+	IFJMPREF {
+		CALL $process_requestMarketOrder$
 	}
 	DUP
 	PUSHINT 468973486
@@ -2912,28 +2921,22 @@ IFJMPREF {
 	IFJMPREF {
 		CALL $getDetails$
 	}
-	DUP
-	PUSHINT 588065453
-	EQUAL
-	IFJMPREF {
-		CALL $positions$
-	}
 }
 DUP
 PUSHINT 876959871
 LEQ
 IFJMPREF {
 	DUP
+	PUSHINT 588065453
+	EQUAL
+	IFJMPREF {
+		CALL $positions$
+	}
+	DUP
 	PUSHINT 601637728
 	EQUAL
 	IFJMPREF {
 		CALL $onDeployRetry$
-	}
-	DUP
-	PUSHINT 675372341
-	EQUAL
-	IFJMPREF {
-		CALL $process_requestMarketOrder$
 	}
 	DUP
 	PUSHINT 707605621

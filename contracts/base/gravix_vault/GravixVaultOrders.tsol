@@ -22,7 +22,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     function _handleMarketOrder(
         address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
-    ) internal view returns (bool success) {
+    ) internal returns (bool success) {
         (
             uint32 market_idx,
             PositionType position_type,
@@ -65,8 +65,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 max_slippage_rate, // %
         IEthereumEvent.EthereumEventOracleData event_data,
         Callback.CallMeta meta
-    ) internal view {
+    ) internal {
         Market _market = markets[market_idx];
+        request_nonce += 1;
 
         PendingMarketOrder new_request = PendingMarketOrder(
             user,
@@ -85,8 +86,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             meta
         );
 
+        pending_market_requests[request_nonce] = new_request;
         address gravix_acc = getGravixAccountAddress(user);
-        IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(new_request);
+        IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_nonce, new_request);
     }
 
     function finish_requestMarketOrder(

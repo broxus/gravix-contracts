@@ -15,7 +15,7 @@ import "locklift/src/console.tsol";
 
 abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_requestMarketOrder(
-        IGravixVault.PendingMarketOrder pending_request
+        uint32, IGravixVault.PendingMarketOrder pending_request
     ) external override onlyGravixVault reserve {
         request_counter += 1;
         marketOrders[request_counter] = MarketOrder(

@@ -62,8 +62,7 @@ export async function openMarketOrder(
     const expected_price = price_multiplier.times(initial_price).idiv(PERCENT_100);
 
     // pre-deploy acc, because we dont have bounces yet
-    await locklift.tracing.trace(vault.deployGravixAccount(user));
-    const account = await vault.account(user);
+    // await locklift.tracing.trace(vault.deployGravixAccount(user));
 
     const res = (await vault.contract.methods.checkPositionAllowed({
         market_idx: market_idx,
@@ -77,8 +76,9 @@ export async function openMarketOrder(
     const details_prev = await vault.details();
     const {traceTree} = await locklift.tracing.trace(vault.openPosition(
         user_wallet, collateral, market_idx, pos_type, leverage, expected_price.toString(), 0, 1
-    ));
+    ), {allowedCodes: {compute: [null]}});
     // await traceTree?.beautyPrint();
+    const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
 

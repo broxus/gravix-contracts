@@ -166,19 +166,22 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         _handleStgUsdtBurn(amount, payload);
     }
 
-    onBounce(TvmSlice slice) external view {
+    onBounce(TvmSlice slice) external {
         tvm.accept();
 
-        TvmSlice ext_slice = slice.loadRef().toSlice();
-        uint32 functionId = ext_slice.decode(uint32);
+        uint32 functionId = slice.decode(uint32);
 
         // if processing failed - contract was not deployed. Deploy and try again
         if (functionId == tvm.functionId(IGravixAccount.process_requestMarketOrder)) {
             tvm.rawReserve(_reserve(), 0);
-            PendingMarketOrder request = ext_slice.decodeFunctionParams(IGravixAccount.process_requestMarketOrder);
+            uint32 _request_nonce = slice.decode(uint32);
+            PendingMarketOrder request = pending_market_requests[_request_nonce];
+            delete pending_market_requests[_request_nonce];
 
             address gravix_acc = _deployGravixAccount(request.user);
-            IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request);
+            IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _request_nonce, request
+            );
         }
     }
 }
