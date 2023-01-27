@@ -2,6 +2,7 @@ import { LockliftConfig } from "locklift";
 import { FactorySource } from "./build/factorySource";
 import {GiverWallet, SimpleGiver, TestnetGiver} from "./giverSettings";
 import * as dotenv from "dotenv";
+import "locklift-verifier";
 declare global {
   const locklift: import("locklift").Locklift<FactorySource>;
 }
@@ -9,6 +10,12 @@ dotenv.config();
 
 
 const config: LockliftConfig = {
+  verifier: {
+    verifierVersion: "latest", // contract verifier binary, see https://github.com/broxus/everscan-verify
+    apiKey: process.env.VERIFIER_KEY || "",
+    secretKey: process.env.VERIFIER_SECRET || "",
+    // license: "AGPL-3.0-or-later", <- this is default value and can be overrided
+  },
   compiler: {
     // Specify path to your TON-Solidity-Compiler
     // path: "/mnt/o/projects/broxus/TON-Solidity-Compiler/build/solc/solc",
@@ -57,6 +64,34 @@ const config: LockliftConfig = {
       },
       tracing: {
         endpoint: 'http://localhost:5000/graphql',
+      },
+
+      keys: {
+        // Use everdev to generate your phrase
+        // !!! Never commit it in your repos !!!
+        // phrase: "action inject penalty envelope rabbit element slim tornado dinner pizza off blood",
+        amount: 500
+      },
+    },
+    test: {
+      // Specify connection settings for https://github.com/broxus/everscale-standalone-client/
+      connection: {
+        // @ts-ignore
+        type: "graphql",
+        data: {
+          // @ts-ignore
+          endpoints: [process.env.TEST_GQL_ENDPOINT]
+        },
+      },
+      // This giver is default local-node giverV2
+      giver: {
+        // Check if you need provide custom giver
+        giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
+        address: "0:a4053fd2e9798d0457c9e8f012cef203e49da863d76f36d52d5e2e62c326b217",
+        key: process.env.TESTNET_GIVER_KEY ?? "",
+      },
+      tracing: {
+        endpoint: process.env.TEST_GQL_ENDPOINT ?? ""
       },
 
       keys: {

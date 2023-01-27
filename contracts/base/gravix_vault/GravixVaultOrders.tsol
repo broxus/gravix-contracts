@@ -154,7 +154,6 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         IEthereumEvent.EthereumEventOracleData event_data,
         Callback.CallMeta meta
     ) internal view {
-        // TODO: calculate deploy gas value
         address proxy = _deployOracleProxy(market_idx, event_data, meta);
         uint128 callback_value = uint128(positions.length) * Gas.LIQUIDATION_VALUE;
         IOracleProxy(proxy).setLiquidationCallback{value: callback_value, flag: MsgFlag.SENDER_PAYS_FEES}(liquidator, positions);
@@ -171,8 +170,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         rnd.shuffle();
         return new OracleProxy{
             stateInit: _buildOracleProxyInitData(rnd.next(uint64(2**64 - 1))),
-            value: Gas.ORACLE_PROXY_DEPLOY,
-            flag: MsgFlag.SENDER_PAYS_FEES
+            value: Gas.ORACLE_PROXY_DEPLOY
         }(
             usdt, oracle, market_idx, price_source, oracle_conf, event_data, meta
         );
@@ -414,15 +412,16 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }
     }
 
-    // TODO: rework gas for all requests with oracle
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDATION ------------------------------------------
     // ----------------------------------------------------------------------------------
-    // @notice 1.5 ever for every market + 1.5 ever for every position
+    // @notice 3 ever for every market + 1 ever for every position
     // @dev Aggregate by market to minimize requests to oracle
     function liquidatePositions(mapping (uint32 => LiquidationData) liquidations, Callback.CallMeta meta) external view onlyActive reserve {
         // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
         for ((uint32 market_idx, LiquidationData liq_data) : liquidations) {
+            require (liq_data.positions.length <= 250, Errors.BAD_INPUT); // we dont want to fail on action phase later
+
             _sendLiquidationOracleRequest(msg.sender, market_idx, liq_data.positions, liq_data.eventData, meta);
         }
         meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
@@ -441,8 +440,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         for (PositionIdx position: positions) {
             address gravix_acc = getGravixAccountAddress(position.user);
-            // reserve 0.05 ever here to cover computation costs of this txn
-            IGravixAccount(gravix_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.05 ever}(
+            // reserve 0.01 ever here to cover computation costs of iterating, needed for big arrays
+            IGravixAccount(gravix_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.01 ever}(
                 liquidator,
                 position.positionKey,
                 asset_price,

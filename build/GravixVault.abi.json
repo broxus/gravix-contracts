@@ -88,6 +88,15 @@
 			]
 		},
 		{
+			"name": "setTotalNOILimit",
+			"inputs": [
+				{"name":"new_state","type":"bool"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setOpenCloseFeeDistributionSchema",
 			"inputs": [
 				{"name":"new_open_fee_schema","type":"uint64[]"},
@@ -143,6 +152,15 @@
 			]
 		},
 		{
+			"name": "setMinPositionCollateral",
+			"inputs": [
+				{"name":"new_val","type":"uint128"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "receiveTokenWalletAddress",
 			"inputs": [
 				{"name":"wallet","type":"address"}
@@ -179,6 +197,7 @@
 			"name": "validateOrderParams",
 			"inputs": [
 				{"name":"market_idx","type":"uint32"},
+				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
 				{"name":"max_slippage","type":"uint32"}
 			],
@@ -739,14 +758,21 @@
 				{"name":"_usdtWallet","type":"address"},
 				{"name":"_stgUsdt","type":"address"},
 				{"name":"_stgUsdtWallet","type":"address"},
+				{"name":"_treasury","type":"address"},
+				{"name":"_projectFund","type":"address"},
+				{"name":"_devFund","type":"address"},
 				{"name":"_poolBalance","type":"uint128"},
 				{"name":"_stgUsdtSupply","type":"uint128"},
 				{"name":"_targetPrice","type":"uint128"},
+				{"name":"_maxPoolUtilRatio","type":"uint64"},
 				{"name":"_insuranceFund","type":"uint128"},
+				{"name":"_insuranceFundLimit","type":"uint128"},
+				{"name":"_insuranceFundOverflowDistributionSchema","type":"uint64[]"},
 				{"name":"_collateralReserve","type":"uint128"},
 				{"name":"_totalNOI","type":"uint128"},
 				{"name":"_paused","type":"bool"},
 				{"name":"_liquidationThresholdRate","type":"uint64"},
+				{"name":"_liquidatorRewardShare","type":"uint64"},
 				{"name":"_openFeeDistributionSchema","type":"uint64[]"},
 				{"name":"_closeFeeDistributionSchema","type":"uint64[]"},
 				{"name":"_marketCount","type":"uint32"}
@@ -930,6 +956,15 @@
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"new_ratio","type":"uint64"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "TotalNOILimit",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_state","type":"bool"}
 			],
 			"outputs": [
 			]
@@ -1160,6 +1195,15 @@
 			]
 		},
 		{
+			"name": "MinPositionCollateralUpdate",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_val","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "CancelMarketOrderRevert",
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
@@ -1270,12 +1314,14 @@
 		{"name":"poolBalance","type":"uint128"},
 		{"name":"stgUsdtSupply","type":"uint128"},
 		{"name":"targetPrice","type":"uint128"},
-		{"name":"maxPoolUtilRatio","type":"uint64"},
 		{"name":"insuranceFund","type":"uint128"},
 		{"name":"insuranceFundLimit","type":"uint128"},
 		{"name":"insuranceFundOverflowDistributionSchema","type":"uint64[]"},
 		{"name":"collateralReserve","type":"uint128"},
 		{"name":"totalNOI","type":"uint128"},
+		{"name":"totalNOILimitEnabled","type":"bool"},
+		{"name":"maxPoolUtilRatio","type":"uint64"},
+		{"name":"minPositionCollateral","type":"uint128"},
 		{"name":"paused","type":"bool"},
 		{"name":"liquidationThresholdRate","type":"uint64"},
 		{"name":"liquidatorRewardShare","type":"uint64"},
