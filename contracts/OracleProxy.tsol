@@ -126,7 +126,7 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
     }
 
     function _collectPriceFromChainlink(address send_gas_to) internal view {
-        tvm.rawReserve(0, CONTRACT_MIN_BALANCE);
+        tvm.rawReserve(CONTRACT_MIN_BALANCE, 0);
         TvmCell empty; // we dont need any special payload, all data is here
         INonTokenOraclePriceCallback(oracle).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             event_data, empty, oracle_config.chainlink.ticker, send_gas_to
