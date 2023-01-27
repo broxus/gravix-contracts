@@ -86,7 +86,7 @@ export class GravixVault {
             meta: {call_id: call_id, nonce: 0, send_gas_to: this.owner.address}
         }).send({
             from: this.owner.address,
-            amount: toNano(markets.length)
+            amount: toNano(2)
         }));
     }
 
