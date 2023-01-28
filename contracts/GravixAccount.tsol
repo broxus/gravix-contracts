@@ -71,23 +71,39 @@ contract GravixAccount is GravixAccountBase {
 
 
     function onCodeUpgrade(TvmCell upgrade_data) private {
-        tvm.resetStorage();
         tvm.rawReserve(_reserve(), 0);
 
         TvmSlice s = upgrade_data.toSlice();
         (address root_, , address send_gas_to) = s.decode(address, uint8, address);
-        vault = root_;
+        address _vault = root_;
 
-        platform_code = s.loadRef();
+        TvmCell _platform_code = s.loadRef();
 
         TvmSlice initialData = s.loadRefAsSlice();
-        user = initialData.decode(address);
+        address _user = initialData.decode(address);
 
         TvmSlice params = s.loadRefAsSlice();
-        (currentVersion,) = params.decode(uint32, uint32);
+        uint32 _oldVersion;
+        uint32 _currentVersion;
+        (_currentVersion, _oldVersion) = params.decode(uint32, uint32);
 
-        IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, Callback.CallMeta(0, 0, send_gas_to)
-        );
+        if (_currentVersion == _oldVersion) {
+            // deploy
+            tvm.resetStorage();
+
+            vault = _vault;
+            platform_code = _platform_code;
+            user = _user;
+            currentVersion = _currentVersion;
+            IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, Callback.CallMeta(0, 0, send_gas_to)
+            );
+        } else {
+            // upgrade without modifying storage
+            currentVersion = _currentVersion;
+            IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, _oldVersion, _currentVersion, Callback.CallMeta(0, 0, send_gas_to)
+            );
+        }
     }
 }

@@ -52,7 +52,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         uint32 old_version,
         uint32 new_version,
         Callback.CallMeta meta
-    ) external view onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
+    ) external view override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
         emit GravixAccountUpgrade(meta.call_id, user, old_version, new_version);
     }
 

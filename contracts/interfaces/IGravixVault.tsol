@@ -207,6 +207,12 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     function receiveTokenWalletAddress(address wallet) external;
     function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view;
+    function onGravixAccountUpgrade(
+        address user,
+        uint32 old_version,
+        uint32 new_version,
+        Callback.CallMeta meta
+    ) external view;
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,

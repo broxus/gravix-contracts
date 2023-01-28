@@ -226,82 +226,120 @@ CALLX
 .internal-alias :onCodeUpgrade, 2
 .internal :onCodeUpgrade
 .loc ../contracts/GravixAccount.tsol, 74
-PUSHINT 0
-SETGLOB 10
-PUSHREFSLICE {
-	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
-}
-SETGLOB 11
-PUSHREFSLICE {
-	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
-}
-SETGLOB 12
-PUSHREF {
-}
-SETGLOB 13
-NEWDICT
-SETGLOB 14
-NEWDICT
-SETGLOB 15
-PUSHINT 0
-SETGLOB 16
-.loc ../contracts/GravixAccount.tsol, 75
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/GravixAccount.tsol, 77
+.loc ../contracts/GravixAccount.tsol, 76
 CTOS
-.loc ../contracts/GravixAccount.tsol, 78
+.loc ../contracts/GravixAccount.tsol, 77
 DUP
 LDMSGADDR
 LDU 8
 LDMSGADDR
 POP S4
 NIP
-.loc ../contracts/GravixAccount.tsol, 79
-SWAP
-SETGLOB 11
-.loc ../contracts/GravixAccount.tsol, 81
-OVER
+.loc ../contracts/GravixAccount.tsol, 78
+XCPU S1, S2
+.loc ../contracts/GravixAccount.tsol, 80
 LDREF
-POP S3
-SETGLOB 13
-.loc ../contracts/GravixAccount.tsol, 83
-OVER
+POP S4
+.loc ../contracts/GravixAccount.tsol, 82
+PUSH S3
 LDREFRTOS
 SWAP
-POP S3
-.loc ../contracts/GravixAccount.tsol, 84
+POP S5
+.loc ../contracts/GravixAccount.tsol, 83
 LDMSGADDR
 DROP
-SETGLOB 12
-.loc ../contracts/GravixAccount.tsol, 86
-SWAP
+.loc ../contracts/GravixAccount.tsol, 85
+ROLL 4
 LDREFRTOS
 NIP
-.loc ../contracts/GravixAccount.tsol, 87
+.loc ../contracts/GravixAccount.tsol, 86
+PUSHINT 0
+.loc ../contracts/GravixAccount.tsol, 88
+SWAP
 LDU 32
 PLDU 32
-DROP
-SETGLOB 10
-.loc ../contracts/GravixAccount.tsol, 89
-PUSHINT 0
-DUP
-ROT
-TRIPLE
-GETGLOB 12
-GETGLOB 11
-NEWC
-STSLICECONST x62_
-STSLICE
-PUSHINT 1
-STUR 111
-ROTREV
-NEWC
-STSLICECONST x44e98a40
-STSLICE
+POP S2
+.loc ../contracts/GravixAccount.tsol, 90
+PUSH2 S0, S1
+EQUAL
+PUSHCONT {
+	.loc ../contracts/GravixAccount.tsol, 92
+	PUSHINT 0
+	SETGLOB 10
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	SETGLOB 11
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+	SETGLOB 12
+	PUSHREF {
+	}
+	SETGLOB 13
+	NEWDICT
+	SETGLOB 14
+	NEWDICT
+	SETGLOB 15
+	PUSHINT 0
+	SETGLOB 16
+	.loc ../contracts/GravixAccount.tsol, 94
+	PUSH S4
+	SETGLOB 11
+	.loc ../contracts/GravixAccount.tsol, 95
+	PUSH S3
+	SETGLOB 13
+	.loc ../contracts/GravixAccount.tsol, 96
+	PUSH S2
+	SETGLOB 12
+	.loc ../contracts/GravixAccount.tsol, 97
+	DUP
+	SETGLOB 10
+	.loc ../contracts/GravixAccount.tsol, 98
+	PUSHINT 0
+	PUSH2 S0, S6
+	TRIPLE
+	GETGLOB 12
+	GETGLOB 11
+	NEWC
+	STSLICECONST x62_
+	STSLICE
+	PUSHINT 1
+	STUR 111
+	ROTREV
+	NEWC
+	STSLICECONST x44e98a40
+	STSLICE
+}
+PUSHCONT {
+	.loc ../contracts/GravixAccount.tsol, 103
+	DUP
+	SETGLOB 10
+	.loc ../contracts/GravixAccount.tsol, 104
+	PUSHINT 0
+	PUSH2 S0, S6
+	TRIPLE
+	PUSH2 S1, S2
+	GETGLOB 12
+	GETGLOB 11
+	NEWC
+	STSLICECONST x62_
+	STSLICE
+	PUSHINT 1
+	STUR 111
+	ROLLREV 4
+	NEWC
+	STSLICECONST x52968f7d
+	STSLICE
+	STU 32
+	STU 32
+}
+IFELSE
 SWAP
 UNTRIPLE
 REVERSE 4, 0
@@ -316,6 +354,7 @@ ENDC
 PUSHPOW2 7
 SENDRAWMSG
 .loc ../contracts/GravixAccount.tsol, 0
+BLKDROP 6
 CALLREF {
 	CALL $c7_to_c4$
 }
