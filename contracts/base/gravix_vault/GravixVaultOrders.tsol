@@ -218,11 +218,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, asset_price);
         uint64 dynamic_spread = getDynamicSpread(position_size_asset, market_idx, position_type);
 
+        Funding _funding = _updateFunding(market_idx, asset_price);
         uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size_asset, asset_price, position_type);
 
         address gravix_acc = getGravixAccountAddress(user);
         if (_error == 0) {
-            Funding _funding = _updateFunding(market_idx, asset_price);
             int256 funding = position_type == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
 
             IGravixAccount(gravix_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
