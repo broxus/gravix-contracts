@@ -111,7 +111,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 collateral;
         uint128 expectedPrice;
         uint32 leverage;
-        uint32 maxSlippageRate; // %
+        uint64 maxSlippageRate; // %
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
         uint64 baseSpreadRate; // %
@@ -155,7 +155,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 collateral,
         uint128 expected_price,
         uint32 leverage,
-        uint32 max_slippage_rate,
+        uint64 max_slippage_rate,
         uint32 position_key
     );
     event MarketOrderExecutionRevert(uint32 call_id, address user, uint32 position_key);
@@ -200,6 +200,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
+    event Debt(uint32 call_id, address user, uint128 debt);
     event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);
     event LiquidatePositionRevert(uint32 call_id, address liquidator, address user, uint32 position_key);
     event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stg_usdt_amount_out);

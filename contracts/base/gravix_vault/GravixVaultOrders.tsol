@@ -28,7 +28,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             PositionType position_type,
             uint32 leverage,
             uint128 expected_price,
-            uint32 max_slippage_rate,
+            uint64 max_slippage_rate,
             IEthereumEvent.EthereumEventOracleData event_data
         ) = decodeMarketOrderPayload(order_params_payload);
 
@@ -53,7 +53,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
     // @param max_slippage - max order price slippage, percent number, 10**12 - 100%
-    function validateOrderParams(uint32 market_idx, uint128 collateral, uint32 leverage, uint32 max_slippage) public view returns (bool correct) {
+    function validateOrderParams(uint32 market_idx, uint128 collateral, uint32 leverage, uint64 max_slippage) public view returns (bool correct) {
         if (collateral < minPositionCollateral) return false;
         if (!markets.exists(market_idx)) return false;
         if (leverage > markets[market_idx].maxLeverage) return false;
@@ -76,7 +76,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 collateral,
         uint32 leverage,
         uint128 expected_price,
-        uint32 max_slippage_rate, // %
+        uint64 max_slippage_rate, // %
         IEthereumEvent.EthereumEventOracleData event_data,
         Callback.CallMeta meta
     ) internal {
@@ -435,14 +435,25 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             int256 pnl_with_fees = position_view.pnl - position_view.borrowFee - position_view.fundingFee;
             _collectCloseFee(position_view.closeFee);
 
+            uint128 debt;
             if (pnl_with_fees < 0) _increaseInsuranceFund(uint128(math.abs(pnl_with_fees)));
-            if (pnl_with_fees > 0) _decreaseInsuranceFund(uint128(pnl_with_fees));
+            if (pnl_with_fees > 0) {
+                // positive debt if we dont have enough money to pay pnl
+                debt = _decreaseInsuranceFund(uint128(pnl_with_fees));
+            }
 
             emit ClosePosition(meta.call_id, user, position_key, position_view);
 
-            // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
-            uint128 user_net_usdt = uint128(collateral + pnl_with_fees - position_view.closeFee);
-            _transfer(usdtWallet, user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+            if (debt > 0) {
+                // at least we can pay collateral, because it was reserved
+                uint128 user_net_usdt = collateral - position_view.closeFee;
+                _transfer(usdtWallet, user_net_usdt , user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+                emit Debt(meta.call_id, user, uint128(pnl_with_fees));
+            } else {
+                // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
+                uint128 user_net_usdt = uint128(collateral + pnl_with_fees - position_view.closeFee);
+                _transfer(usdtWallet, user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+            }
         }
     }
 

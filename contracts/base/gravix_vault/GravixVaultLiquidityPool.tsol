@@ -141,7 +141,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
 
     }
 
-    function _decreaseInsuranceFund(uint128 amount) internal {
+    function _decreaseInsuranceFund(uint128 amount) internal returns (uint128 debt) {
         if (amount <= insuranceFund) {
             insuranceFund -= amount;
         } else {
@@ -149,6 +149,10 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             // we just ran out of insurance fund, save target price
             if (targetPrice == 0) {
                 (targetPrice,) = stgUsdtPrice();
+            }
+            if (delta > poolBalance) {
+                debt = delta - poolBalance;
+                delta = poolBalance;
             }
             poolBalance -= delta;
             insuranceFund = 0;
