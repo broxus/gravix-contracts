@@ -1,4 +1,4 @@
-import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault} from "./utils/common";
+import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault, tryIncreaseTime} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
@@ -8,7 +8,7 @@ import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {PairMockAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
-import {closeOrder, openMarketOrder, setPrice, testMarketPosition} from "./utils/orders";
+import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -20,6 +20,7 @@ describe("Testing main orders flow", async function () {
     let usdt_root: Token;
     let stg_root: Token;
     const TOKEN_DECIMALS = 10 ** 6;
+    const PRICE_DECIMALS = 10 ** 8;
     const PERCENT_100 = bn(1_000_000_000_000);
     const SCALING_FACTOR = bn(10).pow(18);
     const LONG_POS = 0;
@@ -414,9 +415,10 @@ describe("Testing main orders flow", async function () {
         });
 
         describe('Advanced scenarios: funding and borrow fee checked', async function() {
-            const market_idx = 1;
+            let market_idx: number;
+            let base_funding = 1000000000; // 0.1%
 
-            it('Add new market', async function() {
+            it('Add market with borrow rate > 0', async function() {
                 let new_config = basic_config;
                 new_config.fees.borrowBaseRatePerHour = 1000000000; // 0.1% per hour
                 new_config.fees.fundingBaseRatePerHour = 0; // 0.1%
@@ -431,6 +433,7 @@ describe("Testing main orders flow", async function () {
 
                 await locklift.tracing.trace(vault.addMarkets([new_config]));
                 await locklift.tracing.trace(vault.setOracles([[1, oracle]]));
+                market_idx = 1;
             });
 
             it('Testing borrow fee', async function() {
@@ -461,6 +464,126 @@ describe("Testing main orders flow", async function () {
                     1100 * TOKEN_DECIMALS,
                     86400 // 1 day
                 );
+            });
+
+            it('Add market with funding rate > 0', async function() {
+                let new_config = basic_config;
+                new_config.fees.borrowBaseRatePerHour = 0;
+                new_config.fees.fundingBaseRatePerHour = base_funding; // 0.1%
+
+                const oracle: Oracle = {
+                    chainlink: {chainID: 0, ttl: 0, ticker: ''},
+                    dex: {
+                        targetToken: eth_addr,
+                        path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
+                    }
+                }
+
+                await locklift.tracing.trace(vault.addMarkets([new_config]));
+                await locklift.tracing.trace(vault.setOracles([[2, oracle]]));
+                market_idx = 2;
+            });
+
+            describe('Testing funding fee', async function() {
+                it('Solo long position', async function() {
+                    await testPositionFunding(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      market_idx,
+                      LONG_POS,
+                      100 * TOKEN_DECIMALS,
+                      10000,
+                      1000 * TOKEN_DECIMALS,
+                      3600
+                    );
+                });
+
+                it('Solo short position', async function() {
+                    await testPositionFunding(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      market_idx,
+                      SHORT_POS,
+                      100 * TOKEN_DECIMALS,
+                      10000,
+                      1000 * TOKEN_DECIMALS,
+                      3600
+                    );
+                });
+
+                it('Longs > shorts', async function() {
+                    // big long
+                    const pos_key = await openMarketOrder(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      market_idx,
+                      LONG_POS,
+                      100 * TOKEN_DECIMALS,
+                      10000
+                    );
+
+                    await testPositionFunding(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      market_idx,
+                      SHORT_POS,
+                      100 * TOKEN_DECIMALS,
+                      100,
+                      1000 * TOKEN_DECIMALS,
+                      7200
+                    );
+
+                    await closeOrder(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      pos_key
+                    );
+                });
+
+                it('Shorts > longs', async function() {
+                    // big short
+                    const pos_key = await openMarketOrder(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      market_idx,
+                      SHORT_POS,
+                      100 * TOKEN_DECIMALS,
+                      10000
+                    );
+
+                    await testPositionFunding(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      market_idx,
+                      LONG_POS,
+                      100 * TOKEN_DECIMALS,
+                      100,
+                      1000 * TOKEN_DECIMALS,
+                      7200
+                    );
+
+                    await closeOrder(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      pos_key
+                    );
+                })
             });
         });
     });

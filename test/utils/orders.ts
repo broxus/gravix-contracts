@@ -122,7 +122,7 @@ export async function openMarketOrder(
         answerId: 0,
         input: {
             positionKey: pos_key,
-            assetPrice: 1,
+            assetPrice: initial_price,
             funding: {
                 accLongUSDFundingPerShare: 0,
                 accShortUSDFundingPerShare: 0
@@ -144,16 +144,17 @@ export async function openMarketOrder(
 
     const position_up = col_up.times(leverage).idiv(100);
     const liq_price_dist = expected_price
-        .multipliedBy(col_up.multipliedBy(0.9).integerValue().minus(borrow_fee))
-        .integerValue()
-        .idiv(col_up)
+        .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view.fundingFee))
+        .div(col_up)
         .times(100)
-        .idiv(leverage)
+        .div(leverage)
+        .integerValue(BigNumber.ROUND_FLOOR);
 
     let liq_price = pos_type == 0 ? expected_price.minus(liq_price_dist) : expected_price.plus(liq_price_dist);
     liq_price = pos_type == 0 ?
         liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate)) :
         liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
+    liq_price = liq_price.isNegative() ? bn(0) : liq_price;
 
     expect(pos_view.liquidationPrice.toString()).to.be.eq(liq_price.toString());
 
@@ -236,7 +237,7 @@ export async function closeOrder(
         .times(SCALING_FACTOR)
         .idiv(pos_view2.position.openPrice)
         .minus(SCALING_FACTOR)
-        .multipliedBy(pos_type == 0 ? 1 : -1)
+        .times(pos_type == 0 ? 1 : -1)
         .times(col_up)
         .div(SCALING_FACTOR)
         .integerValue(BigNumber.ROUND_FLOOR) // js bignumber cant floor in idiv correctly ;/
@@ -244,21 +245,25 @@ export async function closeOrder(
         .idiv(100);
 
     const liq_price_dist = bn(pos_view2.position.openPrice)
-        .multipliedBy(col_up.multipliedBy(0.9).integerValue().minus(borrow_fee))
+        .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view2.fundingFee))
         .idiv(col_up)
         .times(100)
-        .idiv(pos_view2.position.leverage);
+        .div(pos_view2.position.leverage)
+        .integerValue(BigNumber.ROUND_FLOOR);
 
     let liq_price = pos_type == 0 ? bn(pos_view2.position.openPrice).minus(liq_price_dist) : bn(pos_view2.position.openPrice).plus(liq_price_dist);
     liq_price = pos_type == 0 ?
         liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate)) :
         liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
 
+    liq_price = liq_price.isNegative() ? bn(0) : liq_price;
+
     let up_pos = col_up
       .times(pos_view2.position.leverage)
       .idiv(100)
       .plus(expected_pnl)
-      .minus(borrow_fee);
+      .minus(borrow_fee)
+      .minus(pos_view2.fundingFee);
     // console.log(expected_pnl, borrow_fee);
     const expected_close_fee = up_pos.times(pos_view2.position.closeFeeRate).idiv(PERCENT_100);
 
@@ -275,7 +280,7 @@ export async function closeOrder(
             user: user.address,
             position_view: {
                 closePrice: expected_close_price.toFixed(),
-                fundingFee: '0',
+                fundingFee: pos_view2.fundingFee,
                 borrowFee: borrow_fee.toFixed(),
                 closeFee: expected_close_fee.toFixed(),
                 pnl: expected_pnl.toFixed()
@@ -295,8 +300,11 @@ export async function closeOrder(
         `close price - ${toUSD(expected_close_price / 100)}\$,`,
         `net pnl ${toUSD(net_pnl)}\$,`,
         `(${percent_diff.toFixed(2)}%),`,
-        `close fee - ${toUSD(expected_close_fee)}\$`
+        `close fee - ${toUSD(expected_close_fee)}\$`,
+        `funding fee - ${toUSD(bn(pos_view2.fundingFee))}\$`
     );
+
+    return pos_view2;
 }
 
 export async function testMarketPosition(
@@ -338,4 +346,119 @@ export async function testMarketPosition(
         user_wallet,
         pos_key
     );
+}
+
+
+export async function testPositionFunding(
+  vault: GravixVault,
+  pair: Contract<PairMockAbi>,
+  user: Account,
+  user_wallet: TokenWallet,
+  market_idx: number,
+  pos_type: 0 | 1,
+  collateral: number,
+  leverage: number,
+  initial_price: number,
+  ttl= 0
+) {
+    const market = (await vault.contract.methods.getMarket({
+        market_idx: market_idx,
+        answerId: 0
+    }).call())._market;
+    await setPrice(pair, initial_price);
+    // market has 15k$ depth, open pos on 10k$
+    const pos_key = await openMarketOrder(
+      vault, pair, user, user_wallet, market_idx, pos_type, collateral, leverage
+    );
+
+    const market_0 = (await vault.contract.methods.getMarket({market_idx: 2, answerId: 0}).call())._market;
+    // save funding time
+    // 12 hours
+    await tryIncreaseTime(ttl);
+    const rates = await vault.contract.methods.getFundingRates({market_idx: 2}).call();
+    const pos_view = await closeOrder(
+      vault, pair, user, user_wallet, pos_key
+    );
+    // calculate based on time + noi and check if correct
+    const market_1 = (await vault.contract.methods.getMarket({market_idx: 2, answerId: 0}).call())._market;
+
+    // check rates
+    const noi = bn(market_0.totalLongsAsset).minus(market_0.totalShortsAsset).abs();
+    const funding_rate = bn(market.fees.fundingBaseRatePerHour)
+      .times(noi.times(SCALING_FACTOR).idiv(market_0.depthAsset))
+      .idiv(SCALING_FACTOR);
+
+    let long_rate: BigNumber = bn(0);
+    let short_rate: BigNumber = bn(0);
+
+    if (bn(market_0.totalLongsAsset).isGreaterThanOrEqualTo(market_0.totalShortsAsset)) {
+        long_rate = funding_rate;
+        if (bn(market_0.totalShortsAsset).isGreaterThan(0)) {
+            short_rate = long_rate
+              .times(-1)
+              .times(market_0.totalLongsAsset)
+              .idiv(market_0.totalShortsAsset);
+        }
+    }  else {
+        short_rate = funding_rate;
+        if (bn(market_0.totalLongsAsset).isGreaterThan(0)) {
+            long_rate = short_rate
+              .times(-1)
+              .times(market_0.totalShortsAsset)
+              .idiv(market_0.totalLongsAsset);
+        }
+    }
+
+    expect(rates.long_rate_per_hour).to.be.eq(long_rate.toFixed());
+    expect(rates.short_rate_per_hour).to.be.eq(short_rate.toFixed());
+
+    let long_accFundingPerShare = bn(0);
+    let short_accFundingPerShare = bn(0);
+
+    // check abs values
+    if (!long_rate.isZero()) {
+        const long_funding_asset = long_rate
+          .times(market_0.totalLongsAsset)
+          .div(PERCENT_100)
+          .integerValue(BigNumber.ROUND_FLOOR)
+          .times(bn(market_1.lastFundingUpdateTime).minus(market_0.lastFundingUpdateTime))
+          .div(3600)
+          .integerValue(BigNumber.ROUND_FLOOR);
+
+        const long_funding_usd = long_funding_asset
+          .times(initial_price * 100)
+          .div(PRICE_DECIMALS)
+          .integerValue(BigNumber.ROUND_FLOOR);
+
+        long_accFundingPerShare = long_funding_usd
+          .times(SCALING_FACTOR)
+          .div(market_0.totalLongsAsset)
+          .integerValue(BigNumber.ROUND_FLOOR);
+    }
+
+    if (!short_rate.isZero()) {
+        const short_funding_asset = short_rate
+          .times(market_0.totalShortsAsset)
+          .div(PERCENT_100)
+          .integerValue(BigNumber.ROUND_FLOOR)
+          .times(bn(market_1.lastFundingUpdateTime).minus(market_0.lastFundingUpdateTime))
+          .div(3600)
+          .integerValue(BigNumber.ROUND_FLOOR);
+
+        const short_funding_usd = short_funding_asset
+          .times(initial_price * 100)
+          .div(PRICE_DECIMALS)
+          .integerValue(BigNumber.ROUND_FLOOR);
+
+        short_accFundingPerShare = short_funding_usd
+          .times(SCALING_FACTOR)
+          .div(market_0.totalShortsAsset)
+          .integerValue(BigNumber.ROUND_FLOOR);
+    }
+
+    const cur_short_acc = bn(market_0.funding.accShortUSDFundingPerShare).plus(short_accFundingPerShare);
+    const cur_long_acc = bn(market_0.funding.accLongUSDFundingPerShare).plus(long_accFundingPerShare);
+
+    expect (market_1.funding.accLongUSDFundingPerShare).to.be.eq(cur_long_acc.toFixed());
+    expect (market_1.funding.accShortUSDFundingPerShare).to.be.eq(cur_short_acc.toFixed());
 }
