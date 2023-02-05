@@ -230,39 +230,19 @@ export async function closeOrder(
 
     expect(borrow_fee.toFixed()).to.be.eq(pos_view2.borrowFee);
 
-
-    let up_pos: BigNumber;
-    if (pos_type === 0) {
-        up_pos = expected_close_price
-            .times(SCALING_FACTOR)
-            .idiv(pos_view2.position.openPrice);
-    } else {
-        up_pos = bn(pos_view2.position.openPrice)
-            .times(SCALING_FACTOR)
-            .idiv(expected_close_price);
-    }
-
-    up_pos = up_pos
-        .times(leveraged_usd)
-        .idiv(SCALING_FACTOR)
-        .minus(borrow_fee)
-        .minus(0) // funding fee
-
-    const expected_close_fee = up_pos.lte(0) ? bn(0) : up_pos.times(pos_view2.position.closeFeeRate).idiv(PERCENT_100);
-    expect(expected_close_fee.toFixed()).to.be.eq(pos_view2.closeFee.toString());
+    const col_up = bn(pos_view2.position.initialCollateral).minus(pos_view2.position.openFee);
 
     let expected_pnl = expected_close_price
         .times(SCALING_FACTOR)
         .idiv(pos_view2.position.openPrice)
         .minus(SCALING_FACTOR)
         .multipliedBy(pos_type == 0 ? 1 : -1)
-        .times(bn(pos_view2.position.initialCollateral).minus(pos_view2.position.openFee))
+        .times(col_up)
         .div(SCALING_FACTOR)
         .integerValue(BigNumber.ROUND_FLOOR) // js bignumber cant floor in idiv correctly ;/
         .times(pos_view2.position.leverage)
         .idiv(100);
 
-    const col_up = bn(pos_view2.position.initialCollateral).minus(pos_view2.position.openFee);
     const liq_price_dist = bn(pos_view2.position.openPrice)
         .multipliedBy(col_up.multipliedBy(0.9).integerValue().minus(borrow_fee))
         .idiv(col_up)
@@ -273,6 +253,14 @@ export async function closeOrder(
     liq_price = pos_type == 0 ?
         liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate)) :
         liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
+
+    let up_pos = col_up
+      .times(pos_view2.position.leverage)
+      .idiv(100)
+      .plus(expected_pnl)
+      .minus(borrow_fee);
+    // console.log(expected_pnl, borrow_fee);
+    const expected_close_fee = up_pos.times(pos_view2.position.closeFeeRate).idiv(PERCENT_100);
 
     expect(liq_price.toFixed()).to.be.eq(pos_view2.liquidationPrice);
 
