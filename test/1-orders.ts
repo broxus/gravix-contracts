@@ -86,17 +86,13 @@ describe("Testing main orders flow", async function () {
             user_usdt_wallet = await usdt_root.mint(1000000000 * USDT_DECIMALS, user);
         });
 
-        it('Deploy oracle', async function() {
-
-        });
-
         it('Deploy Gravix Vault', async function () {
             vault = await setupVault(
                 owner,
                 owner,
                 usdt_root.address,
                 stg_root.address,
-                owner.address // TODO: change
+                owner.address
             );
 
             // now transfer ownership of stgTOKEN to vault

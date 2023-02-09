@@ -130,7 +130,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 depthAsset;
         Fees fees;
         bool scheduleEnabled;
-        mapping (uint8 => TimeInterval) workingHours;
+        mapping (uint8 => TimeInterval[]) workingHours;
     }
 
     struct Funding {
@@ -178,7 +178,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 market_idx,
         MarketConfig market
     );
-    event MarketScheduleUpdate(uint32 call_id, uint32 market_idx, mapping (uint8 => TimeInterval));
+    event MarketScheduleUpdate(uint32 call_id, uint32 market_idx, mapping (uint8 => TimeInterval[]));
     event MarketWeekends(uint32 call_id, uint32 market_idx, DateTimeInterval weekend);
     event MarketWeekendsCleared(uint32 call_id, uint32 market_idx);
     event MarketPause(uint32 call_id, uint32 market_idx, bool new_state);

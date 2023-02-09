@@ -35,14 +35,18 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         }
 
         // now lets check if we are on working hours of market
-        mapping (uint8 => TimeInterval) working_hours = workingHours[market_idx];
+        mapping (uint8 => TimeInterval[]) working_hours = workingHours[market_idx];
         if (!working_hours.exists(uint8(cur_week_day))) return false;
         // ok, so, we are on working day, lets get timestamp of start/end of the working day
-        TimeInterval work_interval = working_hours[uint8(cur_week_day)];
-        DateTime from_dt = _timeToDateTime(year, month, day, work_interval.from);
-        DateTime to_dt = _timeToDateTime(year, month, day, work_interval.to);
-        if (now < _dateTimeToTimestamp(from_dt) || now > _dateTimeToTimestamp(to_dt)) return false;
-        return true;
+        TimeInterval[] work_intervals = working_hours[uint8(cur_week_day)];
+        for (TimeInterval interval: work_intervals) {
+            uint32 from_ts = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.from));
+            uint32 to_ts = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.to));
+            // end not set => work till the end of the day, set infinite timestamp to bypass check
+            if (interval.to.hour == 0 && interval.to.minute == 0) to_ts = 2**32 - 1;
+            if (now >= from_ts && now <= to_ts) return true;
+        }
+        return false;
     }
 
     function addMarkets(
@@ -114,9 +118,11 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         correct = correct && config.fees.closeFeeRate < HUNDRED_PERCENT;
         correct = correct && config.fees.openFeeRate < HUNDRED_PERCENT;
 
-        for ((uint8 key, TimeInterval interval) : config.workingHours) {
+        for ((uint8 key, TimeInterval[] intervals) : config.workingHours) {
             correct = correct && key >= DateTimeLib.DOW_MON && key <= DateTimeLib.DOW_SUN;
-            correct = correct && validateTimeInterval(interval);
+            for (TimeInterval interval : intervals) {
+                correct = correct && validateTimeInterval(interval);
+            }
         }
     }
 
@@ -132,17 +138,17 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
     }
 
     function setMarketsWorkingHours(
-        mapping (uint32 => mapping (uint8 => TimeInterval)) market_to_working_hours,
+        mapping (uint32 => mapping (uint8 => TimeInterval[])) market_to_working_hours,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for ((uint32 market_idx, mapping (uint8 => TimeInterval) working_hours) : market_to_working_hours) {
+        for ((uint32 market_idx, mapping (uint8 => TimeInterval[]) working_hours) : market_to_working_hours) {
             _setMarketWorkingHours(market_idx, working_hours, meta);
         }
     }
 
     function setMarketsCommonWorkingHours(
         uint32[] market_idx,
-        mapping (uint8 => TimeInterval) working_hours,
+        mapping (uint8 => TimeInterval[]) working_hours,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
         for (uint i = 0; i < market_idx.length; i++) {
@@ -152,14 +158,16 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
 
     function _setMarketWorkingHours(
         uint32 market_idx,
-        mapping (uint8 => TimeInterval) working_hours,
+        mapping (uint8 => TimeInterval[]) working_hours,
         Callback.CallMeta meta
     ) internal {
         require (markets.exists(market_idx), Errors.BAD_INPUT);
 
-        for ((uint8 key, TimeInterval interval) : working_hours) {
+        for ((uint8 key, TimeInterval[] intervals) : working_hours) {
             require (key >= DateTimeLib.DOW_MON && key <= DateTimeLib.DOW_SUN, Errors.BAD_INPUT);
-            require (validateTimeInterval(interval), Errors.BAD_INPUT);
+            for (TimeInterval interval : intervals) {
+                require (validateTimeInterval(interval), Errors.BAD_INPUT);
+            }
         }
 
         workingHours[market_idx] = working_hours;
@@ -199,6 +207,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
         uint32 _new_weekend_end = _dateTimeToTimestamp(_new_weekend.to);
 
+        // check that previous weekend end before start of this weekend
         optional(uint32, DateTimeInterval) _opt = weekends[market_idx].prevOrEq(_new_weekend_start);
         if (_opt.hasValue()) {
             (, DateTimeInterval _prev_weekend) = _opt.get();
@@ -207,6 +216,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
             require (_new_weekend_start >= _prev_weekend_end, Errors.BAD_INPUT);
         }
 
+        // check that next weekend start after this weekend
         optional(uint32, DateTimeInterval) _opt2 = weekends[market_idx].next(_new_weekend_start);
         if (_opt2.hasValue()) {
             (uint32 _next_weekend_start,) = _opt2.get();
@@ -228,14 +238,16 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
     }
 
     function validateTimeInterval(TimeInterval val) public pure returns (bool correct) {
-        return val.to.hour > val.from.hour || (val.to.hour == val.from.hour && val.to.minute > val.from.minute);
+        return val.to.hour > val.from.hour ||
+            (val.to.hour == val.from.hour && val.to.minute > val.from.minute) ||
+            (val.to.hour == 0 && val.to.minute == 0);
     }
 
     function validateDateTimeInterval(DateTimeInterval val) public pure returns (bool correct) {
         return _dateTimeToTimestamp(val.to) > _dateTimeToTimestamp(val.from);
     }
 
-    function getMarketSchedule(uint32 market_idx) external view responsible returns (mapping (uint8 => TimeInterval)) {
+    function getMarketWorkingHours(uint32 market_idx) external view responsible returns (mapping (uint8 => TimeInterval[])) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }workingHours[market_idx];
     }
 
