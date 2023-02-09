@@ -165,6 +165,11 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         return encodeTokenTransferPayload(Action.LiquidityWithdraw, nonce, call_id, empty);
     }
 
+    function encodeInsuranceDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
+        TvmCell empty;
+        return encodeTokenTransferPayload(Action.InsuranceDeposit, nonce, call_id, empty);
+    }
+
     function encodeTokenTransferPayload(
         Action action, uint32 nonce, uint32 call_id, TvmCell action_payload
     ) public pure returns (TvmCell payload) {

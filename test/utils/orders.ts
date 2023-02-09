@@ -9,7 +9,6 @@ import {TokenWallet} from "./wrappers/token_wallet";
 const logger = require("mocha-logger");
 const {expect} = require("chai");
 
-const TOKEN_DECIMALS = 10 ** 6;
 const PRICE_DECIMALS = 10 ** 8;
 const PERCENT_100 = bn(1_000_000_000_000);
 const SCALING_FACTOR = bn(10).pow(18);
@@ -21,7 +20,7 @@ async function getPrice(pair: Contract<PairMockAbi>): Promise<number> {
     return Number(reserves[1]) * 100; // 6 to 8 decimals
 }
 
-export async function setPrice(pair: Contract<PairMockAbi>, price: number) {
+export async function setPrice(pair: Contract<PairMockAbi>, price: number | string) {
     const signer = await locklift.keystore.getSigner('0');
     await pair.methods.setReserves({
         // 1 eth and {price}$ in reserves

@@ -39,6 +39,12 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         emit InsuranceFundWithdraw(meta.call_id, _treasury_amount, _project_fund_amount, _dev_fund_amount);
     }
 
+    function _handleInsuranceDeposit(address user, uint128 amount, Callback.CallMeta meta) internal {
+        _increaseInsuranceFund(amount);
+        emit InsuranceFundDeposit(meta.call_id, user, amount);
+        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+    }
+
     function _handleUsdtDeposit(
         address user, uint128 amount, Callback.CallMeta meta
     ) internal {

@@ -138,6 +138,8 @@ abstract contract GravixVaultBase is GravixVaultOrders {
                 exception = exception || !_handleMarketOrder(sender, amount, action_payload, Callback.CallMeta(call_id, nonce, remainingGasTo));
             } else if (!exception && action == Action.LiquidityDeposit) {
                 _handleUsdtDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
+            } else if (!exception && action == Action.InsuranceDeposit) {
+                _handleInsuranceDeposit(sender, amount, Callback.CallMeta(call_id, nonce, remainingGasTo));
             }
         } else if (msg.sender == stgUsdtWallet) {
             if (!exception && action == Action.LiquidityWithdraw) {

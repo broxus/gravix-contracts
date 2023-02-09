@@ -9,7 +9,7 @@ import "./IEthereumEvent.tsol";
 
 
 interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
-    enum Action {MarketOrder, LiquidityDeposit, LiquidityWithdraw }
+    enum Action {MarketOrder, LiquidityDeposit, LiquidityWithdraw, InsuranceDeposit }
 
     struct Time {
         uint8 hour;
@@ -192,6 +192,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event NewTreasury(uint32 call_id, address new_treasury);
     event NewProjectFund(uint32 call_id, address new_project_fund);
     event NewDevFund(uint32 call_id, address new_dev_fund);
+    event InsuranceFundDeposit(uint32 call_id, address user, uint128 amount);
     event InsuranceFundWithdraw(uint32 call_id, uint128 treasury, uint128 project_fund, uint128 dev_fund);
     event InsuranceFundOverflowDistributionSchemaUpdate(uint32 call_id, uint64[3] new_schema);
     event MinPositionCollateralUpdate(uint32 call_id, uint128 new_val);

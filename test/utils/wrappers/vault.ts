@@ -155,4 +155,20 @@ export class GravixVault {
                 meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
         ).send({from: user.address, amount: toNano(5)});
     }
+
+    async liquidatePositions(
+      liquidations: [
+        number,
+          {
+              eventData: { eventTransaction: number; eventData: string; eventBlockNumber: number; eventIndex: number; eventBlock: number };
+              positions: Array<{ user: Address; positionKey: number }>
+          }
+      ][],
+      call_id=0
+    ) {
+        return await this.contract.methods.liquidatePositions({
+            liquidations: liquidations,
+            meta: {call_id: call_id, nonce: 0, send_gas_to: this.owner.address}
+        }).send({from: this.owner.address, amount: toNano(10)});
+    }
 }

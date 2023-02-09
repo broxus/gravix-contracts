@@ -21,4 +21,22 @@ export class GravixAccount {
     async positions() {
         return (await this.contract.methods.positions().call()).positions;
     }
+
+    async getPositionView(
+      positionKey: number,
+      assetPrice: number | string,
+      funding: { accShortUSDFundingPerShare: number; accLongUSDFundingPerShare: number; }
+    ) {
+        return await this.contract.methods.getPositionView({
+            input: {
+                positionKey: positionKey,
+                assetPrice: assetPrice,
+                funding: {
+                    accShortUSDFundingPerShare: funding.accShortUSDFundingPerShare,
+                    accLongUSDFundingPerShare: funding.accLongUSDFundingPerShare
+                }
+            },
+            answerId: 0
+        }).call();
+    }
 }
