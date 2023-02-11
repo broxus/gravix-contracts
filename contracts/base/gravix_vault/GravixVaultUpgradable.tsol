@@ -15,9 +15,9 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
-        GravixAccountCode = code;
-        GravixAccountVersion += 1;
-        emit GravixAccountCodeUpdate(meta.call_id, GravixAccountVersion - 1, GravixAccountVersion);
+        gravixAccountCode = code;
+        gravixAccountVersion += 1;
+        emit GravixAccountCodeUpdate(meta.call_id, gravixAccountVersion - 1, gravixAccountVersion);
     }
 
     function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
@@ -44,7 +44,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function _upgradeGravixAccount(address user, uint128 value, Callback.CallMeta meta) internal view {
         address gravix_acc = getGravixAccountAddress(user);
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
-        IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(GravixAccountCode, GravixAccountVersion, meta);
+        IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(gravixAccountCode, gravixAccountVersion, meta);
     }
 
     function onGravixAccountUpgrade(
@@ -70,12 +70,12 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function _deployGravixAccount(address user) internal view returns (address) {
         TvmBuilder constructor_params;
 
-        constructor_params.store(GravixAccountVersion); // 32
-        constructor_params.store(GravixAccountVersion); // 32
+        constructor_params.store(gravixAccountVersion); // 32
+        constructor_params.store(gravixAccountVersion); // 32
 
         return new Platform{
             stateInit: _buildGravixAccountInitData(_buildGravixAccountParams(user)),
             value: Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
-        }(GravixAccountCode, constructor_params.toCell(), user);
+        }(gravixAccountCode, constructor_params.toCell(), user);
     }
 }

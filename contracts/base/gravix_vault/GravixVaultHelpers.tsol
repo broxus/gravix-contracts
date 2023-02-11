@@ -22,6 +22,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     function getDetails() external view responsible returns (
         address _owner,
         address _marketManager,
+        address _oracle,
         address _usdt,
         address _usdtWallet,
         address _stgUsdt,
@@ -32,12 +33,14 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint128 _poolBalance, // liquidity deposits
         uint128 _stgUsdtSupply, // amount of minted stgUsdt
         uint128 _targetPrice,
-        uint64 _maxPoolUtilRatio,
         uint128 _insuranceFund, // collected fees, pnl and etc.
         uint128 _insuranceFundLimit,
         uint64[3] _insuranceFundOverflowDistributionSchema,
         uint128 _collateralReserve, // sum of all usdt provided as a collateral for open order
         uint128 _totalNOI,
+        bool _totalNOILimitEnabled,
+        uint64 _maxPoolUtilRatio,
+        uint128 _minPositionCollateral,
         bool _paused,
         uint64 _liquidationThresholdRate,
         uint64 _liquidatorRewardShare,
@@ -48,6 +51,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             owner,
             marketManager,
+            oracle,
             usdt,
             usdtWallet,
             stgUsdt,
@@ -58,12 +62,14 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             poolBalance, // liquidity deposits
             stgUsdtSupply, // amount of minted stgUsdt
             targetPrice,
-            maxPoolUtilRatio,
             insuranceFund, // collected fees, pnl and etc.
             insuranceFundLimit,
             insuranceFundOverflowDistributionSchema,
             collateralReserve, // sum of all usdt provided as a collateral for open order
             totalNOI,
+            totalNOILimitEnabled,
+            maxPoolUtilRatio,
+            minPositionCollateral,
             paused,
             liquidationThresholdRate,
             liquidatorRewardShare,
@@ -76,16 +82,18 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     function getCodes() external view responsible returns (
         TvmCell _oracleProxyCode,
         TvmCell _platformCode,
-        TvmCell _GravixAccountCode,
-        uint32 _GravixAccountVersion,
-        uint32 _GravixVaultVersion
+        TvmCell _gravixAccountCode,
+        uint32 _oracleProxyVersion,
+        uint32 _gravixAccountVersion,
+        uint32 _gravixVaultVersion
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             oracleProxyCode,
             platformCode,
-            GravixAccountCode,
-            GravixAccountVersion,
-            GravixVaultVersion
+            gravixAccountCode,
+            oracleProxyVersion,
+            gravixAccountVersion,
+            gravixVaultVersion
         );
     }
 

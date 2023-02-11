@@ -754,6 +754,7 @@
 			"outputs": [
 				{"name":"_owner","type":"address"},
 				{"name":"_marketManager","type":"address"},
+				{"name":"_oracle","type":"address"},
 				{"name":"_usdt","type":"address"},
 				{"name":"_usdtWallet","type":"address"},
 				{"name":"_stgUsdt","type":"address"},
@@ -764,12 +765,14 @@
 				{"name":"_poolBalance","type":"uint128"},
 				{"name":"_stgUsdtSupply","type":"uint128"},
 				{"name":"_targetPrice","type":"uint128"},
-				{"name":"_maxPoolUtilRatio","type":"uint64"},
 				{"name":"_insuranceFund","type":"uint128"},
 				{"name":"_insuranceFundLimit","type":"uint128"},
 				{"name":"_insuranceFundOverflowDistributionSchema","type":"uint64[]"},
 				{"name":"_collateralReserve","type":"uint128"},
 				{"name":"_totalNOI","type":"uint128"},
+				{"name":"_totalNOILimitEnabled","type":"bool"},
+				{"name":"_maxPoolUtilRatio","type":"uint64"},
+				{"name":"_minPositionCollateral","type":"uint128"},
 				{"name":"_paused","type":"bool"},
 				{"name":"_liquidationThresholdRate","type":"uint64"},
 				{"name":"_liquidatorRewardShare","type":"uint64"},
@@ -786,18 +789,10 @@
 			"outputs": [
 				{"name":"_oracleProxyCode","type":"cell"},
 				{"name":"_platformCode","type":"cell"},
-				{"name":"_GravixAccountCode","type":"cell"},
-				{"name":"_GravixAccountVersion","type":"uint32"},
-				{"name":"_GravixVaultVersion","type":"uint32"}
-			]
-		},
-		{
-			"name": "_dateTimeToTimestamp",
-			"inputs": [
-				{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"dt","type":"tuple"}
-			],
-			"outputs": [
-				{"name":"value0","type":"uint32"}
+				{"name":"_gravixAccountCode","type":"cell"},
+				{"name":"_oracleProxyVersion","type":"uint32"},
+				{"name":"_gravixAccountVersion","type":"uint32"},
+				{"name":"_gravixVaultVersion","type":"uint32"}
 			]
 		},
 		{
@@ -910,7 +905,7 @@
 		{"key":1,"name":"deploy_nonce","type":"uint32"},
 		{"key":2,"name":"oracleProxyCode","type":"cell"},
 		{"key":3,"name":"platformCode","type":"cell"},
-		{"key":4,"name":"GravixAccountCode","type":"cell"}
+		{"key":4,"name":"gravixAccountCode","type":"cell"}
 	],
 	"events": [
 		{
@@ -1346,10 +1341,10 @@
 		{"name":"devFund","type":"address"},
 		{"name":"oracleProxyCode","type":"cell"},
 		{"name":"platformCode","type":"cell"},
-		{"name":"GravixAccountCode","type":"cell"},
-		{"name":"GravixAccountVersion","type":"uint32"},
+		{"name":"gravixAccountCode","type":"cell"},
+		{"name":"gravixAccountVersion","type":"uint32"},
 		{"name":"oracleProxyVersion","type":"uint32"},
-		{"name":"GravixVaultVersion","type":"uint32"},
+		{"name":"gravixVaultVersion","type":"uint32"},
 		{"name":"poolBalance","type":"uint128"},
 		{"name":"stgUsdtSupply","type":"uint128"},
 		{"name":"targetPrice","type":"uint128"},

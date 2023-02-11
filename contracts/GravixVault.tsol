@@ -46,12 +46,43 @@ contract GravixVault is GravixVaultBase {
         _setupTokenWallets();
     }
 
-
-    // TODO: up
     function upgrade(TvmCell code,  Callback.CallMeta meta) external onlyOwner {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
-
-        TvmCell data;
+        TvmCell data = abi.encode(
+            meta,
+            owner,
+            marketManager,
+            oracle,
+            usdt,
+            usdtWallet,
+            stgUsdt,
+            stgUsdtWallet,
+            treasury,
+            projectFund,
+            devFund,
+            poolBalance, // liquidity deposits
+            stgUsdtSupply, // amount of minted stgUsdt
+            targetPrice,
+            insuranceFund, // collected fees, pnl and etc.
+            insuranceFundLimit,
+            insuranceFundOverflowDistributionSchema,
+            collateralReserve, // sum of all usdt provided as a collateral for open order
+            totalNOI,
+            totalNOILimitEnabled,
+            maxPoolUtilRatio,
+            minPositionCollateral,
+            paused,
+            liquidationThresholdRate,
+            liquidatorRewardShare,
+            openFeeDistributionSchema,
+            closeFeeDistributionSchema,
+            marketCount,
+            oracleProxyCode,
+            platformCode,
+            gravixAccountCode,
+            oracleProxyVersion,
+            gravixAccountVersion,
+            gravixVaultVersion
+        );
 
         // set code after complete this method
         tvm.setcode(code);
