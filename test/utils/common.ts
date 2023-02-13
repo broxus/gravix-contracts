@@ -200,7 +200,7 @@ export const setupVault = async function (owner: Account, market_manager: Accoun
             deploy_nonce: getRandomNonce(),
             oracleProxyCode: OracleProxy.code,
             platformCode: Platform.code,
-            GravixAccountCode: GravixAccount.code
+            gravixAccountCode: GravixAccount.code
         },
         publicKey: signer?.publicKey as string,
         constructorParams: {
