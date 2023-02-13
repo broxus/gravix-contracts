@@ -128,7 +128,7 @@ export const deployUsers = async function (count: number, initial_balance: numbe
 }
 
 
-export const deployUser = async function (initial_balance = 100): Promise<Account> {
+export const deployUser = async function (initial_balance = 100, log=true): Promise<Account> {
     const signer = await locklift.keystore.getSigner('0');
 
     const {account: _user, tx} = await locklift.factory.accounts.addNewAccount({
@@ -146,7 +146,7 @@ export const deployUser = async function (initial_balance = 100): Promise<Accoun
         }
     });
 
-    logger.log(`User address: ${_user.address.toString()}`);
+    if (log) logger.log(`User address: ${_user.address.toString()}`);
     return _user;
 }
 
@@ -187,7 +187,7 @@ export const setupTokenRoot = async function (token_name: string, token_symbol: 
     return new Token(_root, owner);
 }
 
-export const setupVault = async function (owner: Account, market_manager: Account, usdt: Address, stg_usdt: Address, oracle: Address) {
+export const setupVault = async function (owner: Account, market_manager: Account, usdt: Address, stg_usdt: Address, oracle: Address, log=true) {
     const signer = await locklift.keystore.getSigner('0');
 
     const OracleProxy = await locklift.factory.getContractArtifacts('OracleProxy');
@@ -213,7 +213,7 @@ export const setupVault = async function (owner: Account, market_manager: Accoun
         value: toNano(5)
     }))
 
-    logger.log(`Gravix Vault address: ${_root.address.toString()}`);
+    if (log) logger.log(`Gravix Vault address: ${_root.address.toString()}`);
     return new GravixVault(_root, owner);
 }
 

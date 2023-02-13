@@ -228,7 +228,7 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
             }
             // path should resolve in USDT
             // TODO: uncomment for prod
-//            require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
+            require (target_token == usdt, Errors.BAD_DEX_ORACLE_PATH);
             // convert to final price using standard token decimals
             price = math.muldiv(price, 10**9, SCALING_FACTOR);
             _sendCallback(price * 100); // add 2 decimals to get 8
