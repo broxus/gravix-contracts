@@ -310,6 +310,12 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
     }
 
+    modifier reserveAndSendGas(Callback.CallMeta meta) {
+        tvm.rawReserve(_reserve(), 0);
+        _;
+        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+    }
+
     modifier onlyOwner() {
         require(msg.sender == owner, Errors.NOT_OWNER);
         _;

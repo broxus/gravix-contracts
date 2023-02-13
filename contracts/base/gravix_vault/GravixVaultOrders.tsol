@@ -346,7 +346,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     function forceClosePositions(
         address[] users, uint32[] position_keys, IEthereumEvent.EthereumEventOracleData[] event_datas, Callback.CallMeta meta
-    ) external view onlyOwner reserve {
+    ) external view onlyOwner reserveAndSendGas(meta) {
         require (users.length == position_keys.length, Errors.BAD_INPUT);
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
@@ -358,7 +358,31 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }
     }
 
-    function closePosition(uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta) external view onlyActive reserve {
+    // @notice Should be used by admin very carefully when oracle is dead by some reason to save users
+    function forceClosePositionsWithPrice(
+        address[] users, uint32[] position_keys, uint32[] market_idx, uint128[] asset_prices, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        require (users.length == position_keys.length, Errors.BAD_INPUT);
+        require (position_keys.length == market_idx.length, Errors.BAD_INPUT);
+        require (market_idx.length == asset_prices.length, Errors.BAD_INPUT);
+        require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
+
+        for (uint i = 0; i < users.length; i++) {
+            Funding _funding = _updateFunding(market_idx[i], asset_prices[i]);
+
+            address gravix_acc = getGravixAccountAddress(users[i]);
+            IGravixAccount(gravix_acc).process2_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
+                position_keys[i],
+                asset_prices[i],
+                _funding,
+                meta
+            );
+        }
+    }
+
+    function closePosition(
+        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta
+    ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
         address gravix_acc = getGravixAccountAddress(msg.sender);
@@ -462,14 +486,15 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // @notice 3 ever for every market + 1 ever for every position
     // @dev Aggregate by market to minimize requests to oracle
-    function liquidatePositions(mapping (uint32 => LiquidationData) liquidations, Callback.CallMeta meta) external view onlyActive reserve {
+    function liquidatePositions(
+        mapping (uint32 => LiquidationData) liquidations, Callback.CallMeta meta
+    ) external view onlyActive reserveAndSendGas(meta) {
         // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
         for ((uint32 market_idx, LiquidationData liq_data) : liquidations) {
             require (liq_data.positions.length <= 250, Errors.BAD_INPUT); // we dont want to fail on action phase later
 
             _sendLiquidationOracleRequest(msg.sender, market_idx, liq_data.positions, liq_data.eventData, meta);
         }
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
     }
 
     function revert_liquidatePositions(
@@ -480,7 +505,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
-    ) external override onlyOracleProxy(nonce) reserve {
+    ) external override onlyOracleProxy(nonce) reserveAndSendGas(meta) {
         Funding _funding = _updateFunding(market_idx, asset_price);
 
         for (PositionIdx position: positions) {
@@ -494,7 +519,6 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 meta
             );
         }
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
     }
 
     function finish_liquidatePositions(
