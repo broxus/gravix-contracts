@@ -417,7 +417,7 @@ export async function testPositionFunding(
     // check abs values
     if (!long_rate.isZero()) {
         const long_funding_asset = long_rate
-          .times(market_0.totalLongsAsset)
+          .times(market_0.totalLongsAsset).times(SCALING_FACTOR)
           .div(PERCENT_100)
           .integerValue(BigNumber.ROUND_FLOOR)
           .times(bn(market_1.lastFundingUpdateTime).minus(market_0.lastFundingUpdateTime))
@@ -430,14 +430,13 @@ export async function testPositionFunding(
           .integerValue(BigNumber.ROUND_FLOOR);
 
         long_accFundingPerShare = long_funding_usd
-          .times(SCALING_FACTOR)
           .div(market_0.totalLongsAsset)
           .integerValue(BigNumber.ROUND_FLOOR);
     }
 
     if (!short_rate.isZero()) {
         const short_funding_asset = short_rate
-          .times(market_0.totalShortsAsset)
+          .times(market_0.totalShortsAsset).times(SCALING_FACTOR)
           .div(PERCENT_100)
           .integerValue(BigNumber.ROUND_FLOOR)
           .times(bn(market_1.lastFundingUpdateTime).minus(market_0.lastFundingUpdateTime))
@@ -450,7 +449,6 @@ export async function testPositionFunding(
           .integerValue(BigNumber.ROUND_FLOOR);
 
         short_accFundingPerShare = short_funding_usd
-          .times(SCALING_FACTOR)
           .div(market_0.totalShortsAsset)
           .integerValue(BigNumber.ROUND_FLOOR);
     }
