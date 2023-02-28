@@ -699,12 +699,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     // @param asset_price - asset price, 8 decimals number
-    function _calculateFunding(int128 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
+    function _calculateFunding(int256 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
         if (rate_per_hour == 0 || total_position == 0) return 0;
-        int256 funding_asset = math.muldiv(rate_per_hour, int256(total_position), HUNDRED_PERCENT);
+        // multiply by SCALING FACTOR in the beginning to prevent precision loss
+        int256 funding_asset = math.muldiv(rate_per_hour * SCALING_FACTOR, total_position, HUNDRED_PERCENT);
         funding_asset = math.muldiv(funding_asset, (now - last_update_time), HOUR);
         int256 funding_usd = math.muldiv(funding_asset, asset_price, PRICE_DECIMALS);
-        return math.muldiv(funding_usd, SCALING_FACTOR, total_position);
+        return funding_usd / total_position;
     }
 
     // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000

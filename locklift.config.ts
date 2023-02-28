@@ -116,6 +116,30 @@ const config: LockliftConfig = {
         phrase: process.env.MAIN_SEED_PHRASE ?? "",
         amount: 500
       }
+    },
+    venom: {
+      connection: {
+        id: 1000,
+        group: "group",
+        type: "jrpc",
+        data: {
+          endpoint: process.env.MAIN_RPC_ENDPOINT || ""
+        },
+      },
+      giver: {
+        // Mainnet giver has the same abi as testnet one
+        giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
+        address: "0:73a868302a14a05ee6de24eed367bd42e7cd345406bb12e5fc6749de91a579ff",
+        phrase: process.env.MAIN_SEED_PHRASE ?? "",
+        accountId: 0
+      },
+      tracing: {
+        endpoint: process.env.MAIN_GQL_ENDPOINT ?? ""
+      },
+      keys: {
+        phrase: process.env.MAIN_SEED_PHRASE ?? "",
+        amount: 500
+      }
     }
   },
   mocha: {
