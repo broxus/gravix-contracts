@@ -8,7 +8,7 @@ const logger = require("mocha-logger");
 
 
 export interface MarketConfig {
-    priceSource: 0 | 1,
+    priceSource: 0 | 1 | 2,
     maxLongsUSD: number,
     maxShortsUSD: number,
     noiWeight: number,
@@ -35,6 +35,9 @@ export interface Oracle {
         ticker: string,
         chainID: number,
         ttl: number
+    },
+    priceNode: {
+        ticker: string
     }
 }
 

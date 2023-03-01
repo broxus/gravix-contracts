@@ -41,6 +41,12 @@ const main = async () => {
             name: '_oracle',
             message: 'Oracle contract address',
             validate: (value: string) => isValidEverAddress(value) ? true : 'Invalid Everscale address'
+        },
+        {
+            type: 'text',
+            name: '_priceNode',
+            message: 'Price node contract address',
+            validate: (value: string) => isValidEverAddress(value) ? true : 'Invalid Everscale address'
         }
     ]);
     console.log('\x1b[1m', '\nSetup complete! ✔');
@@ -56,6 +62,7 @@ const main = async () => {
       response._usdt,
       response._stg_usdt,
       response._oracle,
+      response._priceNode,
       false
     );
     spinner.succeed(`Gravix Vault deployed: ${vault.address}`);

@@ -8,17 +8,20 @@ import "./libraries/Callback.tsol";
 import "./libraries/Errors.tsol";
 import "./interfaces/INonTokenOraclePriceCallback.tsol";
 import "./interfaces/IOnNonTokenPriceReceived.tsol";
+import "./interfaces/IPriceNode.tsol";
 import "./interfaces/IEthereumEvent.tsol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import "./interfaces/IOnPriceCallback.tsol";
 
 
-contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
+contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived, IOnPriceCallback {
     address static vault;
     uint64 static nonce;
 
     // this always set
     address usdt;
     address oracle;
+    address price_node;
     uint32 market_idx;
     IGravixVault.OracleType price_source;
     IGravixVault.OracleConfig oracle_config;
@@ -50,6 +53,7 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
 
     constructor (
         address _usdt,
+        address _price_node,
         address _oracle,
         uint32 _market_idx,
         IGravixVault.OracleType _price_source,
@@ -61,6 +65,7 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
 
         usdt = _usdt;
         oracle = _oracle;
+        price_node = _price_node;
         market_idx = _market_idx;
         price_source = _price_source;
         oracle_config = _oracle_config;
@@ -107,8 +112,10 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
     function _collectPrice(address send_gas_to) internal view {
         if (price_source == IGravixVault.OracleType.ChainlinkProxy) {
             _collectPriceFromChainlink(send_gas_to);
-        } else {
+        } else if (price_source == IGravixVault.OracleType.Dex) {
             _collectPriceFromDex();
+        } else if (price_source == IGravixVault.OracleType.PriceNode) {
+            _collectPriceFromPriceNode();
         }
     }
 
@@ -120,7 +127,7 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
             TvmCell request_payload = abi.encode(i);
 
             ITWAPOracle(pair.addr).rate{value: DEX_ORACLE_REQUEST_VALUE}(
-                now - 1, now, address(this), request_payload
+                uint32(now) - 1, uint32(now), address(this), request_payload
             );
         }
     }
@@ -131,6 +138,12 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
         INonTokenOraclePriceCallback(oracle).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             event_data, empty, oracle_config.chainlink.ticker, send_gas_to
         );
+    }
+
+    function _collectPriceFromPriceNode() internal view {
+        tvm.rawReserve(CONTRACT_MIN_BALANCE, 0);
+
+        IPriceNode(price_node).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(oracle_config.priceNode.ticker);
     }
 
     function _sendCallback(uint128 price) internal view {
@@ -166,6 +179,15 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived {
                 meta
             );
         }
+    }
+
+    function onPriceCallback(uint128 price, string ticker) external override {
+        // ttl is checked on price node side
+        require (msg.sender == price_node, Errors.BAD_SENDER);
+        // just in case
+        require (ticker == oracle_config.priceNode.ticker, Errors.BAD_INPUT);
+
+        _sendCallback(price);
     }
 
     function onPriceReceived(int256 price, uint256 timestamp, uint256, TvmCell) external override {

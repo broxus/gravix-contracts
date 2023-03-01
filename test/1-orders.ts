@@ -2,10 +2,10 @@ import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault, tryIncreaseTi
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, getRandomNonce, lockliftChai, zeroAddress} from "locklift";
+import {Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress} from "locklift";
 import chai, {expect, use} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
-import {PairMockAbi} from "../build/factorySource";
+import {PairMockAbi, PriceNodeAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
@@ -35,6 +35,7 @@ describe("Testing main orders flow", async function () {
 
     let vault: GravixVault;
     let account: GravixAccount;
+    let priceNode: Contract<PriceNodeAbi>;
 
     let user_usdt_wallet: TokenWallet;
     let owner_usdt_wallet: TokenWallet;
@@ -78,12 +79,28 @@ describe("Testing main orders flow", async function () {
             const stg_token_name = `stg${token_name}`;
             usdt_root = await setupTokenRoot(token_name, token_name, owner, 6);
             stg_root = await setupTokenRoot(stg_token_name, stg_token_name, owner, 6);
-
         });
 
         it('Mint tokens to users', async function () {
             owner_usdt_wallet = await usdt_root.mint(1000000000 * USDT_DECIMALS, owner);
             user_usdt_wallet = await usdt_root.mint(1000000000 * USDT_DECIMALS, user);
+        });
+
+        it('Deploy price node', async function() {
+            const signer = await locklift.keystore.getSigner('0');
+
+            const { contract } = await locklift.tracing.trace(locklift.factory.deployContract({
+                contract: 'PriceNode',
+                initParams: {deploy_nonce: getRandomNonce()},
+                constructorParams: {
+                    _owner: owner.address,
+                    _daemonPubkey: `0x${signer?.publicKey}`,
+                    _oraclePubkey: `0x${signer?.publicKey}`
+                },
+                publicKey: signer?.publicKey as string,
+                value: toNano(1)
+            }));
+            priceNode = contract;
         });
 
         it('Deploy Gravix Vault', async function () {
@@ -92,7 +109,8 @@ describe("Testing main orders flow", async function () {
                 owner,
                 usdt_root.address,
                 stg_root.address,
-                owner.address
+                owner.address,
+                priceNode.address
             );
 
             // now transfer ownership of stgTOKEN to vault
@@ -115,7 +133,8 @@ describe("Testing main orders flow", async function () {
                 dex: {
                     targetToken: eth_addr,
                     path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
-                }
+                },
+                priceNode: {ticker: ''}
             }
 
             await locklift.tracing.trace(vault.addMarkets([basic_config]));
@@ -430,7 +449,8 @@ describe("Testing main orders flow", async function () {
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
-                    }
+                    },
+                    priceNode: {ticker: ''}
                 }
 
                 market_idx = 1;
@@ -478,7 +498,8 @@ describe("Testing main orders flow", async function () {
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
-                    }
+                    },
+                    priceNode: {ticker: ''}
                 }
 
                 market_idx = 2;
@@ -602,7 +623,8 @@ describe("Testing main orders flow", async function () {
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
-                    }
+                    },
+                    priceNode: {ticker: ''}
                 }
 
                 await locklift.tracing.trace(vault.addMarkets([new_config]));
@@ -717,7 +739,8 @@ describe("Testing main orders flow", async function () {
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
-                    }
+                    },
+                    priceNode: {ticker: ''}
                 }
 
                 await locklift.tracing.trace(vault.addMarkets([new_config]));

@@ -2,10 +2,10 @@ import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault, tryIncreaseTi
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, getRandomNonce, lockliftChai, zeroAddress} from "locklift";
+import {Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress} from "locklift";
 import chai, {expect, use} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
-import {PairMockAbi} from "../build/factorySource";
+import {PairMockAbi, PriceNodeAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
@@ -34,6 +34,7 @@ describe('Testing liquidity pool mechanics', async function() {
     eventBlockNumber: 0
   }
 
+  let priceNode: Contract<PriceNodeAbi>;
   let vault: GravixVault;
   let account: GravixAccount;
 
@@ -88,13 +89,31 @@ describe('Testing liquidity pool mechanics', async function() {
       user_usdt_wallet = await usdt_root.mint(1000000000 * USDT_DECIMALS, user);
     });
 
+    it('Deploy price node', async function() {
+      const signer = await locklift.keystore.getSigner('0');
+
+      const { contract } = await locklift.tracing.trace(locklift.factory.deployContract({
+        contract: 'PriceNode',
+        initParams: {deploy_nonce: getRandomNonce()},
+        constructorParams: {
+          _owner: owner.address,
+          _daemonPubkey: `0x${signer?.publicKey}`,
+          _oraclePubkey: `0x${signer?.publicKey}`
+        },
+        publicKey: signer?.publicKey as string,
+        value: toNano(1)
+      }));
+      priceNode = contract;
+    });
+
     it('Deploy Gravix Vault', async function () {
       vault = await setupVault(
         owner,
         owner,
         usdt_root.address,
         stg_root.address,
-        owner.address
+        owner.address,
+        priceNode.address
       );
 
       // now transfer ownership of stgTOKEN to vault
@@ -115,7 +134,8 @@ describe('Testing liquidity pool mechanics', async function() {
         dex: {
           targetToken: eth_addr,
           path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
-        }
+        },
+        priceNode: {ticker: ''}
       }
 
       await locklift.tracing.trace(vault.addMarkets([basic_config]));

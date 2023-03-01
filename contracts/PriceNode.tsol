@@ -1,0 +1,167 @@
+pragma ever-solidity >= 0.62.0;
+pragma AbiHeader expire;
+pragma AbiHeader pubkey;
+
+import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import "./libraries/Errors.tsol";
+import "./interfaces/IOnPriceCallback.tsol";
+import "./interfaces/IPriceNode.tsol";
+
+
+contract PriceNode is IPriceNode {
+    event NewOraclePubkey(uint256 old_pk, uint256 new_pk);
+    event NewDaemonPubkey(uint256 old_pk, uint256 new_pk);
+    event NewMaxRequests(uint16 old_val, uint16 new_val);
+    event OwnershipTransferred(address old_owner, address new_owner);
+
+    uint32 static deploy_nonce;
+    address owner;
+
+    uint256 daemonPubkey;
+    uint256 oraclePubkey;
+    uint32 requestNonce;
+    uint16 maxRequests = 1000;
+    uint16 requestsNum;
+
+    uint8 constant MAX_OUT_ACTIONS = 250;
+    uint128 constant MIN_REQ_VALUE = 0.5 ever;
+
+    struct TickerConfig {
+        bool enabled;
+        string ticker;
+        uint32 maxOracleDelay;
+        uint32 maxServerDelay;
+    }
+
+    struct Request {
+        address sender;
+        uint128 callbackValue;
+    }
+
+    mapping (string => TickerConfig) tickerConfigs; // ticker hash as a key
+    mapping (string => mapping (uint32 => Request)) requests;
+
+    struct Price {
+        uint128 price; // 8 decimals
+        uint32 serverUpdateTime;
+        uint32 oracleUpdateTime;
+        string ticker;
+        TvmCell signature;
+    }
+
+    constructor(address _owner, uint256 _oraclePubkey, uint256 _daemonPubkey) public {
+        require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
+        require (tvm.pubkey() == msg.pubkey(), Errors.WRONG_PUBKEY);
+        tvm.accept();
+
+        owner = _owner;
+        oraclePubkey = _oraclePubkey;
+        daemonPubkey = _daemonPubkey;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, Errors.NOT_OWNER);
+        _;
+    }
+
+    function getTickerConfigs() external view responsible returns (TickerConfig[] _configs) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } tickerConfigs.values();
+    }
+
+    function getTickerRequests(string ticker) external view responsible returns (Request[] _requests) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } requests[ticker].values();
+    }
+
+    function getDetails() external view responsible returns (
+        address _owner,
+        uint256 _daemonPubkey,
+        uint256 _oraclePubkey,
+        uint16 _maxRequests,
+        uint16 _requestsNum,
+        uint32 _requestNonce
+    ) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
+            owner, daemonPubkey, oraclePubkey, maxRequests, requestsNum, requestNonce
+        );
+    }
+
+    function setTickerConfigs(TickerConfig[] configs) external onlyOwner {
+        for (TickerConfig config: configs) {
+            tickerConfigs[config.ticker] = config;
+        }
+    }
+
+    function transferOwnership(address new_owner) external onlyOwner {
+        emit OwnershipTransferred(owner, new_owner);
+        owner = new_owner;
+    }
+
+    function setMaxRequests(uint16 new_max) external onlyOwner {
+        emit NewMaxRequests(maxRequests, new_max);
+        maxRequests = new_max;
+    }
+
+    function setOraclePubkey(uint256 new_pk) external onlyOwner {
+        emit NewOraclePubkey(oraclePubkey, new_pk);
+        oraclePubkey = new_pk;
+    }
+
+    function setDaemonPubkey(uint256 new_pk) external onlyOwner {
+        emit NewDaemonPubkey(daemonPubkey, new_pk);
+        daemonPubkey = new_pk;
+    }
+
+    function checkSign(
+        uint128 p, uint32 t1, uint32 t2, string tick, TvmCell signature
+    ) public view returns (bool) {
+        TvmCell data = abi.encode(p, t1, t2, tick);
+        return tvm.checkSign(tvm.hash(data), signature.toSlice(), oraclePubkey);
+    }
+
+    function makeRequest(string ticker) external override {
+        require (msg.value >= MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
+        require (tickerConfigs[ticker].enabled, Errors.BAD_INPUT);
+        require (requests[ticker].keys().length < maxRequests, Errors.MAX_REQUESTS);
+
+        // just take 0.05 ever to cover this call fees
+        requests[ticker][requestNonce] = Request(msg.sender, msg.value - 0.05 ever);
+        requestsNum += 1;
+        requestNonce += 1;
+    }
+
+    function validatePrice(Price price) public view {
+        TickerConfig config = tickerConfigs[price.ticker];
+        require (config.enabled, Errors.BAD_INPUT);
+        require (now - price.oracleUpdateTime < config.maxOracleDelay, Errors.STALE_PRICE);
+        require (now - price.serverUpdateTime < config.maxServerDelay, Errors.STALE_PRICE);
+        require (checkSign(price.price, price.serverUpdateTime, price.oracleUpdateTime, price.ticker, price.signature), Errors.BAD_SIGNATURE);
+    }
+
+    function resolveRequests(Price[] prices) external {
+        require (msg.pubkey() == daemonPubkey, Errors.NOT_OWNER);
+        require (requestsNum > 0, Errors.NO_REQUESTS);
+        tvm.accept();
+
+        uint32 requestsResolved = 0;
+        for (Price price: prices) {
+            validatePrice(price);
+
+            mapping (uint32 => Request) reqsMap = requests[price.ticker];
+            for ((uint32 nonce, Request req) : reqsMap) {
+                requestsResolved += 1;
+                requestsNum -= 1;
+                delete reqsMap[nonce];
+                IOnPriceCallback(req.sender).onPriceCallback{value: req.callbackValue - 0.1 ever}(price.price, price.ticker);
+
+                if (requestsResolved >= MAX_OUT_ACTIONS) {
+                    break;
+                }
+            }
+
+            requests[price.ticker] = reqsMap;
+            if (requestsResolved >= MAX_OUT_ACTIONS) {
+                break;
+            }
+        }
+    }
+}

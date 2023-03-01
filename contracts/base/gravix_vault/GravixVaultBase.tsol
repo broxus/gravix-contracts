@@ -25,6 +25,11 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit NewOracle(meta.call_id, new_oracle);
     }
 
+    function setPriceNode(address new_node, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        priceNode = new_node;
+        emit NewPriceNode(meta.call_id, new_node);
+    }
+
     function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         paused = new_state;
         emit Pause(meta.call_id, new_state);

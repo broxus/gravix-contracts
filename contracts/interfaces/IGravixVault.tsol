@@ -34,7 +34,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         DateTime to;
     }
 
-    enum OracleType { ChainlinkProxy, Dex }
+    enum OracleType { ChainlinkProxy, Dex, PriceNode }
     struct Pair {
         address addr;
         address leftRoot;
@@ -43,7 +43,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     struct DexOracle {
         address targetToken;
-        // 1st paur should contain target token, last pair should contain USDT
+        // 1st pair should contain target token, last pair should contain USDT
         Pair[] path;
     }
 
@@ -53,9 +53,19 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint16 chainID;
     }
 
+    struct PriceNode {
+        string ticker;
+    }
+
+    struct OracleConfigOld {
+        DexOracle dex;
+        ChainlinkOracle chainlink;
+    }
+
     struct OracleConfig {
         DexOracle dex;
         ChainlinkOracle chainlink;
+        PriceNode priceNode;
     }
 
     struct Fees {
@@ -188,6 +198,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event LiquidationThresholdRateUpdate(uint32 call_id, uint64 new_rate);
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
     event NewOracle(uint32 call_id, address oracle);
+    event NewPriceNode(uint32 call_id, address price_node);
     event MarketOracleConfigUpdate(uint32 call_id, uint32 market_idx, OracleConfig oracle);
     event NewTreasury(uint32 call_id, address new_treasury);
     event NewProjectFund(uint32 call_id, address new_project_fund);
