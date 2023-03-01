@@ -6,9 +6,10 @@ import {readFileSync} from "fs";
 const owner = new Address('0:311fe8e7bfeb6a2622aaba02c21569ac1e6f01c81c33f2623e5d8f1a5ba232d7');
 const usdt = new Address('0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b');
 const oracle_contract = new Address('0:22cf895cb4b8864857858c967bfebebf713cfabe1893e71c9f1115d99b667e36');
+const price_node = new Address('0:f471be9cca5d6921681c5b5d76b0d0adbc81757c3cf93efce87576316299cb96');
 
 const main = async () => {
-    const user = await deployUser(15);
+    const user = await deployUser(10);
     console.log('Deployed tmp admin');
 
     const market_configs = JSON.parse(readFileSync('./setup.json').toString())
@@ -22,7 +23,8 @@ const main = async () => {
         {address: owner} as Account,
         usdt,
         stgUSDT.address,
-        oracle_contract
+        oracle_contract,
+        price_node
     );
     console.log('Deployed vault');
 
