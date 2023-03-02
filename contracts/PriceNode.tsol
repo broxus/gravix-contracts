@@ -13,6 +13,8 @@ contract PriceNode is IPriceNode {
     event NewDaemonPubkey(uint256 old_pk, uint256 new_pk);
     event NewMaxRequests(uint16 old_val, uint16 new_val);
     event OwnershipTransferred(address old_owner, address new_owner);
+    event NewRequest(address sender, uint32 nonce, string ticker);
+    event RequestResolved(address sender, uint32 nonce, string ticker);
 
     uint32 static deploy_nonce;
     address owner;
@@ -127,6 +129,7 @@ contract PriceNode is IPriceNode {
         requests[ticker][requestNonce] = Request(msg.sender, msg.value - 0.05 ever);
         requestsNum += 1;
         requestNonce += 1;
+        emit NewRequest(msg.sender, requestNonce - 1, ticker);
     }
 
     function validatePrice(Price price) public view {
@@ -152,6 +155,7 @@ contract PriceNode is IPriceNode {
                 requestsNum -= 1;
                 delete reqsMap[nonce];
                 IOnPriceCallback(req.sender).onPriceCallback{value: req.callbackValue - 0.1 ever}(price.price, price.ticker);
+                emit RequestResolved(req.sender, nonce, price.ticker);
 
                 if (requestsResolved >= MAX_OUT_ACTIONS) {
                     break;
