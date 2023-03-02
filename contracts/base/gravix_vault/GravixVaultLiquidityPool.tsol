@@ -16,6 +16,9 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     // ----------------------------------------------------------------------------------
     function withdrawInsuranceFundOverflow(Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         require (insuranceFundLimit < insuranceFund, Errors.LOW_INSURANCE_FUND);
+        require (treasury != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
+        require (projectFund != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
+        require (devFund != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
         uint128 overflow = insuranceFund - insuranceFundLimit;
         _decreaseInsuranceFund(overflow);
 
