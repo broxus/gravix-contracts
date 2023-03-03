@@ -161,7 +161,6 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         IEthereumEvent.EthereumEventOracleData event_data,
         OffchainPrice price
     ) {
-        TvmSlice slice = action_payload.toSlice();
         (
             market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price
         ) = abi.decode(action_payload, (uint32, PositionType, uint32, uint128, uint64, IEthereumEvent.EthereumEventOracleData, OffchainPrice));

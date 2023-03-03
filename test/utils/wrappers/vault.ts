@@ -166,6 +166,7 @@ export class GravixVault {
             {
                 position_key: position_key,
                 event_data: empty_event,
+                price: empty_price,
                 meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
         ).send({from: user.address, amount: toNano(2.1)});
     }
@@ -175,6 +176,7 @@ export class GravixVault {
         number,
           {
               eventData: { eventTransaction: number; eventData: string; eventBlockNumber: number; eventIndex: number; eventBlock: number };
+              price: {price: number, serverTime: number, oracleTime: number, ticker: string, signature: string},
               positions: Array<{ user: Address; positionKey: number }>
           }
       ][],

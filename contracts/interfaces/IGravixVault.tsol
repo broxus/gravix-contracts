@@ -114,6 +114,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     struct LiquidationData {
         IEthereumEvent.EthereumEventOracleData eventData;
+        OffchainPrice price;
         PositionIdx[] positions;
     }
 
@@ -266,8 +267,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function process1_closePosition(
-        address user, uint32 position_key, uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta
-    ) external view;
+        address user, uint32 position_key, uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, OffchainPrice price, Callback.CallMeta meta
+    ) external;
     function finish_closePosition(
         address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView order_view, Callback.CallMeta meta
     ) external;

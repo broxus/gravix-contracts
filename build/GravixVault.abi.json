@@ -336,6 +336,7 @@
 				{"name":"users","type":"address[]"},
 				{"name":"position_keys","type":"uint32[]"},
 				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_datas","type":"tuple[]"},
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"prices","type":"tuple[]"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -358,6 +359,7 @@
 			"inputs": [
 				{"name":"position_key","type":"uint32"},
 				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -370,6 +372,7 @@
 				{"name":"position_key","type":"uint32"},
 				{"name":"market_idx","type":"uint32"},
 				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -413,7 +416,7 @@
 		{
 			"name": "liquidatePositions",
 			"inputs": [
-				{"components":[{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"eventData","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"}],"name":"liquidations","type":"map(uint32,tuple)"},
+				{"components":[{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"eventData","type":"tuple"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"}],"name":"liquidations","type":"map(uint32,tuple)"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -434,6 +437,18 @@
 			"name": "oracle_liquidatePositions",
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
+				{"name":"liquidator","type":"address"},
+				{"name":"market_idx","type":"uint32"},
+				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
+				{"name":"asset_price","type":"uint128"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "self_liquidatePositions",
+			"inputs": [
 				{"name":"liquidator","type":"address"},
 				{"name":"market_idx","type":"uint32"},
 				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},

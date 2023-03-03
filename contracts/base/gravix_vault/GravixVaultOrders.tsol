@@ -389,7 +389,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // --------------------------- ORDER CLOSE HANDLERS ---------------------------------
     // ----------------------------------------------------------------------------------
     function forceClosePositions(
-        address[] users, uint32[] position_keys, IEthereumEvent.EthereumEventOracleData[] event_datas, Callback.CallMeta meta
+        address[] users,
+        uint32[] position_keys,
+        IEthereumEvent.EthereumEventOracleData[] event_datas,
+        OffchainPrice[] prices,
+        Callback.CallMeta meta
     ) external view onlyOwner reserveAndSendGas(meta) {
         require (users.length == position_keys.length, Errors.BAD_INPUT);
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
@@ -397,7 +401,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         for (uint i = 0; i < users.length; i++) {
             address gravix_acc = getGravixAccountAddress(users[i]);
             IGravixAccount(gravix_acc).process_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
-                position_keys[i], event_datas[i], meta
+                position_keys[i], event_datas[i], prices[i], meta
             );
         }
     }
@@ -425,23 +429,37 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function closePosition(
-        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta
+        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, OffchainPrice price, Callback.CallMeta meta
     ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
         address gravix_acc = getGravixAccountAddress(msg.sender);
         IGravixAccount(gravix_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            position_key, event_data, meta
+            position_key, event_data, price, meta
         );
     }
 
     function process1_closePosition(
-        address user, uint32 position_key, uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta
-    ) external view override reserve {
+        address user,
+        uint32 position_key,
+        uint32 market_idx,
+        IEthereumEvent.EthereumEventOracleData event_data,
+        OffchainPrice price,
+        Callback.CallMeta meta
+    ) external override reserve {
         // soft fail
         if (!marketOpen(market_idx)) {
             emit ClosePositionRevert(meta.call_id, user, position_key);
             _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
+            return;
+        }
+
+        OracleType price_source = markets[market_idx].priceSource;
+        OracleConfig oracle_conf = oracleConfigs[market_idx];
+
+        // if market uses offchain oracle and we have valid price, we can close order right now
+        if (price_source == OracleType.PriceNode && checkPrice(price, oracle_conf.priceNode)) {
+            _closePosition(user, position_key, market_idx, price.price, meta);
             return;
         }
 
@@ -462,8 +480,17 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        Funding _funding = _updateFunding(market_idx, asset_price);
+        _closePosition(user, position_key, market_idx, asset_price, meta);
+    }
 
+    function _closePosition(
+        address user,
+        uint32 position_key,
+        uint32 market_idx,
+        uint128 asset_price,
+        Callback.CallMeta meta
+    ) internal {
+        Funding _funding = _updateFunding(market_idx, asset_price);
         address gravix_acc = getGravixAccountAddress(user);
         IGravixAccount(gravix_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             position_key,
@@ -537,6 +564,16 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         for ((uint32 market_idx, LiquidationData liq_data) : liquidations) {
             require (liq_data.positions.length <= 250, Errors.BAD_INPUT); // we dont want to fail on action phase later
 
+            OracleType price_source = markets[market_idx].priceSource;
+            OracleConfig oracle_conf = oracleConfigs[market_idx];
+
+            // if market uses offchain oracle and we have valid price, we can liquidate positions right now
+            if (price_source == OracleType.PriceNode && checkPrice(liq_data.price, oracle_conf.priceNode)) {
+                uint128 value = uint128(liq_data.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+                this.self_liquidatePositions{value: value}(msg.sender, market_idx, liq_data.positions, liq_data.price.price, meta);
+                return;
+            }
+
             _sendLiquidationOracleRequest(msg.sender, market_idx, liq_data.positions, liq_data.eventData, meta);
         }
     }
@@ -550,8 +587,20 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserveAndSendGas(meta) {
-        Funding _funding = _updateFunding(market_idx, asset_price);
+        _liquidatePositions(liquidator, market_idx, positions, asset_price, meta);
+    }
 
+    function self_liquidatePositions(
+        address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+    ) external reserveAndSendGas(meta) {
+        require (msg.sender == address(this), Errors.BAD_SENDER);
+        _liquidatePositions(liquidator, market_idx, positions, asset_price, meta);
+    }
+
+    function _liquidatePositions(
+        address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+    ) internal {
+        Funding _funding = _updateFunding(market_idx, asset_price);
         for (PositionIdx position: positions) {
             address gravix_acc = getGravixAccountAddress(position.user);
             // reserve 0.01 ever here to cover computation costs of iterating, needed for big arrays

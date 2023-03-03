@@ -33,6 +33,15 @@ describe("Testing main orders flow", async function () {
         eventBlockNumber: 0
     }
 
+    const empty_price = {
+        price: 0,
+        serverTime: 0,
+        oracleTime: 0,
+        ticker: '',
+        signature: ''
+    }
+
+
     let vault: GravixVault;
     let account: GravixAccount;
     let priceNode: Contract<PriceNodeAbi>;
@@ -691,6 +700,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                         {
                             eventData: empty_event,
+                            price: empty_price,
                             positions: [{user: user.address, positionKey: pos_key1}, {user: user.address, positionKey: pos_key2}]
                         }
                     ]
@@ -719,6 +729,7 @@ describe("Testing main orders flow", async function () {
                           market_idx,
                           {
                               eventData: empty_event,
+                              price: empty_price,
                               positions: [{user: user.address, positionKey: pos_key2}]
                           }
                       ]

@@ -143,7 +143,10 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     }
 
     function process_closePosition(
-        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta
+        uint32 position_key,
+        IEthereumEvent.EthereumEventOracleData event_data,
+        IGravixVault.OffchainPrice price,
+        Callback.CallMeta meta
     ) external view override onlyGravixVault reserve {
         if (!positions.exists(position_key)) {
             IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -154,7 +157,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         Position position = positions[position_key];
         IGravixVault(vault).process1_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, position.marketIdx, event_data, meta
+            user, position_key, position.marketIdx, event_data, price, meta
         );
     }
 

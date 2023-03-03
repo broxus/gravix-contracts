@@ -6,8 +6,8 @@ import {readFileSync} from "fs";
 const owner = new Address('0:311fe8e7bfeb6a2622aaba02c21569ac1e6f01c81c33f2623e5d8f1a5ba232d7');
 const usdt = new Address('0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b');
 const oracle_contract = new Address('0:22cf895cb4b8864857858c967bfebebf713cfabe1893e71c9f1115d99b667e36');
-const price_node = new Address('0:f471be9cca5d6921681c5b5d76b0d0adbc81757c3cf93efce87576316299cb96');
-const oracle_pubkey = '123123';
+const price_node = new Address('0:09e50f8b58aa65875b75bddbabec2c1187d69ace2d7705ef04aa667a54ef64a3');
+const oracle_pubkey = '0x50ff1f834be4c175d4defbc9d0bf097a435e1b10fcfaf1650781939165666f47';
 
 const main = async () => {
     const user = await deployUser(10);
@@ -26,7 +26,7 @@ const main = async () => {
         stgUSDT.address,
         oracle_contract,
         price_node,
-          oracle_pubkey
+        oracle_pubkey
     );
     console.log('Deployed vault');
 
