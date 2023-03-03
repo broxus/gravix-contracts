@@ -30,6 +30,11 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit NewPriceNode(meta.call_id, new_node);
     }
 
+    function setPricePubkey(uint256 new_pubkey, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+        pricePubkey = new_pubkey;
+        emit NewPricePubkey(meta.call_id, new_pubkey);
+    }
+
     function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
         paused = new_state;
         emit Pause(meta.call_id, new_state);

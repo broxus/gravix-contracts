@@ -9,6 +9,7 @@ import {PairMockAbi, PriceNodeAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
+import {sign} from "crypto";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -165,12 +166,17 @@ describe('Testing liquidity pool mechanics', async function() {
           publicKey: signer?.publicKey as string,
           data: boc_hash
         });
+        console.log(signature);
+        const sign_ext = '5a9cf7b5289e9b272ddeedad92badd07b0e0235938b08ff5b571e465ff59a591';
+        const high = `0x${sign_ext.slice(0, sign_ext.length / 2)}`;
+        const low = `0x${sign_ext.slice(sign_ext.length / 2)}`;
+
         const cell = await locklift.provider.packIntoCell({
           structure: [
             {name: "part1", type: "uint256"},
             {name: "part2", type: "uint256"}
           ] as const,
-          data: {part1: signature.signatureParts.high, part2: signature.signatureParts.low}
+          data: {part1: high, part2: low}
         });
 
         const res = await priceNode.methods.checkSign({

@@ -188,7 +188,7 @@ export const setupTokenRoot = async function (token_name: string, token_symbol: 
 }
 
 export const setupVault = async function (
-  owner: Account, market_manager: Account, usdt: Address, stg_usdt: Address, oracle: Address, priceNode: Address, log=true
+  owner: Account, market_manager: Account, usdt: Address, stg_usdt: Address, oracle: Address, priceNode: Address, pricePk: string, log=true
 ) {
     const signer = await locklift.keystore.getSigner('0');
 
@@ -211,7 +211,9 @@ export const setupVault = async function (
             _usdt: usdt,
             _stg_usdt: stg_usdt,
             _oracle: oracle,
-            _priceNode: priceNode
+            _priceNode: priceNode,
+            _pricePubkey: pricePk
+
         },
         value: toNano(5)
     }));

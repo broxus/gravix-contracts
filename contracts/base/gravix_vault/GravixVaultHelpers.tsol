@@ -18,11 +18,12 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 
 abstract contract GravixVaultHelpers is GravixVaultStorage {
-    // TODO: Up
     function getDetails() external view responsible returns (
         address _owner,
         address _marketManager,
         address _oracle,
+        address _priceNode,
+        uint256 _pricePubkey,
         address _usdt,
         address _usdtWallet,
         address _stgUsdt,
@@ -52,6 +53,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             owner,
             marketManager,
             oracle,
+            priceNode,
+            pricePubkey,
             usdt,
             usdtWallet,
             stgUsdt,
@@ -139,12 +142,12 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint128 expected_price,
         uint64 max_slippage_rate,
         IEthereumEvent.EthereumEventOracleData event_data,
+        OffchainPrice price,
         uint32 nonce,
         uint32 call_id
     ) external pure returns (TvmCell payload) {
-        TvmBuilder builder;
-        builder.store(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data);
-        return encodeTokenTransferPayload(Action.MarketOrder, nonce, call_id, builder.toCell());
+        TvmCell cell = abi.encode(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price);
+        return encodeTokenTransferPayload(Action.MarketOrder, nonce, call_id, cell);
     }
 
     function decodeMarketOrderPayload(
@@ -155,12 +158,13 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint32 leverage,
         uint128 expected_price,
         uint64 max_slippage_rate,
-        IEthereumEvent.EthereumEventOracleData event_data
+        IEthereumEvent.EthereumEventOracleData event_data,
+        OffchainPrice price
     ) {
         TvmSlice slice = action_payload.toSlice();
         (
-            market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data
-        ) = slice.decode(uint32, PositionType, uint32, uint128, uint64, IEthereumEvent.EthereumEventOracleData);
+            market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price
+        ) = abi.decode(action_payload, (uint32, PositionType, uint32, uint128, uint64, IEthereumEvent.EthereumEventOracleData, OffchainPrice));
     }
     
     function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
@@ -181,12 +185,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     function encodeTokenTransferPayload(
         Action action, uint32 nonce, uint32 call_id, TvmCell action_payload
     ) public pure returns (TvmCell payload) {
-        TvmBuilder builder;
-        builder.store(action);
-        builder.store(nonce);
-        builder.store(call_id);
-        builder.storeRef(action_payload);
-        return builder.toCell();
+        return abi.encode(action, nonce, call_id, action_payload);
     }
 
     function decodeTokenTransferPayload(TvmCell payload) public pure returns (
@@ -197,12 +196,23 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         // 1 uint8 + 2 uint32 and 1 cell
         (uint16 bits, uint8 refs) = slice.size();
         if ((bits == 8 + 32 + 32) && (refs == 1) && payload.toSlice().decode(uint8) <= uint8(Action.InsuranceDeposit)) {
-            action = slice.decode(Action);
-            nonce = slice.decode(uint32);
-            call_id = slice.decode(uint32);
-            action_payload = slice.loadRef();
+            (action, nonce, call_id, action_payload) = abi.decode(payload, (Action, uint32, uint32, TvmCell));
             correct = true;
         }
+    }
+
+    function checkSign(
+        uint128 p, uint32 t1, uint32 t2, string tick, TvmCell signature
+    ) public view returns (bool) {
+        TvmCell data = abi.encode(p, t1, t2, tick);
+        return tvm.checkSign(tvm.hash(data), signature.toSlice(), pricePubkey);
+    }
+
+    function checkPrice(OffchainPrice price, PriceNode config) public view returns (bool) {
+        if (price.ticker != config.ticker) return false;
+        if (now - price.oracleTime < config.maxOracleDelay) return false;
+        if (now - price.serverTime < config.maxServerDelay) return false;
+        return checkSign(price.price, price.serverTime, price.oracleTime, price.ticker, price.signature);
     }
 
     function getGravixAccountAddress(address user) public view responsible returns (address) {

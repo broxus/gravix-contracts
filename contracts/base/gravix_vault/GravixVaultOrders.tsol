@@ -29,7 +29,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             uint32 leverage,
             uint128 expected_price,
             uint64 max_slippage_rate,
-            IEthereumEvent.EthereumEventOracleData event_data
+            IEthereumEvent.EthereumEventOracleData event_data,
+            OffchainPrice price
         ) = decodeMarketOrderPayload(order_params_payload);
 
         // collateral has USDT decimals -> 6
@@ -44,7 +45,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         ) return false;
         if (!marketOpen(market_idx)) return false;
         _marketOrder(
-            user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, event_data, meta
+            user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, event_data, price, meta
         );
         return true;
     }
@@ -78,6 +79,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 expected_price,
         uint64 max_slippage_rate, // %
         IEthereumEvent.EthereumEventOracleData event_data,
+        OffchainPrice price,
         Callback.CallMeta meta
     ) internal {
         Market _market = markets[market_idx];
@@ -97,6 +99,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             liquidationThresholdRate,
             _market.fees.borrowBaseRatePerHour,
             event_data,
+            price,
             meta
         );
 
@@ -122,6 +125,24 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             request.maxSlippageRate,
             position_key
         );
+
+        OracleType price_source = markets[request.marketIdx].priceSource;
+        OracleConfig oracle_conf = oracleConfigs[request.marketIdx];
+
+        // if market uses offchain oracle and we have valid price, we can execute order right now
+        if (price_source == OracleType.PriceNode && checkPrice(request.price, oracle_conf.priceNode)) {
+            _executeOrder(
+                request.user,
+                position_key,
+                request.marketIdx,
+                request.collateral,
+                request.leverage,
+                request.positionType,
+                request.price.price,
+                request.meta
+            );
+            return;
+        }
 
         _sendOpenOrderOracleRequest(
             request.user,
@@ -215,6 +236,29 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
+        _executeOrder(
+            user,
+            position_key,
+            market_idx,
+            collateral,
+            leverage,
+            position_type,
+            asset_price,
+            meta
+        );
+    }
+
+    function _executeOrder(
+        address user,
+        uint32 position_key,
+        uint32 market_idx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType position_type,
+        uint128 asset_price,
+        Callback.CallMeta meta
+    ) internal {
+        // reserve should be
         uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, asset_price);
         uint64 dynamic_spread = getDynamicSpread(position_size_asset, market_idx, position_type);
 

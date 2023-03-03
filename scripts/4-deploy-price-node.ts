@@ -30,7 +30,7 @@ const main = async () => {
   const price_node_configs = JSON.parse(readFileSync('./price_node_configs.json').toString())
 
   const spinner = ora('Deploying temporary owner...').start();
-  const user = await deployUser(5, false);
+  const user = await deployUser(3, false);
   spinner.succeed(`Tmp owner deployed: ${user.address}`);
 
   const signer = await locklift.keystore.getSigner('0');

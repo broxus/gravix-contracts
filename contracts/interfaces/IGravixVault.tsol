@@ -55,11 +55,16 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     struct PriceNode {
         string ticker;
+        uint32 maxOracleDelay;
+        uint32 maxServerDelay;
     }
 
-    struct OracleConfigOld {
-        DexOracle dex;
-        ChainlinkOracle chainlink;
+    struct OffchainPrice {
+        uint128 price;
+        uint32 serverTime;
+        uint32 oracleTime;
+        string ticker;
+        TvmCell signature;
     }
 
     struct OracleConfig {
@@ -128,6 +133,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
         IEthereumEvent.EthereumEventOracleData eventData;
+        OffchainPrice price;
         Callback.CallMeta meta;
     }
 
@@ -199,6 +205,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
     event NewOracle(uint32 call_id, address oracle);
     event NewPriceNode(uint32 call_id, address price_node);
+    event NewPricePubkey(uint32 call_id, uint256 new_pubkey);
     event MarketOracleConfigUpdate(uint32 call_id, uint32 market_idx, OracleConfig oracle);
     event NewTreasury(uint32 call_id, address new_treasury);
     event NewProjectFund(uint32 call_id, address new_project_fund);

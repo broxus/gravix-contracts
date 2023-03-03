@@ -37,7 +37,9 @@ export interface Oracle {
         ttl: number
     },
     priceNode: {
-        ticker: string
+        ticker: string,
+        maxOracleDelay: number;
+        maxServerDelay: number;
     }
 }
 
@@ -47,6 +49,14 @@ const empty_event = {
     eventIndex: 0,
     eventTransaction: 0,
     eventBlockNumber: 0
+}
+
+const empty_price = {
+    price: 0,
+    serverTime: 0,
+    oracleTime: 0,
+    ticker: '',
+    signature: ''
 }
 
 export class GravixVault {
@@ -140,6 +150,7 @@ export class GravixVault {
             expected_price: expected_price,
             max_slippage_rate: max_slippage,
             event_data: empty_event,
+            price: empty_price,
             call_id: call_id,
             nonce: 0
         }).call()).payload;
