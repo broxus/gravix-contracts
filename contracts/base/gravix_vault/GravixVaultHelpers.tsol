@@ -209,8 +209,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
 
     function checkPrice(OffchainPrice price, PriceNode config) public view returns (bool) {
         if (price.ticker != config.ticker) return false;
-        if (now - price.oracleTime < config.maxOracleDelay) return false;
-        if (now - price.serverTime < config.maxServerDelay) return false;
+        if (now - price.oracleTime > config.maxOracleDelay) return false;
+        if (now - price.serverTime > config.maxServerDelay) return false;
         return checkSign(price.price, price.serverTime, price.oracleTime, price.ticker, price.signature);
     }
 
