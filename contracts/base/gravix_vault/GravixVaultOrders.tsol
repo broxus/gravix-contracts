@@ -30,7 +30,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             uint128 expected_price,
             uint64 max_slippage_rate,
             IEthereumEvent.EthereumEventOracleData event_data,
-            OffchainPrice price
+            IPriceNode.Price price
         ) = decodeMarketOrderPayload(order_params_payload);
 
         // collateral has USDT decimals -> 6
@@ -79,7 +79,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 expected_price,
         uint64 max_slippage_rate, // %
         IEthereumEvent.EthereumEventOracleData event_data,
-        OffchainPrice price,
+        IPriceNode.Price price,
         Callback.CallMeta meta
     ) internal {
         Market _market = markets[market_idx];
@@ -392,7 +392,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         address[] users,
         uint32[] position_keys,
         IEthereumEvent.EthereumEventOracleData[] event_datas,
-        OffchainPrice[] prices,
+        IPriceNode.Price[] prices,
         Callback.CallMeta meta
     ) external view onlyOwner reserveAndSendGas(meta) {
         require (users.length == position_keys.length, Errors.BAD_INPUT);
@@ -429,7 +429,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function closePosition(
-        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, OffchainPrice price, Callback.CallMeta meta
+        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, IPriceNode.Price price, Callback.CallMeta meta
     ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
@@ -444,7 +444,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         uint32 market_idx,
         IEthereumEvent.EthereumEventOracleData event_data,
-        OffchainPrice price,
+        IPriceNode.Price price,
         Callback.CallMeta meta
     ) external override reserve {
         // soft fail

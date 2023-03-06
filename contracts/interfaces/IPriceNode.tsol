@@ -2,5 +2,26 @@
 pragma ever-solidity >= 0.62.0;
 
 interface IPriceNode {
+    struct TickerConfig {
+        bool enabled;
+        string ticker;
+        uint32 maxOracleDelay;
+        uint32 maxServerDelay;
+    }
+
+    struct Request {
+        address sender;
+        uint128 callbackValue;
+    }
+
+
+    struct Price {
+        uint128 price; // 8 decimals
+        uint32 serverTime;
+        uint32 oracleTime;
+        string ticker;
+        TvmCell signature;
+    }
+
     function makeRequest(string ticker) external;
 }

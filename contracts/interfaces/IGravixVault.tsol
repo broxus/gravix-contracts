@@ -6,6 +6,7 @@ import "broxus-token-contracts/contracts/interfaces/IAcceptTokensBurnCallback.ts
 import "./IGravixAccount.tsol";
 import "../libraries/Callback.tsol";
 import "./IEthereumEvent.tsol";
+import "./IPriceNode.tsol";
 
 
 interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
@@ -59,14 +60,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 maxServerDelay;
     }
 
-    struct OffchainPrice {
-        uint128 price;
-        uint32 serverTime;
-        uint32 oracleTime;
-        string ticker;
-        TvmCell signature;
-    }
-
     struct OracleConfig {
         DexOracle dex;
         ChainlinkOracle chainlink;
@@ -114,7 +107,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     struct LiquidationData {
         IEthereumEvent.EthereumEventOracleData eventData;
-        OffchainPrice price;
+        IPriceNode.Price price;
         PositionIdx[] positions;
     }
 
@@ -134,7 +127,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
         IEthereumEvent.EthereumEventOracleData eventData;
-        OffchainPrice price;
+        IPriceNode.Price price;
         Callback.CallMeta meta;
     }
 
@@ -267,7 +260,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function process1_closePosition(
-        address user, uint32 position_key, uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, OffchainPrice price, Callback.CallMeta meta
+        address user, uint32 position_key, uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, IPriceNode.Price price, Callback.CallMeta meta
     ) external;
     function finish_closePosition(
         address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView order_view, Callback.CallMeta meta

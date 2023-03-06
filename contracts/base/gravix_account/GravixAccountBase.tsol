@@ -145,7 +145,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_closePosition(
         uint32 position_key,
         IEthereumEvent.EthereumEventOracleData event_data,
-        IGravixVault.OffchainPrice price,
+        IPriceNode.Price price,
         Callback.CallMeta meta
     ) external view override onlyGravixVault reserve {
         if (!positions.exists(position_key)) {

@@ -28,28 +28,8 @@ contract PriceNode is IPriceNode {
     uint8 constant MAX_OUT_ACTIONS = 250;
     uint128 constant MIN_REQ_VALUE = 0.5 ever;
 
-    struct TickerConfig {
-        bool enabled;
-        string ticker;
-        uint32 maxOracleDelay;
-        uint32 maxServerDelay;
-    }
-
-    struct Request {
-        address sender;
-        uint128 callbackValue;
-    }
-
     mapping (string => TickerConfig) tickerConfigs; // ticker hash as a key
     mapping (string => mapping (uint32 => Request)) requests;
-
-    struct Price {
-        uint128 price; // 8 decimals
-        uint32 serverUpdateTime;
-        uint32 oracleUpdateTime;
-        string ticker;
-        TvmCell signature;
-    }
 
     constructor(address _owner, uint256 _oraclePubkey, uint256 _daemonPubkey) public {
         require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
@@ -135,9 +115,9 @@ contract PriceNode is IPriceNode {
     function validatePrice(Price price) public view {
         TickerConfig config = tickerConfigs[price.ticker];
         require (config.enabled, Errors.BAD_INPUT);
-        require (now - price.oracleUpdateTime < config.maxOracleDelay, Errors.STALE_PRICE);
-        require (now - price.serverUpdateTime < config.maxServerDelay, Errors.STALE_PRICE);
-        require (checkSign(price.price, price.serverUpdateTime, price.oracleUpdateTime, price.ticker, price.signature), Errors.BAD_SIGNATURE);
+        require (now - price.oracleTime < config.maxOracleDelay, Errors.STALE_PRICE);
+        require (now - price.serverTime < config.maxServerDelay, Errors.STALE_PRICE);
+        require (checkSign(price.price, price.serverTime, price.oracleTime, price.ticker, price.signature), Errors.BAD_SIGNATURE);
     }
 
     function resolveRequests(Price[] prices) external {
