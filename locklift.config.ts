@@ -57,8 +57,6 @@ const config: LockliftConfig = {
       },
       // This giver is default local-node giverV2
       giver: {
-        // Check if you need provide custom giver
-        giverFactory: (ever, keyPair, address) => new SimpleGiver(ever, keyPair, address),
         address: "0:ece57bcc6c530283becbbd8a3b24d3c5987cdddc3c8b7b33be6e4a6312490415",
         key: "172af540e43a524763dd53b26a066d472a97c4de37d5498170564510608250c3",
       },
@@ -85,8 +83,6 @@ const config: LockliftConfig = {
       },
       // This giver is default local-node giverV2
       giver: {
-        // Check if you need provide custom giver
-        giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
         address: "0:a4053fd2e9798d0457c9e8f012cef203e49da863d76f36d52d5e2e62c326b217",
         key: process.env.TESTNET_GIVER_KEY ?? "",
       },
@@ -104,8 +100,6 @@ const config: LockliftConfig = {
     main: {
       connection: "mainnetJrpc",
       giver: {
-        // Mainnet giver has the same abi as testnet one
-        giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
         address: "0:3bcef54ea5fe3e68ac31b17799cdea8b7cffd4da75b0b1a70b93a18b5c87f723",
         key: process.env.MAIN_GIVER_KEY ?? ""
       },
@@ -127,8 +121,6 @@ const config: LockliftConfig = {
         },
       },
       giver: {
-        // Mainnet giver has the same abi as testnet one
-        giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
         address: "0:73a868302a14a05ee6de24eed367bd42e7cd345406bb12e5fc6749de91a579ff",
         phrase: process.env.MAIN_SEED_PHRASE ?? "",
         accountId: 0
