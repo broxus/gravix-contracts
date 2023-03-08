@@ -1,8 +1,8 @@
-import { LockliftConfig } from "locklift";
-import { FactorySource } from "./build/factorySource";
-import {GiverWallet, SimpleGiver, TestnetGiver} from "./giverSettings";
+import {LockliftConfig} from "locklift";
+import {FactorySource} from "./build/factorySource";
 import * as dotenv from "dotenv";
 import "locklift-verifier";
+
 declare global {
   const locklift: import("locklift").Locklift<FactorySource>;
 }
