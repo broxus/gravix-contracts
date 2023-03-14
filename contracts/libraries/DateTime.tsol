@@ -40,6 +40,14 @@ library DateTime {
     uint256 constant DOW_SAT = 6;
     uint256 constant DOW_SUN = 7;
 
+    // mimic EVM div
+    function _ethDiv(int num, int den) internal pure returns (int) {
+        if (num < 0 || den < 0) {
+            return math.divc(num, den);
+        }
+        return num / den;
+    }
+
     // ------------------------------------------------------------------------
     // Calculate the number of days from 1970/01/01 to year/month/day using
     // the date conversion algorithm from
@@ -59,9 +67,11 @@ library DateTime {
         int256 _month = int256(month);
         int256 _day = int256(day);
 
-        int256 __days = _day - 32075 + (1461 * (_year + 4800 + (_month - 14) / 12)) / 4
-        + (367 * (_month - 2 - ((_month - 14) / 12) * 12)) / 12
-        - (3 * ((_year + 4900 + (_month - 14) / 12) / 100)) / 4 - OFFSET19700101;
+        int256 __days = _day - 32075
+            + _ethDiv(1461 * (_year + 4800 + _ethDiv(_month - 14, 12)), 4)
+            + _ethDiv(367 * (_month - 2 - _ethDiv(_month - 14, 12) * 12), 12)
+            - _ethDiv(3 * ((_year + 4900 + _ethDiv(_month - 14, 12)) / 100), 4)
+            - OFFSET19700101;
 
         _days = uint256(__days);
     }
@@ -87,13 +97,13 @@ library DateTime {
         int256 __days = int256(_days);
 
         int256 L = __days + 68569 + OFFSET19700101;
-        int256 N = (4 * L) / 146097;
-        L = L - (146097 * N + 3) / 4;
-        int256 _year = (4000 * (L + 1)) / 1461001;
-        L = L - (1461 * _year) / 4 + 31;
-        int256 _month = (80 * L) / 2447;
-        int256 _day = L - (2447 * _month) / 80;
-        L = _month / 11;
+        int256 N = _ethDiv(4 * L, 146097);
+        L = L - _ethDiv(146097 * N + 3, 4);
+        int256 _year = _ethDiv(4000 * (L + 1), 1461001);
+        L = L - _ethDiv(1461 * _year, 4) + 31;
+        int256 _month = _ethDiv(80 * L, 2447);
+        int256 _day = L - _ethDiv(2447 * _month, 80);
+        L = _ethDiv(_month, 11);
         _month = _month + 2 - 12 * L;
         _year = 100 * (N - 49) + _year + L;
 
@@ -114,22 +124,20 @@ library DateTime {
         uint256 minute,
         uint256 second
     )
-    internal
-    returns (uint256 timestamp)
+        internal
+        returns (uint256 timestamp)
     {
         timestamp = _daysFromDate(year, month, day) * SECONDS_PER_DAY + hour * SECONDS_PER_HOUR
         + minute * SECONDS_PER_MINUTE + second;
     }
 
     function timestampToDate(uint256 timestamp) internal returns (uint256 year, uint256 month, uint256 day) {
-     {
         (year, month, day) = _daysToDate(timestamp / SECONDS_PER_DAY);
-    }
     }
 
     function timestampToDateTime(uint256 timestamp)
-    internal
-    returns (uint year, uint month, uint day, uint hour, uint minute, uint second)
+        internal
+        returns (uint year, uint month, uint day, uint hour, uint minute, uint second)
     {
         (year, month, day) = _daysToDate(timestamp / SECONDS_PER_DAY);
         uint256 secs = timestamp % SECONDS_PER_DAY;
