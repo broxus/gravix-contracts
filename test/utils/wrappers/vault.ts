@@ -160,11 +160,13 @@ export class GravixVault {
     async closePosition(
         user: Account,
         position_key: number,
+        market_idx: number | string,
         call_id=0
     ) {
         return await this.contract.methods.closePosition(
             {
                 position_key: position_key,
+                market_idx: market_idx,
                 event_data: empty_event,
                 price: empty_price,
                 meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}

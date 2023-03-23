@@ -204,7 +204,7 @@ export async function closeOrder(
     }).call())._market;
 
     // const details_prev = await vault.details();
-    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, 1));
+    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, 1));
     // await traceTree1?.beautyPrint();
 
     const event = await vault.getEvent('ClosePosition');

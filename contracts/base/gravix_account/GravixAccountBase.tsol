@@ -48,9 +48,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         MarketOrder request = marketOrders[position_key];
-        uint128 leveraged_position_usd = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
 
-        if (!marketOrders.exists(position_key)) {
+        // check if request exists + double check market idx
+        if (request.collateral == 0 || request.marketIdx != market_idx) {
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, position_key, market_idx, 0, position_size_asset, asset_price, position_type, meta
             );
@@ -73,6 +73,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
+        uint128 leveraged_position_usd = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
         uint128 open_fee = math.muldiv(leveraged_position_usd, request.openFeeRate, HUNDRED_PERCENT);
 
         Position opened_position = Position(
@@ -100,14 +101,16 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_cancelMarketOrder(
         uint32 position_key, Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
-        if (!marketOrders.exists(position_key)) {
+        MarketOrder _request = marketOrders[position_key];
+
+        // check request exists
+        if (_request.collateral == 0) {
             IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, position_key, meta
             );
             return;
         }
 
-        MarketOrder _request = marketOrders[position_key];
         delete marketOrders[position_key];
 
         IGravixVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -148,32 +151,16 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
     function process_closePosition(
         uint32 position_key,
-        IEthereumEvent.EthereumEventOracleData event_data,
-        IPriceNode.Price price,
-        Callback.CallMeta meta
-    ) external view override onlyGravixVault reserve {
-        if (!positions.exists(position_key)) {
-            IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, position_key, meta
-            );
-            return;
-        }
-
-        Position position = positions[position_key];
-        IGravixVault(vault).process1_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, position.marketIdx, event_data, price, meta
-        );
-    }
-
-    function process2_closePosition(
-        uint32 position_key,
+        uint32 market_idx,
         uint128 asset_price,
         IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
-        if (!positions.exists(position_key)) {
+        Position _position = positions[position_key];
+
+        if (_position.initialCollateral == 0 || _position.marketIdx != market_idx) {
             IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, position_key, meta
+                user, position_key, market_idx, meta
             );
             return;
         }

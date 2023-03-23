@@ -391,22 +391,34 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function forceClosePositions(
         address[] users,
         uint32[] position_keys,
+        uint32[] market_idx,
         IEthereumEvent.EthereumEventOracleData[] event_datas,
         IPriceNode.Price[] prices,
         Callback.CallMeta meta
-    ) external view onlyOwner reserveAndSendGas(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         require (users.length == position_keys.length, Errors.BAD_INPUT);
+        require (users.length == market_idx.length, Errors.BAD_INPUT);
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            address gravix_acc = getGravixAccountAddress(users[i]);
-            IGravixAccount(gravix_acc).process_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
-                position_keys[i], event_datas[i], prices[i], meta
+            OracleType price_source = markets[market_idx[i]].priceSource;
+            OracleConfig oracle_conf = oracleConfigs[market_idx[i]];
+
+            // if market uses offchain oracle and we have valid price, we can close order right now
+            if (price_source == OracleType.PriceNode && checkPrice(prices[i], oracle_conf.priceNode)) {
+                _closePosition(users[i], position_keys[i], market_idx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, meta);
+                continue;
+            }
+
+            address proxy = _deployOracleProxy(market_idx[i], event_datas[i], meta);
+            IOracleProxy(proxy).setCloseCallback{value: Gas.MIN_MSG_VALUE - Gas.ORACLE_PROXY_DEPLOY - 0.01 ever}(
+                users[i], position_keys[i]
             );
         }
     }
 
     // @notice Should be used by admin very carefully when oracle is dead by some reason to save users
+    // Bad price here can cause bad contract state!
     function forceClosePositionsWithPrice(
         address[] users,
         uint32[] position_keys,
@@ -420,44 +432,24 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            Funding _funding = _updateFunding(market_idx[i], asset_prices[i]);
-
-            address gravix_acc = getGravixAccountAddress(users[i]);
-            IGravixAccount(gravix_acc).process2_closePosition{value: Gas.MIN_MSG_VALUE - 0.1 ever}(
-                position_keys[i],
-                asset_prices[i],
-                _funding,
-                meta
-            );
+            _closePosition(users[i], position_keys[i], market_idx[i], asset_prices[i], Gas.MIN_MSG_VALUE - 0.1 ever, meta);
         }
     }
 
     function closePosition(
         uint32 position_key,
-        IEthereumEvent.EthereumEventOracleData event_data,
-        IPriceNode.Price price,
-        Callback.CallMeta meta
-    ) external view onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
-
-        address gravix_acc = getGravixAccountAddress(msg.sender);
-        IGravixAccount(gravix_acc).process_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            position_key, event_data, price, meta
-        );
-    }
-
-    function process1_closePosition(
-        address user,
-        uint32 position_key,
         uint32 market_idx,
         IEthereumEvent.EthereumEventOracleData event_data,
         IPriceNode.Price price,
         Callback.CallMeta meta
-    ) external override reserve {
+    ) external onlyActive reserve {
+        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+
         // soft fail
+        // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(market_idx)) {
-            emit ClosePositionRevert(meta.call_id, user, position_key);
-            _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
+            emit ClosePositionRevert(meta.call_id, msg.sender, position_key, market_idx);
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
             return;
         }
 
@@ -466,11 +458,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         // if market uses offchain oracle and we have valid price, we can close order right now
         if (price_source == OracleType.PriceNode && checkPrice(price, oracle_conf.priceNode)) {
-            _closePosition(user, position_key, market_idx, price.price, meta);
+            _closePosition(msg.sender, position_key, market_idx, price.price, 0, meta);
             return;
         }
 
-        _sendCloseOrderOracleRequest(user, position_key, market_idx, event_data, meta);
+        _sendCloseOrderOracleRequest(msg.sender, position_key, market_idx, event_data, meta);
     }
 
     // @param nonce - oracle static parameter, required for addr calculation
@@ -487,7 +479,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        _closePosition(user, position_key, market_idx, asset_price, meta);
+        _closePosition(user, position_key, market_idx, asset_price, 0, meta);
     }
 
     function _closePosition(
@@ -495,12 +487,15 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         uint32 market_idx,
         uint128 asset_price,
+        uint128 value,
         Callback.CallMeta meta
     ) internal {
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
         Funding _funding = _updateFunding(market_idx, asset_price);
         address gravix_acc = getGravixAccountAddress(user);
-        IGravixAccount(gravix_acc).process2_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixAccount(gravix_acc).process_closePosition{value: value, flag: flag}(
             position_key,
+            market_idx,
             asset_price,
             _funding,
             meta
@@ -508,9 +503,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function revert_closePosition(
-        address user, uint32 position_key, Callback.CallMeta meta
+        address user, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit ClosePositionRevert(meta.call_id, user, position_key);
+        emit ClosePositionRevert(meta.call_id, user, position_key, market_idx);
     }
 
     function finish_closePosition(

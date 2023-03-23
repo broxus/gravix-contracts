@@ -211,7 +211,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     event CancelMarketOrderRevert(uint32 call_id, address user, uint32 position_key);
     event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);
-    event ClosePositionRevert(uint32 call_id, address user, uint32 position_key);
+    event ClosePositionRevert(uint32 call_id, address user, uint32 position_key, uint32 market_idx);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
     event AddPositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, uint32 new_leverage);
     event AddPositionCollateralRevert(uint32 call_id, address user, uint32 market_idx, uint32 position_key, uint128 amount);
@@ -254,7 +254,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     ) external;
     function revert_cancelMarketOrder(address user, uint32 position_key, Callback.CallMeta meta) external view;
     function finish_cancelMarketOrder(address user, uint32 position_key, uint128 collateral, Callback.CallMeta meta) external;
-    function revert_closePosition(address user, uint32 position_key, Callback.CallMeta meta) external view;
+    function revert_closePosition(address user, uint32 position_key, uint32 market_idx, Callback.CallMeta meta) external view;
     function oracle_closePosition(
         uint64 nonce,
         address user,
@@ -262,9 +262,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 market_idx,
         uint128 asset_price,
         Callback.CallMeta meta
-    ) external;
-    function process1_closePosition(
-        address user, uint32 position_key, uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, IPriceNode.Price price, Callback.CallMeta meta
     ) external;
     function finish_closePosition(
         address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView order_view, Callback.CallMeta meta
