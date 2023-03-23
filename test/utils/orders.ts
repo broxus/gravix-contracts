@@ -237,17 +237,13 @@ export async function closeOrder(
         .idiv(pos_view2.position.openPrice)
         .minus(SCALING_FACTOR)
         .times(pos_type == 0 ? 1 : -1)
-        .times(col_up)
+        .times(leveraged_usd)
         .div(SCALING_FACTOR)
-        .integerValue(BigNumber.ROUND_FLOOR) // js bignumber cant floor in idiv correctly ;/
-        .times(pos_view2.position.leverage)
-        .idiv(100);
+        .integerValue(BigNumber.ROUND_FLOOR); // js bignumber cant floor in idiv correctly ;/
 
     const liq_price_dist = bn(pos_view2.position.openPrice)
         .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view2.fundingFee))
-        .idiv(col_up)
-        .times(100)
-        .div(pos_view2.position.leverage)
+        .idiv(leveraged_usd)
         .integerValue(BigNumber.ROUND_FLOOR);
 
     let liq_price = pos_type == 0 ? bn(pos_view2.position.openPrice).minus(liq_price_dist) : bn(pos_view2.position.openPrice).plus(liq_price_dist);

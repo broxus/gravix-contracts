@@ -64,21 +64,21 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         // * (-1) for shorts
         pnl = is_long ? pnl : -pnl;
         // * collateral * leverage
-        pnl = math.muldiv(math.muldiv(pnl, collateral, SCALING_FACTOR), position.leverage, LEVERAGE_BASE);
+        pnl = math.muldiv(pnl, leveraged_position_usd, SCALING_FACTOR);
         // liquidation price
         // collateral * 0.9
         int256 liq_price_dist = math.muldiv(collateral, (HUNDRED_PERCENT - position.liquidationThresholdRate),  HUNDRED_PERCENT);
         // - borrow_fee - funding_fee_usd
         liq_price_dist -= borrow_fee_usd + funding_fee_usd;
         // * open_price / collateral / leverage
-        liq_price_dist = math.muldiv(math.muldiv(position.openPrice, liq_price_dist, collateral), LEVERAGE_BASE, position.leverage);
+        liq_price_dist = math.muldiv(position.openPrice, liq_price_dist, leveraged_position_usd);
 
         int256 _liq_price_raw = is_long ?
             math.muldiv(position.openPrice - liq_price_dist, HUNDRED_PERCENT, HUNDRED_PERCENT - position.baseSpreadRate) :
             math.muldiv(position.openPrice + liq_price_dist, HUNDRED_PERCENT, HUNDRED_PERCENT + position.baseSpreadRate);
         uint128 liq_price = uint128(math.max(_liq_price_raw, 0)); // price cant be negative
 
-        int256 up_pos = math.muldiv(collateral, position.leverage, LEVERAGE_BASE) + pnl - funding_fee_usd - borrow_fee_usd;
+        int256 up_pos = leveraged_position_usd + pnl - funding_fee_usd - borrow_fee_usd;
         uint128 close_fee = uint128(math.muldiv(math.max(up_pos, 0), position.closeFeeRate, HUNDRED_PERCENT));
 
         // now check if position could be liquidated

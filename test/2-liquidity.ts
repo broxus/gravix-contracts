@@ -107,13 +107,16 @@ describe('Testing liquidity pool mechanics', async function() {
     });
 
     it('Deploy Gravix Vault', async function () {
+      const signer = await locklift.keystore.getSigner('0');
+
       vault = await setupVault(
         owner,
         owner,
         usdt_root.address,
         stg_root.address,
         owner.address,
-        priceNode.address
+        priceNode.address,
+        `0x${signer?.publicKey}`
       );
 
       // now transfer ownership of stgTOKEN to vault
@@ -135,7 +138,7 @@ describe('Testing liquidity pool mechanics', async function() {
           targetToken: eth_addr,
           path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
         },
-        priceNode: {ticker: ''}
+        priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
       }
 
       await locklift.tracing.trace(vault.addMarkets([basic_config]));

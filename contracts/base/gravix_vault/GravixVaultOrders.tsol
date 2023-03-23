@@ -408,7 +408,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
     // @notice Should be used by admin very carefully when oracle is dead by some reason to save users
     function forceClosePositionsWithPrice(
-        address[] users, uint32[] position_keys, uint32[] market_idx, uint128[] asset_prices, Callback.CallMeta meta
+        address[] users,
+        uint32[] position_keys,
+        uint32[] market_idx,
+        uint128[] asset_prices,
+        Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {
         require (users.length == position_keys.length, Errors.BAD_INPUT);
         require (position_keys.length == market_idx.length, Errors.BAD_INPUT);
@@ -429,7 +433,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function closePosition(
-        uint32 position_key, IEthereumEvent.EthereumEventOracleData event_data, IPriceNode.Price price, Callback.CallMeta meta
+        uint32 position_key,
+        IEthereumEvent.EthereumEventOracleData event_data,
+        IPriceNode.Price price,
+        Callback.CallMeta meta
     ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
@@ -507,7 +514,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function finish_closePosition(
-        address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView position_view, Callback.CallMeta meta
+        address user,
+        uint32 position_key,
+        uint128 asset_price,
+        IGravixAccount.PositionView position_view,
+        Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
         uint128 collateral = position_view.position.initialCollateral - position_view.position.openFee;
@@ -552,6 +563,144 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }
     }
 
+    function _handleAddCollateral(
+        address user, uint128 amount, TvmCell action_payload, Callback.CallMeta meta
+    ) internal view returns (bool success) {
+        (uint32 market_idx, uint32 position_key) = decodeAddCollateral(action_payload);
+        // optimistic check on market, we will check that position matches it in account
+        if (!marketOpen(market_idx)) return false;
+        _addCollateral(amount, user, market_idx, position_key, meta);
+        return true;
+    }
+
+    function _addCollateral(
+        uint128 amount,
+        address user,
+        uint32 market_idx,
+        uint32 position_key,
+        Callback.CallMeta meta
+    ) internal view {
+        address gravix_acc = getGravixAccountAddress(user);
+        IGravixAccount(gravix_acc).process_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount, market_idx, position_key, meta
+        );
+    }
+
+    function revert_addCollateral(
+        address user, uint128 amount, uint32 market_idx, uint32 position_key, Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        emit AddPositionCollateralRevert(meta.call_id, user, market_idx, position_key, amount);
+
+        _transfer(
+            usdtWallet, amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+        );
+    }
+
+    function finish_addCollateral(
+        address user,
+        uint128 amount,
+        IGravixAccount.Position position,
+        uint32 old_leverage,
+        uint32 position_key,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
+        collateralReserve += amount;
+
+        uint128 new_collateral = position.initialCollateral - position.openFee;
+        uint128 old_collateral = new_collateral - amount;
+
+        uint128 old_pos_size = calculatePositionAssetSize(old_collateral, old_leverage, position.markPrice);
+        uint128 new_pos_size = calculatePositionAssetSize(new_collateral, position.leverage, position.markPrice);
+
+        // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
+        // we dont want it to accumulate because it could affect further calculations
+        if (old_pos_size != new_pos_size) {
+            Market _market = markets[position.marketIdx];
+
+            _removePositionFromMarket(
+                position.marketIdx,
+                old_pos_size,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+
+            _addPositionToMarket(
+                position.marketIdx,
+                new_pos_size,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+        }
+
+        emit AddPositionCollateral(meta.call_id, user, position_key, amount, position.leverage);
+    }
+
+    function removeCollateral(
+        uint128 amount, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+    ) external view onlyActive reserve {
+        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+
+        // optimistic check on market, we will check that position matches it in account
+        // soft fail because market state is dynamic
+        if (!marketOpen(market_idx)) {
+            emit RemovePositionCollateralRevert(meta.call_id, msg.sender, position_key, market_idx, amount);
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
+            return;
+        }
+
+        address gravix_acc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(gravix_acc).process_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount, position_key, market_idx, minPositionCollateral, meta
+        );
+    }
+
+    function revert_removeCollateral(
+        address user, uint128 amount, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserveAndFailCallback(meta) {
+        emit RemovePositionCollateralRevert(meta.call_id, user, position_key, market_idx, amount);
+    }
+
+    function finish_removeCollateral(
+        address user,
+        uint128 amount,
+        IGravixAccount.Position position,
+        uint32 old_leverage,
+        uint32 position_key,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        collateralReserve -= amount;
+
+        uint128 new_collateral = position.initialCollateral - position.openFee;
+        uint128 old_collateral = new_collateral + amount;
+
+        uint128 old_pos_size = calculatePositionAssetSize(old_collateral, old_leverage, position.markPrice);
+        uint128 new_pos_size = calculatePositionAssetSize(new_collateral, position.leverage, position.markPrice);
+
+        // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
+        // we dont want it to accumulate because it could affect further calculations
+        if (old_pos_size != new_pos_size) {
+            Market _market = markets[position.marketIdx];
+
+            _removePositionFromMarket(
+                position.marketIdx,
+                old_pos_size,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+
+            _addPositionToMarket(
+                position.marketIdx,
+                new_pos_size,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+        }
+
+        emit RemovePositionCollateral(meta.call_id, user, position_key, amount, position.leverage);
+        _transfer(usdtWallet, amount , user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+    }
+
+
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDATION ------------------------------------------
     // ----------------------------------------------------------------------------------
@@ -571,7 +720,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             if (price_source == OracleType.PriceNode && checkPrice(liq_data.price, oracle_conf.priceNode)) {
                 uint128 value = uint128(liq_data.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
                 this.self_liquidatePositions{value: value}(msg.sender, market_idx, liq_data.positions, liq_data.price.price, meta);
-                return;
+                continue;
             }
 
             _sendLiquidationOracleRequest(msg.sender, market_idx, liq_data.positions, liq_data.eventData, meta);
@@ -579,9 +728,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function revert_liquidatePositions(
-        address user, address liquidator, uint32 position_key, Callback.CallMeta meta
+        address user, address liquidator, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit LiquidatePositionRevert(meta.call_id, liquidator, user, position_key);
+        emit LiquidatePositionRevert(meta.call_id, liquidator, user, position_key, market_idx);
     }
 
     function oracle_liquidatePositions(
@@ -607,6 +756,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             IGravixAccount(gravix_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.01 ever}(
                 liquidator,
                 position.positionKey,
+                market_idx,
                 asset_price,
                 _funding,
                 meta

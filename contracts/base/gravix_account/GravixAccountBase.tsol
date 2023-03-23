@@ -118,13 +118,17 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_liquidatePositions(
         address liquidator,
         uint32 position_key,
+        uint32 market_idx,
         uint128 asset_price,
         IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
-        if (!positions.exists(position_key)) {
+        Position _position = positions[position_key];
+
+        // if collateral == 0, position does not exist
+        if (_position.initialCollateral == 0 || _position.marketIdx != market_idx) {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, liquidator, position_key, meta
+                user, liquidator, position_key, market_idx, meta
             );
             return;
         }
@@ -137,7 +141,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
         } else {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, liquidator, position_key, meta
+                user, liquidator, position_key, market_idx, meta
             );
         }
     }
@@ -179,6 +183,78 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, position_key, asset_price, position_view, meta
+        );
+    }
+
+    function process_addCollateral(
+        uint128 amount, uint32 market_idx, uint32 position_key, Callback.CallMeta meta
+    ) external override onlyGravixVault reserve {
+        Position _position = positions[position_key];
+
+        // if collateral == 0, position does not exist
+        if (_position.initialCollateral == 0 || _position.marketIdx != market_idx) {
+            IGravixVault(vault).revert_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, amount, market_idx, position_key, meta
+            );
+            return;
+        }
+
+        uint128 old_collateral = _position.initialCollateral - _position.openFee;
+        uint128 new_collateral = old_collateral + amount;
+        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, LEVERAGE_BASE);
+        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, LEVERAGE_BASE, new_collateral));
+
+        _position.initialCollateral += amount;
+        uint32 old_leverage = _position.leverage;
+        _position.leverage = new_leverage;
+
+        positions[position_key] = _position;
+
+        IGravixVault(vault).finish_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            amount,
+            _position,
+            old_leverage,
+            position_key,
+            meta
+        );
+    }
+
+    function process_removeCollateral(
+        uint128 amount, uint32 position_key, uint32 market_idx, uint128 min_collateral, Callback.CallMeta meta
+    ) external override onlyGravixVault reserve {
+        Position _position = positions[position_key];
+        uint128 old_collateral = _position.initialCollateral - _position.openFee;
+
+        // if collateral == 0, position does not exist
+        if (
+            _position.initialCollateral == 0 ||
+            (old_collateral - math.min(old_collateral, amount) < min_collateral) ||
+            _position.marketIdx != market_idx
+        ) {
+            IGravixVault(vault).revert_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, amount, position_key, market_idx, meta
+            );
+            return;
+        }
+
+        uint128 new_collateral = old_collateral - amount;
+        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, LEVERAGE_BASE);
+        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, LEVERAGE_BASE, new_collateral));
+
+        _position.initialCollateral -= amount;
+        uint32 old_leverage = _position.leverage;
+        _position.leverage = new_leverage;
+
+        positions[position_key] = _position;
+
+        IGravixVault(vault).finish_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            amount,
+            _position,
+            old_leverage,
+            position_key,
+            meta
         );
     }
 }

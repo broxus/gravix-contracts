@@ -414,6 +414,67 @@
 			]
 		},
 		{
+			"name": "revert_addCollateral",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"name":"amount","type":"uint128"},
+				{"name":"market_idx","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "finish_addCollateral",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"name":"amount","type":"uint128"},
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},
+				{"name":"old_leverage","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "removeCollateral",
+			"inputs": [
+				{"name":"amount","type":"uint128"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"market_idx","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "revert_removeCollateral",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"name":"amount","type":"uint128"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"market_idx","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "finish_removeCollateral",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"name":"amount","type":"uint128"},
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},
+				{"name":"old_leverage","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "liquidatePositions",
 			"inputs": [
 				{"components":[{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"eventData","type":"tuple"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"}],"name":"liquidations","type":"map(uint32,tuple)"},
@@ -428,6 +489,7 @@
 				{"name":"user","type":"address"},
 				{"name":"liquidator","type":"address"},
 				{"name":"position_key","type":"uint32"},
+				{"name":"market_idx","type":"uint32"},
 				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -874,6 +936,28 @@
 				{"name":"max_slippage_rate","type":"uint64"},
 				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"}
+			]
+		},
+		{
+			"name": "encodeAddCollateral",
+			"inputs": [
+				{"name":"market_idx","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"nonce","type":"uint32"},
+				{"name":"call_id","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"payload","type":"cell"}
+			]
+		},
+		{
+			"name": "decodeAddCollateral",
+			"inputs": [
+				{"name":"action_payload","type":"cell"}
+			],
+			"outputs": [
+				{"name":"market_idx","type":"uint32"},
+				{"name":"position_key","type":"uint32"}
 			]
 		},
 		{
@@ -1361,6 +1445,54 @@
 			]
 		},
 		{
+			"name": "AddPositionCollateral",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"user","type":"address"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"amount","type":"uint128"},
+				{"name":"new_leverage","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "AddPositionCollateralRevert",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"user","type":"address"},
+				{"name":"market_idx","type":"uint32"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "RemovePositionCollateral",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"user","type":"address"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"amount","type":"uint128"},
+				{"name":"new_leverage","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "RemovePositionCollateralRevert",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"user","type":"address"},
+				{"name":"position_key","type":"uint32"},
+				{"name":"market_idx","type":"uint32"},
+				{"name":"amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "Debt",
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
@@ -1388,7 +1520,8 @@
 				{"name":"call_id","type":"uint32"},
 				{"name":"liquidator","type":"address"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"position_key","type":"uint32"},
+				{"name":"market_idx","type":"uint32"}
 			],
 			"outputs": [
 			]

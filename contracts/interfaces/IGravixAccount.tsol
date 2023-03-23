@@ -84,9 +84,12 @@ interface IGravixAccount {
     function process_liquidatePositions(
         address liquidator,
         uint32 position_key,
+        uint32 market_idx,
         uint128 asset_price,
         IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external;
+    function process_addCollateral(uint128 amount, uint32 market_idx, uint32 position_key, Callback.CallMeta meta) external;
+    function process_removeCollateral(uint128 amount, uint32 position_key, uint32 market_idx, uint128 min_collateral, Callback.CallMeta meta) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
 }
