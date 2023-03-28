@@ -139,7 +139,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
             uint32 call_id,
             TvmCell action_payload,
             bool correct
-        ) = decodeTokenTransferPayload(payload);
+        ) = decodeTokenTransfer(payload);
         bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
 
         if (msg.sender == usdtWallet) {

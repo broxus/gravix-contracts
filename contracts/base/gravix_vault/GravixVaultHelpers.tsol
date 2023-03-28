@@ -135,7 +135,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         return uint32(DateTimeLib.timestampFromDateTime(dt.year, dt.month, dt.day, dt.hour, dt.minute, 0));
     }
 
-    function encodeMarketOrderPayload(
+    function encodeMarketOrder(
         uint32 market_idx,
         PositionType position_type,
         uint32 leverage,
@@ -147,10 +147,10 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint32 call_id
     ) external pure returns (TvmCell payload) {
         TvmCell cell = abi.encode(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price);
-        return encodeTokenTransferPayload(Action.MarketOrder, nonce, call_id, cell);
+        return encodeTokenTransfer(Action.MarketOrder, nonce, call_id, cell);
     }
 
-    function decodeMarketOrderPayload(
+    function decodeMarketOrder(
         TvmCell action_payload
     ) public pure returns (
         uint32 market_idx,
@@ -169,7 +169,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     function encodeAddCollateral(
         uint32 market_idx, uint32 position_key, uint32 nonce, uint32 call_id
     ) public pure returns (TvmCell payload) {
-        return encodeTokenTransferPayload(Action.AddCollateral, nonce, call_id, abi.encode(market_idx, position_key));
+        return encodeTokenTransfer(Action.AddCollateral, nonce, call_id, abi.encode(market_idx, position_key));
     }
 
     function decodeAddCollateral(TvmCell action_payload) public pure returns (uint32 market_idx, uint32 position_key) {
@@ -178,26 +178,26 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     
     function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
         TvmCell empty;
-        return encodeTokenTransferPayload(Action.LiquidityDeposit, nonce, call_id, empty);
+        return encodeTokenTransfer(Action.LiquidityDeposit, nonce, call_id, empty);
     }
 
     function encodeLiquidityWithdraw(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
         TvmCell empty;
-        return encodeTokenTransferPayload(Action.LiquidityWithdraw, nonce, call_id, empty);
+        return encodeTokenTransfer(Action.LiquidityWithdraw, nonce, call_id, empty);
     }
 
     function encodeInsuranceDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
         TvmCell empty;
-        return encodeTokenTransferPayload(Action.InsuranceDeposit, nonce, call_id, empty);
+        return encodeTokenTransfer(Action.InsuranceDeposit, nonce, call_id, empty);
     }
 
-    function encodeTokenTransferPayload(
+    function encodeTokenTransfer(
         Action action, uint32 nonce, uint32 call_id, TvmCell action_payload
     ) public pure returns (TvmCell payload) {
         return abi.encode(action, nonce, call_id, action_payload);
     }
 
-    function decodeTokenTransferPayload(TvmCell payload) public pure returns (
+    function decodeTokenTransfer(TvmCell payload) public pure returns (
         Action action, uint32 nonce, uint32 call_id, TvmCell action_payload, bool correct
     ){
         // check if payload assembled correctly

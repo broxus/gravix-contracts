@@ -30,6 +30,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
     }
 
+    function getPosition(uint32 pos_key) external view responsible returns (Position position) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } positions[pos_key];
+    }
+
     function getPositionsView(ViewInput[] inputs) external view responsible returns (PositionView[] positions_views) {
         for (ViewInput input: inputs) {
             positions_views.push(getPositionView(input));

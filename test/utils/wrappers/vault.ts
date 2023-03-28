@@ -143,7 +143,7 @@ export class GravixVault {
         max_slippage: number,
         call_id=0
     ) {
-        const payload = (await this.contract.methods.encodeMarketOrderPayload({
+        const payload = (await this.contract.methods.encodeMarketOrder({
             market_idx: market_idx,
             position_type: position_type,
             leverage: leverage,
@@ -155,6 +155,39 @@ export class GravixVault {
             nonce: 0
         }).call()).payload;
         return await from_wallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+    }
+
+    async addCollateral(
+      from_wallet: TokenWallet,
+      user: Account,
+      amount: number,
+      position_key: number,
+      market_idx: number | string,
+      call_id=0
+    ) {
+        const payload = (await this.contract.methods.encodeAddCollateral({
+            market_idx: market_idx,
+            position_key: position_key,
+            call_id: call_id,
+            nonce: 0
+        }).call()).payload;
+
+        return from_wallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+    }
+
+    async removeCollateral(
+      user: Account,
+      amount: number,
+      position_key: number,
+      market_idx: number | string,
+      call_id=0
+    ) {
+        return await this.contract.methods.removeCollateral({
+            market_idx: market_idx,
+            position_key: position_key,
+            amount: amount,
+            meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}
+        }).send({from: user.address, amount: toNano(2.1)});
     }
 
     async closePosition(

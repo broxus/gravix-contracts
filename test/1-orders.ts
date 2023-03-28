@@ -1,9 +1,9 @@
-import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault, tryIncreaseTime} from "./utils/common";
+import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress} from "locklift";
-import chai, {expect, use} from "chai";
+import {Address, Contract, getRandomNonce, lockliftChai, toNano} from "locklift";
+import chai, {expect} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {PairMockAbi, PriceNodeAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
@@ -40,7 +40,6 @@ describe("Testing main orders flow", async function () {
         ticker: '',
         signature: ''
     }
-
 
     let vault: GravixVault;
     let account: GravixAccount;
@@ -678,7 +677,7 @@ describe("Testing main orders flow", async function () {
                   pos_key2, price * 100, {accLongUSDFundingPerShare: 0, accShortUSDFundingPerShare: 0}
                 );
 
-                // move price to liquidate first one, but dont touch second one
+                // move price to liquidate first one, but don't touch second one
                 // just 1$ down 1st position liq price
                 const new_price = bn(view1.position_view.liquidationPrice).minus(PRICE_DECIMALS);
                 await setPrice(eth_usdt_mock, new_price.idiv(100).toFixed());
@@ -776,6 +775,94 @@ describe("Testing main orders flow", async function () {
                   100 * USDT_DECIMALS,
                   10000
                 );
+            });
+        });
+
+        describe('Edit collateral', async function() {
+            let pos_key: number;
+
+            describe('Add collateral', async function() {
+                it('Open position', async function() {
+                    await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
+                    pos_key = await openMarketOrder(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      0,
+                      SHORT_POS,
+                      100 * USDT_DECIMALS,
+                      100
+                    );
+                });
+
+                it("Add collateral", async function() {
+                    const account = await vault.account(user);
+                    const pos = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+
+                    const amount = 50000000;
+                    const {traceTree} = await locklift.tracing.trace(
+                      vault.addCollateral(user_usdt_wallet, user, amount, pos_key, 0)
+                    );
+
+                    const old_col = bn(pos.initialCollateral).minus(pos.openFee);
+                    const new_col = old_col.plus(amount);
+                    const leveraged_position_usd = old_col.times(pos.leverage).idiv(100);
+                    const new_leverage = leveraged_position_usd.times(100).idiv(new_col);
+
+                    expect(traceTree).to
+                      .emit('AddPositionCollateral')
+                      .withNamedArgs({
+                          amount: amount.toFixed(),
+                          new_leverage: new_leverage.toFixed()
+                      });
+
+                    const pos2 = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+                    expect(pos2.initialCollateral).to.be.eq(bn(pos.initialCollateral).plus(amount).toFixed());
+                    expect(pos2.leverage).to.be.eq(new_leverage.toFixed());
+
+                });
+            });
+
+            describe('Remove collateral', async function() {
+                it('Open position', async function() {
+                    pos_key = await openMarketOrder(
+                      vault,
+                      eth_usdt_mock,
+                      user,
+                      user_usdt_wallet,
+                      0,
+                      SHORT_POS,
+                      100 * USDT_DECIMALS,
+                      100
+                    );
+                });
+
+                it("Remove collateral", async function() {
+                    const account = await vault.account(user);
+                    const pos = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+
+                    const amount = 50000000;
+                    const {traceTree} = await locklift.tracing.trace(
+                      vault.removeCollateral(user, amount, pos_key, 0, 1)
+                    );
+
+                    const old_col = bn(pos.initialCollateral).minus(pos.openFee);
+                    const new_col = old_col.minus(amount);
+                    const leveraged_position_usd = old_col.times(pos.leverage).idiv(100);
+                    const new_leverage = leveraged_position_usd.times(100).idiv(new_col);
+
+                    expect(traceTree).to
+                      .emit('RemovePositionCollateral')
+                      .withNamedArgs({
+                          amount: amount.toFixed(),
+                          new_leverage: new_leverage.toFixed()
+                      });
+
+                    const pos2 = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+                    expect(pos2.initialCollateral).to.be.eq(bn(pos.initialCollateral).minus(amount).toFixed());
+                    expect(pos2.leverage).to.be.eq(new_leverage.toFixed());
+                });
             });
         });
     });
