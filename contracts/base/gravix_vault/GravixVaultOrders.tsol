@@ -627,7 +627,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             );
         }
 
-        emit AddPositionCollateral(meta.call_id, user, position_key, amount, position.leverage);
+        emit AddPositionCollateral(meta.call_id, user, position_key, amount, position);
     }
 
     function removeCollateral(
@@ -691,7 +691,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             );
         }
 
-        emit RemovePositionCollateral(meta.call_id, user, position_key, amount, position.leverage);
+        emit RemovePositionCollateral(meta.call_id, user, position_key, amount, position);
         _transfer(usdtWallet, amount , user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
     }
 

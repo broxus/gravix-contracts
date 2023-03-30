@@ -49,11 +49,12 @@ contract GravixVault is GravixVaultBase {
 
         _setupTokenWallets();
     }
-
-    function upgrade(TvmCell code,  Callback.CallMeta meta) external onlyOwner {
+    
+    function upgrade(TvmCell code,  Callback.CallMeta meta) external onlyManager {
         TvmCell data = abi.encode(
             meta,
             owner,
+            manager,
             marketManager,
             oracle,
             priceNode,
@@ -103,5 +104,97 @@ contract GravixVault is GravixVaultBase {
         onCodeUpgrade(data);
     }
 
-    function onCodeUpgrade(TvmCell upgrade_data) private {}
+    function onCodeUpgrade(TvmCell upgrade_data) private {
+        tvm.resetStorage();
+
+        (
+            meta,
+            owner,
+//            manager,
+            marketManager,
+            oracle,
+            priceNode,
+            pricePubkey,
+            usdt,
+            usdtWallet,
+            stgUsdt,
+            stgUsdtWallet,
+            treasury,
+            projectFund,
+            devFund,
+            oracleProxyCode,
+            platformCode,
+            gravixAccountCode,
+            gravixAccountVersion,
+            oracleProxyVersion,
+            gravixVaultVersion,
+            poolBalance, // liquidity deposits
+            stgUsdtSupply, // amount of minted stgUsdt
+            targetPrice,
+            insuranceFund, // collected fees, pnl and etc.
+            insuranceFundLimit,
+            insuranceFundOverflowDistributionSchema,
+            collateralReserve, // sum of all usdt provided as a collateral for open order
+            totalNOI,
+            totalNOILimitEnabled,
+            maxPoolUtilRatio,
+            minPositionCollateral,
+            paused,
+            liquidationThresholdRate,
+            liquidatorRewardShare,
+            openFeeDistributionSchema,
+            closeFeeDistributionSchema,
+            marketCount,
+            markets,
+            workingHours,
+            weekends,
+            oracleConfigs,
+            pending_market_requests
+        ) = abi.decode(
+            upgrade,
+            (
+                Callback.CallMeta,
+                address,
+                address,
+                address,
+                uint256,
+                address,
+                address,
+                address,
+                address,
+                address,
+                address,
+                address,
+                address,
+                TvmCell,
+                TvmCell,
+                TvmCell,
+                uint32,
+                uint32,
+                uint32,
+                uint128,
+                uint128,
+                uint128,
+                uint128,
+                uint128,
+                uint64[3],
+                uint128,
+                uint128,
+                bool,
+                uint64,
+                uint128,
+                bool,
+                uint64,
+                uint64,
+                uint64[2],
+                uint64[2],
+                uint32,
+                mapping (uint32 => Market),
+                mapping (uint32 => mapping (uint8 => TimeInterval[])),
+                mapping (uint32 => mapping (uint32 => DateTimeInterval)),
+                mapping (uint32 => OracleConfig),
+                mapping (uint32 => PendingMarketOrder)
+            )
+        );
+    }
 }

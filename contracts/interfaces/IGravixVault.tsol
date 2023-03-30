@@ -213,9 +213,9 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);
     event ClosePositionRevert(uint32 call_id, address user, uint32 position_key, uint32 market_idx);
     event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
-    event AddPositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, uint32 new_leverage);
+    event AddPositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, IGravixAccount.Position updated_pos);
     event AddPositionCollateralRevert(uint32 call_id, address user, uint32 market_idx, uint32 position_key, uint128 amount);
-    event RemovePositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, uint32 new_leverage);
+    event RemovePositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, IGravixAccount.Position updated_pos);
     event RemovePositionCollateralRevert(uint32 call_id, address user, uint32 position_key, uint32 market_idx, uint128 amount);
     event Debt(uint32 call_id, address user, uint128 debt);
     event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);

@@ -6269,19 +6269,41 @@ PUSHCONT {
 IF
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 630
 DROP2
-ROT
-INDEX 6
-SWAP
+XCHG S1, S2
 XCHG S1, S4
 FIRST
-PUSHSLICE xc000000000000000000000000066fb49fe
+PUSHREFSLICE {
+	.blob xc0000000000000000000000001
+}
 NEWC
 STSLICE
+ROLLREV 5
+NEWC
+STSLICECONST x6e0e2dd0
 STU 32
 STSLICE
 STU 32
 STU 128
+SWAP
+UNTUPLE 13
+REVERSE 14, 0
 STU 32
+STU 8
+STU 128
+ROLLREV 10
+NEWC
+STU 128
+STU 128
+STU 128
+STU 32
+STI 256
+STU 64
+STU 64
+STU 64
+STU 64
+STU 32
+STBREFR
+STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
@@ -6764,19 +6786,42 @@ IF
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 694
 DROP2
 ROT
-INDEX 6
 PUSH S3
 ROLL 3
 PUSH2 S5, S3
 FIRST
-PUSHSLICE xc00000000000000000000000007f68e663
+PUSHREFSLICE {
+	.blob xc0000000000000000000000001
+}
 NEWC
 STSLICE
+ROLLREV 5
+NEWC
+STSLICECONST x4539652d
 STU 32
 STSLICE
 STU 32
 STU 128
+SWAP
+UNTUPLE 13
+REVERSE 14, 0
 STU 32
+STU 8
+STU 128
+ROLLREV 10
+NEWC
+STU 128
+STU 128
+STU 128
+STU 32
+STI 256
+STU 64
+STU 64
+STU 64
+STU 64
+STU 32
+STBREFR
+STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
@@ -16220,7 +16265,7 @@ PUSHCONT {
 	SETGLOB 3
 	PUSHINT 3
 	PUSHREF
-	.compute $inline_array_line_40_column_56_ast_id_11611$
+	.compute $inline_array_line_40_column_56_ast_id_11609$
 	PAIR
 	PUSHINT 34
 	SETGLOBVAR
@@ -16239,13 +16284,13 @@ PUSHCONT {
 	SETGLOBVAR
 	PUSHINT 2
 	PUSHREF
-	.compute $inline_array_line_67_column_42_ast_id_11674$
+	.compute $inline_array_line_67_column_42_ast_id_11672$
 	PAIR
 	PUSHINT 43
 	SETGLOBVAR
 	PUSHINT 2
 	PUSHREF
-	.compute $inline_array_line_68_column_43_ast_id_11681$
+	.compute $inline_array_line_68_column_43_ast_id_11679$
 	PAIR
 	PUSHINT 44
 	SETGLOBVAR
@@ -17151,7 +17196,7 @@ MOD
 INC
 .loc ../contracts/libraries/DateTime.tsol, 0
 
-.macro inline_array_line_40_column_56_ast_id_11611
+.macro inline_array_line_40_column_56_ast_id_11609
 PUSHINT 200000000000
 PUSHINT 3000000000000
 UFITS 64
@@ -17175,7 +17220,7 @@ PUSHCONT {
 REPEAT
 NIP
 
-.macro inline_array_line_67_column_42_ast_id_11674
+.macro inline_array_line_67_column_42_ast_id_11672
 PUSHINT 0
 PUSHINT 1000000000000
 PUSHINT 0
@@ -17195,7 +17240,7 @@ PUSHCONT {
 REPEAT
 NIP
 
-.macro inline_array_line_68_column_43_ast_id_11681
+.macro inline_array_line_68_column_43_ast_id_11679
 PUSHINT 1000000000000
 PUSHINT 0
 DUP

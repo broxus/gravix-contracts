@@ -14,13 +14,13 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 
 abstract contract GravixVaultUpgradable is GravixVaultHelpers {
-    function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSuccessCallback(meta) {
         gravixAccountCode = code;
         gravixAccountVersion += 1;
         emit GravixAccountCodeUpdate(meta.call_id, gravixAccountVersion - 1, gravixAccountVersion);
     }
 
-    function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSuccessCallback(meta) {
         oracleProxyCode = code;
         oracleProxyVersion += 1;
         emit OracleProxyCodeUpdate(meta.call_id, oracleProxyVersion - 1, oracleProxyVersion);
@@ -32,8 +32,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         _upgradeGravixAccount(msg.sender, 0, meta);
     }
 
-    // admin hook, no need for call_id or nonce
-    function forceUpgradeGravixAccounts(address[] users, Callback.CallMeta meta) external view onlyOwner reserve {
+    function forceUpgradeGravixAccounts(address[] users, Callback.CallMeta meta) external view onlyManager reserve {
         require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE * (users.length + 1), Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {

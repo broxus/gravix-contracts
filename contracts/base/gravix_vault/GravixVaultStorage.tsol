@@ -8,6 +8,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint32 static deploy_nonce;
 
     address owner;
+    address manager;
     address marketManager;
 
     address priceNode;
@@ -38,7 +39,11 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 insuranceFund; // collected fees, pnl and etc.
     uint128 insuranceFundLimit;
     // 50%, 30%, 20%
-    uint64[3] insuranceFundOverflowDistributionSchema = [HUNDRED_PERCENT / 2, (HUNDRED_PERCENT * 3) / 10, HUNDRED_PERCENT / 5];
+    uint64[3] insuranceFundOverflowDistributionSchema = [
+        HUNDRED_PERCENT / 2,
+        (HUNDRED_PERCENT * 3) / 10,
+        HUNDRED_PERCENT / 5
+    ];
     enum InsuranceFundOverflowDistributionSchema { Treasury, ProjectFund, DevFund }
 
     uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders

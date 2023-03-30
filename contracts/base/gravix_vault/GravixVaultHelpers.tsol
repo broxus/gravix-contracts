@@ -340,8 +340,13 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         _;
     }
 
+    modifier onlyManager() {
+        require(msg.sender == owner || msg.sender == manager, Errors.NOT_OWNER);
+        _;
+    }
+
     modifier onlyMarketManager() {
-        require (msg.sender == owner || msg.sender == marketManager, Errors.NOT_OWNER);
+        require (msg.sender == owner || msg.sender == marketManager || msg.sender == manager, Errors.NOT_OWNER);
         _;
     }
 

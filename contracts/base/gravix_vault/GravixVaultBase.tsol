@@ -10,63 +10,68 @@ import "locklift/src/console.tsol";
 
 
 abstract contract GravixVaultBase is GravixVaultOrders {
-    function transferOwnership(address new_owner, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function transferOwnership(address new_owner, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         owner = new_owner;
         emit NewOwner(meta.call_id, new_owner);
     }
 
-    function setMarketManager(address new_manager, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setMarketManager(address new_manager, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         marketManager = new_manager;
         emit NewMarketManager(meta.call_id, new_manager);
     }
 
-    function setOracle(address new_oracle, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setManager(address new_manager, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
+        manager = new_manager;
+        emit NewManager(meta.call_id, new_manager);
+    }
+
+    function setOracle(address new_oracle, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         oracle = new_oracle;
         emit NewOracle(meta.call_id, new_oracle);
     }
 
-    function setPriceNode(address new_node, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setPriceNode(address new_node, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         priceNode = new_node;
         emit NewPriceNode(meta.call_id, new_node);
     }
 
-    function setPricePubkey(uint256 new_pubkey, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setPricePubkey(uint256 new_pubkey, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         pricePubkey = new_pubkey;
         emit NewPricePubkey(meta.call_id, new_pubkey);
     }
 
-    function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setPause(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         paused = new_state;
         emit Pause(meta.call_id, new_state);
     }
 
-    function setLiquidationThresholdRate(uint64 new_rate, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setLiquidationThresholdRate(uint64 new_rate, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         require (new_rate < HUNDRED_PERCENT, Errors.BAD_INPUT);
 
         liquidationThresholdRate = new_rate;
         emit LiquidationThresholdRateUpdate(meta.call_id, new_rate);
     }
 
-    function setLiquidatorRewardShare(uint64 new_share, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setLiquidatorRewardShare(uint64 new_share, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         require (new_share < HUNDRED_PERCENT, Errors.BAD_INPUT);
 
         liquidatorRewardShare = new_share;
         emit LiquidatorRewardShareUpdate(meta.call_id, new_share);
     }
 
-    function setMaxPoolUtilRatio(uint64 new_ratio, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setMaxPoolUtilRatio(uint64 new_ratio, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         maxPoolUtilRatio = new_ratio;
         emit MaxPoolUtilRatioUpdate(meta.call_id, new_ratio);
     }
 
-    function setTotalNOILimit(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
+    function setTotalNOILimit(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         totalNOILimitEnabled = new_state;
         emit TotalNOILimit(meta.call_id, new_state);
     }
 
     function setOpenCloseFeeDistributionSchema(
         uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         require (new_open_fee_schema[0] + new_open_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
         require (new_close_fee_schema[0] + new_close_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
 
@@ -78,42 +83,42 @@ abstract contract GravixVaultBase is GravixVaultOrders {
 
     function setTreasury(
         address new_treasury, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         treasury = new_treasury;
         emit NewTreasury(meta.call_id, new_treasury);
     }
 
     function setProjectFund(
         address new_project_fund, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         projectFund = new_project_fund;
         emit NewProjectFund(meta.call_id, new_project_fund);
     }
 
     function setDevFund(
         address new_dev_fund, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         devFund = new_dev_fund;
         emit NewDevFund(meta.call_id, new_dev_fund);
     }
 
     function setInsuranceFundLimit(
         uint128 new_limit, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         insuranceFundLimit = new_limit;
         emit InsuranceFundLimitUpdate(meta.call_id, new_limit);
     }
 
     function setInsuranceFundOverflowDistributionSchema(
         uint64[3] new_schema, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         insuranceFundOverflowDistributionSchema = new_schema;
         emit InsuranceFundOverflowDistributionSchemaUpdate(meta.call_id, new_schema);
     }
 
     function setMinPositionCollateral(
         uint128 new_val, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyOwner reserveAndSendGas(meta) {
         minPositionCollateral = new_val;
         emit MinPositionCollateralUpdate(meta.call_id, new_val);
     }
