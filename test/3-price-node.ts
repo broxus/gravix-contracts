@@ -108,12 +108,15 @@ describe('Testing liquidity pool mechanics', async function() {
     });
 
     it('Deploy Gravix Vault', async function () {
+      const signer = await locklift.keystore.getSigner('0');
+
       vault = await setupVault(
         owner,
         usdt_root.address,
         stg_root.address,
         owner.address,
-        priceNode.address
+        priceNode.address,
+        `0x${signer?.publicKey}`
       );
 
       // now transfer ownership of stgTOKEN to vault
@@ -184,12 +187,12 @@ describe('Testing liquidity pool mechanics', async function() {
         // console.log(res);
 
         const res2 = await priceNode.methods.validatePrice({
-          price: {price: price, ticker: ticker, serverUpdateTime: time, oracleUpdateTime: time, signature: cell.boc}
+          price: {price: price, ticker: ticker, serverTime: time, oracleTime: time, signature: cell.boc}
         }).call();
         // console.log(res2);
 
         const {traceTree} = await locklift.tracing.trace(priceNode.methods.resolveRequests({
-          prices: [{price: price, ticker: ticker, serverUpdateTime: time, oracleUpdateTime: time, signature: cell.boc}]
+          prices: [{price: price, ticker: ticker, serverTime: time, oracleTime: time, signature: cell.boc}]
         }).sendExternal({publicKey: signer?.publicKey as string}), {allowedCodes: {compute: [60]}});
 
         await traceTree?.beautyPrint();
@@ -205,7 +208,7 @@ describe('Testing liquidity pool mechanics', async function() {
             targetToken: eth_addr,
             path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
           },
-          priceNode: {ticker: 'BTC / USD'}
+          priceNode: {ticker: 'BTC / USD', maxOracleDelay: 10, maxServerDelay: 10}
         }
 
         await locklift.tracing.trace(vault.addMarkets([basic_config]));
@@ -275,12 +278,12 @@ describe('Testing liquidity pool mechanics', async function() {
         // console.log(res);
 
         const res2 = await priceNode.methods.validatePrice({
-          price: {price: price, ticker: ticker, serverUpdateTime: time, oracleUpdateTime: time, signature: cell.boc}
+          price: {price: price, ticker: ticker, serverTime: time, oracleTime: time, signature: cell.boc}
         }).call();
         // console.log(res2);
 
         const {traceTree} = await locklift.tracing.trace(priceNode.methods.resolveRequests({
-          prices: [{price: price, ticker: ticker, serverUpdateTime: time, oracleUpdateTime: time, signature: cell.boc}]
+          prices: [{price: price, ticker: ticker, serverTime: time, oracleTime: time, signature: cell.boc}]
         }).sendExternal({publicKey: signer?.publicKey as string}));
 
         await traceTree?.beautyPrint();

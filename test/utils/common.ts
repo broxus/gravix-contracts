@@ -195,32 +195,35 @@ export const setupVault = async function (
     const OracleProxy = await locklift.factory.getContractArtifacts('OracleProxy');
     const Platform = await locklift.factory.getContractArtifacts('Platform');
     const GravixAccount = await locklift.factory.getContractArtifacts('GravixAccount');
+    const GravixVaultArtifacts = await locklift.factory.getContractArtifacts('GravixVault');
 
-    const {contract: _root, tx} = await locklift.tracing.trace(locklift.factory.deployContract({
-        contract: 'GravixVault',
+    const {contract: _deployer, tx} = await locklift.tracing.trace(locklift.factory.deployContract({
+        contract: 'VaultDeployer',
         initParams: {
-            deploy_nonce: getRandomNonce(),
-            oracleProxyCode: OracleProxy.code,
-            platformCode: Platform.code,
-            gravixAccountCode: GravixAccount.code
+            deploy_nonce: getRandomNonce()
         },
         publicKey: signer?.publicKey as string,
         constructorParams: {
-            _owner: owner.address,
-            _usdt: usdt,
-            _stg_usdt: stg_usdt,
-            _oracle: oracle,
-            _priceNode: priceNode,
-            _pricePubkey: pricePk
-
+            _vault: GravixVaultArtifacts.code,
+            _platform: Platform.code,
+            _account: GravixAccount.code,
+            _proxy: OracleProxy.code,
         },
         value: toNano(5)
     }));
 
-    console.log(tx);
+    const {traceTree, transaction, output} = await locklift.tracing.trace(_deployer.methods.deployVault({
+        _owner: owner.address,
+        _usdt: usdt,
+        _stg_usdt: stg_usdt,
+        _oracle: oracle,
+        _priceNode: priceNode,
+        _pricePubkey: pricePk
+    }).sendExternal({publicKey: signer?.publicKey as string}));
 
-    if (log) logger.log(`Gravix Vault address: ${_root.address.toString()}`);
-    return new GravixVault(_root, owner);
+
+    if (log) logger.log(`Gravix Vault address: ${output!.value0.toString()}`);
+    return GravixVault.from_addr(output!.value0, owner);
 }
 
 export const setupPairMock = async function () {

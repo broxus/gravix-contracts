@@ -14,13 +14,13 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 
 abstract contract GravixVaultUpgradable is GravixVaultHelpers {
-    function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSuccessCallback(meta) {
+    function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSendGas(meta) {
         gravixAccountCode = code;
         gravixAccountVersion += 1;
         emit GravixAccountCodeUpdate(meta.call_id, gravixAccountVersion - 1, gravixAccountVersion);
     }
 
-    function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSuccessCallback(meta) {
+    function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSendGas(meta) {
         oracleProxyCode = code;
         oracleProxyVersion += 1;
         emit OracleProxyCodeUpdate(meta.call_id, oracleProxyVersion - 1, oracleProxyVersion);

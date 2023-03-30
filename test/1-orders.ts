@@ -813,7 +813,9 @@ describe("Testing main orders flow", async function () {
                       .emit('AddPositionCollateral')
                       .withNamedArgs({
                           amount: amount.toFixed(),
-                          new_leverage: new_leverage.toFixed()
+                          updated_pos: {
+                              leverage: new_leverage.toFixed()
+                          }
                       });
 
                     const pos2 = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
@@ -855,7 +857,9 @@ describe("Testing main orders flow", async function () {
                       .emit('RemovePositionCollateral')
                       .withNamedArgs({
                           amount: amount.toFixed(),
-                          new_leverage: new_leverage.toFixed()
+                          updated_pos: {
+                              leverage: new_leverage.toFixed()
+                          }
                       });
 
                     const pos2 = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;

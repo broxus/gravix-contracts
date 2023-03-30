@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma ever-solidity >= 0.62.0;
+
+import "./libraries/Errors.tsol";
+import "GravixVault.tsol";
+
+
+contract VaultDeployer {
+    uint32 static deploy_nonce;
+
+    TvmCell vault_code;
+    TvmCell oracleProxyCode;
+    TvmCell platformCode;
+    TvmCell gravixAccountCode;
+
+    constructor(TvmCell _vault, TvmCell _proxy, TvmCell _platform, TvmCell _account) public {
+        require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
+        require (tvm.pubkey() == msg.pubkey(), Errors.WRONG_PUBKEY);
+        tvm.accept();
+
+        vault_code = _vault;
+        oracleProxyCode = _proxy;
+        platformCode = _platform;
+        gravixAccountCode = _account;
+    }
+
+    function deployVault(
+        address _owner,
+        address _usdt,
+        address _stg_usdt,
+        address _oracle,
+        address _priceNode,
+        uint256 _pricePubkey
+    ) external view returns (address) {
+        tvm.accept();
+
+        TvmCell state_init = tvm.buildStateInit({
+            contr: GravixVault,
+            varInit: {
+                deploy_nonce: deploy_nonce,
+                platformCode: platformCode,
+                gravixAccountCode: gravixAccountCode,
+                oracleProxyCode: oracleProxyCode
+            },
+            pubkey: tvm.pubkey(),
+            code: vault_code
+        });
+
+        address vault = new GravixVault{
+            stateInit: state_init,
+            value: 2 ever
+        }(
+            _owner, _usdt, _stg_usdt, _oracle, _priceNode, _pricePubkey
+        );
+        return vault;
+    }
+}

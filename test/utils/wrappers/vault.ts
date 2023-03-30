@@ -64,8 +64,8 @@ export class GravixVault {
     public owner: Account;
     public address: Address;
 
-    constructor(token_contract: Contract<GravixVaultAbi>, owner: Account) {
-        this.contract = token_contract;
+    constructor(contract: Contract<GravixVaultAbi>, owner: Account) {
+        this.contract = contract;
         this.owner = owner;
         this.address = this.contract.address;
     }

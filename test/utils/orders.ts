@@ -62,7 +62,7 @@ export async function openMarketOrder(
     const expected_price = price_multiplier.times(initial_price).idiv(PERCENT_100);
 
     // console.log(expected_price.toFixed());
-    // pre-deploy acc, because we dont have bounces yet
+    // pre-deploy acc, because we don't have bounces yet
     // await locklift.tracing.trace(vault.deployGravixAccount(user));
 
     const res = (await vault.contract.methods.checkPositionAllowed({
