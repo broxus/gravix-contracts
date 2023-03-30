@@ -1,6 +1,5 @@
-import {getRandomNonce, toNano, WalletTypes} from "locklift";
+import {toNano} from "locklift";
 import {deployUser, setupVault} from "../test/utils/common";
-import {Account} from "locklift/everscale-client";
 import {readFileSync} from "fs";
 
 const {isValidEverAddress} = require('../test/utils/common');

@@ -1,7 +1,6 @@
-import {Address, Contract} from "locklift";
+import {Address, Contract, toNano} from "locklift";
 import {FactorySource} from "../../../build/factorySource";
 import {Account} from 'locklift/everscale-client'
-const {toNano} = locklift.utils;
 
 
 export class TokenWallet {

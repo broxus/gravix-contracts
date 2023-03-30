@@ -1,11 +1,11 @@
-import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault} from "./utils/common";
+import {bn} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, getRandomNonce, lockliftChai, toNano} from "locklift";
+import {Address, Contract, lockliftChai} from "locklift";
 import chai, {expect} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
-import {PairMockAbi, PriceNodeAbi} from "../build/factorySource";
+import {GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
@@ -76,62 +76,20 @@ describe("Testing main orders flow", async function () {
         workingHours: []
     }
 
-    describe('Setup contracts', async function () {
-        it('Deploy users', async function () {
-            user = await deployUser(30);
-            owner = await deployUser(30);
+    describe('Setup contracts', async function() {
+        it('Run fixtures', async function() {
+           await locklift.deployments.fixture();
+
+           owner = locklift.deployments.getAccount('Owner').account;
+           user = locklift.deployments.getAccount('User').account;
+           vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>('Vault'), owner);
+           stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>('StgUSDT'), owner);
+           usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>('USDT'), owner);
+           eth_usdt_mock = locklift.deployments.getContract('ETH_USDT');
+           user_usdt_wallet = await usdt_root.wallet(user);
+           owner_usdt_wallet = await usdt_root.wallet(user);
         });
-
-        it('Deploy tokens', async function () {
-            const token_name = `TOKEN_${getRandomNonce()}`;
-            const stg_token_name = `stg${token_name}`;
-            usdt_root = await setupTokenRoot(token_name, token_name, owner, 6);
-            stg_root = await setupTokenRoot(stg_token_name, stg_token_name, owner, 6);
-        });
-
-        it('Mint tokens to users', async function () {
-            owner_usdt_wallet = await usdt_root.mint(1000000000 * USDT_DECIMALS, owner);
-            user_usdt_wallet = await usdt_root.mint(1000000000 * USDT_DECIMALS, user);
-        });
-
-        it('Deploy price node', async function() {
-            const signer = await locklift.keystore.getSigner('0');
-
-            const { contract } = await locklift.tracing.trace(locklift.factory.deployContract({
-                contract: 'PriceNode',
-                initParams: {deploy_nonce: getRandomNonce()},
-                constructorParams: {
-                    _owner: owner.address,
-                    _daemonPubkey: `0x${signer?.publicKey}`,
-                    _oraclePubkey: `0x${signer?.publicKey}`
-                },
-                publicKey: signer?.publicKey as string,
-                value: toNano(1)
-            }));
-            priceNode = contract;
-        });
-
-        it('Deploy Gravix Vault', async function () {
-            const signer = await locklift.keystore.getSigner('0');
-
-            vault = await setupVault(
-                owner,
-                usdt_root.address,
-                stg_root.address,
-                owner.address,
-                priceNode.address,
-              `0x${signer?.publicKey}`
-            );
-
-            // now transfer ownership of stgTOKEN to vault
-            await stg_root.transferOwnership({address: vault.address} as Account);
-        });
-
-        it('Deploy pairs mocks', async function () {
-            eth_usdt_mock = await setupPairMock();
-            btc_eth_mock = await setupPairMock();
-        });
-    });
+    })
 
     describe("Running scenarios", async function () {
         let pool_balance: BigNumber;

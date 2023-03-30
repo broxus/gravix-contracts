@@ -2,9 +2,18 @@ import {LockliftConfig} from "locklift";
 import {FactorySource} from "./build/factorySource";
 import * as dotenv from "dotenv";
 import "locklift-verifier";
+import "locklift-deploy";
+import { Deployments } from "locklift-deploy";
+
 
 declare global {
   const locklift: import("locklift").Locklift<FactorySource>;
+}
+declare module "locklift" {
+  //@ts-ignore
+  export interface Locklift {
+    deployments: Deployments<FactorySource>;
+  }
 }
 dotenv.config();
 
@@ -114,7 +123,6 @@ const config: LockliftConfig = {
     venom: {
       connection: {
         id: 1000,
-        group: "group",
         type: "jrpc",
         data: {
           endpoint: process.env.MAIN_RPC_ENDPOINT || ""

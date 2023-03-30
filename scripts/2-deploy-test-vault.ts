@@ -6,6 +6,8 @@ import {MarketConfig, Oracle} from "../test/utils/wrappers/vault";
 const owner = new Address('0:311fe8e7bfeb6a2622aaba02c21569ac1e6f01c81c33f2623e5d8f1a5ba232d7');
 const usdt = new Address('0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b');
 const oracle_contract = new Address('0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b');
+const price_node = new Address('0:09e50f8b58aa65875b75bddbabec2c1187d69ace2d7705ef04aa667a54ef64a3');
+const oracle_pubkey = '0x50ff1f834be4c175d4defbc9d0bf097a435e1b10fcfaf1650781939165666f47';
 
 const basic_config: MarketConfig = {
     priceSource: 1,
@@ -77,7 +79,8 @@ const oracle: Oracle = {
                 rightRoot: new Address('0:a519f99bb5d6d51ef958ed24d337ad75a1c770885dcd42d51d6663f9fcdacfb2')
             }
         ]
-    }
+    },
+    priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
 }
 
 const oracle2: Oracle = {
@@ -98,22 +101,26 @@ const oracle2: Oracle = {
                 rightRoot: new Address('0:a519f99bb5d6d51ef958ed24d337ad75a1c770885dcd42d51d6663f9fcdacfb2')
             }
         ]
-    }
+    },
+    priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
 }
 
 const empty_oracle: Oracle = {
     chainlink: {ticker: '', chainID: 0, ttl: 0},
-    dex: {targetToken: zeroAddress, path: []}
+    dex: {targetToken: zeroAddress, path: []},
+    priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
 }
 
 const btc_oracle: Oracle = {
     chainlink: {ticker: 'BTC / USD', chainID: 137, ttl: 200},
-    dex: {targetToken: zeroAddress, path: []}
+    dex: {targetToken: zeroAddress, path: []},
+    priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
 }
 
 const eth_oracle: Oracle = {
     chainlink: {ticker: 'ETH / USD', chainID: 137, ttl: 200},
-    dex: {targetToken: zeroAddress, path: []}
+    dex: {targetToken: zeroAddress, path: []},
+    priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
 }
 
 const main = async () => {
@@ -127,7 +134,10 @@ const main = async () => {
         user,
         usdt,
         stgUSDT.address,
-        oracle_contract
+        oracle_contract,
+          oracle_contract,
+          price_node,
+          oracle_pubkey
     );
     console.log('Deployed vault');
 
