@@ -110,7 +110,6 @@ describe('Testing liquidity pool mechanics', async function() {
     it('Deploy Gravix Vault', async function () {
       vault = await setupVault(
         owner,
-        owner,
         usdt_root.address,
         stg_root.address,
         owner.address,

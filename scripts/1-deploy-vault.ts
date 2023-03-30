@@ -20,12 +20,6 @@ const main = async () => {
         },
         {
             type: 'text',
-            name: '_market_manager',
-            message: 'Gravix Vault market manager address',
-            validate: (value: string) => isValidEverAddress(value) ? true : 'Invalid Everscale address'
-        },
-        {
-            type: 'text',
             name: '_usdt',
             message: 'USDT root address',
             validate: (value: string) => isValidEverAddress(value) ? true : 'Invalid Everscale address'
@@ -63,7 +57,6 @@ const main = async () => {
     spinner.start('Deploying vault...');
     const vault = await setupVault(
       user,
-      {address: response._market_manager} as Account,
       response._usdt,
       response._stg_usdt,
       response._oracle,

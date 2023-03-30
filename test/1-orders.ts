@@ -116,7 +116,6 @@ describe("Testing main orders flow", async function () {
 
             vault = await setupVault(
                 owner,
-                owner,
                 usdt_root.address,
                 stg_root.address,
                 owner.address,

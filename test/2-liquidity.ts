@@ -111,7 +111,6 @@ describe('Testing liquidity pool mechanics', async function() {
 
       vault = await setupVault(
         owner,
-        owner,
         usdt_root.address,
         stg_root.address,
         owner.address,

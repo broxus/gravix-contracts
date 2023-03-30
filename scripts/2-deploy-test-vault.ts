@@ -125,7 +125,6 @@ const main = async () => {
 
     const vault = await setupVault(
         user,
-        {address: owner} as Account,
         usdt,
         stgUSDT.address,
         oracle_contract

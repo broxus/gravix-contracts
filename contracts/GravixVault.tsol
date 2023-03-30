@@ -28,7 +28,6 @@ import {DateTime as DateTimeLib} from "./libraries/DateTime.tsol";
 contract GravixVault is GravixVaultBase {
     constructor(
         address _owner,
-        address _market_manager,
         address _usdt,
         address _stg_usdt,
         address _oracle,
@@ -40,7 +39,6 @@ contract GravixVault is GravixVaultBase {
         tvm.accept();
 
         owner = _owner;
-        marketManager = _market_manager;
         usdt = _usdt;
         stgUsdt = _stg_usdt;
         oracle = _oracle;
@@ -49,7 +47,7 @@ contract GravixVault is GravixVaultBase {
 
         _setupTokenWallets();
     }
-    
+
     function upgrade(TvmCell code,  Callback.CallMeta meta) external onlyManager {
         TvmCell data = abi.encode(
             meta,
@@ -107,6 +105,7 @@ contract GravixVault is GravixVaultBase {
     function onCodeUpgrade(TvmCell upgrade_data) private {
         tvm.resetStorage();
 
+        Callback.CallMeta meta;
         (
             meta,
             owner,
@@ -151,14 +150,14 @@ contract GravixVault is GravixVaultBase {
             oracleConfigs,
             pending_market_requests
         ) = abi.decode(
-            upgrade,
+            upgrade_data,
             (
                 Callback.CallMeta,
                 address,
                 address,
                 address,
-                uint256,
                 address,
+                uint256,
                 address,
                 address,
                 address,
