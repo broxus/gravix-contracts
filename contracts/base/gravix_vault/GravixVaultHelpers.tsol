@@ -20,6 +20,7 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 abstract contract GravixVaultHelpers is GravixVaultStorage {
     function getDetails() external view responsible returns (
         address _owner,
+        address _manager,
         address _marketManager,
         address _oracle,
         address _priceNode,
@@ -51,6 +52,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             owner,
+            manager,
             marketManager,
             oracle,
             priceNode,
