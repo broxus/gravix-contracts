@@ -25,12 +25,12 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         uint128 _treasury_amount = math.muldiv(
             overflow,
             insuranceFundOverflowDistributionSchema[uint128(InsuranceFundOverflowDistributionSchema.Treasury)],
-            HUNDRED_PERCENT
+            Constants.HUNDRED_PERCENT
         );
         uint128 _project_fund_amount = math.muldiv(
             overflow,
             insuranceFundOverflowDistributionSchema[uint128(InsuranceFundOverflowDistributionSchema.ProjectFund)],
-            HUNDRED_PERCENT
+            Constants.HUNDRED_PERCENT
         );
         uint128 _dev_fund_amount = overflow - _treasury_amount - _project_fund_amount;
 
@@ -93,7 +93,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             stg_amount = usdt_amount;
         } else {
             (uint128 in_price,) = stgUsdtPrice();
-            stg_amount = math.muldiv(usdt_amount, PRICE_DECIMALS, in_price);
+            stg_amount = math.muldiv(usdt_amount, Constants.PRICE_DECIMALS, in_price);
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stg_amount;
     }
@@ -103,7 +103,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             usdt_amount = stg_amount;
         } else {
             (,uint128 out_price) = stgUsdtPrice();
-            usdt_amount = math.muldiv(stg_amount, out_price, PRICE_DECIMALS);
+            usdt_amount = math.muldiv(stg_amount, out_price, Constants.PRICE_DECIMALS);
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }usdt_amount;
     }
@@ -112,10 +112,10 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     // in price could be higher in case of under collateralization
     function stgUsdtPrice() public view responsible returns (uint128 in_price, uint128 out_price) {
         if (stgUsdtSupply == 0) {
-            (in_price, out_price) = (PRICE_DECIMALS, PRICE_DECIMALS);
+            (in_price, out_price) = (Constants.PRICE_DECIMALS, Constants.PRICE_DECIMALS);
         } else {
             // out price is current real price
-            out_price = math.muldiv(poolBalance, PRICE_DECIMALS, stgUsdtSupply);
+            out_price = math.muldiv(poolBalance, Constants.PRICE_DECIMALS, stgUsdtSupply);
             // if we are in undercollateralized state
             in_price = targetPrice > 0 ? targetPrice : out_price;
         }
@@ -123,7 +123,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function poolDebt() public view returns (uint128) {
-        uint128 target_balance = math.muldiv(stgUsdtSupply, targetPrice, PRICE_DECIMALS);
+        uint128 target_balance = math.muldiv(stgUsdtSupply, targetPrice, Constants.PRICE_DECIMALS);
         return poolBalance >= target_balance ? 0 : target_balance - poolBalance;
     }
     // ----------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function _collectFeeWithSchema(uint64[2] fee_schema, uint128 amount) internal {
-        uint128 pool_fee = math.muldiv(amount, fee_schema[uint256(FeeDistributionSchema.Pool)], HUNDRED_PERCENT);
+        uint128 pool_fee = math.muldiv(amount, fee_schema[uint256(FeeDistributionSchema.Pool)], Constants.HUNDRED_PERCENT);
         uint128 fund_fee = amount - pool_fee;
 
         if (fund_fee > 0) _increaseInsuranceFund(fund_fee);

@@ -59,7 +59,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         delete marketOrders[position_key];
 
-        uint128 allowed_delta = math.muldiv(request.expectedPrice, request.maxSlippageRate, HUNDRED_PERCENT);
+        uint128 allowed_delta = math.muldiv(request.expectedPrice, request.maxSlippageRate, Constants.HUNDRED_PERCENT);
         uint128 min_price = request.expectedPrice - allowed_delta;
         uint128 max_price = request.expectedPrice + allowed_delta;
 
@@ -73,8 +73,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        uint128 leveraged_position_usd = math.muldiv(request.collateral, request.leverage, LEVERAGE_BASE);
-        uint128 open_fee = math.muldiv(leveraged_position_usd, request.openFeeRate, HUNDRED_PERCENT);
+        uint128 leveraged_position_usd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
+        uint128 open_fee = math.muldiv(leveraged_position_usd, request.openFeeRate, Constants.HUNDRED_PERCENT);
 
         Position opened_position = Position(
             request.marketIdx,
@@ -188,8 +188,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         uint128 old_collateral = _position.initialCollateral - _position.openFee;
         uint128 new_collateral = old_collateral + amount;
-        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, LEVERAGE_BASE);
-        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, LEVERAGE_BASE, new_collateral));
+        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, Constants.LEVERAGE_BASE);
+        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, Constants.LEVERAGE_BASE, new_collateral));
 
         _position.initialCollateral += amount;
         uint32 old_leverage = _position.leverage;
@@ -226,8 +226,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         uint128 new_collateral = old_collateral - amount;
-        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, LEVERAGE_BASE);
-        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, LEVERAGE_BASE, new_collateral));
+        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, Constants.LEVERAGE_BASE);
+        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, Constants.LEVERAGE_BASE, new_collateral));
 
         _position.initialCollateral -= amount;
         uint32 old_leverage = _position.leverage;

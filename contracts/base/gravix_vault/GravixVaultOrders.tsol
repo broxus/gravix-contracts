@@ -58,7 +58,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         if (collateral < minPositionCollateral) return false;
         if (!markets.exists(market_idx)) return false;
         if (leverage > markets[market_idx].maxLeverage) return false;
-        if (max_slippage > HUNDRED_PERCENT) return false;
+        if (max_slippage > Constants.HUNDRED_PERCENT) return false;
         return true;
     }
 
@@ -338,7 +338,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // @param leverage - order leverage, 2 decimals number
     // @param asset_price - position price, 8 decimals number
     function calculatePositionAssetSize(uint128 collateral, uint32 leverage, uint128 asset_price) public pure returns (uint128 position_size_asset) {
-        return math.muldiv(math.muldiv(collateral, leverage, LEVERAGE_BASE), PRICE_DECIMALS, asset_price);
+        return math.muldiv(math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE), Constants.PRICE_DECIMALS, asset_price);
     }
 
     function getDynamicSpread(
@@ -780,7 +780,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             position_view.position.positionType
         );
 
-        uint128 liquidator_reward = math.muldiv(collateral, liquidatorRewardShare, HUNDRED_PERCENT);
+        uint128 liquidator_reward = math.muldiv(collateral, liquidatorRewardShare, Constants.HUNDRED_PERCENT);
 
         _increaseInsuranceFund(collateral - liquidator_reward);
 
@@ -848,12 +848,12 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     ) internal view returns (Market _market, uint128 _totalNOI, uint16 _error) {
         (_market, _totalNOI) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
 
-        uint128 shorts_usd = math.muldiv(_market.totalShortsAsset, cur_asset_price, PRICE_DECIMALS);
-        uint128 longs_usd = math.muldiv(_market.totalLongsAsset, cur_asset_price, PRICE_DECIMALS);
+        uint128 shorts_usd = math.muldiv(_market.totalShortsAsset, cur_asset_price, Constants.PRICE_DECIMALS);
+        uint128 longs_usd = math.muldiv(_market.totalLongsAsset, cur_asset_price, Constants.PRICE_DECIMALS);
         // market limits
         if (shorts_usd > _market.maxTotalShortsUSD || longs_usd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         // common platform limit
-        if (totalNOILimitEnabled && math.muldiv(poolBalance, maxPoolUtilRatio, HUNDRED_PERCENT) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
+        if (totalNOILimitEnabled && math.muldiv(poolBalance, maxPoolUtilRatio, Constants.HUNDRED_PERCENT) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
         return (_market, _totalNOI, _error);
     }
 
@@ -869,7 +869,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         _totalNOI = totalNOI;
 
         uint128 noi_asset_before = _marketNOI(_market);
-        uint128 noi_usd_before = math.muldiv(noi_asset_before, _market.lastNoiUpdatePrice, PRICE_DECIMALS);
+        uint128 noi_usd_before = math.muldiv(noi_asset_before, _market.lastNoiUpdatePrice, Constants.PRICE_DECIMALS);
 
         if (position_type == PositionType.Long) {
             _market.totalLongsAsset = remove ? (_market.totalLongsAsset - position_size_asset) : (_market.totalLongsAsset + position_size_asset);
@@ -878,10 +878,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }
 
         uint128 noi_asset_after = _marketNOI(_market);
-        uint128 noi_usd_after = math.muldiv(noi_asset_after, cur_asset_price, PRICE_DECIMALS);
+        uint128 noi_usd_after = math.muldiv(noi_asset_after, cur_asset_price, Constants.PRICE_DECIMALS);
 
-        _totalNOI -= math.muldiv(noi_usd_before, _market.noiWeight, WEIGHT_BASE);
-        _totalNOI += math.muldiv(noi_usd_after, _market.noiWeight, WEIGHT_BASE);
+        _totalNOI -= math.muldiv(noi_usd_before, _market.noiWeight, Constants.WEIGHT_BASE);
+        _totalNOI += math.muldiv(noi_usd_after, _market.noiWeight, Constants.WEIGHT_BASE);
 
         _market.lastNoiUpdatePrice = cur_asset_price;
     }
@@ -940,9 +940,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function _calculateFunding(int256 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
         if (rate_per_hour == 0 || total_position == 0) return 0;
         // multiply by SCALING FACTOR in the beginning to prevent precision loss
-        int256 funding_asset = math.muldiv(rate_per_hour * SCALING_FACTOR, total_position, HUNDRED_PERCENT);
-        funding_asset = math.muldiv(funding_asset, (now - last_update_time), HOUR);
-        int256 funding_usd = math.muldiv(funding_asset, asset_price, PRICE_DECIMALS);
+        int256 funding_asset = math.muldiv(rate_per_hour * Constants.SCALING_FACTOR, total_position, Constants.HUNDRED_PERCENT);
+        funding_asset = math.muldiv(funding_asset, (now - last_update_time), Constants.HOUR);
+        int256 funding_usd = math.muldiv(funding_asset, asset_price, Constants.PRICE_DECIMALS);
         return funding_usd / total_position;
     }
 
@@ -956,8 +956,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 noi = uint128(math.abs(int256(_market.totalLongsAsset) - _market.totalShortsAsset));
         uint128 funding_rate_per_hour = math.muldiv(
             _market.fees.fundingBaseRatePerHour,
-            math.muldiv(noi, SCALING_FACTOR, _market.depthAsset),
-            SCALING_FACTOR
+            math.muldiv(noi, Constants.SCALING_FACTOR, _market.depthAsset),
+            Constants.SCALING_FACTOR
         );
 
         if (_market.totalLongsAsset >= _market.totalShortsAsset) {

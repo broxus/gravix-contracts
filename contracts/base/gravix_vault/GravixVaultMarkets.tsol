@@ -110,13 +110,13 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
     }
 
     function validateMarketConfig(MarketConfig config) public pure returns (bool correct) {
-        correct = true && config.maxLeverage >= LEVERAGE_BASE;
-        correct = correct && config.fees.fundingBaseRatePerHour < HUNDRED_PERCENT;
-        correct = correct && config.fees.borrowBaseRatePerHour < HUNDRED_PERCENT;
-        correct = correct && config.fees.baseSpreadRate < HUNDRED_PERCENT;
-        correct = correct && config.fees.baseDynamicSpreadRate < HUNDRED_PERCENT;
-        correct = correct && config.fees.closeFeeRate < HUNDRED_PERCENT;
-        correct = correct && config.fees.openFeeRate < HUNDRED_PERCENT;
+        correct = true && config.maxLeverage >= Constants.LEVERAGE_BASE;
+        correct = correct && config.fees.fundingBaseRatePerHour < Constants.HUNDRED_PERCENT;
+        correct = correct && config.fees.borrowBaseRatePerHour < Constants.HUNDRED_PERCENT;
+        correct = correct && config.fees.baseSpreadRate < Constants.HUNDRED_PERCENT;
+        correct = correct && config.fees.baseDynamicSpreadRate < Constants.HUNDRED_PERCENT;
+        correct = correct && config.fees.closeFeeRate < Constants.HUNDRED_PERCENT;
+        correct = correct && config.fees.openFeeRate < Constants.HUNDRED_PERCENT;
 
         for ((uint8 key, TimeInterval[] intervals) : config.workingHours) {
             correct = correct && key >= DateTimeLib.DOW_MON && key <= DateTimeLib.DOW_SUN;

@@ -2,6 +2,7 @@ pragma ever-solidity ^0.62.0;
 
 
 import "../../interfaces/IGravixVault.tsol";
+import "../../libraries/Constants.tsol";
 
 
 abstract contract GravixVaultStorage is IGravixVault {
@@ -40,9 +41,9 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 insuranceFundLimit;
     // 50%, 30%, 20%
     uint64[3] insuranceFundOverflowDistributionSchema = [
-        HUNDRED_PERCENT / 2,
-        (HUNDRED_PERCENT * 3) / 10,
-        HUNDRED_PERCENT / 5
+        Constants.HUNDRED_PERCENT / 2,
+        (Constants.HUNDRED_PERCENT * 3) / 10,
+        Constants.HUNDRED_PERCENT / 5
     ];
     enum InsuranceFundOverflowDistributionSchema { Treasury, ProjectFund, DevFund }
 
@@ -53,25 +54,15 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 totalNOI;
     bool totalNOILimitEnabled;
     uint64 maxPoolUtilRatio = 1_000_000_000_000; // 100%, multiplied by 1_000_000_000_000
-    uint128 minPositionCollateral = 5 * USDT_DECIMALS; // 5$
+    uint128 minPositionCollateral = 5 * Constants.USDT_DECIMALS; // 5$
 
     bool paused;
-
-    uint128 constant SCALING_FACTOR = 10**18;
-    uint128 constant USDT_DECIMALS = 10**6;
-    uint128 constant PRICE_DECIMALS = 10**8; // chainlink standard
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
-    uint8 constant LEVERAGE_BASE = 100; // 100 -> 1x
-    uint8 constant WEIGHT_BASE = 100; // 100 -> 1x
-
-    uint64 constant HUNDRED_PERCENT = 1_000_000_000_000; // 100%, this allows precision up to 0.0000000001%
-    uint32 constant HOUR = 3600;
-
     uint64 liquidationThresholdRate = 100_000_000_000; // 10%
     uint64 liquidatorRewardShare = 20_000_000_000; // 2%. Share of liquidated collateral that liquidator collect
 
-    uint64[2] openFeeDistributionSchema = [HUNDRED_PERCENT, 0];
-    uint64[2] closeFeeDistributionSchema = [0, HUNDRED_PERCENT];
+    uint64[2] openFeeDistributionSchema = [Constants.HUNDRED_PERCENT, 0];
+    uint64[2] closeFeeDistributionSchema = [0, Constants.HUNDRED_PERCENT];
     enum FeeDistributionSchema { Pool, InsuranceFund }
 
     uint32 marketCount = 0;

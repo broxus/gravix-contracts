@@ -46,14 +46,14 @@ abstract contract GravixVaultBase is GravixVaultOrders {
     }
 
     function setLiquidationThresholdRate(uint64 new_rate, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
-        require (new_rate < HUNDRED_PERCENT, Errors.BAD_INPUT);
+        require (new_rate < Constants.HUNDRED_PERCENT, Errors.BAD_INPUT);
 
         liquidationThresholdRate = new_rate;
         emit LiquidationThresholdRateUpdate(meta.call_id, new_rate);
     }
 
     function setLiquidatorRewardShare(uint64 new_share, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
-        require (new_share < HUNDRED_PERCENT, Errors.BAD_INPUT);
+        require (new_share < Constants.HUNDRED_PERCENT, Errors.BAD_INPUT);
 
         liquidatorRewardShare = new_share;
         emit LiquidatorRewardShareUpdate(meta.call_id, new_share);
@@ -72,8 +72,8 @@ abstract contract GravixVaultBase is GravixVaultOrders {
     function setOpenCloseFeeDistributionSchema(
         uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema, Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {
-        require (new_open_fee_schema[0] + new_open_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
-        require (new_close_fee_schema[0] + new_close_fee_schema[1] == HUNDRED_PERCENT, Errors.BAD_INPUT);
+        require (new_open_fee_schema[0] + new_open_fee_schema[1] == Constants.HUNDRED_PERCENT, Errors.BAD_INPUT);
+        require (new_close_fee_schema[0] + new_close_fee_schema[1] == Constants.HUNDRED_PERCENT, Errors.BAD_INPUT);
 
         openFeeDistributionSchema = new_open_fee_schema;
         closeFeeDistributionSchema = new_close_fee_schema;
