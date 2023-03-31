@@ -69,6 +69,18 @@ contract GravixAccount is GravixAccountBase {
         onCodeUpgrade(main_builder.toCell());
     }
 
+    function _migrate_leverage() internal {
+        uint32 old_lev_base = 100;
+        for ((uint32 key, Position pos) : positions) {
+            pos.leverage = pos.leverage * (Constants.LEVERAGE_BASE / old_lev_base);
+            positions[key] = pos;
+        }
+
+        for ((uint32 key, MarketOrder order) : marketOrders) {
+            order.leverage = order.leverage * (Constants.LEVERAGE_BASE / old_lev_base);
+            marketOrders[key] = order;
+        }
+    }
 
     function onCodeUpgrade(TvmCell upgrade_data) private {
         tvm.rawReserve(_reserve(), 0);
@@ -101,6 +113,7 @@ contract GravixAccount is GravixAccountBase {
         } else {
             // upgrade without modifying storage
             currentVersion = _currentVersion;
+            _migrate_leverage();
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, _oldVersion, _currentVersion, Callback.CallMeta(0, 0, send_gas_to)
             );

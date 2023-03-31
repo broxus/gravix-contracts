@@ -208,26 +208,34 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     }
 
     function process_removeCollateral(
-        uint128 amount, uint32 position_key, uint32 market_idx, uint128 min_collateral, Callback.CallMeta meta
+        uint128 amount,
+        uint32 position_key,
+        uint32 market_idx,
+        uint32 max_leverage,
+        uint128 min_collateral,
+        Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         Position _position = positions[position_key];
         uint128 old_collateral = _position.initialCollateral - _position.openFee;
+
+        // math.min because at this point we dont know if position exists
+        uint128 new_collateral = old_collateral - math.min(amount, old_collateral);
+        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, Constants.LEVERAGE_BASE);
+        // math.max(col, 1) because we dont want to div by 0 if position does not exist
+        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, Constants.LEVERAGE_BASE, math.max(new_collateral, 1)));
 
         // if collateral == 0, position does not exist
         if (
             _position.initialCollateral == 0 ||
             (old_collateral - math.min(old_collateral, amount) < min_collateral) ||
-            _position.marketIdx != market_idx
+            _position.marketIdx != market_idx ||
+            new_leverage > max_leverage
         ) {
             IGravixVault(vault).revert_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, amount, position_key, market_idx, meta
             );
             return;
         }
-
-        uint128 new_collateral = old_collateral - amount;
-        uint128 leveraged_position_usd = math.muldiv(old_collateral, _position.leverage, Constants.LEVERAGE_BASE);
-        uint32 new_leverage = uint32(math.muldiv(leveraged_position_usd, Constants.LEVERAGE_BASE, new_collateral));
 
         _position.initialCollateral -= amount;
         uint32 old_leverage = _position.leverage;

@@ -62,7 +62,7 @@ describe("Testing main orders flow", async function () {
         maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
         maxShortsUSD: 100_000 * USDT_DECIMALS, // 100k
         noiWeight: 100,
-        maxLeverage: 10000, // 100x
+        maxLeverage: 100_000_000, // 100x
         depthAsset: 15 * USDT_DECIMALS, // 25k
         fees: {
             openFeeRate: 1000000000, // 0.1%
@@ -145,7 +145,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        100,
+                        1000000,
                         1000 * USDT_DECIMALS,
                         1100 * USDT_DECIMALS
                     );
@@ -160,7 +160,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        1000,
+                        10000000,
                         1000 * USDT_DECIMALS,
                         1500 * USDT_DECIMALS
                     );
@@ -175,7 +175,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        10000,
+                        100000000,
                         1000 * USDT_DECIMALS,
                         2000 * USDT_DECIMALS
                     );
@@ -190,7 +190,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        100,
+                        1000000,
                         1000 * USDT_DECIMALS,
                         500 * USDT_DECIMALS
                     );
@@ -205,7 +205,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        1000,
+                        10000000,
                         1000 * USDT_DECIMALS,
                         950 * USDT_DECIMALS
                     );
@@ -220,7 +220,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        10000,
+                        100000000,
                         1000 * USDT_DECIMALS,
                         995 * USDT_DECIMALS
                     );
@@ -237,7 +237,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        100,
+                        1000000,
                         1000 * USDT_DECIMALS,
                         900 * USDT_DECIMALS
                     );
@@ -252,7 +252,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        1000,
+                        10000000,
                         1000 * USDT_DECIMALS,
                         650 * USDT_DECIMALS
                     );
@@ -267,7 +267,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        10000,
+                        100000000,
                         1000 * USDT_DECIMALS,
                         300 * USDT_DECIMALS
                     );
@@ -282,7 +282,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        100,
+                        1000000,
                         1000 * USDT_DECIMALS,
                         1850 * USDT_DECIMALS
                     );
@@ -297,7 +297,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        1000,
+                        10000000,
                         1000 * USDT_DECIMALS,
                         1050 * USDT_DECIMALS
                     );
@@ -312,7 +312,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        10000,
+                        100000000,
                         1000 * USDT_DECIMALS,
                         1005 * USDT_DECIMALS
                     );
@@ -333,7 +333,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        100
+                        1000000
                     );
                     short_pos_key = await openMarketOrder(
                         vault,
@@ -343,7 +343,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        100
+                        1000000
                     );
                     long_pos2_key = await openMarketOrder(
                         vault,
@@ -353,7 +353,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        100
+                        1000000
                     );
                     short_pos2_key = await openMarketOrder(
                         vault,
@@ -363,7 +363,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        100
+                        1000000
                     );
                 });
 
@@ -435,7 +435,7 @@ describe("Testing main orders flow", async function () {
                     market_idx,
                     LONG_POS,
                     100 * USDT_DECIMALS,
-                    100,
+                    1000000,
                     1000 * USDT_DECIMALS,
                     1100 * USDT_DECIMALS,
                     86400 // 1 day
@@ -449,7 +449,7 @@ describe("Testing main orders flow", async function () {
                     market_idx,
                     SHORT_POS,
                     100 * USDT_DECIMALS,
-                    100,
+                    1000000,
                     1000 * USDT_DECIMALS,
                     1100 * USDT_DECIMALS,
                     86400 // 1 day
@@ -485,7 +485,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       LONG_POS,
                       100 * USDT_DECIMALS,
-                      10000,
+                      100000000,
                       1000 * USDT_DECIMALS,
                       3600
                     );
@@ -500,7 +500,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      10000,
+                      100000000,
                       1000 * USDT_DECIMALS,
                       3600
                     );
@@ -516,7 +516,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       LONG_POS,
                       100 * USDT_DECIMALS,
-                      10000
+                      100000000
                     );
 
                     await testPositionFunding(
@@ -527,7 +527,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      100,
+                      1000000,
                       1000 * USDT_DECIMALS,
                       7200
                     );
@@ -551,7 +551,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      10000
+                      100000000
                     );
 
                     await testPositionFunding(
@@ -562,7 +562,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       LONG_POS,
                       100 * USDT_DECIMALS,
-                      100,
+                      1000000,
                       1000 * USDT_DECIMALS,
                       7200
                     );
@@ -612,7 +612,7 @@ describe("Testing main orders flow", async function () {
                   market_idx,
                   LONG_POS,
                   100 * USDT_DECIMALS,
-                  10000
+                  100000000
                 );
 
                 const pos_key2 = await openMarketOrder(
@@ -623,7 +623,7 @@ describe("Testing main orders flow", async function () {
                   market_idx,
                   LONG_POS,
                   100 * USDT_DECIMALS,
-                  5000
+                  50000000
                 );
 
                 const acc = await vault.account(user);
@@ -730,7 +730,7 @@ describe("Testing main orders flow", async function () {
                   market_idx,
                   LONG_POS,
                   100 * USDT_DECIMALS,
-                  10000
+                  100000000
                 );
             });
         });
@@ -749,7 +749,7 @@ describe("Testing main orders flow", async function () {
                       0,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      100
+                      1000000
                     );
                 });
 
@@ -793,7 +793,7 @@ describe("Testing main orders flow", async function () {
                       0,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      100
+                      1000000
                     );
                 });
 

@@ -2,9 +2,6 @@ import {toNano, WalletTypes} from "locklift";
 
 
 export default async () => {
-  const networkID = await locklift.provider.getProviderState().then((res) => res.networkId);
-
-  console.log(networkID);
   const [owner, user] = await locklift.deployments.deployAccounts([
       {
         deploymentName: "Owner", // user-defined custom account name

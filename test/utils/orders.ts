@@ -43,7 +43,7 @@ export async function openMarketOrder(
     const initial_price = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({market_idx: market_idx, answerId: 0}).call())._market;
 
-    const position = collateral * (leverage / 100);
+    const position = collateral * (leverage / 1000000);
     const position_in_asset = position * PRICE_DECIMALS / initial_price;
 
     let new_noi;
@@ -132,7 +132,7 @@ export async function openMarketOrder(
     const leveraged_usd = bn(pos_view.position.initialCollateral)
         .minus(pos_view.position.openFee)
         .times(pos_view.position.leverage)
-        .idiv(100);
+        .idiv(1000000);
 
     const time_passed = bn(pos_view.viewTime).minus(pos_view.position.createdAt);
     const borrow_fee = time_passed
@@ -141,11 +141,11 @@ export async function openMarketOrder(
         .times(leveraged_usd)
         .idiv(PERCENT_100)
 
-    const position_up = col_up.times(leverage).idiv(100);
+    const position_up = col_up.times(leverage).idiv(1000000);
     const liq_price_dist = expected_price
         .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view.fundingFee))
         .div(col_up)
-        .times(100)
+        .times(1000000)
         .div(leverage)
         .integerValue(BigNumber.ROUND_FLOOR);
 
@@ -216,7 +216,7 @@ export async function closeOrder(
     const leveraged_usd = bn(pos_view2.position.initialCollateral)
         .minus(pos_view2.position.openFee)
         .times(pos_view2.position.leverage)
-        .idiv(100);
+        .idiv(1000000);
     // const leveraged_asset = leveraged_usd.times(TOKEN_DECIMALS).idiv(pos_view2.position.openPrice);
 
     // console.log(event);
@@ -255,7 +255,7 @@ export async function closeOrder(
 
     let up_pos = col_up
       .times(pos_view2.position.leverage)
-      .idiv(100)
+      .idiv(1000000)
       .plus(expected_pnl)
       .minus(borrow_fee)
       .minus(pos_view2.fundingFee);
@@ -285,7 +285,7 @@ export async function closeOrder(
     const net_pnl = expected_pnl.minus(expected_close_fee);
     const percent_diff = net_pnl
         .div(bn(pos_view1.position.initialCollateral).minus(pos_view1.position.openFee))
-        .times(100);
+        .times(1000000);
 
     // const details1 = await vault.details();
     // expect(details1._totalNOI.toString()).to.be.eq('0');

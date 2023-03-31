@@ -645,7 +645,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         address gravix_acc = getGravixAccountAddress(msg.sender);
         IGravixAccount(gravix_acc).process_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            amount, position_key, market_idx, minPositionCollateral, meta
+            amount, position_key, market_idx, markets[market_idx].maxLeverage, minPositionCollateral, meta
         );
     }
 
