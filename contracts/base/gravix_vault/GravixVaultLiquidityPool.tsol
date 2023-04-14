@@ -144,10 +144,10 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         if (fund_fee > 0) _increaseInsuranceFund(fund_fee);
         if (pool_fee > 0) {
             poolBalance += pool_fee;
+            emit LiquidityPoolFees(pool_fee);
             // we are in undercollaterized state and recover is finished
             if (targetPrice > 0 && poolDebt() == 0) targetPrice = 0;
         }
-
     }
 
     function _decreaseInsuranceFund(uint128 amount) internal returns (uint128 debt) {

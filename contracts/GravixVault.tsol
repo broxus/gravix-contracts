@@ -99,109 +99,99 @@ contract GravixVault is GravixVaultBase {
         onCodeUpgrade(data);
     }
 
-    function _migrate_leverage() internal {
-        uint32 old_lev_base = 100;
-        for ((uint32 key, Market market) : markets) {
-            market.maxLeverage = market.maxLeverage * (Constants.LEVERAGE_BASE / old_lev_base);
-            markets[key] = market;
-        }
-    }
-
     function onCodeUpgrade(TvmCell upgrade_data) private {
-        tvm.resetStorage();
-
-        Callback.CallMeta meta;
-        (
-            meta,
-            owner,
+//        tvm.resetStorage();
+//
+//        Callback.CallMeta meta;
+//        (
+//            meta,
+//            owner,
 //            manager,
-            marketManager,
-            oracle,
-            priceNode,
-            pricePubkey,
-            usdt,
-            usdtWallet,
-            stgUsdt,
-            stgUsdtWallet,
-            treasury,
-            projectFund,
-            devFund,
-            oracleProxyCode,
-            platformCode,
-            gravixAccountCode,
-            gravixAccountVersion,
-            oracleProxyVersion,
-            gravixVaultVersion,
-            poolBalance, // liquidity deposits
-            stgUsdtSupply, // amount of minted stgUsdt
-            targetPrice,
-            insuranceFund, // collected fees, pnl and etc.
-            insuranceFundLimit,
-            insuranceFundOverflowDistributionSchema,
-            collateralReserve, // sum of all usdt provided as a collateral for open order
-            totalNOI,
-            totalNOILimitEnabled,
-            maxPoolUtilRatio,
-            minPositionCollateral,
-            paused,
-            liquidationThresholdRate,
-            liquidatorRewardShare,
-            openFeeDistributionSchema,
-            closeFeeDistributionSchema,
-            marketCount,
-            markets,
-            workingHours,
-            weekends,
-            oracleConfigs,
-            pending_market_requests
-        ) = abi.decode(
-            upgrade_data,
-            (
-                Callback.CallMeta,
-                address,
+//            marketManager,
+//            oracle,
+//            priceNode,
+//            pricePubkey,
+//            usdt,
+//            usdtWallet,
+//            stgUsdt,
+//            stgUsdtWallet,
+//            treasury,
+//            projectFund,
+//            devFund,
+//            oracleProxyCode,
+//            platformCode,
+//            gravixAccountCode,
+//            gravixAccountVersion,
+//            oracleProxyVersion,
+//            gravixVaultVersion,
+//            poolBalance, // liquidity deposits
+//            stgUsdtSupply, // amount of minted stgUsdt
+//            targetPrice,
+//            insuranceFund, // collected fees, pnl and etc.
+//            insuranceFundLimit,
+//            insuranceFundOverflowDistributionSchema,
+//            collateralReserve, // sum of all usdt provided as a collateral for open order
+//            totalNOI,
+//            totalNOILimitEnabled,
+//            maxPoolUtilRatio,
+//            minPositionCollateral,
+//            paused,
+//            liquidationThresholdRate,
+//            liquidatorRewardShare,
+//            openFeeDistributionSchema,
+//            closeFeeDistributionSchema,
+//            marketCount,
+//            markets,
+//            workingHours,
+//            weekends,
+//            oracleConfigs,
+//            pending_market_requests
+//        ) = abi.decode(
+//            upgrade_data,
+//            (
+//                Callback.CallMeta,
 //                address,
-                address,
-                address,
-                address,
-                uint256,
-                address,
-                address,
-                address,
-                address,
-                address,
-                address,
-                address,
-                TvmCell,
-                TvmCell,
-                TvmCell,
-                uint32,
-                uint32,
-                uint32,
-                uint128,
-                uint128,
-                uint128,
-                uint128,
-                uint128,
-                uint64[3],
-                uint128,
-                uint128,
-                bool,
-                uint64,
-                uint128,
-                bool,
-                uint64,
-                uint64,
-                uint64[2],
-                uint64[2],
-                uint32,
-                mapping (uint32 => Market),
-                mapping (uint32 => mapping (uint8 => TimeInterval[])),
-                mapping (uint32 => mapping (uint32 => DateTimeInterval)),
-                mapping (uint32 => OracleConfig),
-                mapping (uint32 => PendingMarketOrder)
-            )
-        );
-
-        _migrate_leverage();
+//                address,
+//                address,
+//                address,
+//                address,
+//                uint256,
+//                address,
+//                address,
+//                address,
+//                address,
+//                address,
+//                address,
+//                address,
+//                TvmCell,
+//                TvmCell,
+//                TvmCell,
+//                uint32,
+//                uint32,
+//                uint32,
+//                uint128,
+//                uint128,
+//                uint128,
+//                uint128,
+//                uint128,
+//                uint64[3],
+//                uint128,
+//                uint128,
+//                bool,
+//                uint64,
+//                uint128,
+//                bool,
+//                uint64,
+//                uint64,
+//                uint64[2],
+//                uint64[2],
+//                uint32,
+//                mapping (uint32 => Market),
+//                mapping (uint32 => mapping (uint8 => TimeInterval[])),
+//                mapping (uint32 => mapping (uint32 => DateTimeInterval)),
+//                mapping (uint32 => OracleConfig),
+//                mapping (uint32 => PendingMarketOrder)
+//            )
+//        );
     }
 }
