@@ -282,10 +282,24 @@ export async function closeOrder(
             }
         });
 
+    const max_pnl_rate = (await vault.contract.methods.getDetails({answerId: 0}).call())._maxPnlRate;
+    const max_pnl = col_up.times(max_pnl_rate).idiv(PERCENT_100);
+
     const net_pnl = expected_pnl.minus(expected_close_fee);
     const percent_diff = net_pnl
         .div(bn(pos_view1.position.initialCollateral).minus(pos_view1.position.openFee))
         .times(1000000);
+
+    const pnl_with_fees = expected_pnl.minus(borrow_fee).minus(pos_view2.fundingFee);
+    const limited_pnl = max_pnl.gt(pnl_with_fees) ? pnl_with_fees : max_pnl;
+    const user_payout = limited_pnl.minus(expected_close_fee).plus(col_up);
+
+    expect(traceTree1).to
+      .call('transfer')
+      .withNamedArgs({
+          recipient: user.address.toString(),
+          amount: user_payout.toString()
+      });
 
     // const details1 = await vault.details();
     // expect(details1._totalNOI.toString()).to.be.eq('0');

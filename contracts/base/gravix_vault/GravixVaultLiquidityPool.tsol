@@ -116,7 +116,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         } else {
             // out price is current real price
             out_price = math.muldiv(poolBalance, Constants.PRICE_DECIMALS, stgUsdtSupply);
-            // if we are in undercollateralized state
+            // if we are in under collateralized state
             in_price = targetPrice > 0 ? targetPrice : out_price;
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(in_price, out_price);

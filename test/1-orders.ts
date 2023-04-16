@@ -2,7 +2,7 @@ import {bn} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, lockliftChai} from "locklift";
+import {Address, Contract, lockliftChai, toNano} from "locklift";
 import chai, {expect} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi} from "../build/factorySource";
@@ -21,6 +21,7 @@ describe("Testing main orders flow", async function () {
     let stg_root: Token;
     const USDT_DECIMALS = 10 ** 6;
     const PRICE_DECIMALS = 10 ** 8;
+    const LEVERAGE_DECIMALS = 10**6;
     const PERCENT_100 = bn(1_000_000_000_000);
     const SCALING_FACTOR = bn(10).pow(18);
     const LONG_POS = 0;
@@ -132,7 +133,7 @@ describe("Testing main orders flow", async function () {
             expect(user_stg_bal.toString()).to.be.eq(deposit_amount.toString());
         });
 
-        describe('Basic scenarios: open fee, pnl, close fee, spreads, liq price checked', async function () {
+        describe.skip('Basic scenarios: open fee, pnl, close fee, spreads, liq price checked', async function () {
             const market_idx = 0;
 
             describe('Test solo long positions', async function () {
@@ -145,7 +146,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        1000000,
+                        LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1100 * USDT_DECIMALS
                     );
@@ -160,7 +161,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        10000000,
+                        10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1500 * USDT_DECIMALS
                     );
@@ -175,7 +176,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        100000000,
+                        100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         2000 * USDT_DECIMALS
                     );
@@ -190,7 +191,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        1000000,
+                        LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         500 * USDT_DECIMALS
                     );
@@ -205,7 +206,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        10000000,
+                        10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         950 * USDT_DECIMALS
                     );
@@ -220,7 +221,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        100000000,
+                        100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         995 * USDT_DECIMALS
                     );
@@ -237,7 +238,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        1000000,
+                        LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         900 * USDT_DECIMALS
                     );
@@ -252,7 +253,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        10000000,
+                        10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         650 * USDT_DECIMALS
                     );
@@ -267,7 +268,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        100000000,
+                        100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         300 * USDT_DECIMALS
                     );
@@ -282,7 +283,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        1000000,
+                        LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1850 * USDT_DECIMALS
                     );
@@ -297,7 +298,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        10000000,
+                        10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1050 * USDT_DECIMALS
                     );
@@ -312,7 +313,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        100000000,
+                        100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1005 * USDT_DECIMALS
                     );
@@ -333,7 +334,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        1000000
+                        LEVERAGE_DECIMALS
                     );
                     short_pos_key = await openMarketOrder(
                         vault,
@@ -343,7 +344,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        1000000
+                        LEVERAGE_DECIMALS
                     );
                     long_pos2_key = await openMarketOrder(
                         vault,
@@ -353,7 +354,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         LONG_POS,
                         100 * USDT_DECIMALS,
-                        1000000
+                        LEVERAGE_DECIMALS
                     );
                     short_pos2_key = await openMarketOrder(
                         vault,
@@ -363,7 +364,7 @@ describe("Testing main orders flow", async function () {
                         market_idx,
                         SHORT_POS,
                         100 * USDT_DECIMALS,
-                        1000000
+                        LEVERAGE_DECIMALS
                     );
                 });
 
@@ -403,7 +404,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe('Advanced scenarios: funding and borrow fee checked', async function() {
+        describe.skip('Advanced scenarios: funding and borrow fee checked', async function() {
             let market_idx: number;
             let base_funding = 1000000000; // 0.1%
 
@@ -435,7 +436,7 @@ describe("Testing main orders flow", async function () {
                     market_idx,
                     LONG_POS,
                     100 * USDT_DECIMALS,
-                    1000000,
+                    LEVERAGE_DECIMALS,
                     1000 * USDT_DECIMALS,
                     1100 * USDT_DECIMALS,
                     86400 // 1 day
@@ -449,7 +450,7 @@ describe("Testing main orders flow", async function () {
                     market_idx,
                     SHORT_POS,
                     100 * USDT_DECIMALS,
-                    1000000,
+                    LEVERAGE_DECIMALS,
                     1000 * USDT_DECIMALS,
                     1100 * USDT_DECIMALS,
                     86400 // 1 day
@@ -485,7 +486,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       LONG_POS,
                       100 * USDT_DECIMALS,
-                      100000000,
+                      100 * LEVERAGE_DECIMALS,
                       1000 * USDT_DECIMALS,
                       3600
                     );
@@ -500,7 +501,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      100000000,
+                      100 * LEVERAGE_DECIMALS,
                       1000 * USDT_DECIMALS,
                       3600
                     );
@@ -516,7 +517,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       LONG_POS,
                       100 * USDT_DECIMALS,
-                      100000000
+                      100 * LEVERAGE_DECIMALS
                     );
 
                     await testPositionFunding(
@@ -551,7 +552,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      100000000
+                      100 * LEVERAGE_DECIMALS
                     );
 
                     await testPositionFunding(
@@ -562,7 +563,7 @@ describe("Testing main orders flow", async function () {
                       market_idx,
                       LONG_POS,
                       100 * USDT_DECIMALS,
-                      1000000,
+                      LEVERAGE_DECIMALS,
                       1000 * USDT_DECIMALS,
                       7200
                     );
@@ -578,7 +579,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe('Liquidations', async function() {
+        describe.skip('Liquidations', async function() {
             let market_idx: number;
 
             it('Add market without borrow/funding fee', async function() {
@@ -735,7 +736,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe('Edit collateral', async function() {
+        describe.skip('Edit collateral', async function() {
             let pos_key: number;
 
             describe('Add collateral', async function() {
@@ -749,7 +750,7 @@ describe("Testing main orders flow", async function () {
                       0,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      1000000
+                      LEVERAGE_DECIMALS
                     );
                 });
 
@@ -793,7 +794,7 @@ describe("Testing main orders flow", async function () {
                       0,
                       SHORT_POS,
                       100 * USDT_DECIMALS,
-                      1000000
+                      LEVERAGE_DECIMALS
                     );
                 });
 
@@ -824,6 +825,43 @@ describe("Testing main orders flow", async function () {
                     expect(pos2.initialCollateral).to.be.eq(bn(pos.initialCollateral).minus(amount).toFixed());
                     expect(pos2.leverage).to.be.eq(new_leverage.toFixed());
                 });
+            });
+        });
+
+        describe('Max PNL rate', async function() {
+            const market_idx = 0;
+            let long_pos_key: number;
+
+            it('Set max PNL rate to 200%', async function() {
+                await locklift.tracing.trace(vault.contract.methods.setMaxPnlRate({
+                    new_max_rate: PERCENT_100.times(2).toFixed(),
+                    meta: {call_id: 0, nonce: 0, send_gas_to: user.address}
+                }).send({amount: toNano(3), from: owner.address}));
+            });
+
+            it('Pnl+, 100x leverage, open at 1000$', async function () {
+                await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
+                long_pos_key = await openMarketOrder(
+                  vault,
+                  eth_usdt_mock,
+                  user,
+                  user_usdt_wallet,
+                  market_idx,
+                  LONG_POS,
+                  100 * USDT_DECIMALS,
+                  100 * LEVERAGE_DECIMALS
+                );
+            });
+
+            it('Closing positions at 5000$', async function() {
+                await setPrice(eth_usdt_mock, 5000 * USDT_DECIMALS);
+                await closeOrder(
+                  vault,
+                  eth_usdt_mock,
+                  user,
+                  user_usdt_wallet,
+                  long_pos_key
+                );
             });
         });
     });

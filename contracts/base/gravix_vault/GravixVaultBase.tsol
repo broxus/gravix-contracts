@@ -64,6 +64,11 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit MaxPoolUtilRatioUpdate(meta.call_id, new_ratio);
     }
 
+    function setMaxPnlRate(uint64 new_max_rate, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
+        maxPnlRate = new_max_rate;
+        emit MaxPnlRateUpdate(meta.call_id, new_max_rate);
+    }
+
     function setTotalNOILimit(bool new_state, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         totalNOILimitEnabled = new_state;
         emit TotalNOILimit(meta.call_id, new_state);

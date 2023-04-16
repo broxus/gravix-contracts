@@ -539,6 +539,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             uint128 debt;
             if (pnl_with_fees < 0) _increaseInsuranceFund(uint128(math.abs(pnl_with_fees)));
             if (pnl_with_fees > 0) {
+                // first, apply max pnl rate limits
+                pnl_with_fees = math.min(pnl_with_fees, math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT));
                 // positive debt if we dont have enough money to pay pnl
                 debt = _decreaseInsuranceFund(uint128(pnl_with_fees));
             }

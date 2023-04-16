@@ -116,6 +116,15 @@
 			]
 		},
 		{
+			"name": "setMaxPnlRate",
+			"inputs": [
+				{"name":"new_max_rate","type":"uint64"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setTotalNOILimit",
 			"inputs": [
 				{"name":"new_state","type":"bool"},
@@ -882,6 +891,7 @@
 				{"name":"_totalNOI","type":"uint128"},
 				{"name":"_totalNOILimitEnabled","type":"bool"},
 				{"name":"_maxPoolUtilRatio","type":"uint64"},
+				{"name":"_maxPnlRate","type":"uint64"},
 				{"name":"_minPositionCollateral","type":"uint128"},
 				{"name":"_paused","type":"bool"},
 				{"name":"_liquidationThresholdRate","type":"uint64"},
@@ -1124,6 +1134,15 @@
 		},
 		{
 			"name": "MaxPoolUtilRatioUpdate",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"new_ratio","type":"uint64"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "MaxPnlRateUpdate",
 			"inputs": [
 				{"name":"call_id","type":"uint32"},
 				{"name":"new_ratio","type":"uint64"}
@@ -1600,6 +1619,7 @@
 		{"name":"totalNOI","type":"uint128"},
 		{"name":"totalNOILimitEnabled","type":"bool"},
 		{"name":"maxPoolUtilRatio","type":"uint64"},
+		{"name":"maxPnlRate","type":"uint64"},
 		{"name":"minPositionCollateral","type":"uint128"},
 		{"name":"paused","type":"bool"},
 		{"name":"liquidationThresholdRate","type":"uint64"},
