@@ -533,29 +533,25 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             emit LiquidatePosition(meta.call_id, user, user, position_key, position_view);
             _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
         } else {
-            int256 pnl_with_fees = position_view.pnl - position_view.borrowFee - position_view.fundingFee;
+            int256 pnl_limit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
+            int256 limited_pnl = math.min(position_view.pnl, pnl_limit);
+
+            int256 pnl_with_fees = limited_pnl - position_view.borrowFee - position_view.fundingFee;
             _collectCloseFee(position_view.closeFee);
 
             uint128 debt;
             if (pnl_with_fees < 0) _increaseInsuranceFund(uint128(math.abs(pnl_with_fees)));
             if (pnl_with_fees > 0) {
-                // first, apply max pnl rate limits
-                pnl_with_fees = math.min(pnl_with_fees, math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT));
                 // positive debt if we dont have enough money to pay pnl
                 debt = _decreaseInsuranceFund(uint128(pnl_with_fees));
             }
 
             emit ClosePosition(meta.call_id, user, position_key, position_view);
-
+            // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
+            uint128 user_net_usdt = uint128(collateral + pnl_with_fees - debt - position_view.closeFee);
+            _transfer(usdtWallet, user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
             if (debt > 0) {
-                // at least we can pay collateral, because it was reserved
-                uint128 user_net_usdt = collateral - position_view.closeFee;
-                _transfer(usdtWallet, user_net_usdt , user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
-                emit Debt(meta.call_id, user, uint128(pnl_with_fees));
-            } else {
-                // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
-                uint128 user_net_usdt = uint128(collateral + pnl_with_fees - position_view.closeFee);
-                _transfer(usdtWallet, user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+                emit Debt(meta.call_id, user, debt);
             }
         }
     }

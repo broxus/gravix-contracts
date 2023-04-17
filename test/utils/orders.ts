@@ -290,9 +290,9 @@ export async function closeOrder(
         .div(bn(pos_view1.position.initialCollateral).minus(pos_view1.position.openFee))
         .times(1000000);
 
-    const pnl_with_fees = expected_pnl.minus(borrow_fee).minus(pos_view2.fundingFee);
-    const limited_pnl = max_pnl.gt(pnl_with_fees) ? pnl_with_fees : max_pnl;
-    const user_payout = limited_pnl.minus(expected_close_fee).plus(col_up);
+    const limited_pnl = max_pnl.gt(expected_pnl) ? expected_pnl : max_pnl;
+    const pnl_with_fees = limited_pnl.minus(borrow_fee).minus(pos_view2.fundingFee);
+    const user_payout = pnl_with_fees.minus(expected_close_fee).plus(col_up);
 
     expect(traceTree1).to
       .call('transfer')
