@@ -147,10 +147,11 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint64 max_slippage_rate,
         IEthereumEvent.EthereumEventOracleData event_data,
         IPriceNode.Price price,
+        address referrer,
         uint32 nonce,
         uint32 call_id
     ) external pure returns (TvmCell payload) {
-        TvmCell cell = abi.encode(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price);
+        TvmCell cell = abi.encode(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price, referrer);
         return encodeTokenTransfer(Action.MarketOrder, nonce, call_id, cell);
     }
 
@@ -163,11 +164,12 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint128 expected_price,
         uint64 max_slippage_rate,
         IEthereumEvent.EthereumEventOracleData event_data,
-        IPriceNode.Price price
+        IPriceNode.Price price,
+        address referrer
     ) {
         (
-            market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price
-        ) = abi.decode(action_payload, (uint32, PositionType, uint32, uint128, uint64, IEthereumEvent.EthereumEventOracleData, IPriceNode.Price));
+            market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price, referrer
+        ) = abi.decode(action_payload, (uint32, PositionType, uint32, uint128, uint64, IEthereumEvent.EthereumEventOracleData, IPriceNode.Price, address));
     }
 
     function encodeAddCollateral(

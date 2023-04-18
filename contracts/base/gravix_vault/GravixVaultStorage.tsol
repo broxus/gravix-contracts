@@ -47,6 +47,13 @@ abstract contract GravixVaultStorage is IGravixVault {
     ];
     enum InsuranceFundOverflowDistributionSchema { Treasury, ProjectFund, DevFund }
 
+    uint64[3] referralFeeSchema = [
+        Constants.HUNDRED_PERCENT / 10, // 10% from open fee
+        Constants.HUNDRED_PERCENT / 10, // 10$ from close fee
+        Constants.HUNDRED_PERCENT / 100 // 1% from pnl
+    ];
+    enum ReferralFeeSchema { OpenFee, CloseFee, PnlFee }
+
     uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders
 
     // total net open interest across all markets according to weights
@@ -58,7 +65,6 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 minPositionCollateral = 5 * Constants.USDT_DECIMALS; // 5$
 
     bool paused;
-    uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
     uint64 liquidationThresholdRate = 100_000_000_000; // 10%
     uint64 liquidatorRewardShare = 20_000_000_000; // 2%. Share of liquidated collateral that liquidator collect
 
@@ -77,4 +83,6 @@ abstract contract GravixVaultStorage is IGravixVault {
 
     uint32 request_nonce = 0;
     mapping (uint32 => PendingMarketOrder) pending_market_requests;
+
+    uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
 }

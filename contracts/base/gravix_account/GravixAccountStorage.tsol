@@ -4,12 +4,14 @@ pragma ever-solidity ^0.62.0;
 import "../../interfaces/IGravixAccount.tsol";
 
 
-
 abstract contract GravixAccountStorage is IGravixAccount {
     uint32 currentVersion;
 
     address vault;
     address user;
+    address referrer; // this user referrer
+
+    uint128 referralBalance; // collected fees from all referrals
 
     TvmCell platform_code;
 

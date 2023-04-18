@@ -121,6 +121,13 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit InsuranceFundOverflowDistributionSchemaUpdate(meta.call_id, new_schema);
     }
 
+    function setReferralFeeSchema(
+        uint64[3] new_schema, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        referralFeeSchema = new_schema;
+        emit ReferralFeeSchemaUpdate(meta.call_id, new_schema);
+    }
+
     function setMinPositionCollateral(
         uint128 new_val, Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {

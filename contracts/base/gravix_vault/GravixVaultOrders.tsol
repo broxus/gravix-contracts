@@ -30,7 +30,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             uint128 expected_price,
             uint64 max_slippage_rate,
             IEthereumEvent.EthereumEventOracleData event_data,
-            IPriceNode.Price price
+            IPriceNode.Price price,
+            address referrer
         ) = decodeMarketOrder(order_params_payload);
 
         // collateral has USDT decimals -> 6
@@ -45,7 +46,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         ) return false;
         if (!marketOpen(market_idx)) return false;
         _marketOrder(
-            user, market_idx, position_type, collateral, leverage, expected_price, max_slippage_rate, event_data, price, meta
+            user, market_idx, position_type,
+            collateral, leverage, expected_price,
+            max_slippage_rate, event_data, price,
+            referrer, meta
         );
         return true;
     }
@@ -69,6 +73,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // @param leverage - order leverage, 2 decimals number
     // @param max_slippage_rate - max order price slippage, percent number, 10**12 - 100%
     // @param event_data - EVM chain event data, required for chainlink proxy price feeds
+    // @param price - price with signature, required for offchain price feeds
+    // @param referrer - referrer address
     // @param meta - meta info of txn
     function _marketOrder(
         address user,
@@ -80,6 +86,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint64 max_slippage_rate, // %
         IEthereumEvent.EthereumEventOracleData event_data,
         IPriceNode.Price price,
+        address referrer,
         Callback.CallMeta meta
     ) internal {
         Market _market = markets[market_idx];
@@ -100,6 +107,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             _market.fees.borrowBaseRatePerHour,
             event_data,
             price,
+            referrer,
             meta
         );
 
@@ -178,10 +186,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         uint32 market_idx,
         IEthereumEvent.EthereumEventOracleData event_data,
+        address referrer,
         Callback.CallMeta meta
     ) internal view {
         address proxy = _deployOracleProxy(market_idx, event_data, meta);
-        IOracleProxy(proxy).setCloseCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(user, position_key);
+        IOracleProxy(proxy).setCloseCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(user, position_key, referrer);
     }
 
     function _sendLiquidationOracleRequest(
@@ -211,6 +220,47 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }(
             usdt, priceNode, oracle, market_idx, price_source, oracle_conf, event_data, meta
         );
+    }
+
+    // --------------------------- REFERRAL LOGIC ---------------------------------------
+    function _sendReferrerFee(address referrer, address referral, uint128 fee, Callback.CallMeta meta) internal view {
+        address referrer_acc = getGravixAccountAddress(referrer);
+
+        emit ReferralPayment(
+            referrer,
+            referral,
+            fee
+        );
+        IGravixAccount(referrer_acc).process_sendReferrerFee{value: Gas.SEND_REF_FEE_VALUE, flag: MsgFlag.SENDER_PAYS_FEES}(
+            fee, meta
+        );
+    }
+
+    function _collectOpenFeeAndReferral(uint128 open_fee, address referrer, address referral, Callback.CallMeta meta) internal {
+        if (referrer != address(0)) {
+            uint128 referrer_fee = math.muldiv(open_fee, referralFeeSchema[uint8(ReferralFeeSchema.OpenFee)], Constants.HUNDRED_PERCENT);
+            open_fee -= referrer_fee;
+            _sendReferrerFee(referrer, referral, referrer_fee, meta);
+        }
+        _collectOpenFee(open_fee);
+    }
+
+    function _collectCloseFeeAndReferral(uint128 close_fee, address referrer, address referral, Callback.CallMeta meta) internal {
+        if (referrer != address(0)) {
+            uint128 referrer_fee = math.muldiv(close_fee, referralFeeSchema[uint8(ReferralFeeSchema.CloseFee)], Constants.HUNDRED_PERCENT);
+            close_fee -= referrer_fee;
+            _sendReferrerFee(referrer, referral, referrer_fee, meta);
+        }
+        _collectCloseFee(close_fee);
+    }
+
+    function _collectPnlAndReferral(uint128 pnl, address referrer, address referral, Callback.CallMeta meta) internal {
+        if (referrer != address(0)) {
+            uint128 referrer_fee = math.muldiv(pnl, referralFeeSchema[uint8(ReferralFeeSchema.PnlFee)], Constants.HUNDRED_PERCENT);
+            pnl -= referrer_fee;
+            _sendReferrerFee(referrer, referral, referrer_fee, meta);
+        }
+        _increaseInsuranceFund(pnl);
     }
 
     // ----------------------------------------------------------------------------------
@@ -315,9 +365,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         address user,
         uint32 position_key,
         IGravixAccount.Position new_pos,
+        address referrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        _collectOpenFee(new_pos.openFee);
+        _collectOpenFeeAndReferral(new_pos.openFee, referrer, user, meta);
         collateralReserve -= new_pos.openFee;
 
         uint128 position_size_asset_raw = calculatePositionAssetSize(new_pos.initialCollateral, new_pos.leverage, new_pos.markPrice);
@@ -406,13 +457,15 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
             // if market uses offchain oracle and we have valid price, we can close order right now
             if (price_source == OracleType.PriceNode && checkPrice(prices[i], oracle_conf.priceNode)) {
-                _closePosition(users[i], position_keys[i], market_idx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, meta);
+                _closePosition(
+                    users[i], position_keys[i], market_idx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, address(0), meta
+                );
                 continue;
             }
 
             address proxy = _deployOracleProxy(market_idx[i], event_datas[i], meta);
             IOracleProxy(proxy).setCloseCallback{value: Gas.MIN_MSG_VALUE - Gas.ORACLE_PROXY_DEPLOY - 0.01 ever}(
-                users[i], position_keys[i]
+                users[i], position_keys[i], address(0)
             );
         }
     }
@@ -432,7 +485,9 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            _closePosition(users[i], position_keys[i], market_idx[i], asset_prices[i], Gas.MIN_MSG_VALUE - 0.1 ever, meta);
+            _closePosition(
+                users[i], position_keys[i], market_idx[i], asset_prices[i], Gas.MIN_MSG_VALUE - 0.1 ever, address(0), meta
+            );
         }
     }
 
@@ -441,6 +496,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 market_idx,
         IEthereumEvent.EthereumEventOracleData event_data,
         IPriceNode.Price price,
+        address referrer,
         Callback.CallMeta meta
     ) external onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
@@ -458,11 +514,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         // if market uses offchain oracle and we have valid price, we can close order right now
         if (price_source == OracleType.PriceNode && checkPrice(price, oracle_conf.priceNode)) {
-            _closePosition(msg.sender, position_key, market_idx, price.price, 0, meta);
+            _closePosition(msg.sender, position_key, market_idx, price.price, 0, referrer, meta);
             return;
         }
 
-        _sendCloseOrderOracleRequest(msg.sender, position_key, market_idx, event_data, meta);
+        _sendCloseOrderOracleRequest(msg.sender, position_key, market_idx, event_data, referrer, meta);
     }
 
     // @param nonce - oracle static parameter, required for addr calculation
@@ -477,9 +533,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         uint32 market_idx,
         uint128 asset_price,
+        address referrer,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        _closePosition(user, position_key, market_idx, asset_price, 0, meta);
+        _closePosition(user, position_key, market_idx, asset_price, 0, referrer, meta);
     }
 
     function _closePosition(
@@ -488,6 +545,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 market_idx,
         uint128 asset_price,
         uint128 value,
+        address referrer,
         Callback.CallMeta meta
     ) internal {
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
@@ -498,6 +556,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             market_idx,
             asset_price,
             _funding,
+            referrer,
             meta
         );
     }
@@ -513,6 +572,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         uint128 asset_price,
         IGravixAccount.PositionView position_view,
+        address referrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
@@ -528,7 +588,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         );
 
         if (position_view.liquidate) {
-            _increaseInsuranceFund(collateral);
+            // increase insurance fund + send referrer payment
+            _collectPnlAndReferral(collateral, referrer, user, meta);
 
             emit LiquidatePosition(meta.call_id, user, user, position_key, position_view);
             _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
@@ -537,10 +598,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             int256 limited_pnl = math.min(position_view.pnl, pnl_limit);
 
             int256 pnl_with_fees = limited_pnl - position_view.borrowFee - position_view.fundingFee;
-            _collectCloseFee(position_view.closeFee);
+            _collectCloseFeeAndReferral(position_view.closeFee, referrer, user, meta);
 
             uint128 debt;
-            if (pnl_with_fees < 0) _increaseInsuranceFund(uint128(math.abs(pnl_with_fees)));
+            if (pnl_with_fees < 0) {
+                // increase insurance fund + send referrer payment
+                _collectPnlAndReferral(uint128(math.abs(pnl_with_fees)), referrer, user, meta);
+            }
             if (pnl_with_fees > 0) {
                 // positive debt if we dont have enough money to pay pnl
                 debt = _decreaseInsuranceFund(uint128(pnl_with_fees));
@@ -763,6 +827,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         uint128 asset_price,
         IGravixAccount.PositionView position_view,
+        address referrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
@@ -780,7 +845,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         uint128 liquidator_reward = math.muldiv(collateral, liquidatorRewardShare, Constants.HUNDRED_PERCENT);
 
-        _increaseInsuranceFund(collateral - liquidator_reward);
+        _collectPnlAndReferral(collateral - liquidator_reward, referrer, user, meta);
 
         emit LiquidatePosition(meta.call_id, user, liquidator, position_key, position_view);
 

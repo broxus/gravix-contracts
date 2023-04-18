@@ -77,6 +77,7 @@ interface IGravixAccount {
         uint32 market_idx,
         uint128 asset_price,
         IGravixVault.Funding funding,
+        address _referrer,
         Callback.CallMeta meta
     ) external;
     function process_liquidatePositions(
@@ -100,6 +101,9 @@ interface IGravixAccount {
         uint32 max_leverage,
         uint128 min_collateral,
         Callback.CallMeta meta
+    ) external;
+    function process_sendReferrerFee(
+        uint128 amount, Callback.CallMeta meta
     ) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
 }

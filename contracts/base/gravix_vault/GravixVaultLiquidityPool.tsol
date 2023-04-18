@@ -24,12 +24,12 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
 
         uint128 _treasury_amount = math.muldiv(
             overflow,
-            insuranceFundOverflowDistributionSchema[uint128(InsuranceFundOverflowDistributionSchema.Treasury)],
+            insuranceFundOverflowDistributionSchema[uint8(InsuranceFundOverflowDistributionSchema.Treasury)],
             Constants.HUNDRED_PERCENT
         );
         uint128 _project_fund_amount = math.muldiv(
             overflow,
-            insuranceFundOverflowDistributionSchema[uint128(InsuranceFundOverflowDistributionSchema.ProjectFund)],
+            insuranceFundOverflowDistributionSchema[uint8(InsuranceFundOverflowDistributionSchema.ProjectFund)],
             Constants.HUNDRED_PERCENT
         );
         uint128 _dev_fund_amount = overflow - _treasury_amount - _project_fund_amount;
@@ -138,7 +138,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function _collectFeeWithSchema(uint64[2] fee_schema, uint128 amount) internal {
-        uint128 pool_fee = math.muldiv(amount, fee_schema[uint256(FeeDistributionSchema.Pool)], Constants.HUNDRED_PERCENT);
+        uint128 pool_fee = math.muldiv(amount, fee_schema[uint8(FeeDistributionSchema.Pool)], Constants.HUNDRED_PERCENT);
         uint128 fund_fee = amount - pool_fee;
 
         if (fund_fee > 0) _increaseInsuranceFund(fund_fee);

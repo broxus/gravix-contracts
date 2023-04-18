@@ -14,6 +14,23 @@ import "locklift/src/console.tsol";
 
 
 abstract contract GravixAccountBase is GravixAccountHelpers {
+    function _setReferrerIfEmpty(address _new_referrer) internal {
+        if (
+            _new_referrer != address(0) && // cant delete referrer
+            _new_referrer != user && // cant refer to himself
+            referrer == address(0) // cant change referrer
+        ) {
+            referrer = _new_referrer;
+        }
+    }
+
+    function process_sendReferrerFee(
+        uint128 amount, Callback.CallMeta meta
+    ) external override onlyGravixVault reserve {
+        referralBalance += amount;
+        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+    }
+
     function process_requestMarketOrder(
         uint32, IGravixVault.PendingMarketOrder pending_request
     ) external override onlyGravixVault reserve {
@@ -32,6 +49,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             pending_request.borrowBaseRatePerHour
         );
 
+        _setReferrerIfEmpty(pending_request.referrer);
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             pending_request, request_counter
         );
@@ -94,7 +112,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         positions[position_key] = opened_position;
 
         IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, opened_position,  meta
+            user, position_key, opened_position, referrer, meta
         );
     }
 
@@ -140,7 +158,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (position_view.liquidate) {
             delete positions[position_key];
             IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, liquidator, position_key, asset_price, position_view, meta
+                user, liquidator, position_key, asset_price, position_view, referrer, meta
             );
         } else {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -154,6 +172,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint32 market_idx,
         uint128 asset_price,
         IGravixVault.Funding funding,
+        address _referrer,
         Callback.CallMeta meta
     ) external override onlyGravixVault reserve {
         Position _position = positions[position_key];
@@ -168,8 +187,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         PositionView position_view = getPositionView(ViewInput(position_key, asset_price, funding));
         delete positions[position_key];
 
+        _setReferrerIfEmpty(_referrer);
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, asset_price, position_view, meta
+            user, position_key, asset_price, position_view, referrer, meta
         );
     }
 

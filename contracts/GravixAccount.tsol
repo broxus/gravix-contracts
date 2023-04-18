@@ -69,19 +69,6 @@ contract GravixAccount is GravixAccountBase {
         onCodeUpgrade(main_builder.toCell());
     }
 
-    function _migrate_leverage() internal {
-        uint32 old_lev_base = 100;
-        for ((uint32 key, Position pos) : positions) {
-            pos.leverage = pos.leverage * (Constants.LEVERAGE_BASE / old_lev_base);
-            positions[key] = pos;
-        }
-
-        for ((uint32 key, MarketOrder order) : marketOrders) {
-            order.leverage = order.leverage * (Constants.LEVERAGE_BASE / old_lev_base);
-            marketOrders[key] = order;
-        }
-    }
-
     function onCodeUpgrade(TvmCell upgrade_data) private {
         tvm.rawReserve(_reserve(), 0);
 
@@ -111,11 +98,20 @@ contract GravixAccount is GravixAccountBase {
                 user, Callback.CallMeta(0, 0, send_gas_to)
             );
         } else {
+            // storage was modified
+            tvm.resetStorage();
             // upgrade without modifying storage
             currentVersion = _currentVersion;
-            _migrate_leverage();
+            vault = _vault;
+            platform_code = _platform_code;
+            user = _user;
+
+            TvmCell data = s.loadRef();
+            (uint32 call_id, uint32 nonce, TvmCell storageData) = abi.decode(data, (uint32, uint32, TvmCell));
+            (marketOrders, positions, request_counter) = abi.decode(storageData, (mapping(uint32 => MarketOrder), mapping(uint32 => Position), uint32));
+
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _oldVersion, _currentVersion, Callback.CallMeta(0, 0, send_gas_to)
+                user, _oldVersion, _currentVersion, Callback.CallMeta(call_id, nonce, send_gas_to)
             );
         }
     }
