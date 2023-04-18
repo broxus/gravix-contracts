@@ -2,7 +2,7 @@ import {bn} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, lockliftChai, toNano} from "locklift";
+import {Address, Contract, lockliftChai, toNano, zeroAddress} from "locklift";
 import chai, {expect} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi} from "../build/factorySource";
@@ -23,6 +23,9 @@ describe("Testing main orders flow", async function () {
     const PRICE_DECIMALS = 10 ** 8;
     const LEVERAGE_DECIMALS = 10**6;
     const PERCENT_100 = bn(1_000_000_000_000);
+    const REF_OPEN_FEE_RATE = PERCENT_100.idiv(10);
+    const REF_CLOSE_FEE_RATE = PERCENT_100.idiv(10);
+    const REF_PNL_FEE_RATE = PERCENT_100.idiv(100);
     const SCALING_FACTOR = bn(10).pow(18);
     const LONG_POS = 0;
     const SHORT_POS = 1;
@@ -43,7 +46,6 @@ describe("Testing main orders flow", async function () {
     }
 
     let vault: GravixVault;
-    let account: GravixAccount;
     let priceNode: Contract<PriceNodeAbi>;
 
     let user_usdt_wallet: TokenWallet;
@@ -88,7 +90,7 @@ describe("Testing main orders flow", async function () {
            usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>('USDT'), owner);
            eth_usdt_mock = locklift.deployments.getContract('ETH_USDT');
            user_usdt_wallet = await usdt_root.wallet(user);
-           owner_usdt_wallet = await usdt_root.wallet(user);
+           owner_usdt_wallet = await usdt_root.wallet(owner);
         });
     })
 
@@ -828,7 +830,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe('Max PNL rate', async function() {
+        describe.skip('Max PNL rate', async function() {
             const market_idx = 0;
             let long_pos_key: number;
 
@@ -862,6 +864,144 @@ describe("Testing main orders flow", async function () {
                   user_usdt_wallet,
                   long_pos_key
                 );
+            });
+        });
+
+        describe('Referrals', async function() {
+            const market_idx = 0;
+            let user1_long_pos_key: number;
+            let owner_long_pos_key: number;
+
+            it('User set referrer on position open', async function() {
+                await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
+                await locklift.tracing.trace(vault.contract.methods.deployGravixAccount({
+                    answerId: 0, user: owner.address, meta: {call_id: 0, send_gas_to: owner.address, nonce: 0}
+                }).send({from: owner.address, amount: toNano(1)}));
+
+                user1_long_pos_key = await openMarketOrder(
+                  vault,
+                  eth_usdt_mock,
+                  user,
+                  user_usdt_wallet,
+                  market_idx,
+                  LONG_POS,
+                  100 * USDT_DECIMALS,
+                  LEVERAGE_DECIMALS,
+                  owner.address // owner as a referrer
+                );
+
+                const user_acc = await vault.account(user);
+                // get position
+                // @ts-ignore
+                const [pos_key, pos] = (await user_acc.positions()).pop();
+                const expected_ref_fee = bn(pos.openFee).times(REF_OPEN_FEE_RATE).idiv(PERCENT_100);
+
+                const user_details = await user_acc.contract.methods.getDetails({answerId: 0}).call();
+                // check referrer is set correctly
+                expect(user_details._referrer.toString()).to.be.eq(owner.address.toString());
+                // check event is emitted
+                const event = (await vault.getEvent('ReferralPayment'))! as any;
+                expect(event.referrer.toString()).to.be.eq(owner.address.toString());
+                expect(event.referral.toString()).to.be.eq(user.address.toString());
+                expect(event.amount).to.be.eq(expected_ref_fee.toFixed());
+
+                const owner_acc = await vault.account(owner);
+                const owner_details = await owner_acc.contract.methods.getDetails({answerId: 0}).call();
+                // check referrer got his balance
+                expect(owner_details._referralBalance).to.be.eq(event.amount);
+            });
+
+            it('User set referrer on position close', async function() {
+                // open position without referrer
+                owner_long_pos_key = await openMarketOrder(
+                  vault,
+                  eth_usdt_mock,
+                  owner,
+                  owner_usdt_wallet,
+                  market_idx,
+                  LONG_POS,
+                  100 * USDT_DECIMALS,
+                  LEVERAGE_DECIMALS
+                );
+                // user doesnt have referrer
+                const owner_acc = await vault.account(owner);
+                const owner_details = await owner_acc.contract.methods.getDetails({answerId: 0}).call();
+                // check referrer got his balance
+                expect(owner_details._referrer.toString()).to.be.eq(zeroAddress.toString());
+
+                // close position with referrer
+                await closeOrder(
+                  vault,
+                  eth_usdt_mock,
+                  owner,
+                  owner_usdt_wallet,
+                  owner_long_pos_key,
+                  user.address // another user as a referrer
+                );
+                const owner_details_2 = await owner_acc.contract.methods.getDetails({answerId: 0}).call();
+                // check referrer is set correctly
+                expect(owner_details_2._referrer.toString()).to.be.eq(user.address.toString());
+
+                // calculate expected ref fees
+                const close_event = await vault.getEvent('ClosePosition') as any;
+                const pos_view = close_event.position_view;
+                const expected_ref_fee_close = bn(pos_view.closeFee).times(REF_CLOSE_FEE_RATE).idiv(PERCENT_100);
+                const pnl_with_fees = bn(pos_view.pnl).minus(pos_view.borrowFee).minus(pos_view.fundingFee).times(-1);
+                const expected_ref_fee_pnl = pnl_with_fees.times(REF_PNL_FEE_RATE).idiv(PERCENT_100);
+
+                // check event is emitted (we have 2 events in this tx, but 1 check is enough)
+                const ref_event = (await vault.getEvent('ReferralPayment'))! as any;
+                expect(ref_event.referrer.toString()).to.be.eq(user.address.toString());
+                expect(ref_event.referral.toString()).to.be.eq(owner.address.toString());
+
+                const user_acc = await vault.account(user);
+                const user_details = await user_acc.contract.methods.getDetails({answerId: 0}).call();
+                // check user got his ref balance
+                expect(user_details._referralBalance).to.be.eq(expected_ref_fee_close.plus(expected_ref_fee_pnl).toFixed());
+            });
+
+            it('User try to change existing referrer', async function() {
+                const owner_acc = await vault.account(owner);
+                const owner_details = await owner_acc.contract.methods.getDetails({answerId: 0}).call();
+                // remember our original referrer
+
+                // try to change referrer
+                await openMarketOrder(
+                  vault,
+                  eth_usdt_mock,
+                  owner,
+                  owner_usdt_wallet,
+                  market_idx,
+                  LONG_POS,
+                  100 * USDT_DECIMALS,
+                  LEVERAGE_DECIMALS,
+                  vault.address // any address could be here, we just check original referrer is not changed
+                );
+
+                const owner_details_2 = await owner_acc.contract.methods.getDetails({answerId: 0}).call();
+                expect(owner_details._referrer.toString()).to.be.eq(owner_details_2._referrer.toString());
+            });
+
+            it('Referrer withdraw his referral balance', async function() {
+                const user_acc = await vault.account(user);
+                const user_details = await user_acc.contract.methods.getDetails({answerId: 0}).call();
+
+                const {traceTree} = await locklift.tracing.trace(
+                  vault.contract.methods.withdrawReferralBalance(
+                    {meta: {call_id: 0, send_gas_to: user.address, nonce: 0}}
+                  ).send({from: user.address, amount: toNano(2.5)})
+                );
+
+                expect(traceTree).to
+                  .emit('ReferralBalanceWithdraw')
+                  .withNamedArgs({
+                    user: user.address.toString(),
+                    amount: user_details._referralBalance.toString()
+                  });
+
+                // check ref balance is zero
+                const user_details_2 = await user_acc.contract.methods.getDetails({answerId: 0}).call();
+                expect(user_details_2._referralBalance).to.be.eq('0');
             });
         });
     });

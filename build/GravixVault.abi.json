@@ -261,6 +261,24 @@
 			]
 		},
 		{
+			"name": "withdrawReferralBalance",
+			"inputs": [
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "finish_withdrawReferralBalance",
+			"inputs": [
+				{"name":"user","type":"address"},
+				{"name":"ref_bal","type":"uint128"},
+				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "oracle_executeMarketOrder",
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
@@ -1224,8 +1242,19 @@
 		{
 			"name": "ReferralPayment",
 			"inputs": [
+				{"name":"call_id","type":"uint32"},
 				{"name":"referrer","type":"address"},
 				{"name":"referral","type":"address"},
+				{"name":"amount","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "ReferralBalanceWithdraw",
+			"inputs": [
+				{"name":"call_id","type":"uint32"},
+				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"}
 			],
 			"outputs": [

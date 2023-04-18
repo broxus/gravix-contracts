@@ -223,10 +223,31 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     // --------------------------- REFERRAL LOGIC ---------------------------------------
+    function withdrawReferralBalance(Callback.CallMeta meta) external view onlyActive reserve {
+        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+
+        address acc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(acc).process_withdrawReferralBalance{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(meta);
+    }
+
+    function finish_withdrawReferralBalance(
+        address user, uint128 ref_bal, Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserve {
+        if (ref_bal > 0) {
+            emit ReferralBalanceWithdraw(meta.call_id, user, ref_bal);
+            _transfer(
+                usdtWallet, ref_bal, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
+        }
+    }
+
     function _sendReferrerFee(address referrer, address referral, uint128 fee, Callback.CallMeta meta) internal view {
         address referrer_acc = getGravixAccountAddress(referrer);
 
         emit ReferralPayment(
+            meta.call_id,
             referrer,
             referral,
             fee

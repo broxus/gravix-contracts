@@ -24,6 +24,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
     }
 
+    function process_withdrawReferralBalance(Callback.CallMeta meta) external override onlyGravixVault reserve {
+        IGravixVault(vault).finish_withdrawReferralBalance{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user, referralBalance, meta
+        );
+        referralBalance = 0;
+    }
+
+
     function process_sendReferrerFee(
         uint128 amount, Callback.CallMeta meta
     ) external override onlyGravixVault reserve {

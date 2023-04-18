@@ -178,8 +178,14 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 position_key
     );
     event ReferralPayment(
+        uint32 call_id,
         address referrer,
         address referral,
+        uint128 amount
+    );
+    event ReferralBalanceWithdraw(
+        uint32 call_id,
+        address user,
         uint128 amount
     );
     event OraclePriceRequested(
@@ -315,4 +321,5 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 position_key,
         Callback.CallMeta meta
     ) external;
+    function finish_withdrawReferralBalance(address user, uint128 ref_bal, Callback.CallMeta meta) external view;
 }

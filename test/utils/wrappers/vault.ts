@@ -141,6 +141,7 @@ export class GravixVault {
         leverage: number,
         expected_price: number | string,
         max_slippage: number,
+        referrer: Address,
         call_id=0
     ) {
         const payload = (await this.contract.methods.encodeMarketOrder({
@@ -152,6 +153,7 @@ export class GravixVault {
             event_data: empty_event,
             price: empty_price,
             call_id: call_id,
+            referrer: referrer,
             nonce: 0
         }).call()).payload;
         return await from_wallet.transfer(amount, this.contract.address, payload, toNano(2.1));
@@ -194,6 +196,7 @@ export class GravixVault {
         user: Account,
         position_key: number,
         market_idx: number | string,
+        referrer: Address,
         call_id=0
     ) {
         return await this.contract.methods.closePosition(
@@ -202,6 +205,7 @@ export class GravixVault {
                 market_idx: market_idx,
                 event_data: empty_event,
                 price: empty_price,
+                referrer: referrer,
                 meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
         ).send({from: user.address, amount: toNano(2.1)});
     }

@@ -1,4 +1,4 @@
-import {Contract} from "locklift";
+import {Address, Contract, getRandomNonce, zeroAddress} from "locklift";
 import {Account} from 'locklift/everscale-client'
 import {GravixVault} from "./wrappers/vault";
 import BigNumber from "bignumber.js";
@@ -38,7 +38,8 @@ export async function openMarketOrder(
     market_idx: number,
     pos_type: 0 | 1,
     collateral: number,
-    leverage: number
+    leverage: number,
+    referrer=zeroAddress
 ) {
     const initial_price = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({market_idx: market_idx, answerId: 0}).call())._market;
@@ -74,21 +75,22 @@ export async function openMarketOrder(
     }).call()).value0;
     expect(res.toString()).to.be.eq('0');
 
+    const call_id = getRandomNonce();
     const details_prev = await vault.details();
     const {traceTree} = await locklift.tracing.trace(vault.openPosition(
-        user_wallet, collateral, market_idx, pos_type, leverage, expected_price.toString(), 0, 1
+        user_wallet, collateral, market_idx, pos_type, leverage, expected_price.toString(), 0, referrer, call_id
     ), {allowedCodes: {compute: [null]}});
     // await traceTree?.beautyPrint();
     const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
 
-    const open_fee_expected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
+    let open_fee_expected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
 
     expect(traceTree).to
         .emit("MarketOrder")
         .withNamedArgs({
-            call_id: '1',
+            call_id: call_id.toFixed(),
             user: user.address,
             collateral: collateral.toString(),
             expected_price: expected_price.toFixed(),
@@ -100,7 +102,7 @@ export async function openMarketOrder(
         .and
         .emit("MarketOrderExecution")
         .withNamedArgs({
-            call_id: '1',
+            call_id: call_id.toFixed(),
             user: user.address,
             position: {
                 positionType: pos_type.toString(),
@@ -110,12 +112,18 @@ export async function openMarketOrder(
         });
 
     const event = await vault.getEvent('MarketOrderExecution');
-
     const details = await vault.details();
     const col_up = bn(collateral).minus(open_fee_expected);
 
+    let pool_increase = open_fee_expected;
+    // if referral payment was made - notice it
+    const ref_payment = await vault.getEvent('ReferralPayment') as any;
+    if (ref_payment !== null && ref_payment.call_id === call_id.toFixed()) {
+        pool_increase = pool_increase.minus(open_fee_expected.idiv(10))
+    }
+
     expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(col_up).toFixed());
-    expect(details._poolBalance).to.be.eq(bn(details_prev._poolBalance).plus(open_fee_expected).toFixed());
+    expect(details._poolBalance).to.be.eq(bn(details_prev._poolBalance).plus(pool_increase).toFixed());
 
     const pos_view = (await account.contract.methods.getPositionView({
         answerId: 0,
@@ -179,7 +187,8 @@ export async function closeOrder(
     pair: Contract<PairMockAbi>,
     user: Account,
     user_wallet: TokenWallet,
-    pos_key: number
+    pos_key: number,
+    referrer= zeroAddress
 ) {
     const finish_price = Number(await getPrice(pair));
     const account = await vault.account(user);
@@ -204,8 +213,7 @@ export async function closeOrder(
     }).call())._market;
 
     // const details_prev = await vault.details();
-    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, 1));
-    // await traceTree1?.beautyPrint();
+    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, referrer, 1));
 
     const event = await vault.getEvent('ClosePosition');
     // @ts-ignore
@@ -327,7 +335,8 @@ export async function testMarketPosition(
     leverage: number,
     initial_price: number,
     finish_price: number,
-    ttl= 0
+    ttl= 0,
+    referrer=zeroAddress
 ) {
     await setPrice(pair, initial_price);
     // OPEN POSITION
@@ -339,7 +348,8 @@ export async function testMarketPosition(
         market_idx,
         pos_type,
         collateral,
-        leverage
+        leverage,
+        referrer
     );
 
     if (ttl > 0) {
@@ -353,7 +363,8 @@ export async function testMarketPosition(
         pair,
         user,
         user_wallet,
-        pos_key
+        pos_key,
+        referrer
     );
 }
 
@@ -368,7 +379,8 @@ export async function testPositionFunding(
   collateral: number,
   leverage: number,
   initial_price: number,
-  ttl= 0
+  ttl= 0,
+  referrer=zeroAddress
 ) {
     const market = (await vault.contract.methods.getMarket({
         market_idx: market_idx,
@@ -377,7 +389,7 @@ export async function testPositionFunding(
     await setPrice(pair, initial_price);
     // market has 15k$ depth, open pos on 10k$
     const pos_key = await openMarketOrder(
-      vault, pair, user, user_wallet, market_idx, pos_type, collateral, leverage
+      vault, pair, user, user_wallet, market_idx, pos_type, collateral, leverage, referrer
     );
 
     const market_0 = (await vault.contract.methods.getMarket({market_idx: 2, answerId: 0}).call())._market;
@@ -386,7 +398,7 @@ export async function testPositionFunding(
     await tryIncreaseTime(ttl);
     const rates = await vault.contract.methods.getFundingRates({market_idx: 2}).call();
     const pos_view = await closeOrder(
-      vault, pair, user, user_wallet, pos_key
+      vault, pair, user, user_wallet, pos_key, referrer
     );
     // calculate based on time + noi and check if correct
     const market_1 = (await vault.contract.methods.getMarket({market_idx: 2, answerId: 0}).call())._market;

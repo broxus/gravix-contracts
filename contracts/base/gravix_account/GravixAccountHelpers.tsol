@@ -12,8 +12,10 @@ import "../../libraries/Constants.tsol";
 
 
 abstract contract GravixAccountHelpers is GravixAccountStorage {
-    function getDetails() external view responsible returns (uint32 _currentVersion, address _vault, address _user) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user);
+    function getDetails() external view responsible returns (
+        uint32 _currentVersion, address _vault, address _user, address _referrer, uint128 _referralBalance
+    ) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, referralBalance);
     }
 
     // @param price - 8 decimals number
@@ -45,6 +47,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
 
     function getPositionView(ViewInput input) public view responsible returns (PositionView position_view) {
         Position position = positions[input.positionKey];
+        require (position.createdAt != 0, Errors.POSITION_NOT_FOUND);
+
         bool is_long = position.positionType == IGravixVault.PositionType.Long;
 
         uint128 collateral = position.initialCollateral - position.openFee;
