@@ -135,7 +135,7 @@ describe("Testing main orders flow", async function () {
             expect(user_stg_bal.toString()).to.be.eq(deposit_amount.toString());
         });
 
-        describe.skip('Basic scenarios: open fee, pnl, close fee, spreads, liq price checked', async function () {
+        describe('Basic scenarios: open fee, pnl, close fee, spreads, liq price checked', async function () {
             const market_idx = 0;
 
             describe('Test solo long positions', async function () {
@@ -406,7 +406,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe.skip('Advanced scenarios: funding and borrow fee checked', async function() {
+        describe('Advanced scenarios: funding and borrow fee checked', async function() {
             let market_idx: number;
             let base_funding = 1000000000; // 0.1%
 
@@ -581,7 +581,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe.skip('Liquidations', async function() {
+        describe('Liquidations', async function() {
             let market_idx: number;
 
             it('Add market without borrow/funding fee', async function() {
@@ -738,7 +738,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe.skip('Edit collateral', async function() {
+        describe('Edit collateral', async function() {
             let pos_key: number;
 
             describe('Add collateral', async function() {
@@ -830,7 +830,7 @@ describe("Testing main orders flow", async function () {
             });
         });
 
-        describe.skip('Max PNL rate', async function() {
+        describe('Max PNL rate', async function() {
             const market_idx = 0;
             let long_pos_key: number;
 
