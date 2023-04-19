@@ -69,7 +69,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     }
 
     function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        emit GravixAccountDeploy(user);
+        emit GravixAccountDeploy(meta.call_id, user);
     }
 
     function deployGravixAccount(
