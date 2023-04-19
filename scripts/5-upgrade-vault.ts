@@ -1,5 +1,6 @@
 import {toNano} from "locklift";
 import {isValidEverAddress} from "../test/utils/common";
+import {GravixVaultAbi} from "../build/factorySource";
 
 const prompts = require('prompts');
 const ora = require('ora');
@@ -10,18 +11,24 @@ const main = async () => {
   console.log('\x1b[1m', '\n\nUpgrade vault:')
   const response = await prompts([
     {
-      type: 'text',
+      type: 'select',
       name: 'vault',
-      message: 'Vault address',
+      message: 'Select vault to upgrade',
+      choices: [
+        {title: 'prod', value: 'prod_Vault'},
+        {title: 'beta', value: 'beta_Vault'}
+      ],
       validate: (value: string) => isValidEverAddress(value) ? true : 'Invalid Everscale address'
     }
   ]);
   const manager = await locklift.deployments.getAccount('Manager').account;
   console.log('\x1b[1m', `\nGet manager from deployments: ${manager.address}`);
 
-  const spinner = ora('Upgrading vault...').start();
-  const vault = await locklift.factory.getDeployedContract('GravixVault', response.vault);
+  const vault = await locklift.deployments.getContract<GravixVaultAbi>(response.vault);
+  console.log(`Get vault from deployments: ${vault.address}`);
   const vault_artifacts = await locklift.factory.getContractArtifacts('GravixVault');
+
+  const spinner = ora('Upgrading vault...').start();
 
   await locklift.tracing.trace(vault.methods.upgrade({
     code: vault_artifacts.code, meta: {send_gas_to: manager.address, call_id: 0, nonce: 0}

@@ -74,7 +74,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
 
     function deployGravixAccount(
         address user, Callback.CallMeta meta
-    ) external view responsible reserveAndSuccessCallback(meta) returns (address account) {
+    ) external view responsible reserveAndSendGas(meta) returns (address account) {
         require (msg.value > Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE, Errors.LOW_MSG_VALUE);
         account = _deployGravixAccount(user);
     }

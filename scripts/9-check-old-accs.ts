@@ -23,7 +23,7 @@ const main = async () => {
 
   const spinner = ora('Fetching old accounts...').start();
   let all_old_accs: Address[] = [];
-  let continuation: string | undefined = '123';
+  let continuation: string | undefined = '123'; // just not undefined
   while (continuation) {
     const accs = await locklift.provider.getAccountsByCodeHash({
       codeHash: cur_code_hash

@@ -52,6 +52,7 @@ const config: LockliftConfig = {
   },
   networks: {
     local: {
+      deploy: ['local/'],
       // Specify connection settings for https://github.com/broxus/everscale-client/
       connection: {
         group: "localnet",
@@ -107,6 +108,7 @@ const config: LockliftConfig = {
       },
     },
     main: {
+      deploy: ['common/', 'main/'],
       connection: "mainnetJrpc",
       giver: {
         address: "0:3bcef54ea5fe3e68ac31b17799cdea8b7cffd4da75b0b1a70b93a18b5c87f723",
