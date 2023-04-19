@@ -29,18 +29,31 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function upgradeGravixAccount(Callback.CallMeta meta) external view reserve {
         require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE, Errors.LOW_MSG_VALUE);
 
-        _upgradeGravixAccount(msg.sender, 0, meta);
+        _upgradeGravixAccountByUser(msg.sender, 0, meta);
     }
 
-    function forceUpgradeGravixAccounts(address[] users, Callback.CallMeta meta) external view onlyManager reserve {
+    function forceUpgradeGravixAccountsByUsers(address[] users, Callback.CallMeta meta) external view onlyManager reserve {
         require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE * (users.length + 1), Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            _upgradeGravixAccount(users[i], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
+            _upgradeGravixAccountByUser(users[i], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
         }
     }
 
-    function _upgradeGravixAccount(address user, uint128 value, Callback.CallMeta meta) internal view {
+    function forceUpgradeGravixAccountsByContracts(address[] contracts, Callback.CallMeta meta) external view onlyManager reserve {
+        require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE * (contracts.length + 1), Errors.LOW_MSG_VALUE);
+
+        for (uint i = 0; i < contracts.length; i++) {
+            _upgradeGravixAccountByContract(contracts[i], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
+        }
+    }
+
+    function _upgradeGravixAccountByContract(address gravix_acc, uint128 value, Callback.CallMeta meta) internal view {
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
+        IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(gravixAccountCode, gravixAccountVersion, meta);
+    }
+
+    function _upgradeGravixAccountByUser(address user, uint128 value, Callback.CallMeta meta) internal view {
         address gravix_acc = getGravixAccountAddress(user);
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
         IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(gravixAccountCode, gravixAccountVersion, meta);

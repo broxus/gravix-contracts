@@ -14854,11 +14854,11 @@ GETGLOB 9
 PUSHINT 0
 ROT
 CALLREF {
-	CALL $_upgradeGravixAccount_984e210b_internal_macro$
+	CALL $_upgradeGravixAccountByUser_bc101454_internal_macro$
 }
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
 
-.macro forceUpgradeGravixAccounts
+.macro forceUpgradeGravixAccountsByUsers
 DROP
 GETGLOB 6
 THROWIFNOT 76
@@ -14898,14 +14898,14 @@ SWAP
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
 CALLREF {
-	CALL $forceUpgradeGravixAccounts_b90e9041_internal_macro$
+	CALL $forceUpgradeGravixAccountsByUsers_5115735e_internal_macro$
 }
 IFREF {
 	CALL $upd_only_time_in_c4$
 }
 THROW 0
 
-.macro forceUpgradeGravixAccounts_b90e9041_internal_macro
+.macro forceUpgradeGravixAccountsByUsers_5115735e_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 350
 GETGLOB 9
 GETGLOB 11
@@ -14949,7 +14949,7 @@ PUSHCONT {
 	PUSHINT 1000000000
 	PUSH S3
 	CALLREF {
-		CALL $_upgradeGravixAccount_984e210b_internal_macro$
+		CALL $_upgradeGravixAccountByUser_bc101454_internal_macro$
 	}
 	.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 38
 	INC
@@ -14959,22 +14959,163 @@ WHILE
 BLKDROP 3
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
 
-.globl	_upgradeGravixAccount_984e210b_internal
-.type	_upgradeGravixAccount_984e210b_internal, @function
-CALL $_upgradeGravixAccount_984e210b_internal_macro$
+.macro forceUpgradeGravixAccountsByContracts
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 43
+OVER
+PUSHCONT {
+	LDU 32
+	LDDICT
+	ROTREV
+	PAIR
+	SWAP
+	LDU 32
+	LDU 32
+	LDREF
+	ENDS
+	CTOS
+}
+PUSHCONT {
+	LDU 32
+	LDDICT
+	ROTREV
+	PAIR
+	SWAP
+	LDU 32
+	LDU 32
+}
+IFELSE
+LDMSGADDR
+ROLLREV 3
+TRIPLE
+SWAP
+ENDS
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
+CALLREF {
+	CALL $forceUpgradeGravixAccountsByContracts_269d0a0f_internal_macro$
+}
+IFREF {
+	CALL $upd_only_time_in_c4$
+}
+THROW 0
 
-.macro _upgradeGravixAccount_984e210b_internal_macro
+.macro forceUpgradeGravixAccountsByContracts_269d0a0f_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 350
+GETGLOB 9
+GETGLOB 11
+SDEQ
+GETGLOB 9
+GETGLOB 12
+SDEQ
+OR
+THROWIFNOT 1000
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 322
+CALLREF {
+	CALL $_reserve_413ab4a8_internal_macro$
+}
+PUSHINT 0
+RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 44
+DEPTH
+ADDCONST -2
+PICK
+PUSHINT 1000000000
+PUSH S3
+FIRST
+INC
+MUL
+GEQ
+THROWIFNOT 1004
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 46
+PUSHINT 0
+PUSHCONT {
+	PUSH2 S0, S2
+	FIRST
+	LESS
+}
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 47
+	PUSH2 S0, S2
+	SECOND
+	PUSHINT 32
+	DICTUGET
+	THROWIFNOT 50
+	PUSHINT 1000000000
+	PUSH S3
+	CALLREF {
+		CALL $_upgradeGravixAccountByContract_853b9324_internal_macro$
+	}
+	.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 46
+	INC
+	.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
+}
+WHILE
+BLKDROP 3
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
+
+.globl	_upgradeGravixAccountByContract_853b9324_internal
+.type	_upgradeGravixAccountByContract_853b9324_internal, @function
+CALL $_upgradeGravixAccountByContract_853b9324_internal_macro$
+
+.macro _upgradeGravixAccountByContract_853b9324_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 52
+OVER
+PUSHINT 0
+PUSHPOW2 7
+CONDSEL
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 53
+SWAP
+GETGLOB 27
+GETGLOB 26
+BLKSWAP 2, 4
+SWAP
+NEWC
+STSLICECONST x62_
+STSLICE
+SWAP
+STGRAMS
+PUSHINT 1
+STUR 107
+ROLLREV 3
+NEWC
+STSLICECONST x3dd789be
+STREF
+STU 32
+SWAP
+UNTRIPLE
+REVERSE 4, 0
+STU 32
+STU 32
+STSLICE
+STBREFR
+ENDC
+SWAP
+SENDRAWMSG
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
+
+.globl	_upgradeGravixAccountByUser_bc101454_internal
+.type	_upgradeGravixAccountByUser_bc101454_internal, @function
+CALL $_upgradeGravixAccountByUser_bc101454_internal_macro$
+
+.macro _upgradeGravixAccountByUser_bc101454_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 57
 ROT
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 45
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 58
 PUSH S2
 PUSHINT 0
 PUSHPOW2 7
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 46
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 59
 ROT
 GETGLOB 27
 GETGLOB 26
@@ -15012,7 +15153,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 49
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 62
 OVER
 PUSHCONT {
 	LDREF
@@ -15043,7 +15184,7 @@ IFREF {
 THROW 0
 
 .macro onGravixAccountUpgrade_eaff3a78_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 49
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 62
 PUSH S3
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 306
 CALLREF {
@@ -15064,7 +15205,7 @@ RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 328
 SWAP
 REVERSE 4, 1
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 55
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 68
 FIRST
 PUSHSLICE xc00000000000000000000000001c78f57e
 NEWC
@@ -15097,7 +15238,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 58
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 71
 OVER
 PUSHCONT {
 	LDREF
@@ -15126,7 +15267,7 @@ IFREF {
 THROW 0
 
 .macro onGravixAccountDeploy_24807c3a_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 58
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 71
 OVER
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 306
 CALLREF {
@@ -15146,7 +15287,7 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 328
 ROTREV
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 59
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 72
 DROP
 PUSHSLICE xc00000000000000000000000000fa1f348
 NEWC
@@ -15176,7 +15317,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 62
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 75
 LDU 32
 GETGLOB 4
 ROT
@@ -15263,7 +15404,7 @@ IFREF {
 THROW 0
 
 .macro deployGravixAccount_831abc2e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 62
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 75
 DUP
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 327
 CALLREF {
@@ -15273,7 +15414,7 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 328
 ROTREV
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 65
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 78
 DROP
 DEPTH
 ADDCONST -2
@@ -15281,7 +15422,7 @@ PICK
 PUSHINT 650000000
 GREATER
 THROWIFNOT 1004
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 66
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 79
 CALLREF {
 	CALL $_deployGravixAccount_9a99eb4c_internal_macro$
 }
@@ -15304,14 +15445,14 @@ CALLREF {
 CALL $_deployGravixAccount_9a99eb4c_internal_macro$
 
 .macro _deployGravixAccount_9a99eb4c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 72
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 85
 GETGLOB 27
 NEWC
 STU 32
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 73
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 86
 GETGLOB 27
 STUR 32
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 75
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 88
 PUXC S1, S-1
 ENDC
 GETGLOB 26
@@ -18478,7 +18619,7 @@ INC
 
 .macro public_function_selector
 DUP
-PUSHINT 1241839707
+PUSHINT 1239843297
 LEQ
 IFJMPREF {
 	DUP
@@ -18603,11 +18744,11 @@ IFJMPREF {
 		}
 	}
 	DUP
-	PUSHINT 643597393
+	PUSHINT 645657490
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 351916886
+		PUSHINT 361080294
 		LEQ
 		IFJMPREF {
 			DUP
@@ -18623,28 +18764,22 @@ IFJMPREF {
 				CALL $finish_cancelMarketOrder$
 			}
 			DUP
-			PUSHINT 348050807
-			EQUAL
-			IFJMPREF {
-				CALL $forceUpgradeGravixAccounts$
-			}
-			DUP
 			PUSHINT 351916886
 			EQUAL
 			IFJMPREF {
 				CALL $marketOpen$
 			}
-		}
-		DUP
-		PUSHINT 514817439
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 361080294
 			EQUAL
 			IFJMPREF {
 				CALL $setDevFund$
 			}
+		}
+		DUP
+		PUSHINT 556704653
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 385866883
 			EQUAL
@@ -18663,17 +18798,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $revert_liquidatePositions$
 			}
-		}
-		DUP
-		PUSHINT 579666856
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 556704653
 			EQUAL
 			IFJMPREF {
 				CALL $closePosition$
 			}
+		}
+		DUP
+		PUSHINT 584838598
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 565278305
 			EQUAL
@@ -18692,17 +18827,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setInsuranceFundOverflowDistributionSchema$
 			}
-		}
-		DUP
-		PUSHINT 643597393
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 584838598
 			EQUAL
 			IFJMPREF {
 				CALL $setMarketManager$
 			}
+		}
+		DUP
+		PUSHINT 645657490
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 592490051
 			EQUAL
@@ -18721,6 +18856,12 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setMinPositionCollateral$
 			}
+			DUP
+			PUSHINT 645657490
+			EQUAL
+			IFJMPREF {
+				CALL $validateOrderParams$
+			}
 		}
 	}
 	DUP
@@ -18728,15 +18869,9 @@ IFJMPREF {
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 721214914
+		PUSHINT 727022424
 		LEQ
 		IFJMPREF {
-			DUP
-			PUSHINT 645657490
-			EQUAL
-			IFJMPREF {
-				CALL $validateOrderParams$
-			}
 			DUP
 			PUSHINT 647668493
 			EQUAL
@@ -18755,17 +18890,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $finish_liquidatePositions$
 			}
-		}
-		DUP
-		PUSHINT 773109784
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 727022424
 			EQUAL
 			IFJMPREF {
 				CALL $getDetails$
 			}
+		}
+		DUP
+		PUSHINT 781149731
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 760929225
 			EQUAL
@@ -18784,17 +18919,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $getMarket$
 			}
-		}
-		DUP
-		PUSHINT 814317962
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 781149731
 			EQUAL
 			IFJMPREF {
 				CALL $setManager$
 			}
+		}
+		DUP
+		PUSHINT 848235184
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 802788579
 			EQUAL
@@ -18812,6 +18947,12 @@ IFJMPREF {
 			EQUAL
 			IFJMPREF {
 				CALL $setPause$
+			}
+			DUP
+			PUSHINT 848235184
+			EQUAL
+			IFJMPREF {
+				CALL $forceUpgradeGravixAccountsByUsers$
 			}
 		}
 		DUP
@@ -18845,7 +18986,7 @@ IFJMPREF {
 		}
 	}
 	DUP
-	PUSHINT 1241839707
+	PUSHINT 1239843297
 	LEQ
 	IFJMPREF {
 		DUP
@@ -18907,7 +19048,7 @@ IFJMPREF {
 			}
 		}
 		DUP
-		PUSHINT 1156155968
+		PUSHINT 1094704576
 		LEQ
 		IFJMPREF {
 			DUP
@@ -18923,22 +19064,28 @@ IFJMPREF {
 				CALL $setLiquidatorRewardShare$
 			}
 			DUP
+			PUSHINT 1091731520
+			EQUAL
+			IFJMPREF {
+				CALL $forceUpgradeGravixAccountsByContracts$
+			}
+			DUP
 			PUSHINT 1094704576
 			EQUAL
 			IFJMPREF {
 				CALL $revert_addCollateral$
 			}
+		}
+		DUP
+		PUSHINT 1239843297
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1156155968
 			EQUAL
 			IFJMPREF {
 				CALL $onGravixAccountDeploy$
 			}
-		}
-		DUP
-		PUSHINT 1241839707
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1158877187
 			EQUAL
@@ -18957,12 +19104,6 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setPricePubkey$
 			}
-			DUP
-			PUSHINT 1241839707
-			EQUAL
-			IFJMPREF {
-				CALL $oracle_closePosition$
-			}
 		}
 	}
 }
@@ -18971,13 +19112,19 @@ PUSHINT 2147483157
 LEQ
 IFJMPREF {
 	DUP
-	PUSHINT 1501784833
+	PUSHINT 1493221159
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 1333059264
+		PUSHINT 1252511245
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 1241839707
+			EQUAL
+			IFJMPREF {
+				CALL $oracle_closePosition$
+			}
 			DUP
 			PUSHINT 1243748251
 			EQUAL
@@ -18996,17 +19143,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $transferOwnership$
 			}
+		}
+		DUP
+		PUSHINT 1371085930
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1333059264
 			EQUAL
 			IFJMPREF {
 				CALL $getMarketWeekends$
 			}
-		}
-		DUP
-		PUSHINT 1371162683
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1345850728
 			EQUAL
@@ -19025,17 +19172,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $getCodes$
 			}
+		}
+		DUP
+		PUSHINT 1388823748
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1371162683
 			EQUAL
 			IFJMPREF {
 				CALL $getDynamicSpread$
 			}
-		}
-		DUP
-		PUSHINT 1396355438
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1373802292
 			EQUAL
@@ -19054,17 +19201,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $finish_requestMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 1493221159
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1396355438
 			EQUAL
 			IFJMPREF {
 				CALL $setMaxPoolUtilRatio$
 			}
-		}
-		DUP
-		PUSHINT 1501784833
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1418208498
 			EQUAL
@@ -19083,22 +19230,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $self_liquidatePositions$
 			}
+		}
+	}
+	DUP
+	PUSHINT 1893244873
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 1580921097
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1501784833
 			EQUAL
 			IFJMPREF {
 				CALL $updateOracleProxyCode$
 			}
-		}
-	}
-	DUP
-	PUSHINT 1934918785
-	LEQ
-	IFJMPREF {
-		DUP
-		PUSHINT 1587106804
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1511855509
 			EQUAL
@@ -19117,17 +19264,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $cancelMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 1622165144
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1587106804
 			EQUAL
 			IFJMPREF {
 				CALL $getFundingRates$
 			}
-		}
-		DUP
-		PUSHINT 1643400842
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1598947791
 			EQUAL
@@ -19146,17 +19293,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $withdrawReferralBalance$
 			}
+		}
+		DUP
+		PUSHINT 1709185823
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1643400842
 			EQUAL
 			IFJMPREF {
 				CALL $validateMarketConfig$
 			}
-		}
-		DUP
-		PUSHINT 1739861605
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1669556863
 			EQUAL
@@ -19175,17 +19322,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $addMarketsWeekends$
 			}
+		}
+		DUP
+		PUSHINT 1893244873
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1739861605
 			EQUAL
 			IFJMPREF {
 				CALL $encodeAddCollateral$
 			}
-		}
-		DUP
-		PUSHINT 1934918785
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1745391003
 			EQUAL
@@ -19204,12 +19351,6 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $onAcceptTokensTransfer$
 			}
-			DUP
-			PUSHINT 1934918785
-			EQUAL
-			IFJMPREF {
-				CALL $setOpenCloseFeeDistributionSchema$
-			}
 		}
 	}
 	DUP
@@ -19217,9 +19358,15 @@ IFJMPREF {
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 1981564756
+		PUSHINT 1979337915
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 1934918785
+			EQUAL
+			IFJMPREF {
+				CALL $setOpenCloseFeeDistributionSchema$
+			}
 			DUP
 			PUSHINT 1947513686
 			EQUAL
@@ -19238,17 +19385,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $encodeInsuranceDeposit$
 			}
+		}
+		DUP
+		PUSHINT 2147483157
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1981564756
 			EQUAL
 			IFJMPREF {
 				CALL $deployGravixAccount$
 			}
-		}
-		DUP
-		PUSHINT 2147483157
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 2011637505
 			EQUAL
