@@ -31,7 +31,6 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived, IOnPriceCallb
     // this is set for open/close
     uint32 position_key;
     address user;
-    address referrer;
 
     // this is set for open
     uint128 collateral;
@@ -92,12 +91,11 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived, IOnPriceCallb
         _collectPrice(user);
     }
 
-    function setCloseCallback(address _user, uint32 _position_key, address _referrer) external {
+    function setCloseCallback(address _user, uint32 _position_key) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
         user = _user;
         position_key = _position_key;
-        referrer = _referrer;
         callbackType = CallbackType.Close;
         _collectPrice(user);
     }
@@ -169,7 +167,6 @@ contract OracleProxy is IOnRateCallback, IOnNonTokenPriceReceived, IOnPriceCallb
                 position_key,
                 market_idx,
                 price,
-                referrer,
                 meta
             );
         } else {

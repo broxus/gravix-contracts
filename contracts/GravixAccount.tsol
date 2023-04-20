@@ -58,7 +58,7 @@ contract GravixAccount is GravixAccountBase {
 
         main_builder.storeRef(params); // ref3
 
-        TvmCell storage_data = abi.encode(marketOrders, positions, request_counter);
+        TvmCell storage_data = abi.encode(marketOrders, positions, request_counter, referrer, referralBalance);
         TvmCell data = abi.encode(meta.call_id, meta.nonce, storage_data);
 
         main_builder.storeRef(data); // ref3
