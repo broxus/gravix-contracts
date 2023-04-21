@@ -9,13 +9,18 @@ import "../../libraries/PlatformTypes.tsol";
 import "../../libraries/Errors.tsol";
 import "locklift/src/console.tsol";
 import "../../libraries/Constants.tsol";
+import {RPlatform as Platform} from "../../Platform.tsol";
 
 
 abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getDetails() external view responsible returns (
-        uint32 _currentVersion, address _vault, address _user, address _referrer, uint128 _referralBalance
+        uint32 _currentVersion, address _vault, address _user, address _referrer, address _grandReferrer, uint128 _referralBalance
     ) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, referralBalance);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, grandReferrer, referralBalance);
+    }
+
+    function getReferrer() external view override responsible returns (address _user, address _referrer) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
     }
 
     // @param price - 8 decimals number
@@ -108,6 +113,30 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             liquidate,
             now
         );
+    }
+
+    function _getGravixAccountAddress(address user) internal view returns (address) {
+        return address(tvm.hash(_buildGravixAccountInitData(_buildGravixAccountParams(user))));
+    }
+
+    function _buildGravixAccountParams(address user) internal pure returns (TvmCell) {
+        TvmBuilder builder;
+        builder.store(user);
+        return builder.toCell();
+    }
+
+    function _buildGravixAccountInitData(TvmCell _initialData) internal view returns (TvmCell) {
+        return tvm.buildStateInit({
+            contr: Platform,
+            varInit: {
+                root: vault,
+                platformType: PlatformTypes.GravixAccount,
+                initialData: _initialData,
+                platformCode: platform_code
+            },
+            pubkey: 0,
+            code: platform_code
+        });
     }
 
 

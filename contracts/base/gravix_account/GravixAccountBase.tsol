@@ -14,23 +14,12 @@ import "locklift/src/console.tsol";
 
 
 abstract contract GravixAccountBase is GravixAccountHelpers {
-    function _setReferrerIfEmpty(address _new_referrer) internal {
-        if (
-            _new_referrer != address(0) && // cant delete referrer
-            _new_referrer != user && // cant refer to himself
-            referrer == address(0) // cant change referrer
-        ) {
-            referrer = _new_referrer;
-        }
-    }
-
     function process_withdrawReferralBalance(Callback.CallMeta meta) external override onlyGravixVault reserve {
         IGravixVault(vault).finish_withdrawReferralBalance{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, referralBalance, meta
         );
         referralBalance = 0;
     }
-
 
     function process_sendReferrerFee(
         uint128 amount, Callback.CallMeta meta
@@ -57,9 +46,39 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             pending_request.borrowBaseRatePerHour
         );
 
-        _setReferrerIfEmpty(pending_request.referrer);
+        // always trying to get grandReferrer on 1st request if referrer is set
+        if (request_counter == 1 && referrer != address(0)) {
+            address referrer_acc = _getGravixAccountAddress(referrer);
+            first_request = pending_request;
+            IGravixAccount(referrer_acc).getReferrer{
+                value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getReferrer
+            }();
+            return;
+        }
+
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             pending_request, request_counter
+        );
+    }
+
+    function process_getReferrer(address _referrer, address _grand_referrer) external override reserve {
+        require (msg.sender == _getGravixAccountAddress(_referrer), Errors.NOT_GRAVIX_ACCOUNT);
+
+        // we got this callback from our referrer account
+        // + we got correct grand referrer address
+        if (_referrer == referrer && _grand_referrer != address(0)) {
+            grandReferrer = _grand_referrer;
+            // we dont really need data from our grand referrer, we just want to check if he exists
+            address grand_referrer_acc = _getGravixAccountAddress(grandReferrer);
+            IGravixAccount(grand_referrer_acc).getReferrer{
+                value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getReferrer
+            }();
+            return;
+        }
+
+        // if we get here, it means we have no grand referrer/we got correct callback from grand referrer
+        IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            first_request, 1 // we can get here only of 1st request
         );
     }
 
@@ -120,7 +139,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         positions[position_key] = opened_position;
 
         IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, opened_position, referrer, meta
+            user, position_key, opened_position, referrer, grandReferrer, meta
         );
     }
 
@@ -166,7 +185,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (position_view.liquidate) {
             delete positions[position_key];
             IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, liquidator, position_key, asset_price, position_view, referrer, meta
+                user, liquidator, position_key, asset_price, position_view, referrer, grandReferrer, meta
             );
         } else {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -195,7 +214,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         delete positions[position_key];
 
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, asset_price, position_view, referrer, meta
+            user, position_key, asset_price, position_view, referrer, grandReferrer, meta
         );
     }
 
@@ -277,5 +296,26 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             position_key,
             meta
         );
+    }
+
+    onBounce(TvmSlice slice) external {
+        tvm.accept();
+
+        uint32 functionId = slice.decode(uint32);
+        // we can get here because of failed referrer/grand referrer callback
+        if (functionId == tvm.functionId(IGravixAccount.getReferrer)) {
+            tvm.rawReserve(_reserve(), 0);
+            if (referrer != address(0) && grandReferrer != address(0)) {
+                // If both addresses are set, it means we:
+                // 1. Checked that referrer exists and got grand referrer address
+                // 2. Tried to check that grand referrer exists and got bounce
+                delete grandReferrer;
+            } else if (referrer != address(0)) {
+                // We tried to check that referrer exists and got bounce
+                delete referrer;
+            }
+            IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(first_request, 1);
+            delete first_request;
+        }
     }
 }

@@ -8,6 +8,7 @@ export default async () => {
 
   const {account:owner} = await locklift.deployments.getAccount('Owner');
   const {account:user} = await locklift.deployments.getAccount('User');
+  const {account:user1} = await locklift.deployments.getAccount('User1');
 
   const usdt_root = await setupTokenRoot(token_name, token_name, owner, 6);
   const stg_root = await setupTokenRoot(stg_token_name, stg_token_name, owner, 6);
@@ -15,6 +16,7 @@ export default async () => {
   const USDT_DECIMALS = 10 ** 6;
   await usdt_root.mint(1000000000 * USDT_DECIMALS, owner);
   await usdt_root.mint(1000000000 * USDT_DECIMALS, user);
+  await usdt_root.mint(1000000000 * USDT_DECIMALS, user1);
 
   await locklift.deployments.saveContract({
     deploymentName: "USDT",

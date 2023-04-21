@@ -1,4 +1,4 @@
-import {Address, Contract, toNano} from "locklift";
+import {Address, Contract, toNano, zeroAddress} from "locklift";
 import {GravixVaultAbi} from "../../../build/factorySource";
 import {Account} from 'locklift/everscale-client'
 import {TokenWallet} from "./token_wallet";
@@ -121,9 +121,9 @@ export class GravixVault {
         return await this.contract.methods.getDetails({answerId: 0}).call();
     }
 
-    async deployGravixAccount(user: Account, call_id=0) {
+    async deployGravixAccount(user: Account, referrer=zeroAddress, call_id=0) {
         return await this.contract.methods.deployGravixAccount(
-            {user: user.address, answerId: 0, meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
+            {answerId: 0, referrer: referrer, meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
         ).send({from: user.address, amount: toNano(1)})
     }
 
@@ -205,7 +205,6 @@ export class GravixVault {
                 market_idx: market_idx,
                 event_data: empty_event,
                 price: empty_price,
-                referrer: referrer,
                 meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
         ).send({from: user.address, amount: toNano(2.1)});
     }

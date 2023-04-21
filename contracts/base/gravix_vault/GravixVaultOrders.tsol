@@ -258,30 +258,49 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         );
     }
 
-    function _collectOpenFeeAndReferral(uint128 open_fee, address referrer, address referral, Callback.CallMeta meta) internal {
+    function _distributeReferralFee(
+        uint128 fee,
+        address referrer,
+        address grandReferrer,
+        address referral,
+        ReferralFeeSchema fee_schema,
+        Callback.CallMeta meta
+    ) internal view returns (uint128 remaining_fee) {
+        remaining_fee = fee;
         if (referrer != address(0)) {
-            uint128 referrer_fee = math.muldiv(open_fee, referralFeeSchema[uint8(ReferralFeeSchema.OpenFee)], Constants.HUNDRED_PERCENT);
-            open_fee -= referrer_fee;
-            _sendReferrerFee(referrer, referral, referrer_fee, meta);
+            uint128 referrer_fee = math.muldiv(fee, referralFeeSchema[uint8(fee_schema)], Constants.HUNDRED_PERCENT);
+            remaining_fee -= referrer_fee;
+            if (referrer_fee > 0) {
+                _sendReferrerFee(referrer, referral, referrer_fee, meta);
+            }
         }
+        if (grandReferrer != address(0)) {
+            uint128 grand_referrer_fee = math.muldiv(fee, grandReferralSchema[uint8(fee_schema)], Constants.HUNDRED_PERCENT);
+            remaining_fee -= grand_referrer_fee;
+            if (grand_referrer_fee > 0) {
+                _sendReferrerFee(grandReferrer, referral, grand_referrer_fee, meta);
+            }
+        }
+    }
+
+    function _collectOpenFeeAndReferral(
+        uint128 open_fee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+    ) internal {
+        open_fee = _distributeReferralFee(open_fee, referrer, grandReferrer, referral, ReferralFeeSchema.OpenFee, meta);
         _collectOpenFee(open_fee);
     }
 
-    function _collectCloseFeeAndReferral(uint128 close_fee, address referrer, address referral, Callback.CallMeta meta) internal {
-        if (referrer != address(0)) {
-            uint128 referrer_fee = math.muldiv(close_fee, referralFeeSchema[uint8(ReferralFeeSchema.CloseFee)], Constants.HUNDRED_PERCENT);
-            close_fee -= referrer_fee;
-            _sendReferrerFee(referrer, referral, referrer_fee, meta);
-        }
+    function _collectCloseFeeAndReferral(
+        uint128 close_fee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+    ) internal {
+        close_fee = _distributeReferralFee(close_fee, referrer, grandReferrer, referral, ReferralFeeSchema.CloseFee, meta);
         _collectCloseFee(close_fee);
     }
 
-    function _collectPnlAndReferral(uint128 pnl, address referrer, address referral, Callback.CallMeta meta) internal {
-        if (referrer != address(0)) {
-            uint128 referrer_fee = math.muldiv(pnl, referralFeeSchema[uint8(ReferralFeeSchema.PnlFee)], Constants.HUNDRED_PERCENT);
-            pnl -= referrer_fee;
-            _sendReferrerFee(referrer, referral, referrer_fee, meta);
-        }
+    function _collectPnlAndReferral(
+        uint128 pnl, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+    ) internal {
+        pnl = _distributeReferralFee(pnl, referrer, grandReferrer, referral, ReferralFeeSchema.PnlFee, meta);
         _increaseInsuranceFund(pnl);
     }
 
@@ -388,9 +407,10 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint32 position_key,
         IGravixAccount.Position new_pos,
         address referrer,
+        address grandReferrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        _collectOpenFeeAndReferral(new_pos.openFee, referrer, user, meta);
+        _collectOpenFeeAndReferral(new_pos.openFee, referrer, grandReferrer, user, meta);
         collateralReserve -= new_pos.openFee;
 
         uint128 position_size_asset_raw = calculatePositionAssetSize(new_pos.initialCollateral, new_pos.leverage, new_pos.markPrice);
@@ -591,6 +611,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         IGravixAccount.PositionView position_view,
         address referrer,
+        address grandReferrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
@@ -607,7 +628,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         if (position_view.liquidate) {
             // increase insurance fund + send referrer payment
-            _collectPnlAndReferral(collateral, referrer, user, meta);
+            _collectPnlAndReferral(collateral, referrer, grandReferrer, user, meta);
 
             emit LiquidatePosition(meta.call_id, user, user, position_key, position_view);
             _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
@@ -616,12 +637,12 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             int256 limited_pnl = math.min(position_view.pnl, pnl_limit);
 
             int256 pnl_with_fees = limited_pnl - position_view.borrowFee - position_view.fundingFee;
-            _collectCloseFeeAndReferral(position_view.closeFee, referrer, user, meta);
+            _collectCloseFeeAndReferral(position_view.closeFee, referrer, grandReferrer, user, meta);
 
             uint128 debt;
             if (pnl_with_fees < 0) {
                 // increase insurance fund + send referrer payment
-                _collectPnlAndReferral(uint128(math.abs(pnl_with_fees)), referrer, user, meta);
+                _collectPnlAndReferral(uint128(math.abs(pnl_with_fees)), referrer, grandReferrer, user, meta);
             }
             if (pnl_with_fees > 0) {
                 // positive debt if we dont have enough money to pay pnl
@@ -846,6 +867,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 asset_price,
         IGravixAccount.PositionView position_view,
         address referrer,
+        address grandReferrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
@@ -863,7 +885,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         uint128 liquidator_reward = math.muldiv(collateral, liquidatorRewardShare, Constants.HUNDRED_PERCENT);
 
-        _collectPnlAndReferral(collateral - liquidator_reward, referrer, user, meta);
+        _collectPnlAndReferral(collateral - liquidator_reward, referrer, grandReferrer, user, meta);
 
         emit LiquidatePosition(meta.call_id, user, liquidator, position_key, position_view);
 

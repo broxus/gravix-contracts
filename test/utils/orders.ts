@@ -113,13 +113,33 @@ export async function openMarketOrder(
 
     const event = await vault.getEvent('MarketOrderExecution');
     const details = await vault.details();
+    const acc_details = await account.contract.methods.getDetails({answerId: 0}).call();
     const col_up = bn(collateral).minus(open_fee_expected);
 
     let pool_increase = open_fee_expected;
-    // if referral payment was made - notice it
-    const ref_payment = await vault.getEvent('ReferralPayment') as any;
-    if (ref_payment !== null && ref_payment.call_id === call_id.toFixed()) {
+    if (!acc_details._referrer.equals(zeroAddress)) {
         pool_increase = pool_increase.minus(open_fee_expected.idiv(10))
+
+        expect(traceTree).to
+          .emit('ReferralPayment')
+          .withNamedArgs({
+              call_id: call_id.toFixed(),
+              referral: user.address,
+              referrer: acc_details._referrer.toString(),
+              amount: open_fee_expected.idiv(10).toFixed()
+          })
+    }
+    if (!acc_details._grandReferrer.equals(zeroAddress)) {
+        pool_increase = pool_increase.minus(open_fee_expected.idiv(100));
+
+        expect(traceTree).to
+          .emit('ReferralPayment')
+          .withNamedArgs({
+              call_id: call_id.toFixed(),
+              referral: user.address,
+              referrer: acc_details._grandReferrer.toString(),
+              amount: open_fee_expected.idiv(100).toFixed()
+          })
     }
 
     expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(col_up).toFixed());
@@ -213,7 +233,8 @@ export async function closeOrder(
     }).call())._market;
 
     // const details_prev = await vault.details();
-    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, referrer, 1));
+    const call_id = getRandomNonce();
+    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, referrer, call_id));
 
     const event = await vault.getEvent('ClosePosition');
     // @ts-ignore
@@ -279,7 +300,7 @@ export async function closeOrder(
     expect(traceTree1).to
         .emit('ClosePosition')
         .withNamedArgs({
-            call_id: '1',
+            call_id: call_id.toFixed(),
             user: user.address,
             position_view: {
                 closePrice: expected_close_price.toFixed(),
@@ -308,6 +329,51 @@ export async function closeOrder(
           recipient: user.address.toString(),
           amount: user_payout.toString()
       });
+
+    const acc_details = await account.contract.methods.getDetails({answerId: 0}).call();
+
+    if (!acc_details._referrer.equals(zeroAddress)) {
+        expect(traceTree1).to
+          .emit('ReferralPayment')
+          .withNamedArgs({
+              call_id: call_id.toFixed(),
+              referral: user.address,
+              referrer: acc_details._referrer.toString(),
+              amount: expected_close_fee.idiv(10).toFixed()
+          })
+
+        if (pnl_with_fees.lte(0)) {
+            expect(traceTree1).to
+              .emit('ReferralPayment')
+              .withNamedArgs({
+                  call_id: call_id.toFixed(),
+                  referral: user.address,
+                  referrer: acc_details._referrer.toString(),
+                  amount: pnl_with_fees.abs().idiv(100).toFixed()
+              })
+        }
+    }
+    if (!acc_details._grandReferrer.equals(zeroAddress)) {
+        expect(traceTree1).to
+          .emit('ReferralPayment')
+          .withNamedArgs({
+              call_id: call_id.toFixed(),
+              referral: user.address,
+              referrer: acc_details._grandReferrer.toString(),
+              amount: expected_close_fee.idiv(100).toFixed()
+          })
+
+        if (pnl_with_fees.lte(0)) {
+            expect(traceTree1).to
+              .emit('ReferralPayment')
+              .withNamedArgs({
+                  call_id: call_id.toFixed(),
+                  referral: user.address,
+                  referrer: acc_details._grandReferrer.toString(),
+                  amount: pnl_with_fees.abs().idiv(1000).toFixed()
+              })
+        }
+    }
 
     // const details1 = await vault.details();
     // expect(details1._totalNOI.toString()).to.be.eq('0');

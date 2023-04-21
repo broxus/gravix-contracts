@@ -195,7 +195,7 @@ describe('Testing liquidity pool mechanics', async function() {
 
       it('Open position request', async function() {
         const {traceTree} = await locklift.tracing.trace(vault.openPosition(
-          user_usdt_wallet, 10000000, 0, 0, 100, 1000000000, 1000000000000, 1
+          user_usdt_wallet, 10000000, 0, 0, 100, 1000000000, 1000000000000, zeroAddress,1
         ), {allowedCodes: {compute: [null]}});
       });
 

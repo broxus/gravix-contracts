@@ -73,17 +73,18 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     }
 
     function deployGravixAccount(
-        address user, Callback.CallMeta meta
+        address referrer, Callback.CallMeta meta
     ) external view responsible reserveAndSendGas(meta) returns (address account) {
         require (msg.value > Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE, Errors.LOW_MSG_VALUE);
-        account = _deployGravixAccount(user);
+        account = _deployGravixAccount(msg.sender, referrer);
     }
 
-    function _deployGravixAccount(address user) internal view returns (address) {
+    function _deployGravixAccount(address user, address referrer) internal view returns (address) {
         TvmBuilder constructor_params;
 
         constructor_params.store(gravixAccountVersion); // 32
         constructor_params.store(gravixAccountVersion); // 32
+        constructor_params.store(referrer); // 267
 
         return new Platform{
             stateInit: _buildGravixAccountInitData(_buildGravixAccountParams(user)),

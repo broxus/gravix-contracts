@@ -105,5 +105,7 @@ interface IGravixAccount {
         uint128 amount, Callback.CallMeta meta
     ) external;
     function process_withdrawReferralBalance(Callback.CallMeta meta) external;
+    function getReferrer() external view responsible returns (address user, address _referrer);
+    function process_getReferrer(address _user, address _referrer) external;
     function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
 }

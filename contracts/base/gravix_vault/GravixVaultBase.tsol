@@ -214,7 +214,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
             PendingMarketOrder request = pending_market_requests[_request_nonce];
             delete pending_market_requests[_request_nonce];
 
-            address gravix_acc = _deployGravixAccount(request.user);
+            address gravix_acc = _deployGravixAccount(request.user, request.referrer);
             IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _request_nonce, request
             );

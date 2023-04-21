@@ -267,6 +267,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 position_key,
         IGravixAccount.Position opened_position,
         address referrer,
+        address grandReferrer,
         Callback.CallMeta meta
     ) external;
     function revert_cancelMarketOrder(address user, uint32 position_key, Callback.CallMeta meta) external view;
@@ -281,7 +282,13 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function finish_closePosition(
-        address user, uint32 position_key, uint128 asset_price, IGravixAccount.PositionView order_view, address referrer, Callback.CallMeta meta
+        address user,
+        uint32 position_key,
+        uint128 asset_price,
+        IGravixAccount.PositionView order_view,
+        address referrer,
+        address grandReferrer,
+        Callback.CallMeta meta
     ) external;
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
@@ -296,6 +303,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 asset_price,
         IGravixAccount.PositionView position_view,
         address referrer,
+        address grandReferrer,
         Callback.CallMeta meta
     ) external;
     function revert_addCollateral(

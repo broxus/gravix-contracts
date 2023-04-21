@@ -52,7 +52,12 @@ abstract contract GravixVaultStorage is IGravixVault {
         Constants.HUNDRED_PERCENT / 10, // 10% from close fee
         Constants.HUNDRED_PERCENT / 100 // 1% from pnl
     ];
-    enum ReferralFeeSchema { OpenFee, CloseFee, PnlFee }
+    uint64[3] grandReferralSchema = [
+        Constants.HUNDRED_PERCENT / 100, // 1% from open fee
+        Constants.HUNDRED_PERCENT / 100, // 1% from close fee
+        Constants.HUNDRED_PERCENT / 1000 // 0.1% from pnl
+    ];
+    enum ReferralFeeSchema { OpenFee, CloseFee, PnlFee } // same for referral and grandReferral
 
     uint128 collateralReserve; // sum of all usdt provided as a collateral for open orders
 
