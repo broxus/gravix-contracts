@@ -275,7 +275,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             }
         }
         if (grandReferrer != address(0)) {
-            uint128 grand_referrer_fee = math.muldiv(fee, grandReferralSchema[uint8(fee_schema)], Constants.HUNDRED_PERCENT);
+            uint128 grand_referrer_fee = math.muldiv(fee, grandReferralFeeSchema[uint8(fee_schema)], Constants.HUNDRED_PERCENT);
             remaining_fee -= grand_referrer_fee;
             if (grand_referrer_fee > 0) {
                 _sendReferrerFee(grandReferrer, referral, grand_referrer_fee, meta);

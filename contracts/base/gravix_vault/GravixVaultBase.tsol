@@ -128,6 +128,13 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit ReferralFeeSchemaUpdate(meta.call_id, new_schema);
     }
 
+    function setGrandReferralFeeSchema(
+        uint64[3] new_schema, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        grandReferralFeeSchema = new_schema;
+        emit GrandReferralFeeSchemaUpdate(meta.call_id, new_schema);
+    }
+
     function setMinPositionCollateral(
         uint128 new_val, Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {
