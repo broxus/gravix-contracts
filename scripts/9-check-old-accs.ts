@@ -5,7 +5,7 @@ const prompts = require('prompts');
 const ora = require('ora');
 
 
-const cur_code_hash = '3a62e1fdf81fc00146fcf799a8ed0e0de54a7677a4c27e4e54fbee047fc1a856';
+const cur_code_hash = '6e1ea15cd427afd627b886c234c9f873f43e2cd068b7f45e67ea704ed7119571';
 
 const main = async () => {
   await locklift.deployments.load();
@@ -37,7 +37,7 @@ const main = async () => {
   for (const acc of all_old_accs) {
     const account = await locklift.factory.getDeployedContract('GravixAccount', acc);
     const details = await account.methods.getDetails({answerId: 0}).call();
-    if (details._vault === vault.address) {
+    if (details._vault.equals(vault.address)) {
       vault_old_accs.push(acc);
     }
   }

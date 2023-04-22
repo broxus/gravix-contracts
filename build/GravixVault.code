@@ -567,6 +567,16 @@ LDDICT
 ROTREV
 PAIR
 SWAP
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
 LDU 128
 LDU 128
 LDI 1
@@ -574,10 +584,10 @@ LDU 64
 LDU 64
 LDU 128
 LDI 1
-LDU 64
 LDREF
 ENDS
 CTOS
+LDU 64
 LDU 64
 LDU 32
 LDDICT
@@ -599,7 +609,7 @@ LDDICT
 LDDICT
 LDDICT
 ENDS
-PUSHINT 43
+PUSHINT 45
 PUSHINT 0
 REVX
 DROP
@@ -631,6 +641,10 @@ SETGLOBVAR
 PUSHINT 34
 SETGLOBVAR
 PUSHINT 35
+SETGLOBVAR
+PUSHINT 36
+SETGLOBVAR
+PUSHINT 37
 SETGLOBVAR
 PUSHINT 38
 SETGLOBVAR
@@ -15526,6 +15540,20 @@ PUSHINT 650000000
 GREATER
 THROWIFNOT 1004
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 79
+DUP
+GETGLOB 9
+SDEQ
+PUSHCONT {
+	PUSHREFSLICE {
+		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
+	}
+}
+PUSHCONT {
+	DUP
+}
+IFELSE
+NIP
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 80
 GETGLOB 9
 SWAP
 CALLREF {
@@ -15550,16 +15578,16 @@ SENDRAWMSG
 CALL $_deployGravixAccount_af50137c_internal_macro$
 
 .macro _deployGravixAccount_af50137c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 85
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 86
 GETGLOB 27
 NEWC
 STU 32
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 86
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 87
 GETGLOB 27
 STUR 32
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 87
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 88
 STSLICE
-.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 89
+.loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 90
 PUXC S1, S-1
 ENDC
 GETGLOB 26
