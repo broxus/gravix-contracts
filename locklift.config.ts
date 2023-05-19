@@ -123,6 +123,7 @@ const config: LockliftConfig = {
       }
     },
     venom: {
+      deploy: ['common/', 'venom-test/'],
       connection: {
         id: 1000,
         type: "jrpc",

@@ -60,7 +60,7 @@ const main = async () => {
       response._stg_usdt,
       response._oracle,
       response._priceNode,
-      response._pricePubkey,
+      `0x${response._pricePubkey}`,
       false
     );
     spinner.succeed(`Gravix Vault deployed: ${vault.address}`);
