@@ -117,9 +117,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function finish_requestMarketOrder(
+        uint32 req_nonce,
         PendingMarketOrder request,
         uint32 position_key
     ) external override onlyGravixAccount(request.user) reserve {
+        delete pending_market_requests[req_nonce];
         collateralReserve += request.collateral;
 
         emit MarketOrder(

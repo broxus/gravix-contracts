@@ -259,7 +259,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 asset_price,
         Callback.CallMeta meta
     ) external;
-    function finish_requestMarketOrder(PendingMarketOrder request, uint32 position_key) external;
+    function finish_requestMarketOrder(uint32 req_nonce, PendingMarketOrder request, uint32 position_key) external;
     function revert_executeMarketOrder(
         address user, uint32 position_key, uint32 market_idx, uint128 collateral, uint128 position_size_usd, uint128 asset_price, PositionType position_type, Callback.CallMeta meta
     ) external;

@@ -29,7 +29,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     }
 
     function process_requestMarketOrder(
-        uint32, IGravixVault.PendingMarketOrder pending_request
+        uint32 req_nonce, IGravixVault.PendingMarketOrder pending_request
     ) external override onlyGravixVault reserve {
         request_counter += 1;
         marketOrders[request_counter] = MarketOrder(
@@ -50,6 +50,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (request_counter == 1 && referrer != address(0)) {
             address referrer_acc = _getGravixAccountAddress(referrer);
             first_request = pending_request;
+            first_req_nonce = req_nonce;
             IGravixAccount(referrer_acc).getReferrer{
                 value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getReferrer
             }();
@@ -57,7 +58,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            pending_request, request_counter
+            req_nonce, pending_request, request_counter
         );
     }
 
@@ -78,7 +79,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         // if we get here, it means we have no grand referrer/we got correct callback from grand referrer
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            first_request, 1 // we can get here only of 1st request
+            first_req_nonce, first_request, 1 // we can get here only of 1st request
         );
     }
 
@@ -314,8 +315,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 // We tried to check that referrer exists and got bounce
                 delete referrer;
             }
-            IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(first_request, 1);
+            IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(first_req_nonce, first_request, 1);
             delete first_request;
+            delete first_req_nonce;
         }
     }
 }

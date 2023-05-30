@@ -100,7 +100,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
 
     function setOracleConfigs(
         mapping (uint32 => OracleConfig) new_oracles, Callback.CallMeta meta
-    ) external onlyOwner reserveAndSuccessCallback(meta) {
+    ) external onlyManager reserveAndSuccessCallback(meta) {
         for ((uint32 market_idx, OracleConfig oracle_conf) : new_oracles) {
             require (markets.exists(market_idx), Errors.BAD_INPUT);
 
