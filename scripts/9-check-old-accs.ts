@@ -6,7 +6,7 @@ const prompts = require('prompts');
 const ora = require('ora');
 
 
-const cur_code_hash = '6e1ea15cd427afd627b886c234c9f873f43e2cd068b7f45e67ea704ed7119571';
+const cur_code_hash = 'f413970f94e7c196f431447e92f2189f2448498b924400b14eef9d6eddbf15b8';
 
 const main = async () => {
   await locklift.deployments.load();
@@ -41,17 +41,19 @@ const main = async () => {
   console.log('Raw', uSet.size);
   // this will work only if getDetails method is not changed, otherwise 60 error will be thrown
   let vault_old_accs: Address[] = [];
+  let vault_old_users = [];
   for (const acc of Array.from(uSet)) {
     const account = await locklift.factory.getDeployedContract('GravixAccount', acc);
     const details = await account.methods.getDetails({answerId: 0}).call();
     console.log('call')
     if (details._vault.equals(vault.address)) {
       vault_old_accs.push(acc);
+      vault_old_users.push(details._user);
     }
   }
-
   spinner.succeed(`Found ${vault_old_accs.length} old accounts`);
-  console.log(vault_old_accs);
+
+  fs.writeFileSync('all_old_users.json', JSON.stringify(vault_old_users, null, 2));
 };
 
 main()
