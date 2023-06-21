@@ -34,7 +34,7 @@ const config: LockliftConfig = {
 
     // Specify config for external contracts as in example
     externalContracts: {
-      "node_modules/broxus-token-contracts/build": [
+      "node_modules/@broxus/tip3/build": [
         'TokenRootUpgradeable',
         'TokenWalletUpgradeable',
         'TokenWalletPlatform'
