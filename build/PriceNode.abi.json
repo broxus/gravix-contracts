@@ -43,6 +43,7 @@
 				{"name":"_oraclePubkey","type":"uint256"},
 				{"name":"_maxRequests","type":"uint16"},
 				{"name":"_requestsNum","type":"uint16"},
+				{"name":"_maxActionsPerTx","type":"uint16"},
 				{"name":"_requestNonce","type":"uint32"}
 			]
 		},
@@ -50,6 +51,14 @@
 			"name": "setTickerConfigs",
 			"inputs": [
 				{"components":[{"name":"enabled","type":"bool"},{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"configs","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setMaxActionsPerTx",
+			"inputs": [
+				{"name":"new_max","type":"uint16"}
 			],
 			"outputs": [
 			]
@@ -183,6 +192,15 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "NewMaxActionsPerTx",
+			"inputs": [
+				{"name":"old_val","type":"uint16"},
+				{"name":"new_val","type":"uint16"}
+			],
+			"outputs": [
+			]
 		}
 	],
 	"fields": [
@@ -196,6 +214,7 @@
 		{"name":"requestNonce","type":"uint32"},
 		{"name":"maxRequests","type":"uint16"},
 		{"name":"requestsNum","type":"uint16"},
+		{"name":"maxActionsPerTx","type":"uint16"},
 		{"name":"tickerConfigs","type":"optional(cell)"},
 		{"name":"requests","type":"optional(cell)"}
 	]

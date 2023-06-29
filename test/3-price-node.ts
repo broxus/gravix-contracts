@@ -56,7 +56,7 @@ describe('Testing liquidity pool mechanics', async function() {
     maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
     maxShortsUSD: 100_000 * USDT_DECIMALS, // 100k
     noiWeight: 100,
-    maxLeverage: 10000, // 100x
+    maxLeverage: 100_000_000, // 100x
     depthAsset: 15 * USDT_DECIMALS, // 25k
     fees: {
       openFeeRate: 1000000000, // 0.1%
@@ -82,6 +82,7 @@ describe('Testing liquidity pool mechanics', async function() {
       eth_usdt_mock = locklift.deployments.getContract('ETH_USDT');
       user_usdt_wallet = await usdt_root.wallet(user);
       owner_usdt_wallet = await usdt_root.wallet(user);
+      priceNode = locklift.deployments.getContract<PriceNodeAbi>('PriceNode');
     });
   })
 
@@ -125,22 +126,21 @@ describe('Testing liquidity pool mechanics', async function() {
           data: boc_hash
         });
         console.log(signature);
-        const sign_ext = '5a9cf7b5289e9b272ddeedad92badd07b0e0235938b08ff5b571e465ff59a591';
-        const high = `0x${sign_ext.slice(0, sign_ext.length / 2)}`;
-        const low = `0x${sign_ext.slice(sign_ext.length / 2)}`;
+        // const sign_ext = '5a9cf7b5289e9b272ddeedad92badd07b0e0235938b08ff5b571e465ff59a591';
+        // const high = `0x${sign_ext.slice(0, sign_ext.length / 2)}`;
+        // const low = `0x${sign_ext.slice(sign_ext.length / 2)}`;
 
         const cell = await locklift.provider.packIntoCell({
           structure: [
             {name: "part1", type: "uint256"},
             {name: "part2", type: "uint256"}
           ] as const,
-          data: {part1: high, part2: low}
+          data: {part1: signature.signatureParts.high, part2: signature.signatureParts.low}
         });
 
         const res = await priceNode.methods.checkSign({
           p: price, t1: time, t2: time, tick: ticker, signature: cell.boc
         }).call();
-        // console.log(res);
 
         const res2 = await priceNode.methods.validatePrice({
           price: {price: price, ticker: ticker, serverTime: time, oracleTime: time, signature: cell.boc}

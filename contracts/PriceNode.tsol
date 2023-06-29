@@ -15,6 +15,7 @@ contract PriceNode is IPriceNode {
     event OwnershipTransferred(address old_owner, address new_owner);
     event NewRequest(address sender, uint32 nonce, string ticker);
     event RequestResolved(address sender, uint32 nonce, string ticker);
+    event NewMaxActionsPerTx(uint16 old_val, uint16 new_val);
 
     uint32 static deploy_nonce;
     address owner;
@@ -25,7 +26,7 @@ contract PriceNode is IPriceNode {
     uint16 maxRequests = 1000;
     uint16 requestsNum;
 
-    uint8 constant MAX_OUT_ACTIONS = 250;
+    uint16 maxActionsPerTx = 20;
     uint128 constant MIN_REQ_VALUE = 0.5 ever;
 
     mapping (string => TickerConfig) tickerConfigs; // ticker hash as a key
@@ -56,14 +57,16 @@ contract PriceNode is IPriceNode {
 
     function getDetails() external view responsible returns (
         address _owner,
+
         uint256 _daemonPubkey,
         uint256 _oraclePubkey,
         uint16 _maxRequests,
         uint16 _requestsNum,
+        uint16 _maxActionsPerTx,
         uint32 _requestNonce
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
-            owner, daemonPubkey, oraclePubkey, maxRequests, requestsNum, requestNonce
+            owner, daemonPubkey, oraclePubkey, maxRequests, requestsNum, maxActionsPerTx, requestNonce
         );
     }
 
@@ -71,6 +74,11 @@ contract PriceNode is IPriceNode {
         for (TickerConfig config: configs) {
             tickerConfigs[config.ticker] = config;
         }
+    }
+
+    function setMaxActionsPerTx(uint16 new_max) external onlyOwner {
+        emit NewMaxActionsPerTx(maxActionsPerTx, new_max);
+        maxActionsPerTx = new_max;
     }
 
     function transferOwnership(address new_owner) external onlyOwner {
@@ -121,7 +129,7 @@ contract PriceNode is IPriceNode {
     }
 
     function resolveRequests(Price[] prices) external {
-        require (msg.pubkey() == daemonPubkey, Errors.NOT_OWNER);
+        require (msg.pubkey() == daemonPubkey || msg.sender == address(this), Errors.NOT_OWNER);
         require (requestsNum > 0, Errors.NO_REQUESTS);
         tvm.accept();
 
@@ -137,14 +145,15 @@ contract PriceNode is IPriceNode {
                 IOnPriceCallback(req.sender).onPriceCallback{value: req.callbackValue - 0.1 ever}(price.price, price.ticker);
                 emit RequestResolved(req.sender, nonce, price.ticker);
 
-                if (requestsResolved >= MAX_OUT_ACTIONS) {
+                if (requestsResolved >= maxActionsPerTx) {
                     break;
                 }
             }
 
             requests[price.ticker] = reqsMap;
-            if (requestsResolved >= MAX_OUT_ACTIONS) {
-                break;
+            if (requestsResolved >= maxActionsPerTx) {
+                this.resolveRequests{value: 0.1 ever}(prices);
+                return;
             }
         }
     }
