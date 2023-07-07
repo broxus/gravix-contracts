@@ -94,10 +94,19 @@ describe('Testing liquidity pool mechanics', async function() {
             {ticker: 'BTC / USD', enabled: true, maxOracleDelay: 20, maxServerDelay: 15}
           ]
         }).send({from: owner.address, amount: toNano(1)}));
+
+        await locklift.tracing.trace(priceNode.methods.setMaxActionsPerTx({new_max: 2})
+          .send({from: owner.address, amount: toNano(1)}));
       });
 
-      it('Send request', async function() {
+      it('Send requests', async function() {
         const {traceTree} = await locklift.tracing.trace(priceNode.methods.makeRequest({
+          ticker: 'BTC / USD'
+        }).send({from: user.address, amount: toNano(2)}));
+        await locklift.tracing.trace(priceNode.methods.makeRequest({
+          ticker: 'BTC / USD'
+        }).send({from: user.address, amount: toNano(2)}));
+        await locklift.tracing.trace(priceNode.methods.makeRequest({
           ticker: 'BTC / USD'
         }).send({from: user.address, amount: toNano(2)}));
 

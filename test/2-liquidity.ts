@@ -55,7 +55,7 @@ describe('Testing liquidity pool mechanics', async function() {
     maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
     maxShortsUSD: 100_000 * USDT_DECIMALS, // 100k
     noiWeight: 100,
-    maxLeverage: 10000, // 100x
+    maxLeverage: 100_000_000, // 100x
     depthAsset: 15 * USDT_DECIMALS, // 25k
     fees: {
       openFeeRate: 1000000000, // 0.1%
