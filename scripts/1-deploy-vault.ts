@@ -81,7 +81,7 @@ const main = async () => {
 
     spinner.start(`Transferring ownership...`);
     await vault.contract.methods.transferOwnership(
-      {new_owner: response._owner, meta: {call_id: 0, send_gas_to: response._owner, nonce: 0}}
+      {newOwner: response._owner, meta: {callId: 0, sendGasTo: response._owner, nonce: 0}}
     ).send({from: user.address, amount: toNano(2)});
     spinner.succeed('Ownership transferred');
 

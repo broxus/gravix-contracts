@@ -19,24 +19,14 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 abstract contract GravixVaultHelpers is GravixVaultStorage {
     function getDetails() external view responsible returns (
-        address _owner,
-        address _manager,
-        address _marketManager,
-        address _oracle,
+        Managers _managers,
         address _priceNode,
         uint256 _pricePubkey,
-        address _usdt,
-        address _usdtWallet,
-        address _stgUsdt,
-        address _stgUsdtWallet,
-        address _treasury,
-        address _projectFund,
-        address _devFund,
-        uint128 _poolBalance, // liquidity deposits
-        uint128 _stgUsdtSupply, // amount of minted stgUsdt
-        uint128 _targetPrice,
-        uint128 _insuranceFund, // collected fees, pnl and etc.
-        uint128 _insuranceFundLimit,
+        TokenData _usdtToken,
+        TokenData _stgUsdtToken,
+        Treasuries _treasuries,
+        PoolAssets _poolAssets,
+        InsuranceFund _insuranceFunds, // collected fees, pnl and etc.,
         uint64[3] _insuranceFundOverflowDistributionSchema,
         uint64[3] _referralFeeSchema,
         uint64[3] _grandReferralFeeSchema,
@@ -47,31 +37,20 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint64 _maxPnlRate,
         uint128 _minPositionCollateral,
         bool _paused,
-        uint64 _liquidationThresholdRate,
-        uint64 _liquidatorRewardShare,
+        LiquidationParams _liquidation,
         uint64[2] _openFeeDistributionSchema,
         uint64[2] _closeFeeDistributionSchema,
         uint32 _marketCount
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
-            owner,
-            manager,
-            marketManager,
-            oracle,
+            managers,
             priceNode,
             pricePubkey,
             usdt,
-            usdtWallet,
             stgUsdt,
-            stgUsdtWallet,
-            treasury,
-            projectFund,
-            devFund,
-            poolBalance, // liquidity deposits
-            stgUsdtSupply, // amount of minted stgUsdt
-            targetPrice,
-            insuranceFund, // collected fees, pnl and etc.
-            insuranceFundLimit,
+            treasuries,
+            poolAssets,
+            insuranceFund,
             insuranceFundOverflowDistributionSchema,
             referralFeeSchema,
             grandReferralFeeSchema,
@@ -82,8 +61,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             maxPnlRate,
             minPositionCollateral,
             paused,
-            liquidationThresholdRate,
-            liquidatorRewardShare,
+            liquidationParams,
             openFeeDistributionSchema,
             closeFeeDistributionSchema,
             marketCount
@@ -91,45 +69,41 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function getCodes() external view responsible returns (
-        TvmCell _oracleProxyCode,
+        CodeWithVersion _oracleProxy,
         TvmCell _platformCode,
-        TvmCell _gravixAccountCode,
-        uint32 _oracleProxyVersion,
-        uint32 _gravixAccountVersion,
+        CodeWithVersion _gravixAccount,
         uint32 _gravixVaultVersion
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
-            oracleProxyCode,
+        oracleProxyCode,
             platformCode,
-            gravixAccountCode,
-            oracleProxyVersion,
-            gravixAccountVersion,
+        gravixAccountCode,
             gravixVaultVersion
         );
     }
 
-    function _sendCallbackOrGas(address callback_receiver, uint32 nonce, bool success, address send_gas_to) internal pure {
+    function _sendCallbackOrGas(address callbackReceiver, uint32 nonce, bool success, address sendGasTo) internal pure {
         if (nonce > 0) {
             if (success) {
                 ICallbackReceiver(
-                    callback_receiver
+                    callbackReceiver
                 ).acceptSuccessCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(nonce);
             } else {
                 ICallbackReceiver(
-                    callback_receiver
+                    callbackReceiver
                 ).acceptFailCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(nonce);
             }
         } else {
-            send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+            sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
         }
     }
 
     function _setupTokenWallets() internal view {
-        ITokenRoot(usdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
+        ITokenRoot(usdt.root).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
-        ITokenRoot(stgUsdt).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
+        ITokenRoot(stgUsdt.root).deployWallet{value: Gas.TOKEN_WALLET_DEPLOY_VALUE, callback: IGravixVault.receiveTokenWalletAddress }(
             address(this), // owner
             Gas.TOKEN_WALLET_DEPLOY_VALUE / 2 // deploy grams
         );
@@ -144,78 +118,76 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function encodeMarketOrder(
-        uint32 market_idx,
-        PositionType position_type,
+        uint32 marketIdx,
+        PositionType positionType,
         uint32 leverage,
-        uint128 expected_price,
-        uint64 max_slippage_rate,
-        IEthereumEvent.EthereumEventOracleData event_data,
+        uint128 expectedPrice,
+        uint64 maxSlippageRate,
         IPriceNode.Price price,
         address referrer,
         uint32 nonce,
-        uint32 call_id
+        uint32 callId
     ) external pure returns (TvmCell payload) {
-        TvmCell cell = abi.encode(market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price, referrer);
-        return encodeTokenTransfer(Action.MarketOrder, nonce, call_id, cell);
+        TvmCell cell = abi.encode(marketIdx, positionType, leverage, expectedPrice, maxSlippageRate, price, referrer);
+        return encodeTokenTransfer(Action.MarketOrder, nonce, callId, cell);
     }
 
     function decodeMarketOrder(
-        TvmCell action_payload
+        TvmCell actionPayload
     ) public pure returns (
-        uint32 market_idx,
-        PositionType position_type,
+        uint32 marketIdx,
+        PositionType positionType,
         uint32 leverage,
-        uint128 expected_price,
-        uint64 max_slippage_rate,
-        IEthereumEvent.EthereumEventOracleData event_data,
+        uint128 expectedPrice,
+        uint64 maxSlippageRate,
         IPriceNode.Price price,
         address referrer
     ) {
         (
-            market_idx, position_type, leverage, expected_price, max_slippage_rate, event_data, price, referrer
-        ) = abi.decode(action_payload, (uint32, PositionType, uint32, uint128, uint64, IEthereumEvent.EthereumEventOracleData, IPriceNode.Price, address));
+        marketIdx, positionType, leverage, expectedPrice, maxSlippageRate, price, referrer
+        ) = abi.decode(actionPayload, (uint32, PositionType, uint32, uint128, uint64, IPriceNode.Price, address));
     }
 
     function encodeAddCollateral(
-        uint32 market_idx, uint32 position_key, uint32 nonce, uint32 call_id
+        uint32 marketIdx, uint32 positionKey, uint32 nonce, uint32 callId
     ) public pure returns (TvmCell payload) {
-        return encodeTokenTransfer(Action.AddCollateral, nonce, call_id, abi.encode(market_idx, position_key));
+        return encodeTokenTransfer(Action.AddCollateral, nonce, callId, abi.encode(marketIdx, positionKey));
     }
 
-    function decodeAddCollateral(TvmCell action_payload) public pure returns (uint32 market_idx, uint32 position_key) {
-        (market_idx, position_key) = abi.decode(action_payload, (uint32, uint32));
-    }
-    
-    function encodeLiquidityDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
-        TvmCell empty;
-        return encodeTokenTransfer(Action.LiquidityDeposit, nonce, call_id, empty);
+    function decodeAddCollateral(TvmCell actionPayload) public pure returns (uint32 marketIdx, uint32 positionKey) {
+        (marketIdx, positionKey) = abi.decode(actionPayload, (uint32, uint32));
     }
 
-    function encodeLiquidityWithdraw(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
+    function encodeLiquidityDeposit(uint32 nonce, uint32 callId) public pure returns (TvmCell payload) {
         TvmCell empty;
-        return encodeTokenTransfer(Action.LiquidityWithdraw, nonce, call_id, empty);
+        return encodeTokenTransfer(Action.LiquidityDeposit, nonce, callId, empty);
     }
 
-    function encodeInsuranceDeposit(uint32 nonce, uint32 call_id) public pure returns (TvmCell payload) {
+    function encodeLiquidityWithdraw(uint32 nonce, uint32 callId) public pure returns (TvmCell payload) {
         TvmCell empty;
-        return encodeTokenTransfer(Action.InsuranceDeposit, nonce, call_id, empty);
+        return encodeTokenTransfer(Action.LiquidityWithdraw, nonce, callId, empty);
+    }
+
+    function encodeInsuranceDeposit(uint32 nonce, uint32 callId) public pure returns (TvmCell payload) {
+        TvmCell empty;
+        return encodeTokenTransfer(Action.InsuranceDeposit, nonce, callId, empty);
     }
 
     function encodeTokenTransfer(
-        Action action, uint32 nonce, uint32 call_id, TvmCell action_payload
+        Action action, uint32 nonce, uint32 callId, TvmCell actionPayload
     ) public pure returns (TvmCell payload) {
-        return abi.encode(action, nonce, call_id, action_payload);
+        return abi.encode(action, nonce, callId, actionPayload);
     }
 
     function decodeTokenTransfer(TvmCell payload) public pure returns (
-        Action action, uint32 nonce, uint32 call_id, TvmCell action_payload, bool correct
+        Action action, uint32 nonce, uint32 callId, TvmCell actionPayload, bool correct
     ){
         // check if payload assembled correctly
         TvmSlice slice = payload.toSlice();
         // 1 uint8 + 2 uint32 and 1 cell
         (uint16 bits, uint8 refs) = slice.size();
         if ((bits == 8 + 32 + 32) && (refs == 1) && payload.toSlice().decode(uint8) <= uint8(Action.RemoveCollateral)) {
-            (action, nonce, call_id, action_payload) = abi.decode(payload, (Action, uint32, uint32, TvmCell));
+            (action, nonce, callId, actionPayload) = abi.decode(payload, (Action, uint32, uint32, TvmCell));
             correct = true;
         }
     }
@@ -255,7 +227,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function _transfer(
-        address wallet, uint128 amount, address receiver, TvmCell payload, address send_gas_to, uint16 flag
+        address wallet, uint128 amount, address receiver, TvmCell payload, address sendGasTo, uint16 flag
     ) internal pure {
         uint128 value = flag != MsgFlag.ALL_NOT_RESERVED ? Gas.TOKEN_TRANSFER_VALUE : 0;
         bool notify = false;
@@ -268,7 +240,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             amount,
             receiver,
             0,
-            send_gas_to,
+            sendGasTo,
             notify,
             payload
         );
@@ -282,7 +254,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
                 nonce: nonce
             },
             pubkey: 0,
-            code: oracleProxyCode
+            code: oracleProxyCode.code
         });
     }
 
@@ -307,8 +279,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     modifier onlyGravixAccount(address user) {
-        address gravix_account_addr = getGravixAccountAddress(user);
-        require (msg.sender == gravix_account_addr, Errors.NOT_GRAVIX_ACCOUNT);
+        address gravixAccountAddr = getGravixAccountAddress(user);
+        require (msg.sender == gravixAccountAddr, Errors.NOT_GRAVIX_ACCOUNT);
         _;
     }
 
@@ -330,38 +302,38 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     modifier reserveAndSuccessCallback(Callback.CallMeta meta) {
         tvm.rawReserve(_reserve(), 0);
         _;
-        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.send_gas_to);
+        _sendCallbackOrGas(msg.sender, meta.nonce, true, meta.sendGasTo);
     }
 
     modifier reserveAndFailCallback(Callback.CallMeta meta) {
         tvm.rawReserve(_reserve(), 0);
         _;
-        _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
+        _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
     }
 
     modifier reserveAndSendGas(Callback.CallMeta meta) {
         tvm.rawReserve(_reserve(), 0);
         _;
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
     }
 
     modifier onlyOwner() {
-        require(msg.sender == owner, Errors.NOT_OWNER);
+        require(msg.sender == managers.owner, Errors.NOT_OWNER);
         _;
     }
 
     modifier onlyManager() {
-        require(msg.sender == owner || msg.sender == manager, Errors.NOT_OWNER);
+        require(msg.sender == managers.owner || msg.sender == managers.manager, Errors.NOT_OWNER);
         _;
     }
 
     modifier onlyMarketManager() {
-        require (msg.sender == owner || msg.sender == marketManager || msg.sender == manager, Errors.NOT_OWNER);
+        require (msg.sender == managers.owner || msg.sender == managers.marketManager || msg.sender == managers.manager, Errors.NOT_OWNER);
         _;
     }
 
     modifier onlyActive() {
-        require (!paused || msg.sender == owner, Errors.NOT_ACTIVE);
+        require (!paused || msg.sender == managers.owner, Errors.NOT_ACTIVE);
         _;
     }
 }

@@ -1,0 +1,46 @@
+pragma ever-solidity ^0.62.0;
+
+
+import "./IGravixAccount.tsol";
+import "./IGravixVault.tsol";
+
+
+interface IOldGravixVault {
+    enum OldOracleType { ChainlinkProxy, Dex, PriceNode }
+
+    struct ChainlinkOracle {
+        string ticker;
+        uint32 ttl;
+        uint16 chainID;
+    }
+
+    struct OldMarket {
+        OldOracleType priceSource;
+
+        uint128 totalLongsAsset;
+        uint128 totalShortsAsset;
+
+        uint128 maxTotalLongsUSD;
+        uint128 maxTotalShortsUSD;
+
+        uint128 lastNoiUpdatePrice;
+        uint16 noiWeight; // 100 -> 1x
+
+        IGravixVault.Funding funding;
+        uint32 lastFundingUpdateTime;
+
+        uint32 maxLeverage; // 10**6 -> 1x
+        uint128 depthAsset;
+
+        IGravixVault.Fees fees;
+        // if this is true, market works only in specified workingHours
+        bool scheduleEnabled;
+        bool paused;
+    }
+
+    struct DeprecatedOracleConfig {
+        IGravixVault.DexOracle dex;
+        ChainlinkOracle chainlink;
+        IGravixVault.PriceNode priceNode;
+    }
+}

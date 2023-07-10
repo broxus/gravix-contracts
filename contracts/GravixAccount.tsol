@@ -32,52 +32,52 @@ contract GravixAccount is GravixAccountBase {
         sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
     }
 
-    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external override onlyGravixVault {
-        if (new_version == currentVersion) {
+    function upgrade(TvmCell newCode, uint32 newVersion, Callback.CallMeta meta) external override onlyGravixVault {
+        if (newVersion == currentVersion) {
             tvm.rawReserve(_reserve(), 0);
-            meta.send_gas_to.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
+            meta.sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.ALL_NOT_RESERVED });
             return;
         }
 
         uint8 _tmp;
-        TvmBuilder main_builder;
-        main_builder.store(vault); // address 267
-        main_builder.store(_tmp); // 8
-        main_builder.store(meta.send_gas_to); // address 267
+        TvmBuilder mainBuilder;
+        mainBuilder.store(vault); // address 267
+        mainBuilder.store(_tmp); // 8
+        mainBuilder.store(meta.sendGasTo); // address 267
 
-        main_builder.storeRef(platform_code); // ref
+        mainBuilder.storeRef(platformCode); // ref
 
         TvmBuilder initial;
         initial.store(user);
 
-        main_builder.storeRef(initial); // ref 2
+        mainBuilder.storeRef(initial); // ref 2
 
         TvmBuilder params;
-        params.store(new_version);
+        params.store(newVersion);
         params.store(currentVersion);
         params.store(referrer);
 
-        main_builder.storeRef(params); // ref3
+        mainBuilder.storeRef(params); // ref3
 
-        TvmCell storage_data = abi.encode(marketOrders, positions, request_counter, grandReferrer, referralBalance);
-        TvmCell data = abi.encode(meta.call_id, meta.nonce, storage_data);
+        TvmCell storageData = abi.encode(marketOrders, positions, requestCounter, grandReferrer, referralBalance);
+        TvmCell data = abi.encode(meta.callId, meta.nonce, storageData);
 
-        main_builder.storeRef(data); // ref3
+        mainBuilder.storeRef(data); // ref3
 
-        tvm.setcode(new_code);
+        tvm.setcode(newCode);
         // run onCodeUpgrade from new code
-        tvm.setCurrentCode(new_code);
-        onCodeUpgrade(main_builder.toCell());
+        tvm.setCurrentCode(newCode);
+        onCodeUpgrade(mainBuilder.toCell());
     }
 
-    function onCodeUpgrade(TvmCell upgrade_data) private {
+    function onCodeUpgrade(TvmCell upgradeData) private {
         tvm.rawReserve(_reserve(), 0);
 
-        TvmSlice s = upgrade_data.toSlice();
-        (address root_, , address send_gas_to) = s.decode(address, uint8, address);
+        TvmSlice s = upgradeData.toSlice();
+        (address root_, , address sendGasTo) = s.decode(address, uint8, address);
         address _vault = root_;
 
-        TvmCell _platform_code = s.loadRef();
+        TvmCell _platformCode = s.loadRef();
 
         TvmSlice initialData = s.loadRefAsSlice();
         address _user = initialData.decode(address);
@@ -93,11 +93,11 @@ contract GravixAccount is GravixAccountBase {
             referrer = params.decode(address);
 
             vault = _vault;
-            platform_code = _platform_code;
+            platformCode = _platformCode;
             user = _user;
             currentVersion = _currentVersion;
             IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, Callback.CallMeta(0, 0, send_gas_to)
+                user, Callback.CallMeta(0, 0, sendGasTo)
             );
         } else {
             // storage was modified
@@ -106,21 +106,21 @@ contract GravixAccount is GravixAccountBase {
             // upgrade without modifying storage
             currentVersion = _currentVersion;
             vault = _vault;
-            platform_code = _platform_code;
+            platformCode = _platformCode;
             user = _user;
 
             TvmCell data = s.loadRef();
-            (uint32 call_id, uint32 nonce, TvmCell storageData) = abi.decode(data, (uint32, uint32, TvmCell));
+            (uint32 callId, uint32 nonce, TvmCell storageData) = abi.decode(data, (uint32, uint32, TvmCell));
             (
                 marketOrders,
                 positions,
-                request_counter,
+                requestCounter,
                 grandReferrer,
                 referralBalance
             ) = abi.decode(storageData, (mapping(uint32 => MarketOrder), mapping(uint32 => Position), uint32, address, uint128));
 
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _oldVersion, _currentVersion, Callback.CallMeta(call_id, nonce, send_gas_to)
+                user, _oldVersion, _currentVersion, Callback.CallMeta(callId, nonce, sendGasTo)
             );
         }
     }

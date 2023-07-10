@@ -47,7 +47,7 @@ const main = async () => {
   while (old_accs.length) {
     const pack = old_accs.splice(0, 30);
     await locklift.transactions.waitFinalized(vault.methods.forceUpgradeGravixAccountsByContracts({
-      contracts: pack, meta: {call_id: 0, nonce: 0, send_gas_to: manager.address}
+      contracts: pack, meta: {callId: 0, nonce: 0, sendGasTo: manager.address}
     }).send({from: manager.address, amount: toNano(pack.length + 2)}));
     console.log('\x1b[1m', `Upgraded ${pack.length} accounts`)
   }

@@ -90,7 +90,6 @@ describe('Testing liquidity pool mechanics', async function() {
     it("Add market to vault", async function () {
       // eth market
       const oracle: Oracle = {
-        chainlink: {chainID: 0, ticker: '', ttl: 0},
         dex: {
           targetToken: eth_addr,
           path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -111,13 +110,13 @@ describe('Testing liquidity pool mechanics', async function() {
       expect(traceTree).to
         .emit("LiquidityPoolDeposit")
         .withNamedArgs({
-          usdt_amount_in: deposit_amount.toString(),
-          stg_usdt_amount_out: deposit_amount.toString()
+          usdtAmountIn: deposit_amount.toString(),
+          stgUsdtAmountOut: deposit_amount.toString()
         });
 
       const details = await vault.details();
-      expect(details._stgUsdtSupply).to.be.eq(deposit_amount.toString());
-      expect(details._poolBalance).to.be.eq(deposit_amount.toString());
+      expect(details._poolAssets.stgUsdtSupply).to.be.eq(deposit_amount.toString());
+      expect(details._poolAssets.balance).to.be.eq(deposit_amount.toString());
 
       user_stg_wallet = await stg_root.wallet(user);
       const user_stg_bal = await user_stg_wallet.balance();

@@ -38,7 +38,7 @@ const main = async () => {
   spinner.start('Deploying price node...');
   const { contract } = await locklift.tracing.trace(locklift.factory.deployContract({
     contract: 'PriceNode',
-    initParams: {deploy_nonce: getRandomNonce()},
+    initParams: {deployNonce: getRandomNonce()},
     constructorParams: {
       _owner: user.address,
       _daemonPubkey: `0x${response._daemonPubkey}`,
@@ -57,7 +57,7 @@ const main = async () => {
 
   spinner.start('Transferring ownership...');
   await locklift.tracing.trace(contract.methods.transferOwnership({
-    new_owner: response._owner
+    newOwner: response._owner
   }).send({from: user.address, amount: toNano(1)}));
   spinner.succeed('Ownership transferred');
 

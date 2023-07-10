@@ -4,11 +4,11 @@ pragma ever-solidity ^0.62.0;
 import "../libraries/Callback.tsol";
 import "./IGravixVault.tsol";
 import "./IPriceNode.tsol";
-import "./IEthereumEvent.tsol";
 
 
 
 interface IGravixAccount {
+
     struct MarketOrder {
         uint32 marketIdx;
         IGravixVault.PositionType positionType;
@@ -59,46 +59,46 @@ interface IGravixAccount {
     }
 
     function process_requestMarketOrder(
-        uint32 req_nonce, IGravixVault.PendingMarketOrder pending_request
+        uint32 reqNonce, IGravixVault.PendingMarketOrder pendingRequest
     ) external;
-    function process_cancelMarketOrder(uint32 position_key, Callback.CallMeta meta) external;
+    function process_cancelMarketOrder(uint32 positionKey, Callback.CallMeta meta) external;
     function process_executeMarketOrder(
-        uint32 position_key,
-        uint32 market_idx,
-        uint128 position_size,
-        IGravixVault.PositionType position_type,
-        uint128 asset_price,
-        uint64 dynamic_spread,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 positionSize,
+        IGravixVault.PositionType positionType,
+        uint128 assetPrice,
+        uint64 dynamicSpread,
         int256 accUSDFundingPerShare,
         Callback.CallMeta meta
     ) external;
     function process_closePosition(
-        uint32 position_key,
-        uint32 market_idx,
-        uint128 asset_price,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
         IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external;
     function process_liquidatePositions(
         address liquidator,
-        uint32 position_key,
-        uint32 market_idx,
-        uint128 asset_price,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
         IGravixVault.Funding funding,
         Callback.CallMeta meta
     ) external;
     function process_addCollateral(
         uint128 amount,
-        uint32 market_idx,
-        uint32 position_key,
+        uint32 marketIdx,
+        uint32 positionKey,
         Callback.CallMeta meta
     ) external;
     function process_removeCollateral(
         uint128 amount,
-        uint32 position_key,
-        uint32 market_idx,
-        uint32 max_leverage,
-        uint128 min_collateral,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint32 maxLeverage,
+        uint128 minCollateral,
         Callback.CallMeta meta
     ) external;
     function process_sendReferrerFee(
@@ -107,5 +107,5 @@ interface IGravixAccount {
     function process_withdrawReferralBalance(Callback.CallMeta meta) external;
     function getReferrer() external view responsible returns (address user, address _referrer);
     function process_getReferrer(address _user, address _referrer) external;
-    function upgrade(TvmCell new_code, uint32 new_version, Callback.CallMeta meta) external;
+    function upgrade(TvmCell newCode, uint32 newVersion, Callback.CallMeta meta) external;
 }

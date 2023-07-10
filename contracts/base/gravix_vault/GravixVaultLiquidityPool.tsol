@@ -15,51 +15,74 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     // --------------------------- LIQUIDITY POOL ---------------------------------------
     // ----------------------------------------------------------------------------------
     function withdrawInsuranceFundOverflow(Callback.CallMeta meta) external onlyOwner reserveAndSuccessCallback(meta) {
-        require (insuranceFundLimit < insuranceFund, Errors.LOW_INSURANCE_FUND);
-        require (treasury != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
-        require (projectFund != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
-        require (devFund != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
-        uint128 overflow = insuranceFund - insuranceFundLimit;
+        require (insuranceFund.limit < insuranceFund.balance, Errors.LOW_INSURANCE_FUND);
+        require (treasuries.treasury != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
+        require (treasuries.projectFund != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
+        require (treasuries.devFund != address.makeAddrStd(0, 0), Errors.ZERO_ADDRESS);
+        uint128 overflow = insuranceFund.balance - insuranceFund.limit;
         _decreaseInsuranceFund(overflow);
 
-        uint128 _treasury_amount = math.muldiv(
+        uint128 _treasuryAmount = math.muldiv(
             overflow,
             insuranceFundOverflowDistributionSchema[uint8(InsuranceFundOverflowDistributionSchema.Treasury)],
             Constants.HUNDRED_PERCENT
         );
-        uint128 _project_fund_amount = math.muldiv(
+        uint128 _projectFundAmount = math.muldiv(
             overflow,
             insuranceFundOverflowDistributionSchema[uint8(InsuranceFundOverflowDistributionSchema.ProjectFund)],
             Constants.HUNDRED_PERCENT
         );
-        uint128 _dev_fund_amount = overflow - _treasury_amount - _project_fund_amount;
+        uint128 _devFundAmount = overflow - _treasuryAmount - _projectFundAmount;
 
         TvmCell empty;
-        _transfer(usdtWallet, _treasury_amount, treasury, empty, meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
-        _transfer(usdtWallet, _project_fund_amount, projectFund, empty, meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
-        _transfer(usdtWallet, _dev_fund_amount, devFund, empty, meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
+        _transfer(
+            usdt.wallet,
+            _treasuryAmount,
+            treasuries.treasury,
+            empty,
+            meta.sendGasTo,
+            MsgFlag.SENDER_PAYS_FEES
+        );
 
-        emit InsuranceFundWithdraw(meta.call_id, _treasury_amount, _project_fund_amount, _dev_fund_amount);
+        _transfer(
+            usdt.wallet,
+            _projectFundAmount,
+            treasuries.projectFund,
+            empty,
+            meta.sendGasTo,
+            MsgFlag.SENDER_PAYS_FEES
+        );
+
+        _transfer(
+            usdt.wallet,
+            _devFundAmount,
+            treasuries.devFund,
+            empty,
+            meta.sendGasTo,
+            MsgFlag.SENDER_PAYS_FEES
+        );
+
+        emit InsuranceFundWithdraw(meta.callId, _treasuryAmount, _projectFundAmount, _devFundAmount);
     }
 
     function _handleInsuranceDeposit(address user, uint128 amount, Callback.CallMeta meta) internal {
         _increaseInsuranceFund(amount);
-        emit InsuranceFundDeposit(meta.call_id, user, amount);
-        meta.send_gas_to.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        emit InsuranceFundDeposit(meta.callId, user, amount);
+        meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
     }
 
     function _handleUsdtDeposit(
         address user, uint128 amount, Callback.CallMeta meta
     ) internal {
-        uint128 mint_amount = usdtToStgUsdt(amount);
+        uint128 mintAmount = usdtToStgUsdt(amount);
 
-        poolBalance += amount;
-        stgUsdtSupply += mint_amount;
+        poolAssets.balance += amount;
+        poolAssets.stgUsdtSupply += mintAmount;
 
-        emit LiquidityPoolDeposit(meta.call_id, user, amount, mint_amount);
+        emit LiquidityPoolDeposit(meta.callId, user, amount, mintAmount);
 
-        ITokenRoot(stgUsdt).mint{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            mint_amount, user, Gas.TOKEN_WALLET_DEPLOY_VALUE / 2, meta.send_gas_to, true, _makeCell(meta.nonce)
+        ITokenRoot(stgUsdt.root).mint{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            mintAmount, user, Gas.TOKEN_WALLET_DEPLOY_VALUE / 2, meta.sendGasTo, true, _makeCell(meta.nonce)
         );
     }
 
@@ -67,64 +90,64 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         TvmBuilder builder;
         builder.store(user);
         builder.store(meta);
-        IBurnableTokenWallet(stgUsdtWallet).burn{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            amount, meta.send_gas_to, address(this), builder.toCell()
+        IBurnableTokenWallet(stgUsdt.wallet).burn{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount, meta.sendGasTo, address(this), builder.toCell()
         );
     }
 
-    function _handleStgUsdtBurn(uint128 stg_usdt_amount, TvmCell payload) internal {
+    function _handleStgUsdtBurn(uint128 stgUsdtAmount, TvmCell payload) internal {
         TvmSlice slice = payload.toSlice();
 
         address user = slice.decode(address);
         Callback.CallMeta meta = slice.decode(Callback.CallMeta);
 
-        uint128 usdt_amount = stgUsdtToUsdt(stg_usdt_amount);
+        uint128 usdtAmount = stgUsdtToUsdt(stgUsdtAmount);
 
-        poolBalance -= usdt_amount;
-        stgUsdtSupply -= stg_usdt_amount;
+        poolAssets.balance -= usdtAmount;
+        poolAssets.stgUsdtSupply -= stgUsdtAmount;
 
-        emit LiquidityPoolWithdraw(meta.call_id, user, usdt_amount, stg_usdt_amount);
+        emit LiquidityPoolWithdraw(meta.callId, user, usdtAmount, stgUsdtAmount);
 
-        _transfer(usdtWallet, usdt_amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+        _transfer(usdt.wallet, usdtAmount, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
     }
 
-    function usdtToStgUsdt(uint128 usdt_amount) public view responsible returns (uint128 stg_amount) {
-        if (stgUsdtSupply == 0) {
-            stg_amount = usdt_amount;
+    function usdtToStgUsdt(uint128 usdtAmount) public view responsible returns (uint128 stgAmount) {
+        if (poolAssets.stgUsdtSupply == 0) {
+            stgAmount = usdtAmount;
         } else {
-            (uint128 in_price,) = stgUsdtPrice();
-            stg_amount = math.muldiv(usdt_amount, Constants.PRICE_DECIMALS, in_price);
+            (uint128 inPrice,) = stgUsdtPrice();
+            stgAmount = math.muldiv(usdtAmount, Constants.PRICE_DECIMALS, inPrice);
         }
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stg_amount;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }stgAmount;
     }
 
-    function stgUsdtToUsdt(uint128 stg_amount) public view responsible returns (uint128 usdt_amount) {
-        if (stgUsdtSupply == 0) {
-            usdt_amount = stg_amount;
+    function stgUsdtToUsdt(uint128 stgAmount) public view responsible returns (uint128 usdtAmount) {
+        if (poolAssets.stgUsdtSupply == 0) {
+            usdtAmount = stgAmount;
         } else {
-            (,uint128 out_price) = stgUsdtPrice();
-            usdt_amount = math.muldiv(stg_amount, out_price, Constants.PRICE_DECIMALS);
+            (,uint128 outPrice) = stgUsdtPrice();
+            usdtAmount = math.muldiv(stgAmount, outPrice, Constants.PRICE_DECIMALS);
         }
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }usdt_amount;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }usdtAmount;
     }
 
     // @dev Prices are multiplied by 10**8
     // in price could be higher in case of under collateralization
-    function stgUsdtPrice() public view responsible returns (uint128 in_price, uint128 out_price) {
-        if (stgUsdtSupply == 0) {
-            (in_price, out_price) = (Constants.PRICE_DECIMALS, Constants.PRICE_DECIMALS);
+    function stgUsdtPrice() public view responsible returns (uint128 inPrice, uint128 outPrice) {
+        if (poolAssets.stgUsdtSupply == 0) {
+            (inPrice, outPrice) = (Constants.PRICE_DECIMALS, Constants.PRICE_DECIMALS);
         } else {
             // out price is current real price
-            out_price = math.muldiv(poolBalance, Constants.PRICE_DECIMALS, stgUsdtSupply);
+            outPrice = math.muldiv(poolAssets.balance, Constants.PRICE_DECIMALS, poolAssets.stgUsdtSupply);
             // if we are in under collateralized state
-            in_price = targetPrice > 0 ? targetPrice : out_price;
+            inPrice = poolAssets.targetPrice > 0 ? poolAssets.targetPrice : outPrice;
         }
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(in_price, out_price);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(inPrice, outPrice);
     }
 
     function poolDebt() public view returns (uint128) {
-        uint128 target_balance = math.muldiv(stgUsdtSupply, targetPrice, Constants.PRICE_DECIMALS);
-        return poolBalance >= target_balance ? 0 : target_balance - poolBalance;
+        uint128 targetBalance = math.muldiv(poolAssets.stgUsdtSupply, poolAssets.targetPrice, Constants.PRICE_DECIMALS);
+        return poolAssets.balance >= targetBalance ? 0 : targetBalance - poolAssets.balance;
     }
     // ----------------------------------------------------------------------------------
     // --------------------------- MONEY FLOW MUTATORS ----------------------------------
@@ -137,44 +160,44 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         _collectFeeWithSchema(closeFeeDistributionSchema, amount);
     }
 
-    function _collectFeeWithSchema(uint64[2] fee_schema, uint128 amount) internal {
-        uint128 pool_fee = math.muldiv(amount, fee_schema[uint8(FeeDistributionSchema.Pool)], Constants.HUNDRED_PERCENT);
-        uint128 fund_fee = amount - pool_fee;
+    function _collectFeeWithSchema(uint64[2] feeSchema, uint128 amount) internal {
+        uint128 poolFee = math.muldiv(amount, feeSchema[uint8(FeeDistributionSchema.Pool)], Constants.HUNDRED_PERCENT);
+        uint128 fundFee = amount - poolFee;
 
-        if (fund_fee > 0) _increaseInsuranceFund(fund_fee);
-        if (pool_fee > 0) {
-            poolBalance += pool_fee;
-            emit LiquidityPoolFees(pool_fee);
+        if (fundFee > 0) _increaseInsuranceFund(fundFee);
+        if (poolFee > 0) {
+            poolAssets.balance += poolFee;
+            emit LiquidityPoolFees(poolFee);
             // we are in undercollaterized state and recover is finished
-            if (targetPrice > 0 && poolDebt() == 0) targetPrice = 0;
+            if (poolAssets.targetPrice > 0 && poolDebt() == 0) poolAssets.targetPrice = 0;
         }
     }
 
     function _decreaseInsuranceFund(uint128 amount) internal returns (uint128 debt) {
-        if (amount <= insuranceFund) {
-            insuranceFund -= amount;
+        if (amount <= insuranceFund.balance) {
+            insuranceFund.balance -= amount;
         } else {
-            uint128 delta = amount - insuranceFund;
+            uint128 delta = amount - insuranceFund.balance;
             // we just ran out of insurance fund, save target price
-            if (targetPrice == 0) {
-                (targetPrice,) = stgUsdtPrice();
+            if (poolAssets.targetPrice == 0) {
+                (poolAssets.targetPrice,) = stgUsdtPrice();
             }
-            if (delta > poolBalance) {
-                debt = delta - poolBalance;
-                delta = poolBalance;
+            if (delta > poolAssets.balance) {
+                debt = delta - poolAssets.balance;
+                delta = poolAssets.balance;
             }
-            poolBalance -= delta;
-            insuranceFund = 0;
+            poolAssets.balance -= delta;
+            insuranceFund.balance = 0;
         }
     }
 
     function _increaseInsuranceFund(uint128 amount) internal {
-        if (targetPrice > 0) {
+        if (poolAssets.targetPrice > 0) {
             uint128 debt = poolDebt();
-            poolBalance += math.min(debt, amount);
+            poolAssets.balance += math.min(debt, amount);
             amount -= math.min(debt, amount);
-            if (amount > 0) targetPrice = 0;
+            if (amount > 0) poolAssets.targetPrice = 0;
         }
-        insuranceFund += amount;
+        insuranceFund.balance += amount;
     }
 }
