@@ -31,11 +31,11 @@ export function toUSD(num: Bignumber | number) {
 
 export async function tryIncreaseTime(seconds: number) {
     // @ts-ignore
-    if (locklift.testing.isEnabled) {
-        await locklift.testing.increaseTime(seconds);
-    } else {
+    // if (locklift.testing.isEnabled) {
+    //     await locklift.testing.increaseTime(seconds);
+    // } else {
         await sleep(seconds * 1000);
-    }
+    // }
 }
 
 
@@ -94,7 +94,7 @@ export const deployUsers = async function (count: number, initial_balance: numbe
     const TestWallet = await locklift.factory.getContractArtifacts('TestWallet');
     const {contract: factory, tx} = await locklift.factory.deployContract({
         contract: 'TestFactory',
-        initParams: {wallet_code: TestWallet.code, _randomNonce: getRandomNonce()},
+        initParams: {walletCode: TestWallet.code, _randomNonce: getRandomNonce()},
         publicKey: signers[0]?.publicKey as string,
         constructorParams: {},
         value: toNano(count * initial_balance + 10)
@@ -142,7 +142,7 @@ export const deployUser = async function (initial_balance = 100, log=true): Prom
             _randomNonce: getRandomNonce()
         },
         constructorParams: {
-            owner_pubkey: `0x${signer?.publicKey}`
+            ownerPubkey: `0x${signer?.publicKey}`
         }
     });
 
@@ -200,7 +200,7 @@ export const setupVault = async function (
     const {contract: _deployer, tx} = await locklift.tracing.trace(locklift.factory.deployContract({
         contract: 'VaultDeployer',
         initParams: {
-            deploy_nonce: getRandomNonce()
+            deployNonce: getRandomNonce()
         },
         publicKey: signer?.publicKey as string,
         constructorParams: {
@@ -216,7 +216,6 @@ export const setupVault = async function (
         _owner: owner.address,
         _usdt: usdt,
         _stg_usdt: stg_usdt,
-        _oracle: oracle,
         _priceNode: priceNode,
         _pricePubkey: pricePk
     }).sendExternal({publicKey: signer?.publicKey as string}));
@@ -232,7 +231,7 @@ export const setupPairMock = async function () {
     const {contract: mock, tx} = await locklift.tracing.trace(locklift.factory.deployContract({
         contract: 'PairMock',
         initParams: {
-            deploy_nonce: getRandomNonce()
+            deployNonce: getRandomNonce()
         },
         publicKey: signer?.publicKey as string,
         constructorParams: {},

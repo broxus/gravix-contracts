@@ -14,8 +14,8 @@ import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
 abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
-    function marketOpen(uint32 market_idx) public view returns (bool open) {
-        Market _market = markets[market_idx];
+    function marketOpen(uint32 marketIdx) public view returns (bool open) {
+        Market _market = markets[marketIdx];
 
         if (_market.paused) return false;
         if (!_market.scheduleEnabled) return true;
@@ -23,65 +23,65 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         (
             uint year, uint month, uint day,,,
         ) = DateTimeLib.timestampToDateTime(now);
-        uint cur_week_day = DateTimeLib.getDayOfWeek(now);
+        uint curWeekDay = DateTimeLib.getDayOfWeek(now);
 
         // first check if market is shut down because of weekend
         // weekend intervals are sorted by beginning and cant intersect
         // so that its enough to check 1st interval with lower start
-        optional(uint32, DateTimeInterval) opt = weekends[market_idx].prevOrEq(now);
+        optional(uint32, DateTimeInterval) opt = weekends[marketIdx].prevOrEq(now);
         if (opt.hasValue()) {
-            (,DateTimeInterval last_weekend) = opt.get();
-            if (now <= _dateTimeToTimestamp(last_weekend.to)) return false;
+            (,DateTimeInterval lastWeekend) = opt.get();
+            if (now <= _dateTimeToTimestamp(lastWeekend.to)) return false;
         }
 
         // now lets check if we are on working hours of market
-        mapping (uint8 => TimeInterval[]) working_hours = workingHours[market_idx];
-        if (!working_hours.exists(uint8(cur_week_day))) return false;
+        mapping (uint8 => TimeInterval[]) workingHours = workingHours[marketIdx];
+        if (!workingHours.exists(uint8(curWeekDay))) return false;
         // ok, so, we are on working day, lets get timestamp of start/end of the working day
-        TimeInterval[] work_intervals = working_hours[uint8(cur_week_day)];
-        for (TimeInterval interval: work_intervals) {
-            uint32 from_ts = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.from));
-            uint32 to_ts = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.to));
+        TimeInterval[] workIntervals = workingHours[uint8(curWeekDay)];
+        for (TimeInterval interval: workIntervals) {
+            uint32 fromTs = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.from));
+            uint32 toTs = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.to));
             // end not set => work till the end of the day, set infinite timestamp to bypass check
-            if (interval.to.hour == 0 && interval.to.minute == 0) to_ts = 2**32 - 1;
-            if (now >= from_ts && now <= to_ts) return true;
+            if (interval.to.hour == 0 && interval.to.minute == 0) toTs = 2**32 - 1;
+            if (now >= fromTs && now <= toTs) return true;
         }
         return false;
     }
 
     function addMarkets(
-        MarketConfig[] new_markets,
+        MarketConfig[] newMarkets,
         Callback.CallMeta meta
     ) external onlyOwner reserveAndSuccessCallback(meta) {
-        for (MarketConfig _market_config : new_markets) {
-            require (validateMarketConfig(_market_config), Errors.BAD_INPUT);
+        for (MarketConfig _marketConfig : newMarkets) {
+            require (validateMarketConfig(_marketConfig), Errors.BAD_INPUT);
 
-            Market new_market;
-            new_market.priceSource = _market_config.priceSource;
-            new_market.maxTotalLongsUSD = _market_config.maxLongsUSD;
-            new_market.maxTotalShortsUSD = _market_config.maxShortsUSD;
-            new_market.noiWeight = _market_config.noiWeight;
-            new_market.maxLeverage = _market_config.maxLeverage;
-            new_market.depthAsset = _market_config.depthAsset;
-            new_market.fees = _market_config.fees;
-            new_market.scheduleEnabled = _market_config.scheduleEnabled;
+            Market newMarket;
+            newMarket.priceSource = _marketConfig.priceSource;
+            newMarket.maxTotalLongsUSD = _marketConfig.maxLongsUSD;
+            newMarket.maxTotalShortsUSD = _marketConfig.maxShortsUSD;
+            newMarket.noiWeight = _marketConfig.noiWeight;
+            newMarket.maxLeverage = _marketConfig.maxLeverage;
+            newMarket.depthAsset = _marketConfig.depthAsset;
+            newMarket.fees = _marketConfig.fees;
+            newMarket.scheduleEnabled = _marketConfig.scheduleEnabled;
 
-            workingHours[marketCount] = _market_config.workingHours;
-            markets[marketCount] = new_market;
+            workingHours[marketCount] = _marketConfig.workingHours;
+            markets[marketCount] = newMarket;
             marketCount += 1;
 
-            emit NewMarket(meta.call_id, _market_config);
+            emit NewMarket(meta.callId, _marketConfig);
         }
     }
 
     function setMarketsConfigs(
-        mapping (uint32 => MarketConfig) new_configs, Callback.CallMeta meta
+        mapping (uint32 => MarketConfig) newConfigs, Callback.CallMeta meta
     ) external onlyOwner reserveAndSuccessCallback(meta) {
-        for ((uint32 market_idx, MarketConfig config) : new_configs) {
-            require (markets.exists(market_idx), Errors.BAD_INPUT);
+        for ((uint32 marketIdx, MarketConfig config) : newConfigs) {
+            require (markets.exists(marketIdx), Errors.BAD_INPUT);
             require (validateMarketConfig(config), Errors.BAD_INPUT);
 
-            Market market = markets[market_idx];
+            Market market = markets[marketIdx];
             market.priceSource = config.priceSource;
             market.maxTotalLongsUSD = config.maxLongsUSD;
             market.maxTotalShortsUSD = config.maxShortsUSD;
@@ -91,21 +91,21 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
             market.fees = config.fees;
             market.scheduleEnabled = config.scheduleEnabled;
 
-            workingHours[market_idx] = config.workingHours;
-            markets[market_idx] = market;
+            workingHours[marketIdx] = config.workingHours;
+            markets[marketIdx] = market;
 
-            emit MarketConfigUpdate(meta.call_id, market_idx, config);
+            emit MarketConfigUpdate(meta.callId, marketIdx, config);
         }
     }
 
     function setOracleConfigs(
-        mapping (uint32 => OracleConfig) new_oracles, Callback.CallMeta meta
+        mapping (uint32 => OracleConfig) newOracles, Callback.CallMeta meta
     ) external onlyManager reserveAndSuccessCallback(meta) {
-        for ((uint32 market_idx, OracleConfig oracle_conf) : new_oracles) {
-            require (markets.exists(market_idx), Errors.BAD_INPUT);
+        for ((uint32 marketIdx, OracleConfig oracleConf) : newOracles) {
+            require (markets.exists(marketIdx), Errors.BAD_INPUT);
 
-            oracleConfigs[market_idx] = oracle_conf;
-            emit MarketOracleConfigUpdate(meta.call_id, market_idx, oracle_conf);
+            oracleConfigs[marketIdx] = oracleConf;
+            emit MarketOracleConfigUpdate(meta.callId, marketIdx, oracleConf);
         }
     }
 
@@ -129,111 +129,111 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
     function setMarketsPause(
         mapping (uint32 => bool) pause, Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for ((uint32 market_idx, bool new_state) : pause) {
-            require (markets.exists(market_idx), Errors.BAD_INPUT);
+        for ((uint32 marketIdx, bool newState) : pause) {
+            require (markets.exists(marketIdx), Errors.BAD_INPUT);
 
-            markets[market_idx].paused = new_state;
-            emit MarketPause(meta.call_id, market_idx, new_state);
+            markets[marketIdx].paused = newState;
+            emit MarketPause(meta.callId, marketIdx, newState);
         }
     }
 
     function setMarketsWorkingHours(
-        mapping (uint32 => mapping (uint8 => TimeInterval[])) market_to_working_hours,
+        mapping (uint32 => mapping (uint8 => TimeInterval[])) marketToWorkingHours,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for ((uint32 market_idx, mapping (uint8 => TimeInterval[]) working_hours) : market_to_working_hours) {
-            _setMarketWorkingHours(market_idx, working_hours, meta);
+        for ((uint32 marketIdx, mapping (uint8 => TimeInterval[]) workingHours) : marketToWorkingHours) {
+            _setMarketWorkingHours(marketIdx, workingHours, meta);
         }
     }
 
     function setMarketsCommonWorkingHours(
-        uint32[] market_idx,
-        mapping (uint8 => TimeInterval[]) working_hours,
+        uint32[] marketIdx,
+        mapping (uint8 => TimeInterval[]) workingHours,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for (uint i = 0; i < market_idx.length; i++) {
-            _setMarketWorkingHours(market_idx[i], working_hours, meta);
+        for (uint i = 0; i < marketIdx.length; i++) {
+            _setMarketWorkingHours(marketIdx[i], workingHours, meta);
         }
     }
 
     function _setMarketWorkingHours(
-        uint32 market_idx,
-        mapping (uint8 => TimeInterval[]) working_hours,
+        uint32 marketIdx,
+        mapping (uint8 => TimeInterval[]) _workingHours,
         Callback.CallMeta meta
     ) internal {
-        require (markets.exists(market_idx), Errors.BAD_INPUT);
+        require (markets.exists(marketIdx), Errors.BAD_INPUT);
 
-        for ((uint8 key, TimeInterval[] intervals) : working_hours) {
+        for ((uint8 key, TimeInterval[] intervals) : _workingHours) {
             require (key >= DateTimeLib.DOW_MON && key <= DateTimeLib.DOW_SUN, Errors.BAD_INPUT);
             for (TimeInterval interval : intervals) {
                 require (validateTimeInterval(interval), Errors.BAD_INPUT);
             }
         }
 
-        workingHours[market_idx] = working_hours;
-        emit MarketScheduleUpdate(meta.call_id, market_idx, working_hours);
+        workingHours[marketIdx] = _workingHours;
+        emit MarketScheduleUpdate(meta.callId, marketIdx, _workingHours);
     }
 
     function addMarketsWeekends(
-        uint32[] market_idx,
-        DateTimeInterval[] new_weekends,
+        uint32[] marketIdx,
+        DateTimeInterval[] newWeekends,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        require (market_idx.length == new_weekends.length, Errors.BAD_INPUT);
+        require (marketIdx.length == newWeekends.length, Errors.BAD_INPUT);
 
-        for (uint i = 0; i < market_idx.length; i++) {
-            _addMarketWeekends(market_idx[i], new_weekends[i], meta);
+        for (uint i = 0; i < marketIdx.length; i++) {
+            _addMarketWeekends(marketIdx[i], newWeekends[i], meta);
         }
     }
 
     function addMarketsCommonWeekends(
-        uint32[] market_idx,
-        DateTimeInterval new_weekends,
+        uint32[] marketIdx,
+        DateTimeInterval newWeekends,
         Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for (uint i = 0; i < market_idx.length; i++) {
-            _addMarketWeekends(market_idx[i], new_weekends, meta);
+        for (uint i = 0; i < marketIdx.length; i++) {
+            _addMarketWeekends(marketIdx[i], newWeekends, meta);
         }
     }
 
     function _addMarketWeekends(
-        uint32 market_idx,
-        DateTimeInterval _new_weekend,
+        uint32 marketIdx,
+        DateTimeInterval _newWeekend,
         Callback.CallMeta meta
     ) internal {
-        require (markets.exists(market_idx), Errors.BAD_INPUT);
-        require (validateDateTimeInterval(_new_weekend));
+        require (markets.exists(marketIdx), Errors.BAD_INPUT);
+        require (validateDateTimeInterval(_newWeekend));
 
-        uint32 _new_weekend_start = _dateTimeToTimestamp(_new_weekend.from);
-        uint32 _new_weekend_end = _dateTimeToTimestamp(_new_weekend.to);
+        uint32 _newWeekendStart = _dateTimeToTimestamp(_newWeekend.from);
+        uint32 _newWeekendEnd = _dateTimeToTimestamp(_newWeekend.to);
 
         // check that previous weekend end before start of this weekend
-        optional(uint32, DateTimeInterval) _opt = weekends[market_idx].prevOrEq(_new_weekend_start);
+        optional(uint32, DateTimeInterval) _opt = weekends[marketIdx].prevOrEq(_newWeekendStart);
         if (_opt.hasValue()) {
-            (, DateTimeInterval _prev_weekend) = _opt.get();
-            uint32 _prev_weekend_end = _dateTimeToTimestamp(_prev_weekend.to);
+            (, DateTimeInterval _prevWeekend) = _opt.get();
+            uint32 _prevWeekendEnd = _dateTimeToTimestamp(_prevWeekend.to);
 
-            require (_new_weekend_start >= _prev_weekend_end, Errors.BAD_INPUT);
+            require (_newWeekendStart >= _prevWeekendEnd, Errors.BAD_INPUT);
         }
 
         // check that next weekend start after this weekend
-        optional(uint32, DateTimeInterval) _opt2 = weekends[market_idx].next(_new_weekend_start);
+        optional(uint32, DateTimeInterval) _opt2 = weekends[marketIdx].next(_newWeekendStart);
         if (_opt2.hasValue()) {
-            (uint32 _next_weekend_start,) = _opt2.get();
+            (uint32 _nextWeekendStart,) = _opt2.get();
 
-            require (_next_weekend_start >= _new_weekend_end, Errors.BAD_INPUT);
+            require (_nextWeekendStart >= _newWeekendEnd, Errors.BAD_INPUT);
         }
 
-        weekends[market_idx][_new_weekend_start] = _new_weekend;
-        emit MarketWeekends(meta.call_id, market_idx, _new_weekend);
+        weekends[marketIdx][_newWeekendStart] = _newWeekend;
+        emit MarketWeekends(meta.callId, marketIdx, _newWeekend);
     }
-    
+
     function clearMarketsWeekends(
-        uint32[] market_idx, Callback.CallMeta meta
+        uint32[] marketIdx, Callback.CallMeta meta
     ) external onlyMarketManager reserveAndSuccessCallback(meta) {
-        for (uint i = 0; i < market_idx.length; i++) {
-            delete weekends[market_idx[i]];
-            emit MarketWeekendsCleared(meta.call_id, market_idx[i]);
+        for (uint i = 0; i < marketIdx.length; i++) {
+            delete weekends[marketIdx[i]];
+            emit MarketWeekendsCleared(meta.callId, marketIdx[i]);
         }
     }
 
@@ -247,16 +247,16 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         return _dateTimeToTimestamp(val.to) > _dateTimeToTimestamp(val.from);
     }
 
-    function getMarketWorkingHours(uint32 market_idx) external view responsible returns (mapping (uint8 => TimeInterval[])) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }workingHours[market_idx];
+    function getMarketWorkingHours(uint32 marketIdx) external view responsible returns (mapping (uint8 => TimeInterval[])) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }workingHours[marketIdx];
     }
 
-    function getMarketWeekends(uint32 market_idx) external view responsible returns (mapping (uint32 => DateTimeInterval)) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }weekends[market_idx];
+    function getMarketWeekends(uint32 marketIdx) external view responsible returns (mapping (uint32 => DateTimeInterval)) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }weekends[marketIdx];
     }
 
-    function getMarket(uint32 market_idx) external view responsible returns (Market _market) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } markets[market_idx];
+    function getMarket(uint32 marketIdx) external view responsible returns (Market _market) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } markets[marketIdx];
     }
 
     function getMarkets() external view responsible returns (mapping (uint32 => Market) _markets) {
@@ -267,7 +267,7 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracleConfigs;
     }
 
-    function getOracleConfig(uint32 market_idx) external view responsible returns (OracleConfig _oracle) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracleConfigs[market_idx];
+    function getOracleConfig(uint32 marketIdx) external view responsible returns (OracleConfig _oracle) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } oracleConfigs[marketIdx];
     }
 }

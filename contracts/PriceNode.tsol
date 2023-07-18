@@ -9,15 +9,15 @@ import "./interfaces/IPriceNode.tsol";
 
 
 contract PriceNode is IPriceNode {
-    event NewOraclePubkey(uint256 old_pk, uint256 new_pk);
-    event NewDaemonPubkey(uint256 old_pk, uint256 new_pk);
-    event NewMaxRequests(uint16 old_val, uint16 new_val);
-    event OwnershipTransferred(address old_owner, address new_owner);
+    event NewOraclePubkey(uint256 oldPk, uint256 newPk);
+    event NewDaemonPubkey(uint256 oldPk, uint256 newPk);
+    event NewMaxRequests(uint16 oldVal, uint16 newVal);
+    event OwnershipTransferred(address oldOwner, address newOwner);
     event NewRequest(address sender, uint32 nonce, string ticker);
     event RequestResolved(address sender, uint32 nonce, string ticker);
-    event NewMaxActionsPerTx(uint16 old_val, uint16 new_val);
+    event NewMaxActionsPerTx(uint16 oldVal, uint16 newVal);
 
-    uint32 static deploy_nonce;
+    uint32 static deployNonce;
     address owner;
 
     uint256 daemonPubkey;
@@ -76,29 +76,29 @@ contract PriceNode is IPriceNode {
         }
     }
 
-    function setMaxActionsPerTx(uint16 new_max) external onlyOwner {
-        emit NewMaxActionsPerTx(maxActionsPerTx, new_max);
-        maxActionsPerTx = new_max;
+    function setMaxActionsPerTx(uint16 newMax) external onlyOwner {
+        emit NewMaxActionsPerTx(maxActionsPerTx, newMax);
+        maxActionsPerTx = newMax;
     }
 
-    function transferOwnership(address new_owner) external onlyOwner {
-        emit OwnershipTransferred(owner, new_owner);
-        owner = new_owner;
+    function transferOwnership(address newOwner) external onlyOwner {
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
     }
 
-    function setMaxRequests(uint16 new_max) external onlyOwner {
-        emit NewMaxRequests(maxRequests, new_max);
-        maxRequests = new_max;
+    function setMaxRequests(uint16 newMax) external onlyOwner {
+        emit NewMaxRequests(maxRequests, newMax);
+        maxRequests = newMax;
     }
 
-    function setOraclePubkey(uint256 new_pk) external onlyOwner {
-        emit NewOraclePubkey(oraclePubkey, new_pk);
-        oraclePubkey = new_pk;
+    function setOraclePubkey(uint256 newPk) external onlyOwner {
+        emit NewOraclePubkey(oraclePubkey, newPk);
+        oraclePubkey = newPk;
     }
 
-    function setDaemonPubkey(uint256 new_pk) external onlyOwner {
-        emit NewDaemonPubkey(daemonPubkey, new_pk);
-        daemonPubkey = new_pk;
+    function setDaemonPubkey(uint256 newPk) external onlyOwner {
+        emit NewDaemonPubkey(daemonPubkey, newPk);
+        daemonPubkey = newPk;
     }
 
     function checkSign(

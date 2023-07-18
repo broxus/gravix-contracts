@@ -31,11 +31,6 @@ export interface Oracle {
         targetToken: Address,
         path: {addr: Address, leftRoot: Address, rightRoot: Address}[]
     },
-    chainlink: {
-        ticker: string,
-        chainID: number,
-        ttl: number
-    },
     priceNode: {
         ticker: string,
         maxOracleDelay: number;
@@ -93,27 +88,27 @@ export class GravixVault {
         return GravixAccount.from_addr(address.value0);
     }
 
-    async addMarkets(markets: MarketConfig[], call_id=0) {
+    async addMarkets(markets: MarketConfig[], callId=0) {
         return (await this.contract.methods.addMarkets({
-            new_markets: markets,
-            meta: {call_id: call_id, nonce: 0, send_gas_to: this.owner.address}
+            newMarkets: markets,
+            meta: {callId: callId, nonce: 0, sendGasTo: this.owner.address}
         }).send({
             from: this.owner.address,
             amount: toNano(2)
         }));
     }
 
-    async setOracles(oracles: [number, Oracle][], call_id=0) {
+    async setOracles(oracles: [number, Oracle][], callId=0) {
         return this.contract.methods.setOracleConfigs({
-            new_oracles: oracles, meta: {call_id: call_id, nonce: 0, send_gas_to: this.owner.address}
+            newOracles: oracles, meta: {callId: callId, nonce: 0, sendGasTo: this.owner.address}
         }).send({
             from: this.owner.address,
             amount: toNano(2)
         });
     }
 
-    async addLiquidity(from_wallet: TokenWallet, amount: number, call_id=0) {
-        const payload = (await this.contract.methods.encodeLiquidityDeposit({nonce: 0, call_id: call_id}).call()).payload;
+    async addLiquidity(from_wallet: TokenWallet, amount: number, callId=0) {
+        const payload = (await this.contract.methods.encodeLiquidityDeposit({nonce: 0, callId: callId}).call()).payload;
         return await from_wallet.transfer(amount, this.contract.address, payload, toNano(5));
     }
 
@@ -121,38 +116,37 @@ export class GravixVault {
         return await this.contract.methods.getDetails({answerId: 0}).call();
     }
 
-    async deployGravixAccount(user: Account, referrer=zeroAddress, call_id=0) {
+    async deployGravixAccount(user: Account, referrer=zeroAddress, callId=0) {
         return await this.contract.methods.deployGravixAccount(
-            {answerId: 0, referrer: referrer, meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
+            {answerId: 0, referrer: referrer, meta: {callId: callId, nonce: 0, sendGasTo: user.address}}
         ).send({from: user.address, amount: toNano(1)})
     }
 
-    async getDynamicSpread(market_idx: number, position_size_asset: number, position_type: 0 | 1) {
+    async getDynamicSpread(marketIdx: number, positionSizeAsset: number, positionType: 0 | 1) {
         return (await this.contract.methods.getDynamicSpread({
-            market_idx: market_idx, position_size_asset: position_size_asset, position_type: position_type, answerId: 0
-        }).call()).dynamic_spread;
+            marketIdx: marketIdx, positionSizeAsset: positionSizeAsset, positionType: positionType, answerId: 0
+        }).call()).dynamicSpread;
     }
 
     async openPosition(
         from_wallet: TokenWallet,
         amount: number,
-        market_idx: number,
-        position_type: 0 | 1, // 0 - short, 1 - long
+        marketIdx: number,
+        positionType: 0 | 1, // 0 - short, 1 - long
         leverage: number,
-        expected_price: number | string,
+        expectedPrice: number | string,
         max_slippage: number,
         referrer: Address,
-        call_id=0
+        callId=0
     ) {
         const payload = (await this.contract.methods.encodeMarketOrder({
-            market_idx: market_idx,
-            position_type: position_type,
+            marketIdx: marketIdx,
+            positionType: positionType,
             leverage: leverage,
-            expected_price: expected_price,
-            max_slippage_rate: max_slippage,
-            event_data: empty_event,
+            expectedPrice: expectedPrice,
+            maxSlippageRate: max_slippage,
             price: empty_price,
-            call_id: call_id,
+            callId: callId,
             referrer: referrer,
             nonce: 0
         }).call()).payload;
@@ -163,14 +157,14 @@ export class GravixVault {
       from_wallet: TokenWallet,
       user: Account,
       amount: number,
-      position_key: number,
-      market_idx: number | string,
-      call_id=0
+      positionKey: number,
+      marketIdx: number | string,
+      callId=0
     ) {
         const payload = (await this.contract.methods.encodeAddCollateral({
-            market_idx: market_idx,
-            position_key: position_key,
-            call_id: call_id,
+            marketIdx: marketIdx,
+            positionKey: positionKey,
+            callId: callId,
             nonce: 0
         }).call()).payload;
 
@@ -180,32 +174,31 @@ export class GravixVault {
     async removeCollateral(
       user: Account,
       amount: number,
-      position_key: number,
-      market_idx: number | string,
-      call_id=0
+      positionKey: number,
+      marketIdx: number | string,
+      callId=0
     ) {
         return await this.contract.methods.removeCollateral({
-            market_idx: market_idx,
-            position_key: position_key,
+            marketIdx: marketIdx,
+            positionKey: positionKey,
             amount: amount,
-            meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}
+            meta: {callId: callId, nonce: 0, sendGasTo: user.address}
         }).send({from: user.address, amount: toNano(2.1)});
     }
 
     async closePosition(
         user: Account,
-        position_key: number,
-        market_idx: number | string,
+        positionKey: number,
+        marketIdx: number | string,
         referrer: Address,
-        call_id=0
+        callId=0
     ) {
         return await this.contract.methods.closePosition(
             {
-                position_key: position_key,
-                market_idx: market_idx,
-                event_data: empty_event,
+                positionKey: positionKey,
+                marketIdx: marketIdx,
                 price: empty_price,
-                meta: {call_id: call_id, nonce: 0, send_gas_to: user.address}}
+                meta: {callId: callId, nonce: 0, sendGasTo: user.address}}
         ).send({from: user.address, amount: toNano(2.1)});
     }
 
@@ -213,16 +206,15 @@ export class GravixVault {
       liquidations: [
         number,
           {
-              eventData: { eventTransaction: number; eventData: string; eventBlockNumber: number; eventIndex: number; eventBlock: number };
               price: {price: number, serverTime: number, oracleTime: number, ticker: string, signature: string},
               positions: Array<{ user: Address; positionKey: number }>
           }
       ][],
-      call_id=0
+      callId=0
     ) {
         return await this.contract.methods.liquidatePositions({
             liquidations: liquidations,
-            meta: {call_id: call_id, nonce: 0, send_gas_to: this.owner.address}
+            meta: {callId: callId, nonce: 0, sendGasTo: this.owner.address}
         }).send({from: this.owner.address, amount: toNano(10)});
     }
 }

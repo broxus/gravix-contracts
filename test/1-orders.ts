@@ -63,7 +63,7 @@ describe("Testing main orders flow", async function () {
     const btc_addr = new Address('0:2222222222222222222222222222222222222222222222222222222222222222');
 
     const basic_config: MarketConfig = {
-        priceSource: 1,
+        priceSource: 0,
         maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
         maxShortsUSD: 100_000 * USDT_DECIMALS, // 100k
         noiWeight: 100,
@@ -103,7 +103,6 @@ describe("Testing main orders flow", async function () {
         it("Add market to vault", async function () {
             // eth market
             const oracle: Oracle = {
-                chainlink: {chainID: 0, ticker: '', ttl: 0},
                 dex: {
                     targetToken: eth_addr,
                     path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -120,17 +119,17 @@ describe("Testing main orders flow", async function () {
 
             const deposit_amount = 10000000 * USDT_DECIMALS;
             const {traceTree} = await locklift.tracing.trace(vault.addLiquidity(user_usdt_wallet, deposit_amount));
-
+await traceTree?.beautyPrint();
             expect(traceTree).to
                 .emit("LiquidityPoolDeposit")
                 .withNamedArgs({
-                    usdt_amount_in: deposit_amount.toString(),
-                    stg_usdt_amount_out: deposit_amount.toString()
+                    usdtAmountIn: deposit_amount.toString(),
+                    stgUsdtAmountOut: deposit_amount.toString()
                 });
 
             const details = await vault.details();
-            expect(details._stgUsdtSupply).to.be.eq(deposit_amount.toString());
-            expect(details._poolBalance).to.be.eq(deposit_amount.toString());
+            expect(details._poolAssets.stgUsdtSupply).to.be.eq(deposit_amount.toString());
+            expect(details._poolAssets.balance).to.be.eq(deposit_amount.toString());
             pool_balance = bn(deposit_amount);
 
             user_stg_wallet = await stg_root.wallet(user);
@@ -419,7 +418,6 @@ describe("Testing main orders flow", async function () {
                 new_config.fees.fundingBaseRatePerHour = 0; // 0.1%
 
                 const oracle: Oracle = {
-                    chainlink: {chainID: 0, ttl: 0, ticker: ''},
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -468,7 +466,6 @@ describe("Testing main orders flow", async function () {
                 new_config.fees.fundingBaseRatePerHour = base_funding; // 0.1%
 
                 const oracle: Oracle = {
-                    chainlink: {chainID: 0, ttl: 0, ticker: ''},
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -593,7 +590,6 @@ describe("Testing main orders flow", async function () {
                 new_config.fees.fundingBaseRatePerHour = 0;
 
                 const oracle: Oracle = {
-                    chainlink: {chainID: 0, ttl: 0, ticker: ''},
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -642,7 +638,7 @@ describe("Testing main orders flow", async function () {
 
                 // move price to liquidate first one, but don't touch second one
                 // just 1$ down 1st position liq price
-                const new_price = bn(view1.position_view.liquidationPrice).minus(PRICE_DECIMALS);
+                const new_price = bn(view1.positionView.liquidationPrice).minus(PRICE_DECIMALS);
                 await setPrice(eth_usdt_mock, new_price.idiv(100).toFixed());
 
                 const view11 = await acc.getPositionView(
@@ -652,8 +648,8 @@ describe("Testing main orders flow", async function () {
                   pos_key2, new_price.toFixed(), {accLongUSDFundingPerShare: 0, accShortUSDFundingPerShare: 0}
                 );
 
-                expect(view11.position_view.liquidate).to.be.true;
-                expect(view22.position_view.liquidate).to.be.false;
+                expect(view11.positionView.liquidate).to.be.true;
+                expect(view22.positionView.liquidate).to.be.false;
 
                 // now try liquidate
                 const {traceTree} = await locklift.tracing.trace(vault.liquidatePositions(
@@ -661,7 +657,6 @@ describe("Testing main orders flow", async function () {
                     [
                       market_idx,
                         {
-                            eventData: empty_event,
                             price: empty_price,
                             positions: [{user: user.address, positionKey: pos_key1}, {user: user.address, positionKey: pos_key2}]
                         }
@@ -672,17 +667,17 @@ describe("Testing main orders flow", async function () {
                   .emit('LiquidatePosition')
                   .withNamedArgs({
                       user: user.address,
-                      position_key: pos_key1
+                      positionKey: pos_key1
                   });
                 expect(traceTree).to
                   .emit('LiquidatePositionRevert')
                   .withNamedArgs({
                       user: user.address,
-                      position_key: pos_key2
+                      positionKey: pos_key2
                   });
 
                 // now liquidate 2nd position
-                const new_price2 = bn(view2.position_view.liquidationPrice).minus(PRICE_DECIMALS);
+                const new_price2 = bn(view2.positionView.liquidationPrice).minus(PRICE_DECIMALS);
                 await setPrice(eth_usdt_mock, new_price2.idiv(100).toFixed());
 
                 const {traceTree: traceTree2} = await locklift.tracing.trace(vault.liquidatePositions(
@@ -690,7 +685,6 @@ describe("Testing main orders flow", async function () {
                       [
                           market_idx,
                           {
-                              eventData: empty_event,
                               price: empty_price,
                               positions: [{user: user.address, positionKey: pos_key2}]
                           }
@@ -701,7 +695,7 @@ describe("Testing main orders flow", async function () {
                   .emit('LiquidatePosition')
                   .withNamedArgs({
                       user: user.address,
-                      position_key: pos_key2
+                      positionKey: pos_key2
                   });
             });
 
@@ -711,7 +705,6 @@ describe("Testing main orders flow", async function () {
                 new_config.fees.fundingBaseRatePerHour = 0;
 
                 const oracle: Oracle = {
-                    chainlink: {chainID: 0, ttl: 0, ticker: ''},
                     dex: {
                         targetToken: eth_addr,
                         path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -761,7 +754,7 @@ describe("Testing main orders flow", async function () {
 
                 it("Add collateral", async function() {
                     const account = await vault.account(user);
-                    const pos = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+                    const pos = (await account.contract.methods.getPosition({posKey: pos_key, answerId: 0}).call()).position;
 
                     const amount = 50000000;
                     const {traceTree} = await locklift.tracing.trace(
@@ -777,12 +770,12 @@ describe("Testing main orders flow", async function () {
                       .emit('AddPositionCollateral')
                       .withNamedArgs({
                           amount: amount.toFixed(),
-                          updated_pos: {
+                          updatedPos: {
                               leverage: new_leverage.toFixed()
                           }
                       });
 
-                    const pos2 = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+                    const pos2 = (await account.contract.methods.getPosition({posKey: pos_key, answerId: 0}).call()).position;
                     expect(pos2.initialCollateral).to.be.eq(bn(pos.initialCollateral).plus(amount).toFixed());
                     expect(pos2.leverage).to.be.eq(new_leverage.toFixed());
 
@@ -805,7 +798,7 @@ describe("Testing main orders flow", async function () {
 
                 it("Remove collateral", async function() {
                     const account = await vault.account(user);
-                    const pos = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+                    const pos = (await account.contract.methods.getPosition({posKey: pos_key, answerId: 0}).call()).position;
 
                     const amount = 50000000;
                     const {traceTree} = await locklift.tracing.trace(
@@ -821,12 +814,12 @@ describe("Testing main orders flow", async function () {
                       .emit('RemovePositionCollateral')
                       .withNamedArgs({
                           amount: amount.toFixed(),
-                          updated_pos: {
+                          updatedPos: {
                               leverage: new_leverage.toFixed()
                           }
                       });
 
-                    const pos2 = (await account.contract.methods.getPosition({pos_key: pos_key, answerId: 0}).call()).position;
+                    const pos2 = (await account.contract.methods.getPosition({posKey: pos_key, answerId: 0}).call()).position;
                     expect(pos2.initialCollateral).to.be.eq(bn(pos.initialCollateral).minus(amount).toFixed());
                     expect(pos2.leverage).to.be.eq(new_leverage.toFixed());
                 });
@@ -839,8 +832,8 @@ describe("Testing main orders flow", async function () {
 
             it('Set max PNL rate to 200%', async function() {
                 await locklift.tracing.trace(vault.contract.methods.setMaxPnlRate({
-                    new_max_rate: PERCENT_100.times(2).toFixed(),
-                    meta: {call_id: 0, nonce: 0, send_gas_to: user.address}
+                    newMaxRate: PERCENT_100.times(2).toFixed(),
+                    meta: {callId: 0, nonce: 0, sendGasTo: user.address}
                 }).send({amount: toNano(3), from: owner.address}));
             });
 
@@ -883,11 +876,11 @@ describe("Testing main orders flow", async function () {
                 user3 = await deployUser();
 
                 await locklift.tracing.trace(vault.contract.methods.deployGravixAccount({
-                    answerId: 0, meta: {call_id: 0, send_gas_to: owner.address, nonce: 0}, referrer: zeroAddress
+                    answerId: 0, meta: {callId: 0, sendGasTo: owner.address, nonce: 0}, referrer: zeroAddress
                 }).send({from: user2.address, amount: toNano(1)}));
 
                 await locklift.tracing.trace(vault.contract.methods.deployGravixAccount({
-                    answerId: 0, meta: {call_id: 0, send_gas_to: owner.address, nonce: 0}, referrer: user2.address
+                    answerId: 0, meta: {callId: 0, sendGasTo: owner.address, nonce: 0}, referrer: user2.address
                 }).send({from: user3.address, amount: toNano(1)}));
 
                 const account = await vault.account(user3);
@@ -898,7 +891,7 @@ describe("Testing main orders flow", async function () {
             it('User set referrer on position open', async function() {
                 await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
                 await locklift.tracing.trace(vault.contract.methods.deployGravixAccount({
-                    answerId: 0, meta: {call_id: 0, send_gas_to: owner.address, nonce: 0}, referrer: zeroAddress
+                    answerId: 0, meta: {callId: 0, sendGasTo: owner.address, nonce: 0}, referrer: zeroAddress
                 }).send({from: owner.address, amount: toNano(1)}));
 
                 user1_long_pos_key = await openMarketOrder(
@@ -992,7 +985,7 @@ describe("Testing main orders flow", async function () {
 
                 const {traceTree} = await locklift.tracing.trace(
                   vault.contract.methods.withdrawReferralBalance(
-                    {meta: {call_id: 0, send_gas_to: owner.address, nonce: 0}}
+                    {meta: {callId: 0, sendGasTo: owner.address, nonce: 0}}
                   ).send({from: owner.address, amount: toNano(2.5)})
                 );
 

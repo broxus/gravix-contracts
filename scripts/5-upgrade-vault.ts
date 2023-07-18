@@ -31,7 +31,7 @@ const main = async () => {
   const spinner = ora('Upgrading vault...').start();
 
   await locklift.tracing.trace(vault.methods.upgrade({
-    code: vault_artifacts.code, meta: {send_gas_to: manager.address, call_id: 0, nonce: 0}
+    code: vault_artifacts.code, meta: {sendGasTo: manager.address, callId: 0, nonce: 0}
   }).send({from: manager.address, amount: toNano(1)}));
 
   spinner.succeed(`Vault upgraded`);

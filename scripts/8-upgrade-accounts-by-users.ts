@@ -35,7 +35,7 @@ const main = async () => {
   while (users.length) {
     const pack = users.splice(0, 50).map((i) => new Address(i));
     await locklift.tracing.trace(vault.methods.forceUpgradeGravixAccountsByUsers({
-      users: pack, meta: {call_id: 0, nonce: 0, send_gas_to: manager.address}
+      users: pack, meta: {callId: 0, nonce: 0, sendGasTo: manager.address}
     }).send({from: manager.address, amount: toNano(pack.length + 2)}));
     console.log(`Upgraded ${pack.length} accounts`);
   }

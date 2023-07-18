@@ -9,7 +9,7 @@ export default async () => {
     deploymentName: "PriceNode",
     deployConfig: {
       contract: 'PriceNode',
-      initParams: {deploy_nonce: getRandomNonce()},
+      initParams: {deployNonce: getRandomNonce()},
       constructorParams: {
         _owner: owner.address,
         _daemonPubkey: `0x${signer?.publicKey}`,

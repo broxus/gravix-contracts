@@ -25,7 +25,7 @@ export async function setPrice(pair: Contract<PairMockAbi>, price: number | stri
     await pair.methods.setReserves({
         // 1 eth and {price}$ in reserves
         // tokens in pairs have 9 decimals
-        new_reserves: [10 ** 9, price]
+        newReserves: [10 ** 9, price]
     }).sendExternal({publicKey: signer?.publicKey as string});
 }
 
@@ -42,7 +42,7 @@ export async function openMarketOrder(
     referrer=zeroAddress
 ) {
     const initial_price = Number(await getPrice(pair));
-    const market = (await vault.contract.methods.getMarket({market_idx: market_idx, answerId: 0}).call())._market;
+    const market = (await vault.contract.methods.getMarket({marketIdx: market_idx, answerId: 0}).call())._market;
 
     const position = collateral * (leverage / 1000000);
     const position_in_asset = position * PRICE_DECIMALS / initial_price;
@@ -67,20 +67,20 @@ export async function openMarketOrder(
     // await locklift.tracing.trace(vault.deployGravixAccount(user));
 
     const res = (await vault.contract.methods.checkPositionAllowed({
-        market_idx: market_idx,
+        marketIdx: market_idx,
         leverage: leverage,
         collateral: collateral,
-        position_type: pos_type,
-        asset_price: expected_price.toString()
+        positionType: pos_type,
+        assetPrice: expected_price.toString()
     }).call()).value0;
     expect(res.toString()).to.be.eq('0');
 
-    const call_id = getRandomNonce();
+    const callId = getRandomNonce();
     const details_prev = await vault.details();
     const {traceTree} = await locklift.tracing.trace(vault.openPosition(
-        user_wallet, collateral, market_idx, pos_type, leverage, expected_price.toString(), 0, referrer, call_id
-    ), {allowedCodes: {compute: [null]}});
-    // await traceTree?.beautyPrint();
+        user_wallet, collateral, market_idx, pos_type, leverage, expected_price.toString(), 0, referrer, callId
+    ), {allowedCodes: {compute: [null]},raise: false});
+    await traceTree?.beautyPrint();
     const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
@@ -90,19 +90,19 @@ export async function openMarketOrder(
     expect(traceTree).to
         .emit("MarketOrder")
         .withNamedArgs({
-            call_id: call_id.toFixed(),
+            callId: callId.toFixed(),
             user: user.address,
             collateral: collateral.toString(),
-            expected_price: expected_price.toFixed(),
+            expectedPrice: expected_price.toFixed(),
             leverage: leverage.toString(),
-            position_type: pos_type.toString(),
-            max_slippage_rate: '0',
-            market_idx: market_idx.toString()
+            positionType: pos_type.toString(),
+            maxSlippageRate: '0',
+            marketIdx: market_idx.toString()
         })
         .and
         .emit("MarketOrderExecution")
         .withNamedArgs({
-            call_id: call_id.toFixed(),
+            callId: callId.toFixed(),
             user: user.address,
             position: {
                 positionType: pos_type.toString(),
@@ -123,7 +123,7 @@ export async function openMarketOrder(
         expect(traceTree).to
           .emit('ReferralPayment')
           .withNamedArgs({
-              call_id: call_id.toFixed(),
+              callId: callId.toFixed(),
               referral: user.address,
               referrer: acc_details._referrer.toString(),
               amount: open_fee_expected.idiv(10).toFixed()
@@ -135,7 +135,7 @@ export async function openMarketOrder(
         expect(traceTree).to
           .emit('ReferralPayment')
           .withNamedArgs({
-              call_id: call_id.toFixed(),
+              callId: callId.toFixed(),
               referral: user.address,
               referrer: acc_details._grandReferrer.toString(),
               amount: open_fee_expected.idiv(100).toFixed()
@@ -143,7 +143,7 @@ export async function openMarketOrder(
     }
 
     expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(col_up).toFixed());
-    expect(details._poolBalance).to.be.eq(bn(details_prev._poolBalance).plus(pool_increase).toFixed());
+    expect(details._poolAssets.balance).to.be.eq(bn(details_prev._poolAssets.balance).plus(pool_increase).toFixed());
 
     const pos_view = (await account.contract.methods.getPositionView({
         answerId: 0,
@@ -155,7 +155,7 @@ export async function openMarketOrder(
                 accShortUSDFundingPerShare: 0
             }
         }
-    }).call()).position_view;
+    }).call()).positionView;
 
     const leveraged_usd = bn(pos_view.position.initialCollateral)
         .minus(pos_view.position.openFee)
@@ -223,22 +223,22 @@ export async function closeOrder(
                 accShortUSDFundingPerShare: 0
             }
         }
-    }).call()).position_view;
+    }).call()).positionView;
 
     // @ts-ignore
     const pos_type: 0 | 1 = Number(pos_view1.position.positionType);
     const market = (await vault.contract.methods.getMarket({
-        market_idx: pos_view1.position.marketIdx,
+        marketIdx: pos_view1.position.marketIdx,
         answerId: 0
     }).call())._market;
 
     // const details_prev = await vault.details();
-    const call_id = getRandomNonce();
-    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, referrer, call_id));
+    const callId = getRandomNonce();
+    const {traceTree: traceTree1} = await locklift.tracing.trace(vault.closePosition(user, pos_key, pos_view1.position.marketIdx, referrer, callId));
 
     const event = await vault.getEvent('ClosePosition');
     // @ts-ignore
-    const pos_view2 = event.position_view;
+    const pos_view2 = event.positionView;
 
     const price_multiplier1 = pos_type === 0 ? PERCENT_100.minus(market.fees.baseSpreadRate) : PERCENT_100.plus(market.fees.baseSpreadRate);
     const expected_close_price = price_multiplier1.times(finish_price).idiv(PERCENT_100);
@@ -300,9 +300,9 @@ export async function closeOrder(
     expect(traceTree1).to
         .emit('ClosePosition')
         .withNamedArgs({
-            call_id: call_id.toFixed(),
+            callId: callId.toFixed(),
             user: user.address,
-            position_view: {
+            positionView: {
                 closePrice: expected_close_price.toFixed(),
                 fundingFee: pos_view2.fundingFee,
                 borrowFee: borrow_fee.toFixed(),
@@ -336,7 +336,7 @@ export async function closeOrder(
         expect(traceTree1).to
           .emit('ReferralPayment')
           .withNamedArgs({
-              call_id: call_id.toFixed(),
+              callId: callId.toFixed(),
               referral: user.address,
               referrer: acc_details._referrer.toString(),
               amount: expected_close_fee.idiv(10).toFixed()
@@ -346,7 +346,7 @@ export async function closeOrder(
             expect(traceTree1).to
               .emit('ReferralPayment')
               .withNamedArgs({
-                  call_id: call_id.toFixed(),
+                  callId: callId.toFixed(),
                   referral: user.address,
                   referrer: acc_details._referrer.toString(),
                   amount: pnl_with_fees.abs().idiv(100).toFixed()
@@ -357,7 +357,7 @@ export async function closeOrder(
         expect(traceTree1).to
           .emit('ReferralPayment')
           .withNamedArgs({
-              call_id: call_id.toFixed(),
+              callId: callId.toFixed(),
               referral: user.address,
               referrer: acc_details._grandReferrer.toString(),
               amount: expected_close_fee.idiv(100).toFixed()
@@ -367,7 +367,7 @@ export async function closeOrder(
             expect(traceTree1).to
               .emit('ReferralPayment')
               .withNamedArgs({
-                  call_id: call_id.toFixed(),
+                  callId: callId.toFixed(),
                   referral: user.address,
                   referrer: acc_details._grandReferrer.toString(),
                   amount: pnl_with_fees.abs().idiv(1000).toFixed()
@@ -449,7 +449,7 @@ export async function testPositionFunding(
   referrer=zeroAddress
 ) {
     const market = (await vault.contract.methods.getMarket({
-        market_idx: market_idx,
+        marketIdx: market_idx,
         answerId: 0
     }).call())._market;
     await setPrice(pair, initial_price);
@@ -458,16 +458,16 @@ export async function testPositionFunding(
       vault, pair, user, user_wallet, market_idx, pos_type, collateral, leverage, referrer
     );
 
-    const market_0 = (await vault.contract.methods.getMarket({market_idx: 2, answerId: 0}).call())._market;
+    const market_0 = (await vault.contract.methods.getMarket({marketIdx: 2, answerId: 0}).call())._market;
     // save funding time
     // 12 hours
     await tryIncreaseTime(ttl);
-    const rates = await vault.contract.methods.getFundingRates({market_idx: 2}).call();
+    const rates = await vault.contract.methods.getFundingRates({marketIdx: 2}).call();
     const pos_view = await closeOrder(
       vault, pair, user, user_wallet, pos_key, referrer
     );
     // calculate based on time + noi and check if correct
-    const market_1 = (await vault.contract.methods.getMarket({market_idx: 2, answerId: 0}).call())._market;
+    const market_1 = (await vault.contract.methods.getMarket({marketIdx: 2, answerId: 0}).call())._market;
 
     // check rates
     const noi = bn(market_0.totalLongsAsset).minus(market_0.totalShortsAsset).abs();
@@ -496,8 +496,8 @@ export async function testPositionFunding(
         }
     }
 
-    expect(rates.long_rate_per_hour).to.be.eq(long_rate.toFixed());
-    expect(rates.short_rate_per_hour).to.be.eq(short_rate.toFixed());
+    expect(rates.longRatePerHour).to.be.eq(long_rate.toFixed());
+    expect(rates.shortRatePerHour).to.be.eq(short_rate.toFixed());
 
     let long_accFundingPerShare = bn(0);
     let short_accFundingPerShare = bn(0);

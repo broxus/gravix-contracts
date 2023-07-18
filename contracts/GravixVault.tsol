@@ -14,13 +14,8 @@ pragma ever-solidity ^0.62.0;
 //─██████████████─██████──██████████─██████──██████─────██████─────██████████─████████──████████─
 //───────────────────────────────────────────────────────────────────────────────────────────────
 
-import "@broxus/tip3/contracts/interfaces/ITokenRootUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/ITokenWalletUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "./libraries/Gas.tsol";
+
 import "./libraries/Callback.tsol";
-import "./libraries/Errors.tsol";
 import "./base/gravix_vault/GravixVaultBase.tsol";
 import "./interfaces/IGravixAccount.tsol";
 import {DateTime as DateTimeLib} from "./libraries/DateTime.tsol";
@@ -31,16 +26,18 @@ contract GravixVault is GravixVaultBase {
         address _owner,
         address _usdt,
         address _stg_usdt,
-        address _oracle,
         address _priceNode,
-        uint256 _pricePubkey
+        uint256 _pricePubkey,
+        TvmCell _gravixAccountCode,
+        TvmCell _oracleProxyCode
     ) public {
-        owner = _owner;
-        usdt = _usdt;
-        stgUsdt = _stg_usdt;
-        oracle = _oracle;
+        managers.owner = _owner;
+        usdt.root = _usdt;
+        stgUsdt.root = _stg_usdt;
         priceNode = _priceNode;
         pricePubkey = _pricePubkey;
+        gravixAccountCode.code = _gravixAccountCode;
+        oracleProxyCode.code = _oracleProxyCode;
 
         _setupTokenWallets();
     }
@@ -48,30 +45,18 @@ contract GravixVault is GravixVaultBase {
     function upgrade(TvmCell code,  Callback.CallMeta meta) external onlyManager {
         TvmCell data = abi.encode(
             meta,
-            owner,
-            manager,
-            marketManager,
-            oracle,
+            managers,
             priceNode,
             pricePubkey,
             usdt,
-            usdtWallet,
             stgUsdt,
-            stgUsdtWallet,
-            treasury,
-            projectFund,
-            devFund,
+            treasuries,
             oracleProxyCode,
             platformCode,
             gravixAccountCode,
-            gravixAccountVersion,
-            oracleProxyVersion,
             gravixVaultVersion,
-            poolBalance, // liquidity deposits
-            stgUsdtSupply, // amount of minted stgUsdt
-            targetPrice,
+            poolAssets,
             insuranceFund, // collected fees, pnl and etc.
-            insuranceFundLimit,
             insuranceFundOverflowDistributionSchema,
             referralFeeSchema,
             grandReferralFeeSchema,
@@ -82,8 +67,7 @@ contract GravixVault is GravixVaultBase {
             maxPnlRate,
             minPositionCollateral,
             paused,
-            liquidationThresholdRate,
-            liquidatorRewardShare,
+            liquidationParams,
             openFeeDistributionSchema,
             closeFeeDistributionSchema,
             marketCount,
@@ -91,7 +75,7 @@ contract GravixVault is GravixVaultBase {
             workingHours,
             weekends,
             oracleConfigs,
-            pending_market_requests
+            pendingMarketRequests
         );
 
         // set code after complete this method
@@ -102,105 +86,232 @@ contract GravixVault is GravixVaultBase {
         onCodeUpgrade(data);
     }
 
-    function onCodeUpgrade(TvmCell upgrade_data) private {
-        delete pending_market_requests;
+    function onCodeUpgrade(TvmCell upgradeData) private {
+        tvm.rawReserve(_reserve(), 0);
+        tvm.resetStorage();
 
-//        Callback.CallMeta meta;
-//        (
-//            meta,
-//            owner,
-//            manager,
-//            marketManager,
-//            oracle,
-//            priceNode,
-//            pricePubkey,
-//            usdt,
-//            usdtWallet,
-//            stgUsdt,
-//            stgUsdtWallet,
-//            treasury,
-//            projectFund,
-//            devFund,
-//            oracleProxyCode,
-//            platformCode,
-//            gravixAccountCode,
-//            gravixAccountVersion,
-//            oracleProxyVersion,
-//            gravixVaultVersion,
-//            poolBalance, // liquidity deposits
-//            stgUsdtSupply, // amount of minted stgUsdt
-//            targetPrice,
-//            insuranceFund, // collected fees, pnl and etc.
-//            insuranceFundLimit,
-//            insuranceFundOverflowDistributionSchema,
-//            referralFeeSchema,
-//            grandReferralFeeSchema,
-//            collateralReserve, // sum of all usdt provided as a collateral for open order
-//            totalNOI,
-//            totalNOILimitEnabled,
-//            maxPoolUtilRatio,
-//            maxPnlRate,
-//            minPositionCollateral,
-//            paused,
-//            liquidationThresholdRate,
-//            liquidatorRewardShare,
-//            openFeeDistributionSchema,
-//            closeFeeDistributionSchema,
-//            marketCount,
-//            markets,
-//            workingHours,
-//            weekends,
-//            oracleConfigs,
-//            pending_market_requests
-//        ) = abi.decode(
-//            upgrade_data,
-//            (
-//                Callback.CallMeta,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                uint256,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                TvmCell,
-//                TvmCell,
-//                TvmCell,
-//                uint32,
-//                uint32,
-//                uint32,
-//                uint128,
-//                uint128,
-//                uint128,
-//                uint128,
-//                uint128,
-//                uint64[3],
-//                uint64[3],
-//                uint64[3],
-//                uint128,
-//                uint128,
-//                bool,
-//                uint64,
-//                uint64,
-//                uint128,
-//                bool,
-//                uint64,
-//                uint64,
-//                uint64[2],
-//                uint64[2],
-//                uint32,
-//                mapping (uint32 => Market),
-//                mapping (uint32 => mapping (uint8 => TimeInterval[])),
-//                mapping (uint32 => mapping (uint32 => DateTimeInterval)),
-//                mapping (uint32 => OracleConfig),
-//                mapping (uint32 => PendingMarketOrder)
-//            )
-//        );
+        (
+            Callback.CallMeta _meta,
+            address _owner,
+            address _manager,
+            address _marketManager,
+            address _oracle,
+            address _priceNode,
+            uint256 _pricePubkey,
+            address _usdt,
+            address _usdtWallet,
+            address _stgUsdt,
+            address _stgUsdtWallet,
+            address _treasury,
+            address _projectFund,
+            address _devFund,
+            TvmCell _oracleProxyCode,
+            TvmCell _platformCode,
+            TvmCell _gravixAccountCode,
+            uint32 _gravixAccountVersion,
+            uint32 _oracleProxyVersion,
+            uint32 _gravixVaultVersion,
+            uint128 _poolBalance, // liquidity deposits
+            uint128 _stgUsdtSupply, // amount of minted stgUsdt
+            uint128 _targetPrice,
+            uint128 _insuranceFund, // collected fees, pnl and etc.
+            uint128 _insuranceFundLimit,
+            uint64[3] _insuranceFundOverflowDistributionSchema,
+            uint64[3] _referralFeeSchema,
+            uint64[3] _grandReferralFeeSchema,
+            uint128 _collateralReserve, // sum of all usdt provided as a collateral for open order
+            uint128 _totalNOI,
+            bool _totalNOILimitEnabled,
+            uint64 _maxPoolUtilRatio,
+            uint64 _maxPnlRate,
+            uint128 _minPositionCollateral,
+            bool _paused,
+            uint64 _liquidationThresholdRate,
+            uint64 _liquidatorRewardShare,
+            uint64[2] _openFeeDistributionSchema,
+            uint64[2] _closeFeeDistributionSchema,
+            uint32 _marketCount,
+            mapping (uint32 => OldMarket) _oldMarkets,
+            mapping (uint32 => mapping (uint8 => TimeInterval[])) _workingHours,
+            mapping (uint32 => mapping (uint32 => DateTimeInterval)) _weekends,
+            mapping (uint32 => DeprecatedOracleConfig) _oldOracleConfigs,
+            mapping (uint32 => PendingMarketOrder) _pendingMarketRequests
+        ) = abi.decode(
+            upgradeData,
+            (
+                Callback.CallMeta,
+                address,
+                address,
+                address,
+                address,
+                address,
+                uint256,
+                address,
+                address,
+                address,
+                address,
+                address,
+                address,
+                address,
+                TvmCell,
+                TvmCell,
+                TvmCell,
+                uint32,
+                uint32,
+                uint32,
+                uint128,
+                uint128,
+                uint128,
+                uint128,
+                uint128,
+                uint64[3],
+                uint64[3],
+                uint64[3],
+                uint128,
+                uint128,
+                bool,
+                uint64,
+                uint64,
+                uint128,
+                bool,
+                uint64,
+                uint64,
+                uint64[2],
+                uint64[2],
+                uint32,
+                mapping (uint32 => OldMarket),
+                mapping (uint32 => mapping (uint8 => TimeInterval[])),
+                mapping (uint32 => mapping (uint32 => DateTimeInterval)),
+                mapping (uint32 => DeprecatedOracleConfig),
+                mapping (uint32 => PendingMarketOrder)
+            )
+        );
+
+        // merging fields
+        managers = Managers({
+            owner: _owner,
+            manager: _manager,
+            marketManager: _marketManager
+        });
+        priceNode = _priceNode;
+        pricePubkey = _pricePubkey;
+
+        usdt = TokenData({
+            wallet: _usdtWallet,
+            root: _usdt
+        });
+
+        stgUsdt = TokenData({
+            wallet: _stgUsdtWallet,
+            root: _stgUsdt
+        });
+
+        treasuries = Treasuries({
+            treasury: _treasury,
+            projectFund: _projectFund,
+            devFund: _devFund
+        });
+
+        platformCode = _platformCode;
+        gravixVaultVersion = _gravixVaultVersion + 1;
+
+        oracleProxyCode = CodeWithVersion({
+            code: _oracleProxyCode,
+            version: _oracleProxyVersion
+        });
+
+        gravixAccountCode = CodeWithVersion({
+            code: _gravixAccountCode,
+            version: _gravixAccountVersion
+        });
+
+        poolAssets = PoolAssets({
+            balance: _poolBalance,
+            stgUsdtSupply: _stgUsdtSupply,
+            targetPrice: _targetPrice
+        });
+
+        insuranceFund = InsuranceFund({
+            balance: _insuranceFund,
+            limit: _insuranceFundLimit
+        });
+
+        insuranceFundOverflowDistributionSchema = _insuranceFundOverflowDistributionSchema;
+        referralFeeSchema = _referralFeeSchema;
+        grandReferralFeeSchema = _grandReferralFeeSchema;
+        collateralReserve = _collateralReserve;
+        totalNOI = _totalNOI;
+        totalNOILimitEnabled = _totalNOILimitEnabled;
+        maxPoolUtilRatio = _maxPoolUtilRatio;
+        maxPnlRate = _maxPnlRate;
+        minPositionCollateral = _minPositionCollateral;
+        paused = _paused;
+
+        liquidationParams = LiquidationParams({
+            thresholdRate: _liquidationThresholdRate,
+            rewardShare: _liquidatorRewardShare
+        });
+
+        openFeeDistributionSchema = _openFeeDistributionSchema;
+        closeFeeDistributionSchema = _closeFeeDistributionSchema;
+        marketCount = _marketCount;
+
+        // region migrating markets
+        mapping (uint32 => Market) tempMarkets;
+
+        for ((uint32 idx, OldMarket oldMarket) : _oldMarkets) {
+            OldOracleType oldOracleType = oldMarket.priceSource;
+            OracleType newOracleType;
+            if (oldOracleType == OldOracleType.ChainlinkProxy) {
+                newOracleType = OracleType.PriceNode;
+            } else if (oldOracleType == OldOracleType.Dex) {
+                newOracleType = OracleType.Dex;
+            } else if (oldOracleType == OldOracleType.PriceNode) {
+                newOracleType = OracleType.PriceNode;
+            }
+
+            tempMarkets[idx] = Market({
+                priceSource: newOracleType,
+
+                totalLongsAsset: oldMarket.totalLongsAsset,
+                totalShortsAsset: oldMarket.totalShortsAsset,
+
+                maxTotalLongsUSD: oldMarket.maxTotalLongsUSD,
+                maxTotalShortsUSD: oldMarket.maxTotalShortsUSD,
+
+                lastNoiUpdatePrice: oldMarket.lastNoiUpdatePrice,
+                noiWeight: oldMarket.noiWeight,
+
+                funding: oldMarket.funding,
+                lastFundingUpdateTime: oldMarket.lastFundingUpdateTime,
+
+                maxLeverage: oldMarket.maxLeverage,
+                depthAsset: oldMarket.depthAsset,
+
+                fees: oldMarket.fees,
+                scheduleEnabled: oldMarket.scheduleEnabled,
+                paused: oldMarket.paused
+            });
+        }
+
+        markets = tempMarkets;
+        // endregion
+        workingHours = _workingHours;
+        weekends = _weekends;
+
+        // region migrating oracle configs
+        mapping (uint32 => OracleConfig) tempOracleConfigs;
+        for ((uint32 idx, DeprecatedOracleConfig conf) : _oldOracleConfigs) {
+            tempOracleConfigs[idx] = OracleConfig({
+                dex: conf.dex,
+                priceNode: conf.priceNode
+            });
+        }
+
+        oracleConfigs = tempOracleConfigs;
+        // endregion
+
+        pendingMarketRequests = _pendingMarketRequests;
     }
+
 }

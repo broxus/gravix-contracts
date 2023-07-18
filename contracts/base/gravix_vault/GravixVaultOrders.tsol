@@ -20,111 +20,108 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // --------------------------- ORDER REQUEST HANDLERS -------------------------------
     // ----------------------------------------------------------------------------------
     function _handleMarketOrder(
-        address user, uint128 collateral, TvmCell order_params_payload, Callback.CallMeta meta
+        address user, uint128 collateral, TvmCell orderParamsPayload, Callback.CallMeta meta
     ) internal returns (bool success) {
         (
-            uint32 market_idx,
-            PositionType position_type,
+            uint32 marketIdx,
+            PositionType positionType,
             uint32 leverage,
-            uint128 expected_price,
-            uint64 max_slippage_rate,
-            IEthereumEvent.EthereumEventOracleData event_data,
+            uint128 expectedPrice,
+            uint64 maxSlippageRate,
             IPriceNode.Price price,
             address referrer
-        ) = decodeMarketOrder(order_params_payload);
+        ) = decodeMarketOrder(orderParamsPayload);
 
         // collateral has USDT decimals -> 6
         // price has PRICE decimals -> 8
-        if (!validateOrderParams(market_idx, collateral, leverage, max_slippage_rate)) return false;
+        if (!validateOrderParams(marketIdx, collateral, leverage, maxSlippageRate)) return false;
         if (checkPositionAllowed(
-            market_idx,
+            marketIdx,
             collateral,
             leverage,
-            expected_price,
-            position_type) > 0
+            expectedPrice,
+            positionType) > 0
         ) return false;
-        if (!marketOpen(market_idx)) return false;
+        if (!marketOpen(marketIdx)) return false;
         _marketOrder(
-            user, market_idx, position_type,
-            collateral, leverage, expected_price,
-            max_slippage_rate, event_data, price,
+            user, marketIdx, positionType,
+            collateral, leverage, expectedPrice,
+            maxSlippageRate, price,
             referrer, meta
         );
         return true;
     }
 
-    // @param market_idx - market id
+    // @param marketIdx - market id
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
-    // @param max_slippage - max order price slippage, percent number, 10**12 - 100%
-    function validateOrderParams(uint32 market_idx, uint128 collateral, uint32 leverage, uint64 max_slippage) public view returns (bool correct) {
+    // @param maxSlippage - max order price slippage, percent number, 10**12 - 100%
+    function validateOrderParams(uint32 marketIdx, uint128 collateral, uint32 leverage, uint64 maxSlippage) public view returns (bool correct) {
         if (collateral < minPositionCollateral) return false;
-        if (!markets.exists(market_idx)) return false;
-        if (leverage > markets[market_idx].maxLeverage) return false;
-        if (max_slippage > Constants.HUNDRED_PERCENT) return false;
+        if (!markets.exists(marketIdx)) return false;
+        if (leverage > markets[marketIdx].maxLeverage) return false;
+        if (maxSlippage > Constants.HUNDRED_PERCENT) return false;
         return true;
     }
 
     // @param user - order maker
-    // @param market_idx - market id
-    // @param position_type - 0 - long, 1 - short
+    // @param marketIdx - market id
+    // @param positionType - 0 - long, 1 - short
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
-    // @param max_slippage_rate - max order price slippage, percent number, 10**12 - 100%
-    // @param event_data - EVM chain event data, required for chainlink proxy price feeds
+    // @param maxSlippageRate - max order price slippage, percent number, 10**12 - 100%
+    // @param eventData - EVM chain event data, required for chainlink proxy price feeds
     // @param price - price with signature, required for offchain price feeds
     // @param referrer - referrer address
     // @param meta - meta info of txn
     function _marketOrder(
         address user,
-        uint32 market_idx,
-        PositionType position_type,
+        uint32 marketIdx,
+        PositionType positionType,
         uint128 collateral,
         uint32 leverage,
-        uint128 expected_price,
-        uint64 max_slippage_rate, // %
-        IEthereumEvent.EthereumEventOracleData event_data,
+        uint128 expectedPrice,
+        uint64 maxSlippageRate, // %
         IPriceNode.Price price,
         address referrer,
         Callback.CallMeta meta
     ) internal {
-        Market _market = markets[market_idx];
-        request_nonce += 1;
+        Market _market = markets[marketIdx];
+        requestNonce += 1;
 
-        PendingMarketOrder new_request = PendingMarketOrder(
+        PendingMarketOrder newRequest = PendingMarketOrder(
             user,
-            market_idx,
-            position_type,
+            marketIdx,
+            positionType,
             collateral,
-            expected_price,
+            expectedPrice,
             leverage,
-            max_slippage_rate,
+            maxSlippageRate,
             _market.fees.openFeeRate,
             _market.fees.closeFeeRate,
             _market.fees.baseSpreadRate,
-            liquidationThresholdRate,
+            liquidationParams.thresholdRate,
             _market.fees.borrowBaseRatePerHour,
-            event_data,
             price,
             referrer,
             meta
         );
 
-        pending_market_requests[request_nonce] = new_request;
-        address gravix_acc = getGravixAccountAddress(user);
-        IGravixAccount(gravix_acc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(request_nonce, new_request);
+        pendingMarketRequests[requestNonce] = newRequest;
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(requestNonce, newRequest);
     }
 
     function finish_requestMarketOrder(
-        uint32 req_nonce,
+        uint32 reqNonce,
         PendingMarketOrder request,
-        uint32 position_key
+        uint32 positionKey
     ) external override onlyGravixAccount(request.user) reserve {
-        delete pending_market_requests[req_nonce];
+        delete pendingMarketRequests[reqNonce];
         collateralReserve += request.collateral;
 
         emit MarketOrder(
-            request.meta.call_id,
+            request.meta.callId,
             request.user,
             request.marketIdx,
             request.positionType,
@@ -132,17 +129,17 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             request.expectedPrice,
             request.leverage,
             request.maxSlippageRate,
-            position_key
+            positionKey
         );
 
-        OracleType price_source = markets[request.marketIdx].priceSource;
-        OracleConfig oracle_conf = oracleConfigs[request.marketIdx];
+        OracleType priceSource = markets[request.marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[request.marketIdx];
 
         // if market uses offchain oracle and we have valid price, we can execute order right now
-        if (price_source == OracleType.PriceNode && checkPrice(request.price, oracle_conf.priceNode)) {
+        if (priceSource == OracleType.PriceNode && checkPrice(request.price, oracleConf.priceNode)) {
             _executeOrder(
                 request.user,
-                position_key,
+                positionKey,
                 request.marketIdx,
                 request.collateral,
                 request.leverage,
@@ -155,12 +152,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         _sendOpenOrderOracleRequest(
             request.user,
-            position_key,
+            positionKey,
             request.marketIdx,
             request.collateral,
             request.leverage,
             request.positionType,
-            request.eventData,
             request.meta
         );
     }
@@ -170,57 +166,54 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     function _sendOpenOrderOracleRequest(
         address user,
-        uint32 position_key,
-        uint32 market_idx,
+        uint32 positionKey,
+        uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
-        PositionType position_type,
-        IEthereumEvent.EthereumEventOracleData event_data,
+        PositionType positionType,
         Callback.CallMeta meta
     ) internal view {
-        address proxy = _deployOracleProxy(market_idx, event_data, meta);
+        address proxy = _deployOracleProxy(marketIdx, meta);
         IOracleProxy(proxy).setExecuteCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, position_key, collateral, leverage, position_type
+            user, positionKey, collateral, leverage, positionType
         );
     }
 
     function _sendCloseOrderOracleRequest(
         address user,
-        uint32 position_key,
-        uint32 market_idx,
-        IEthereumEvent.EthereumEventOracleData event_data,
+        uint32 positionKey,
+        uint32 marketIdx,
         Callback.CallMeta meta
     ) internal view {
-        address proxy = _deployOracleProxy(market_idx, event_data, meta);
-        IOracleProxy(proxy).setCloseCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(user, position_key);
+        address proxy = _deployOracleProxy(marketIdx, meta);
+        IOracleProxy(proxy).setCloseCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(user, positionKey);
     }
 
     function _sendLiquidationOracleRequest(
         address liquidator,
-        uint32 market_idx,
+        uint32 marketIdx,
         PositionIdx[] positions,
-        IEthereumEvent.EthereumEventOracleData event_data,
         Callback.CallMeta meta
     ) internal view {
-        address proxy = _deployOracleProxy(market_idx, event_data, meta);
-        uint128 callback_value = uint128(positions.length) * Gas.LIQUIDATION_VALUE;
-        IOracleProxy(proxy).setLiquidationCallback{value: callback_value, flag: MsgFlag.SENDER_PAYS_FEES}(liquidator, positions);
+        address proxy = _deployOracleProxy(marketIdx, meta);
+        uint128 callbackValue = uint128(positions.length) * Gas.LIQUIDATION_VALUE;
+        IOracleProxy(proxy).setLiquidationCallback{value: callbackValue, flag: MsgFlag.SENDER_PAYS_FEES}(liquidator, positions);
     }
 
     function _deployOracleProxy(
-        uint32 market_idx, IEthereumEvent.EthereumEventOracleData event_data, Callback.CallMeta meta
+        uint32 marketIdx, Callback.CallMeta meta
     ) internal view returns (address) {
-        OracleType price_source = markets[market_idx].priceSource;
-        OracleConfig oracle_conf = oracleConfigs[market_idx];
+        OracleType priceSource = markets[marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[marketIdx];
 
-        emit OraclePriceRequested(meta.call_id, market_idx);
+        emit OraclePriceRequested(meta.callId, marketIdx);
         // update random seed
         rnd.shuffle();
         return new OracleProxy{
             stateInit: _buildOracleProxyInitData(rnd.next(uint64(2**64 - 1))),
             value: Gas.ORACLE_PROXY_DEPLOY
         }(
-            usdt, priceNode, oracle, market_idx, price_source, oracle_conf, event_data, meta
+            usdt.root, priceNode, marketIdx, priceSource, oracleConf, meta
         );
     }
 
@@ -233,28 +226,28 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     function finish_withdrawReferralBalance(
-        address user, uint128 ref_bal, Callback.CallMeta meta
+        address user, uint128 refBal, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserve {
-        if (ref_bal > 0) {
-            emit ReferralBalanceWithdraw(meta.call_id, user, ref_bal);
+        if (refBal > 0) {
+            emit ReferralBalanceWithdraw(meta.callId, user, refBal);
             _transfer(
-                usdtWallet, ref_bal, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+                usdt.wallet, refBal, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
             );
         } else {
-            _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
+            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
         }
     }
 
     function _sendReferrerFee(address referrer, address referral, uint128 fee, Callback.CallMeta meta) internal view {
-        address referrer_acc = getGravixAccountAddress(referrer);
+        address referrerAcc = getGravixAccountAddress(referrer);
 
         emit ReferralPayment(
-            meta.call_id,
+            meta.callId,
             referrer,
             referral,
             fee
         );
-        IGravixAccount(referrer_acc).process_sendReferrerFee{value: Gas.SEND_REF_FEE_VALUE, flag: MsgFlag.SENDER_PAYS_FEES}(
+        IGravixAccount(referrerAcc).process_sendReferrerFee{value: Gas.SEND_REF_FEE_VALUE, flag: MsgFlag.SENDER_PAYS_FEES}(
             fee, meta
         );
     }
@@ -264,38 +257,38 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         address referrer,
         address grandReferrer,
         address referral,
-        ReferralFeeSchema fee_schema,
+        ReferralFeeSchema feeSchema,
         Callback.CallMeta meta
-    ) internal view returns (uint128 remaining_fee) {
-        remaining_fee = fee;
+    ) internal view returns (uint128 remainingFee) {
+        remainingFee = fee;
         if (referrer != address(0)) {
-            uint128 referrer_fee = math.muldiv(fee, referralFeeSchema[uint8(fee_schema)], Constants.HUNDRED_PERCENT);
-            remaining_fee -= referrer_fee;
-            if (referrer_fee > 0) {
-                _sendReferrerFee(referrer, referral, referrer_fee, meta);
+            uint128 referrerFee = math.muldiv(fee, referralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingFee -= referrerFee;
+            if (referrerFee > 0) {
+                _sendReferrerFee(referrer, referral, referrerFee, meta);
             }
         }
         if (grandReferrer != address(0)) {
-            uint128 grand_referrer_fee = math.muldiv(fee, grandReferralFeeSchema[uint8(fee_schema)], Constants.HUNDRED_PERCENT);
-            remaining_fee -= grand_referrer_fee;
-            if (grand_referrer_fee > 0) {
-                _sendReferrerFee(grandReferrer, referral, grand_referrer_fee, meta);
+            uint128 grandReferrerFee = math.muldiv(fee, grandReferralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingFee -= grandReferrerFee;
+            if (grandReferrerFee > 0) {
+                _sendReferrerFee(grandReferrer, referral, grandReferrerFee, meta);
             }
         }
     }
 
     function _collectOpenFeeAndReferral(
-        uint128 open_fee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+        uint128 openFee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
     ) internal {
-        open_fee = _distributeReferralFee(open_fee, referrer, grandReferrer, referral, ReferralFeeSchema.OpenFee, meta);
-        _collectOpenFee(open_fee);
+        openFee = _distributeReferralFee(openFee, referrer, grandReferrer, referral, ReferralFeeSchema.OpenFee, meta);
+        _collectOpenFee(openFee);
     }
 
     function _collectCloseFeeAndReferral(
-        uint128 close_fee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+        uint128 closeFee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
     ) internal {
-        close_fee = _distributeReferralFee(close_fee, referrer, grandReferrer, referral, ReferralFeeSchema.CloseFee, meta);
-        _collectCloseFee(close_fee);
+        closeFee = _distributeReferralFee(closeFee, referrer, grandReferrer, referral, ReferralFeeSchema.CloseFee, meta);
+        _collectCloseFee(closeFee);
     }
 
     function _collectPnlAndReferral(
@@ -310,173 +303,173 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // @param nonce - oracle static parameter, required for addr calculation
     // @param user - order maker
-    // @param position_key - unique(per user) position key
-    // @param market_idx - market id
+    // @param positionKey - unique(per user) position key
+    // @param marketIdx - market id
     // @param collateral - position collateral, 6 decimals number
     // @param leverage - position leverage, 2 decimals number
-    // @param position_type - 0 - long, 1 - short
-    // @param asset_price - current asset price for this market, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
+    // @param assetPrice - current asset price for this market, 8 decimals number
     // @param meta - txn meta
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
-        uint32 position_key,
-        uint32 market_idx,
+        uint32 positionKey,
+        uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
-        PositionType position_type,
-        uint128 asset_price,
+        PositionType positionType,
+        uint128 assetPrice,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
         _executeOrder(
             user,
-            position_key,
-            market_idx,
+            positionKey,
+            marketIdx,
             collateral,
             leverage,
-            position_type,
-            asset_price,
+            positionType,
+            assetPrice,
             meta
         );
     }
 
     function _executeOrder(
         address user,
-        uint32 position_key,
-        uint32 market_idx,
+        uint32 positionKey,
+        uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
-        PositionType position_type,
-        uint128 asset_price,
+        PositionType positionType,
+        uint128 assetPrice,
         Callback.CallMeta meta
     ) internal {
         // reserve should be
-        uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, asset_price);
-        uint64 dynamic_spread = getDynamicSpread(position_size_asset, market_idx, position_type);
+        uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
+        uint64 dynamicSpread = getDynamicSpread(positionSizeAsset, marketIdx, positionType);
 
-        Funding _funding = _updateFunding(market_idx, asset_price);
-        uint16 _error = _addPositionToMarketOrReturnErr(market_idx, position_size_asset, asset_price, position_type);
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        uint16 _error = _addPositionToMarketOrReturnErr(marketIdx, positionSizeAsset, assetPrice, positionType);
 
-        address gravix_acc = getGravixAccountAddress(user);
+        address gravixAcc = getGravixAccountAddress(user);
         if (_error == 0) {
-            int256 funding = position_type == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
+            int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
 
-            IGravixAccount(gravix_acc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                position_key,
-                market_idx,
-                position_size_asset,
-                position_type,
-                asset_price,
-                dynamic_spread,
+            IGravixAccount(gravixAcc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                positionKey,
+                marketIdx,
+                positionSizeAsset,
+                positionType,
+                assetPrice,
+                dynamicSpread,
                 funding,
                 meta
             );
         } else {
             // order cant be executed now, some limits reached and etc.
-            IGravixAccount(gravix_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(position_key, meta);
+            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(positionKey, meta);
         }
     }
 
     function revert_executeMarketOrder(
         address user,
-        uint32 position_key,
-        uint32 market_idx,
+        uint32 positionKey,
+        uint32 marketIdx,
         uint128 collateral,
-        uint128 position_size_asset,
-        uint128 asset_price,
-        PositionType position_type,
+        uint128 positionSizeAsset,
+        uint128 assetPrice,
+        PositionType positionType,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
-        emit MarketOrderExecutionRevert(meta.call_id, user, position_key);
+        emit MarketOrderExecutionRevert(meta.callId, user, positionKey);
 
-        _removePositionFromMarket(market_idx, position_size_asset, asset_price, position_type);
+        _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
 
         // too high slippage
         if (collateral > 0) {
             collateralReserve -= collateral;
             _transfer(
-                usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+                usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
             );
         } else {
             // tried to execute non-existent order
-            _sendCallbackOrGas(user, meta.nonce, false, meta.send_gas_to);
+            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
         }
     }
 
     function finish_executeMarketOrder(
         address user,
-        uint32 position_key,
-        IGravixAccount.Position new_pos,
+        uint32 positionKey,
+        IGravixAccount.Position newPos,
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        _collectOpenFeeAndReferral(new_pos.openFee, referrer, grandReferrer, user, meta);
-        collateralReserve -= new_pos.openFee;
+        _collectOpenFeeAndReferral(newPos.openFee, referrer, grandReferrer, user, meta);
+        collateralReserve -= newPos.openFee;
 
-        uint128 position_size_asset_raw = calculatePositionAssetSize(new_pos.initialCollateral, new_pos.leverage, new_pos.markPrice);
-        _removePositionFromMarket(new_pos.marketIdx, position_size_asset_raw, new_pos.markPrice, new_pos.positionType);
+        uint128 positionSizeAssetRaw = calculatePositionAssetSize(newPos.initialCollateral, newPos.leverage, newPos.markPrice);
+        _removePositionFromMarket(newPos.marketIdx, positionSizeAssetRaw, newPos.markPrice, newPos.positionType);
 
-        uint128 position_size_asset = calculatePositionAssetSize(new_pos.initialCollateral - new_pos.openFee, new_pos.leverage, new_pos.openPrice);
-        _addPositionToMarket(new_pos.marketIdx, position_size_asset, new_pos.markPrice, new_pos.positionType);
+        uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
+        _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
 
         emit MarketOrderExecution(
-            meta.call_id,
+            meta.callId,
             user,
-            new_pos,
-            position_key
+            newPos,
+            positionKey
         );
     }
 
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
-    // @param asset_price - position price, 8 decimals number
-    function calculatePositionAssetSize(uint128 collateral, uint32 leverage, uint128 asset_price) public pure returns (uint128 position_size_asset) {
-        return math.muldiv(math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE), Constants.PRICE_DECIMALS, asset_price);
+    // @param assetPrice - position price, 8 decimals number
+    function calculatePositionAssetSize(uint128 collateral, uint32 leverage, uint128 assetPrice) public pure returns (uint128 positionSizeAsset) {
+        return math.muldiv(math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE), Constants.PRICE_DECIMALS, assetPrice);
     }
 
     function getDynamicSpread(
-        uint128 position_size_asset,
-        uint32 market_idx,
-        PositionType position_type
-    ) public view responsible returns (uint64 dynamic_spread) {
-        uint128 new_noi;
+        uint128 positionSizeAsset,
+        uint32 marketIdx,
+        PositionType positionType
+    ) public view responsible returns (uint64 dynamicSpread) {
+        uint128 newNoi;
 
-        Market market = markets[market_idx];
-        // calculate dynamic dynamic_spread multiplier
-        if (position_type == PositionType.Long) {
-            uint128 new_longs_total = market.totalLongsAsset + position_size_asset / 2;
-            new_noi = new_longs_total - math.min(market.totalShortsAsset, new_longs_total);
+        Market market = markets[marketIdx];
+        // calculate dynamic dynamicSpread multiplier
+        if (positionType == PositionType.Long) {
+            uint128 newLongsTotal = market.totalLongsAsset + positionSizeAsset / 2;
+            newNoi = newLongsTotal - math.min(market.totalShortsAsset, newLongsTotal);
         } else {
-            uint128 new_shorts_total = market.totalShortsAsset + position_size_asset / 2;
-            new_noi = new_shorts_total - math.min(market.totalLongsAsset, new_shorts_total);
+            uint128 newShortsTotal = market.totalShortsAsset + positionSizeAsset / 2;
+            newNoi = newShortsTotal - math.min(market.totalLongsAsset, newShortsTotal);
         }
-        dynamic_spread = uint64(math.muldiv(new_noi, market.fees.baseDynamicSpreadRate, market.depthAsset));
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamic_spread;
+        dynamicSpread = uint64(math.muldiv(newNoi, market.fees.baseDynamicSpreadRate, market.depthAsset));
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamicSpread;
     }
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
-    function cancelMarketOrder(address user, uint32 position_key, Callback.CallMeta meta) external view onlyActive reserve {
+    function cancelMarketOrder(address user, uint32 positionKey, Callback.CallMeta meta) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
-        address gravix_acc = getGravixAccountAddress(user);
-        IGravixAccount(gravix_acc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(position_key, meta);
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(positionKey, meta);
     }
 
     function revert_cancelMarketOrder(
-        address user, uint32 position_key, Callback.CallMeta meta
+        address user, uint32 positionKey, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit CancelMarketOrderRevert(meta.call_id, user, position_key);
+        emit CancelMarketOrderRevert(meta.callId, user, positionKey);
     }
 
     function finish_cancelMarketOrder(
-        address user, uint32 position_key, uint128 collateral, Callback.CallMeta meta
+        address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         collateralReserve -= collateral;
 
-        emit CancelMarketOrder(meta.call_id, user, position_key);
-        _transfer(usdtWallet, collateral, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+        emit CancelMarketOrder(meta.callId, user, positionKey);
+        _transfer(usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
     }
 
     // ----------------------------------------------------------------------------------
@@ -484,31 +477,30 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     function forceClosePositions(
         address[] users,
-        uint32[] position_keys,
-        uint32[] market_idx,
-        IEthereumEvent.EthereumEventOracleData[] event_datas,
+        uint32[] positionKeys,
+        uint32[] marketIdx,
         IPriceNode.Price[] prices,
         Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {
-        require (users.length == position_keys.length, Errors.BAD_INPUT);
-        require (users.length == market_idx.length, Errors.BAD_INPUT);
+        require (users.length == positionKeys.length, Errors.BAD_INPUT);
+        require (users.length == marketIdx.length, Errors.BAD_INPUT);
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
-            OracleType price_source = markets[market_idx[i]].priceSource;
-            OracleConfig oracle_conf = oracleConfigs[market_idx[i]];
+            OracleType priceSource = markets[marketIdx[i]].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx[i]];
 
             // if market uses offchain oracle and we have valid price, we can close order right now
-            if (price_source == OracleType.PriceNode && checkPrice(prices[i], oracle_conf.priceNode)) {
+            if (priceSource == OracleType.PriceNode && checkPrice(prices[i], oracleConf.priceNode)) {
                 _closePosition(
-                    users[i], position_keys[i], market_idx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, meta
+                    users[i], positionKeys[i], marketIdx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, meta
                 );
                 continue;
             }
 
-            address proxy = _deployOracleProxy(market_idx[i], event_datas[i], meta);
+            address proxy = _deployOracleProxy(marketIdx[i], meta);
             IOracleProxy(proxy).setCloseCallback{value: Gas.MIN_MSG_VALUE - Gas.ORACLE_PROXY_DEPLOY - 0.01 ever}(
-                users[i], position_keys[i]
+                users[i], positionKeys[i]
             );
         }
     }
@@ -517,27 +509,26 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // Bad price here can cause bad contract state!
     function forceClosePositionsWithPrice(
         address[] users,
-        uint32[] position_keys,
-        uint32[] market_idx,
-        uint128[] asset_prices,
+        uint32[] positionKeys,
+        uint32[] marketIdx,
+        uint128[] assetPrices,
         Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {
-        require (users.length == position_keys.length, Errors.BAD_INPUT);
-        require (position_keys.length == market_idx.length, Errors.BAD_INPUT);
-        require (market_idx.length == asset_prices.length, Errors.BAD_INPUT);
+        require (users.length == positionKeys.length, Errors.BAD_INPUT);
+        require (positionKeys.length == marketIdx.length, Errors.BAD_INPUT);
+        require (marketIdx.length == assetPrices.length, Errors.BAD_INPUT);
         require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
 
         for (uint i = 0; i < users.length; i++) {
             _closePosition(
-                users[i], position_keys[i], market_idx[i], asset_prices[i], Gas.MIN_MSG_VALUE - 0.1 ever, meta
+                users[i], positionKeys[i], marketIdx[i], assetPrices[i], Gas.MIN_MSG_VALUE - 0.1 ever, meta
             );
         }
     }
 
     function closePosition(
-        uint32 position_key,
-        uint32 market_idx,
-        IEthereumEvent.EthereumEventOracleData event_data,
+        uint32 positionKey,
+        uint32 marketIdx,
         IPriceNode.Price price,
         Callback.CallMeta meta
     ) external onlyActive reserve {
@@ -545,151 +536,151 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         // soft fail
         // optimistic check on market, we will check that position matches it in account
-        if (!marketOpen(market_idx)) {
-            emit ClosePositionRevert(meta.call_id, msg.sender, position_key, market_idx);
-            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
+        if (!marketOpen(marketIdx)) {
+            emit ClosePositionRevert(meta.callId, msg.sender, positionKey, marketIdx);
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
             return;
         }
 
-        OracleType price_source = markets[market_idx].priceSource;
-        OracleConfig oracle_conf = oracleConfigs[market_idx];
+        OracleType priceSource = markets[marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[marketIdx];
 
         // if market uses offchain oracle and we have valid price, we can close order right now
-        if (price_source == OracleType.PriceNode && checkPrice(price, oracle_conf.priceNode)) {
-            _closePosition(msg.sender, position_key, market_idx, price.price, 0, meta);
+        if (priceSource == OracleType.PriceNode && checkPrice(price, oracleConf.priceNode)) {
+            _closePosition(msg.sender, positionKey, marketIdx, price.price, 0, meta);
             return;
         }
 
-        _sendCloseOrderOracleRequest(msg.sender, position_key, market_idx, event_data, meta);
+        _sendCloseOrderOracleRequest(msg.sender, positionKey, marketIdx, meta);
     }
 
     // @param nonce - oracle static parameter, required for addr calculation
     // @param user - order maker
-    // @param position_key - unique(per user) position key
-    // @param market_idx - market id
-    // @param asset_price - current asset price for this market, 8 decimals number
+    // @param positionKey - unique(per user) position key
+    // @param marketIdx - market id
+    // @param assetPrice - current asset price for this market, 8 decimals number
     // @param meta - txn meta
     function oracle_closePosition(
         uint64 nonce,
         address user,
-        uint32 position_key,
-        uint32 market_idx,
-        uint128 asset_price,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
-        _closePosition(user, position_key, market_idx, asset_price, 0, meta);
+        _closePosition(user, positionKey, marketIdx, assetPrice, 0, meta);
     }
 
     function _closePosition(
         address user,
-        uint32 position_key,
-        uint32 market_idx,
-        uint128 asset_price,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
         uint128 value,
         Callback.CallMeta meta
     ) internal {
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
-        Funding _funding = _updateFunding(market_idx, asset_price);
-        address gravix_acc = getGravixAccountAddress(user);
-        IGravixAccount(gravix_acc).process_closePosition{value: value, flag: flag}(
-            position_key,
-            market_idx,
-            asset_price,
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_closePosition{value: value, flag: flag}(
+            positionKey,
+            marketIdx,
+            assetPrice,
             _funding,
             meta
         );
     }
 
     function revert_closePosition(
-        address user, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+        address user, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit ClosePositionRevert(meta.call_id, user, position_key, market_idx);
+        emit ClosePositionRevert(meta.callId, user, positionKey, marketIdx);
     }
 
     function finish_closePosition(
         address user,
-        uint32 position_key,
-        uint128 asset_price,
-        IGravixAccount.PositionView position_view,
+        uint32 positionKey,
+        uint128 assetPrice,
+        IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
-        uint128 collateral = position_view.position.initialCollateral - position_view.position.openFee;
+        uint128 collateral = positionView.position.initialCollateral - positionView.position.openFee;
         collateralReserve -= collateral;
 
-        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.position.leverage, position_view.position.openPrice);
+        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, positionView.position.leverage, positionView.position.openPrice);
         _removePositionFromMarket(
-            position_view.position.marketIdx,
-            initial_position_size_asset,
-            asset_price,
-            position_view.position.positionType
+            positionView.position.marketIdx,
+            initialPositionSizeAsset,
+            assetPrice,
+            positionView.position.positionType
         );
 
-        if (position_view.liquidate) {
+        if (positionView.liquidate) {
             // increase insurance fund + send referrer payment
             _collectPnlAndReferral(collateral, referrer, grandReferrer, user, meta);
 
-            emit LiquidatePosition(meta.call_id, user, user, position_key, position_view);
-            _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
+            emit LiquidatePosition(meta.callId, user, user, positionKey, positionView);
+            _sendCallbackOrGas(user, meta.nonce, true, meta.sendGasTo);
         } else {
-            int256 pnl_limit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
-            int256 limited_pnl = math.min(position_view.pnl, pnl_limit);
+            int256 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
+            int256 limitedPnl = math.min(positionView.pnl, pnlLimit);
 
-            int256 pnl_with_fees = limited_pnl - position_view.borrowFee - position_view.fundingFee;
-            _collectCloseFeeAndReferral(position_view.closeFee, referrer, grandReferrer, user, meta);
+            int256 pnlWithFees = limitedPnl - positionView.borrowFee - positionView.fundingFee;
+            _collectCloseFeeAndReferral(positionView.closeFee, referrer, grandReferrer, user, meta);
 
             uint128 debt;
-            if (pnl_with_fees < 0) {
+            if (pnlWithFees < 0) {
                 // increase insurance fund + send referrer payment
-                _collectPnlAndReferral(uint128(math.abs(pnl_with_fees)), referrer, grandReferrer, user, meta);
+                _collectPnlAndReferral(uint128(math.abs(pnlWithFees)), referrer, grandReferrer, user, meta);
             }
-            if (pnl_with_fees > 0) {
+            if (pnlWithFees > 0) {
                 // positive debt if we dont have enough money to pay pnl
-                debt = _decreaseInsuranceFund(uint128(pnl_with_fees));
+                debt = _decreaseInsuranceFund(uint128(pnlWithFees));
             }
 
-            emit ClosePosition(meta.call_id, user, position_key, position_view);
+            emit ClosePosition(meta.callId, user, positionKey, positionView);
             // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
-            uint128 user_net_usdt = uint128(collateral + pnl_with_fees - debt - position_view.closeFee);
-            _transfer(usdtWallet, user_net_usdt, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+            uint128 userNetUsdt = uint128(collateral + pnlWithFees - debt - positionView.closeFee);
+            _transfer(usdt.wallet, userNetUsdt, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
             if (debt > 0) {
-                emit Debt(meta.call_id, user, debt);
+                emit Debt(meta.callId, user, debt);
             }
         }
     }
 
     function _handleAddCollateral(
-        address user, uint128 amount, TvmCell action_payload, Callback.CallMeta meta
+        address user, uint128 amount, TvmCell actionPayload, Callback.CallMeta meta
     ) internal view returns (bool success) {
-        (uint32 market_idx, uint32 position_key) = decodeAddCollateral(action_payload);
+        (uint32 marketIdx, uint32 positionKey) = decodeAddCollateral(actionPayload);
         // optimistic check on market, we will check that position matches it in account
-        if (!marketOpen(market_idx)) return false;
-        _addCollateral(amount, user, market_idx, position_key, meta);
+        if (!marketOpen(marketIdx)) return false;
+        _addCollateral(amount, user, marketIdx, positionKey, meta);
         return true;
     }
 
     function _addCollateral(
         uint128 amount,
         address user,
-        uint32 market_idx,
-        uint32 position_key,
+        uint32 marketIdx,
+        uint32 positionKey,
         Callback.CallMeta meta
     ) internal view {
-        address gravix_acc = getGravixAccountAddress(user);
-        IGravixAccount(gravix_acc).process_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            amount, market_idx, position_key, meta
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount, marketIdx, positionKey, meta
         );
     }
 
     function revert_addCollateral(
-        address user, uint128 amount, uint32 market_idx, uint32 position_key, Callback.CallMeta meta
+        address user, uint128 amount, uint32 marketIdx, uint32 positionKey, Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
-        emit AddPositionCollateralRevert(meta.call_id, user, market_idx, position_key, amount);
+        emit AddPositionCollateralRevert(meta.callId, user, marketIdx, positionKey, amount);
 
         _transfer(
-            usdtWallet, amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED
+            usdt.wallet, amount, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
         );
     }
 
@@ -697,104 +688,104 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         address user,
         uint128 amount,
         IGravixAccount.Position position,
-        uint32 old_leverage,
-        uint32 position_key,
+        uint32 oldLeverage,
+        uint32 positionKey,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
         collateralReserve += amount;
 
-        uint128 new_collateral = position.initialCollateral - position.openFee;
-        uint128 old_collateral = new_collateral - amount;
+        uint128 newCollateral = position.initialCollateral - position.openFee;
+        uint128 oldCollateral = newCollateral - amount;
 
-        uint128 old_pos_size = calculatePositionAssetSize(old_collateral, old_leverage, position.markPrice);
-        uint128 new_pos_size = calculatePositionAssetSize(new_collateral, position.leverage, position.markPrice);
+        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.markPrice);
+        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.markPrice);
 
         // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
         // we dont want it to accumulate because it could affect further calculations
-        if (old_pos_size != new_pos_size) {
+        if (oldPosSize != newPosSize) {
             Market _market = markets[position.marketIdx];
 
             _removePositionFromMarket(
                 position.marketIdx,
-                old_pos_size,
+                oldPosSize,
                 _market.lastNoiUpdatePrice,
                 position.positionType
             );
 
             _addPositionToMarket(
                 position.marketIdx,
-                new_pos_size,
+                newPosSize,
                 _market.lastNoiUpdatePrice,
                 position.positionType
             );
         }
 
-        emit AddPositionCollateral(meta.call_id, user, position_key, amount, position);
+        emit AddPositionCollateral(meta.callId, user, positionKey, amount, position);
     }
 
     function removeCollateral(
-        uint128 amount, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+        uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
         // optimistic check on market, we will check that position matches it in account
         // soft fail because market state is dynamic
-        if (!marketOpen(market_idx)) {
-            emit RemovePositionCollateralRevert(meta.call_id, msg.sender, position_key, market_idx, amount);
-            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.send_gas_to);
+        if (!marketOpen(marketIdx)) {
+            emit RemovePositionCollateralRevert(meta.callId, msg.sender, positionKey, marketIdx, amount);
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
             return;
         }
 
-        address gravix_acc = getGravixAccountAddress(msg.sender);
-        IGravixAccount(gravix_acc).process_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            amount, position_key, market_idx, markets[market_idx].maxLeverage, minPositionCollateral, meta
+        address gravixAcc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(gravixAcc).process_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount, positionKey, marketIdx, markets[marketIdx].maxLeverage, minPositionCollateral, meta
         );
     }
 
     function revert_removeCollateral(
-        address user, uint128 amount, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+        address user, uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit RemovePositionCollateralRevert(meta.call_id, user, position_key, market_idx, amount);
+        emit RemovePositionCollateralRevert(meta.callId, user, positionKey, marketIdx, amount);
     }
 
     function finish_removeCollateral(
         address user,
         uint128 amount,
         IGravixAccount.Position position,
-        uint32 old_leverage,
-        uint32 position_key,
+        uint32 oldLeverage,
+        uint32 positionKey,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         collateralReserve -= amount;
 
-        uint128 new_collateral = position.initialCollateral - position.openFee;
-        uint128 old_collateral = new_collateral + amount;
+        uint128 newCollateral = position.initialCollateral - position.openFee;
+        uint128 oldCollateral = newCollateral + amount;
 
-        uint128 old_pos_size = calculatePositionAssetSize(old_collateral, old_leverage, position.markPrice);
-        uint128 new_pos_size = calculatePositionAssetSize(new_collateral, position.leverage, position.markPrice);
+        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.markPrice);
+        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.markPrice);
 
         // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
         // we dont want it to accumulate because it could affect further calculations
-        if (old_pos_size != new_pos_size) {
+        if (oldPosSize != newPosSize) {
             Market _market = markets[position.marketIdx];
 
             _removePositionFromMarket(
                 position.marketIdx,
-                old_pos_size,
+                oldPosSize,
                 _market.lastNoiUpdatePrice,
                 position.positionType
             );
 
             _addPositionToMarket(
                 position.marketIdx,
-                new_pos_size,
+                newPosSize,
                 _market.lastNoiUpdatePrice,
                 position.positionType
             );
         }
 
-        emit RemovePositionCollateral(meta.call_id, user, position_key, amount, position);
-        _transfer(usdtWallet, amount , user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+        emit RemovePositionCollateral(meta.callId, user, positionKey, amount, position);
+        _transfer(usdt.wallet, amount , user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
     }
 
 
@@ -807,54 +798,54 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         mapping (uint32 => LiquidationData) liquidations, Callback.CallMeta meta
     ) external view onlyActive reserveAndSendGas(meta) {
         // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
-        for ((uint32 market_idx, LiquidationData liq_data) : liquidations) {
-            require (liq_data.positions.length <= 250, Errors.BAD_INPUT); // we dont want to fail on action phase later
+        for ((uint32 marketIdx, LiquidationData liqData) : liquidations) {
+            require (liqData.positions.length <= 250, Errors.BAD_INPUT); // we dont want to fail on action phase later
 
-            OracleType price_source = markets[market_idx].priceSource;
-            OracleConfig oracle_conf = oracleConfigs[market_idx];
+            OracleType priceSource = markets[marketIdx].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx];
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
-            if (price_source == OracleType.PriceNode && checkPrice(liq_data.price, oracle_conf.priceNode)) {
-                uint128 value = uint128(liq_data.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
-                this.self_liquidatePositions{value: value}(msg.sender, market_idx, liq_data.positions, liq_data.price.price, meta);
+            if (priceSource == OracleType.PriceNode && checkPrice(liqData.price, oracleConf.priceNode)) {
+                uint128 value = uint128(liqData.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+                this.self_liquidatePositions{value: value}(msg.sender, marketIdx, liqData.positions, liqData.price.price, meta);
                 continue;
             }
 
-            _sendLiquidationOracleRequest(msg.sender, market_idx, liq_data.positions, liq_data.eventData, meta);
+            _sendLiquidationOracleRequest(msg.sender, marketIdx, liqData.positions, meta);
         }
     }
 
     function revert_liquidatePositions(
-        address user, address liquidator, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+        address user, address liquidator, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit LiquidatePositionRevert(meta.call_id, liquidator, user, position_key, market_idx);
+        emit LiquidatePositionRevert(meta.callId, liquidator, user, positionKey, marketIdx);
     }
 
     function oracle_liquidatePositions(
-        uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+        uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserveAndSendGas(meta) {
-        _liquidatePositions(liquidator, market_idx, positions, asset_price, meta);
+        _liquidatePositions(liquidator, marketIdx, positions, assetPrice, meta);
     }
 
     function self_liquidatePositions(
-        address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+        address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
     ) external reserveAndSendGas(meta) {
         require (msg.sender == address(this), Errors.BAD_SENDER);
-        _liquidatePositions(liquidator, market_idx, positions, asset_price, meta);
+        _liquidatePositions(liquidator, marketIdx, positions, assetPrice, meta);
     }
 
     function _liquidatePositions(
-        address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+        address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
     ) internal {
-        Funding _funding = _updateFunding(market_idx, asset_price);
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
         for (PositionIdx position: positions) {
-            address gravix_acc = getGravixAccountAddress(position.user);
+            address gravixAcc = getGravixAccountAddress(position.user);
             // reserve 0.01 ever here to cover computation costs of iterating, needed for big arrays
-            IGravixAccount(gravix_acc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.01 ever}(
+            IGravixAccount(gravixAcc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.01 ever}(
                 liquidator,
                 position.positionKey,
-                market_idx,
-                asset_price,
+                marketIdx,
+                assetPrice,
                 _funding,
                 meta
             );
@@ -864,53 +855,53 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     function finish_liquidatePositions(
         address user,
         address liquidator,
-        uint32 position_key,
-        uint128 asset_price,
-        IGravixAccount.PositionView position_view,
+        uint32 positionKey,
+        uint128 assetPrice,
+        IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         // we already deducted open fee when position was opened
-        uint128 collateral = position_view.position.initialCollateral - position_view.position.openFee;
+        uint128 collateral = positionView.position.initialCollateral - positionView.position.openFee;
         collateralReserve -= collateral;
 
         // we added exactly this amount when opened order
-        uint128 initial_position_size_asset = calculatePositionAssetSize(collateral, position_view.position.leverage, position_view.position.openPrice);
+        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, positionView.position.leverage, positionView.position.openPrice);
         _removePositionFromMarket(
-            position_view.position.marketIdx,
-            initial_position_size_asset,
-            asset_price,
-            position_view.position.positionType
+            positionView.position.marketIdx,
+            initialPositionSizeAsset,
+            assetPrice,
+            positionView.position.positionType
         );
 
-        uint128 liquidator_reward = math.muldiv(collateral, liquidatorRewardShare, Constants.HUNDRED_PERCENT);
+        uint128 liquidatorReward = math.muldiv(collateral, liquidationParams.rewardShare, Constants.HUNDRED_PERCENT);
 
-        _collectPnlAndReferral(collateral - liquidator_reward, referrer, grandReferrer, user, meta);
+        _collectPnlAndReferral(collateral - liquidatorReward, referrer, grandReferrer, user, meta);
 
-        emit LiquidatePosition(meta.call_id, user, liquidator, position_key, position_view);
+        emit LiquidatePosition(meta.callId, user, liquidator, positionKey, positionView);
 
-        _transfer(usdtWallet, liquidator_reward, liquidator, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.SENDER_PAYS_FEES);
-        _sendCallbackOrGas(user, meta.nonce, true, meta.send_gas_to);
+        _transfer(usdt.wallet, liquidatorReward, liquidator, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.SENDER_PAYS_FEES);
+        _sendCallbackOrGas(user, meta.nonce, true, meta.sendGasTo);
     }
 
     // ----------------------------------------------------------------------------------
     // --------------------------- POSITION LIMITS --------------------------------------
     // ----------------------------------------------------------------------------------
-    // @param market_idx - market id
+    // @param marketIdx - market id
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
-    // @param asset_price - position price, 8 decimals number
-    // @param position_type - 0 - long, 1 - short
+    // @param assetPrice - position price, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
     function checkPositionAllowed(
-        uint32 market_idx,
+        uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
-        uint128 asset_price,
-        PositionType position_type
+        uint128 assetPrice,
+        PositionType positionType
     ) public view returns (uint16) {
-        uint128 position_size_asset = calculatePositionAssetSize(collateral, leverage, asset_price);
-        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size_asset, asset_price, position_type);
+        uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
+        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, assetPrice, positionType);
         return _error;
     }
 
@@ -921,160 +912,195 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
 
     // @dev Will not apply changes if _error > 0
-    // @param market_idx - market id
-    // @param position_size_asset - position value in asset, 6 decimals number
-    // @param cur_asset_price - position price, 8 decimals number
-    // @param position_type - 0 - long, 1 - short
+    // @param marketIdx - market id
+    // @param positionSizeAsset - position value in asset, 6 decimals number
+    // @param curAssetPrice - position price, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
     function _addPositionToMarketOrReturnErr(
-        uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type
+        uint32 marketIdx, uint128 positionSizeAsset, uint128 curAssetPrice, PositionType positionType
     ) internal returns (uint16) {
         (
             Market _market,
             uint128 _totalNOI,
             uint16 _error
-        ) = _calculatePositionImpactAndCheckAllowed(market_idx, position_size_asset, cur_asset_price, position_type);
+        ) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, curAssetPrice, positionType);
         if (_error == 0) {
-            markets[market_idx] = _market;
+            markets[marketIdx] = _market;
             totalNOI = _totalNOI;
         }
         return _error;
     }
 
-    // @param market_idx - market id
-    // @param position_size_asset - position value in asset, 6 decimals number
-    // @param cur_asset_price - position price, 8 decimals number
-    // @param position_type - 0 - long, 1 - short
+    // @param marketIdx - market id
+    // @param positionSizeAsset - position value in asset, 6 decimals number
+    // @param curAssetPrice - position price, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
     function _calculatePositionImpactAndCheckAllowed(
-        uint32 market_idx,
-        uint128 position_size_asset,
-        uint128 cur_asset_price,
-        PositionType position_type
+        uint32 marketIdx,
+        uint128 positionSizeAsset,
+        uint128 curAssetPrice,
+        PositionType positionType
     ) internal view returns (Market _market, uint128 _totalNOI, uint16 _error) {
-        (_market, _totalNOI) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
+        (_market, _totalNOI) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, false);
 
-        uint128 shorts_usd = math.muldiv(_market.totalShortsAsset, cur_asset_price, Constants.PRICE_DECIMALS);
-        uint128 longs_usd = math.muldiv(_market.totalLongsAsset, cur_asset_price, Constants.PRICE_DECIMALS);
+        uint128 shortsUsd = math.muldiv(_market.totalShortsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
+        uint128 longsUsd = math.muldiv(_market.totalLongsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
         // market limits
-        if (shorts_usd > _market.maxTotalShortsUSD || longs_usd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
+        if (shortsUsd > _market.maxTotalShortsUSD || longsUsd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         // common platform limit
-        if (totalNOILimitEnabled && math.muldiv(poolBalance, maxPoolUtilRatio, Constants.HUNDRED_PERCENT) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
+        if (totalNOILimitEnabled && math.muldiv(
+            poolAssets.balance,
+            maxPoolUtilRatio,
+            Constants.HUNDRED_PERCENT
+        ) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
         return (_market, _totalNOI, _error);
     }
 
-    // @param market_idx - market id
-    // @param position_size_asset - position value in asset, 6 decimals number
-    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation, 8 decimals number
-    // @param position_type - 0 - long, 1 - short
+    // @param marketIdx - market id
+    // @param positionSizeAsset - position value in asset, 6 decimals number
+    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
     // @param bool - whether position is removed or added
     function _calculatePositionImpact(
-        uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type, bool remove
+        uint32 marketIdx, uint128 positionSizeAsset, uint128 curAssetPrice, PositionType positionType, bool remove
     ) internal view returns (Market _market, uint128 _totalNOI) {
-        _market = markets[market_idx];
+        _market = markets[marketIdx];
         _totalNOI = totalNOI;
 
-        uint128 noi_asset_before = _marketNOI(_market);
-        uint128 noi_usd_before = math.muldiv(noi_asset_before, _market.lastNoiUpdatePrice, Constants.PRICE_DECIMALS);
+        uint128 noiAssetBefore = _marketNOI(_market);
+        uint128 noiUsdBefore = math.muldiv(noiAssetBefore, _market.lastNoiUpdatePrice, Constants.PRICE_DECIMALS);
 
-        if (position_type == PositionType.Long) {
-            _market.totalLongsAsset = remove ? (_market.totalLongsAsset - position_size_asset) : (_market.totalLongsAsset + position_size_asset);
+        if (positionType == PositionType.Long) {
+            _market.totalLongsAsset = remove ? (_market.totalLongsAsset - positionSizeAsset) : (_market.totalLongsAsset + positionSizeAsset);
         } else {
-            _market.totalShortsAsset = remove ? (_market.totalShortsAsset - position_size_asset) : (_market.totalShortsAsset + position_size_asset);
+            _market.totalShortsAsset = remove ? (_market.totalShortsAsset - positionSizeAsset) : (_market.totalShortsAsset + positionSizeAsset);
         }
 
-        uint128 noi_asset_after = _marketNOI(_market);
-        uint128 noi_usd_after = math.muldiv(noi_asset_after, cur_asset_price, Constants.PRICE_DECIMALS);
+        uint128 noiAssetAfter = _marketNOI(_market);
+        uint128 noiUsdAfter = math.muldiv(noiAssetAfter, curAssetPrice, Constants.PRICE_DECIMALS);
 
-        _totalNOI -= math.muldiv(noi_usd_before, _market.noiWeight, Constants.WEIGHT_BASE);
-        _totalNOI += math.muldiv(noi_usd_after, _market.noiWeight, Constants.WEIGHT_BASE);
+        _totalNOI -= math.muldiv(noiUsdBefore, _market.noiWeight, Constants.WEIGHT_BASE);
+        _totalNOI += math.muldiv(noiUsdAfter, _market.noiWeight, Constants.WEIGHT_BASE);
 
-        _market.lastNoiUpdatePrice = cur_asset_price;
+        _market.lastNoiUpdatePrice = curAssetPrice;
     }
 
 
-    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation, 8 decimals number
-    function _addPositionToMarket(uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type) internal {
+    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    function _addPositionToMarket(
+        uint32 marketIdx,
+        uint128 positionSizeAsset,
+        uint128 curAssetPrice,
+        PositionType positionType
+    ) internal {
         (
-            markets[market_idx],
+            markets[marketIdx],
             totalNOI
-        ) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, false);
+        ) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, false);
     }
 
-    // @param cur_asset_price - asset price on moment of update, required for TNOI calculation, 8 decimals number
-    function _removePositionFromMarket(uint32 market_idx, uint128 position_size_asset, uint128 cur_asset_price, PositionType position_type) internal {
+    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    function _removePositionFromMarket(
+        uint32 marketIdx,
+        uint128 positionSizeAsset,
+        uint128 curAssetPrice,
+        PositionType positionType
+    ) internal {
         (
-            markets[market_idx],
+            markets[marketIdx],
             totalNOI
-        ) = _calculatePositionImpact(market_idx, position_size_asset, cur_asset_price, position_type, true);
+        ) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, true);
     }
     // ----------------------------------------------------------------------------------
     // --------------------------- FUNDING ----------------------------------------------
     // ----------------------------------------------------------------------------------
-    // @param market_idx - market id
-    // @param asset_price - asset price, 8 decimals number
-    function _updateFunding(uint32 market_idx, uint128 asset_price) internal returns (Funding funding) {
-        Market _market = markets[market_idx];
+    // @param marketIdx - market id
+    // @param assetPrice - asset price, 8 decimals number
+    function _updateFunding(uint32 marketIdx, uint128 assetPrice) internal returns (Funding funding) {
+        Market _market = markets[marketIdx];
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
-        _market.funding = _getUpdatedFunding(_market, asset_price);
+        _market.funding = _getUpdatedFunding(_market, assetPrice);
         _market.lastFundingUpdateTime = now;
 
-        markets[market_idx] = _market;
+        markets[marketIdx] = _market;
         return _market.funding;
     }
 
     // TODO: function for updating funding without real deal
 
-    function getUpdatedFunding(mapping (uint32 => uint128) prices) external view returns (mapping (uint32 => Funding) funding) {
-        for ((uint32 market_idx, uint128 asset_price): prices) {
-            funding[market_idx] = _getUpdatedFunding(markets[market_idx], asset_price);
+    function getUpdatedFunding(
+        mapping (uint32 => uint128) prices
+    ) external view returns (mapping (uint32 => Funding) funding) {
+        for ((uint32 marketIdx, uint128 assetPrice): prices) {
+            funding[marketIdx] = _getUpdatedFunding(markets[marketIdx], assetPrice);
         }
         return funding;
     }
 
-    function _getUpdatedFunding(Market _market, uint128 asset_price) internal pure returns (Funding _funding) {
+    function _getUpdatedFunding(Market _market, uint128 assetPrice) internal pure returns (Funding _funding) {
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
-        (int128 long_rate_per_hour, int128 short_rate_per_hour) = _getFundingRates(_market);
+        (int128 longRatePerHour, int128 shortRatePerHour) = _getFundingRates(_market);
 
-        _funding.accLongUSDFundingPerShare = _market.funding.accLongUSDFundingPerShare + _calculateFunding(long_rate_per_hour, _market.totalLongsAsset, asset_price, _market.lastFundingUpdateTime);
-        _funding.accShortUSDFundingPerShare = _market.funding.accShortUSDFundingPerShare + _calculateFunding(short_rate_per_hour, _market.totalShortsAsset, asset_price, _market.lastFundingUpdateTime);
+        _funding.accLongUSDFundingPerShare = _market.funding.accLongUSDFundingPerShare + _calculateFunding(
+            longRatePerHour,
+            _market.totalLongsAsset,
+            assetPrice,
+            _market.lastFundingUpdateTime
+        );
+
+        _funding.accShortUSDFundingPerShare = _market.funding.accShortUSDFundingPerShare + _calculateFunding(
+            shortRatePerHour,
+            _market.totalShortsAsset,
+            assetPrice,
+            _market.lastFundingUpdateTime
+        );
+
         return _funding;
     }
 
-    // @param asset_price - asset price, 8 decimals number
-    function _calculateFunding(int256 rate_per_hour, uint128 total_position, uint128 asset_price, uint32 last_update_time) internal pure returns (int256) {
-        if (rate_per_hour == 0 || total_position == 0) return 0;
+    // @param assetPrice - asset price, 8 decimals number
+    function _calculateFunding(
+        int256 ratePerHour,
+        uint128 totalPosition,
+        uint128 assetPrice,
+        uint32 lastUpdateTime
+    ) internal pure returns (int256) {
+        if (ratePerHour == 0 || totalPosition == 0) return 0;
         // multiply by SCALING FACTOR in the beginning to prevent precision loss
-        int256 funding_asset = math.muldiv(rate_per_hour * Constants.SCALING_FACTOR, total_position, Constants.HUNDRED_PERCENT);
-        funding_asset = math.muldiv(funding_asset, (now - last_update_time), Constants.HOUR);
-        int256 funding_usd = math.muldiv(funding_asset, asset_price, Constants.PRICE_DECIMALS);
-        return funding_usd / total_position;
+        int256 fundingAsset = math.muldiv(ratePerHour * Constants.SCALING_FACTOR, totalPosition, Constants.HUNDRED_PERCENT);
+        fundingAsset = math.muldiv(fundingAsset, (now - lastUpdateTime), Constants.HOUR);
+        int256 fundingUsd = math.muldiv(fundingAsset, assetPrice, Constants.PRICE_DECIMALS);
+        return fundingUsd / totalPosition;
     }
 
     // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
-    function getFundingRates(uint32 market_idx) public view returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
-        return _getFundingRates(markets[market_idx]);
+    function getFundingRates(uint32 marketIdx) public view returns (int128 longRatePerHour, int128 shortRatePerHour) {
+        return _getFundingRates(markets[marketIdx]);
     }
 
     // @notice If rate is positive - trader should pay, negative - receive payment
-    function _getFundingRates(Market _market) internal pure returns (int128 long_rate_per_hour, int128 short_rate_per_hour) {
+    function _getFundingRates(Market _market) internal pure returns (int128 longRatePerHour, int128 shortRatePerHour) {
         uint128 noi = uint128(math.abs(int256(_market.totalLongsAsset) - _market.totalShortsAsset));
-        uint128 funding_rate_per_hour = math.muldiv(
+        uint128 fundingRatePerHour = math.muldiv(
             _market.fees.fundingBaseRatePerHour,
             math.muldiv(noi, Constants.SCALING_FACTOR, _market.depthAsset),
             Constants.SCALING_FACTOR
         );
 
         if (_market.totalLongsAsset >= _market.totalShortsAsset) {
-            long_rate_per_hour = int128(funding_rate_per_hour);
+            longRatePerHour = int128(fundingRatePerHour);
             if (_market.totalShortsAsset > 0) {
-                short_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalLongsAsset, _market.totalShortsAsset));
+                shortRatePerHour = -1 * int128(
+                    math.muldiv(fundingRatePerHour, _market.totalLongsAsset, _market.totalShortsAsset)
+                );
             }
         } else {
-            short_rate_per_hour = int128(funding_rate_per_hour);
+            shortRatePerHour = int128(fundingRatePerHour);
             if (_market.totalLongsAsset > 0) {
-                long_rate_per_hour = -1 * int128(math.muldiv(funding_rate_per_hour, _market.totalShortsAsset, _market.totalLongsAsset));
+                longRatePerHour = -1 * int128(math.muldiv(fundingRatePerHour, _market.totalShortsAsset, _market.totalLongsAsset));
             }
         }
-        return (long_rate_per_hour, short_rate_per_hour);
+        return (longRatePerHour, shortRatePerHour);
     }
 }
