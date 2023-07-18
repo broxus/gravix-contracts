@@ -163,16 +163,16 @@ describe("Testing main orders flow", async function () {
                         .call()
                 ).payload;
 
-                for (let _ of Array.from({ length: 5 })) {
-                    await locklift.transactions.waitFinalized(
-                        user_usdt_wallet.multiTransfer(
-                            Array.from({ length: 80 }, () => collateral),
-                            vault.address,
-                            payload,
-                            toNano(2.1),
-                        ),
-                    );
-                }
+                // for (let _ of Array.from({ length: 5 })) {
+                await locklift.transactions.waitFinalized(
+                    user_usdt_wallet.multiTransfer(
+                        Array.from({ length: 80 }, () => collateral),
+                        vault.address,
+                        payload,
+                        toNano(2.1),
+                    ),
+                );
+                // }
                 const acc = await vault.account(user);
                 // const view1 = await acc.getPositionView(posKeys[0], price * 100, {
                 //     accLongUSDFundingPerShare: 0,
