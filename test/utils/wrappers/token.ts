@@ -1,10 +1,9 @@
-import {Address, Contract, toNano} from "locklift";
-import {TokenWallet} from "./token_wallet";
-import {FactorySource} from "../../../build/factorySource";
-import {Account} from 'locklift/everscale-client'
+import { Address, Contract, toNano } from "locklift";
+import { TokenWallet } from "./token_wallet";
+import { FactorySource } from "../../../build/factorySource";
+import { Account } from "locklift/everscale-client";
 
 const logger = require("mocha-logger");
-
 
 export class Token {
     public contract: Contract<FactorySource["TokenRootUpgradeable"]>;
@@ -18,12 +17,12 @@ export class Token {
     }
 
     static async from_addr(addr: Address, owner: Account) {
-        const contract = await locklift.factory.getDeployedContract('TokenRootUpgradeable', addr);
+        const contract = await locklift.factory.getDeployedContract("TokenRootUpgradeable", addr);
         return new Token(contract, owner);
     }
 
     async walletAddr(user: Address) {
-        return (await this.contract.methods.walletOf({walletOwner: user, answerId: 0}).call()).value0;
+        return (await this.contract.methods.walletOf({ walletOwner: user, answerId: 0 }).call()).value0;
     }
 
     async wallet(user: Account) {
@@ -32,12 +31,12 @@ export class Token {
     }
 
     async deployWallet(user: Account) {
-        await this.contract.methods.deployWallet(
-            {answerId: 0, walletOwner: user.address, deployWalletValue: toNano(1)}
-        ).send({
-            amount: toNano(2),
-            from: user.address
-        });
+        await this.contract.methods
+            .deployWallet({ answerId: 0, walletOwner: user.address, deployWalletValue: toNano(1) })
+            .send({
+                amount: toNano(2),
+                from: user.address,
+            });
 
         const addr = await this.walletAddr(user.address);
         logger.log(`User token wallet: ${addr.toString()}`);
@@ -45,29 +44,37 @@ export class Token {
     }
 
     async transferOwnership(newOwner: Account) {
-        await locklift.tracing.trace(this.contract.methods.transferOwnership({
-            newOwner: newOwner.address,
-            remainingGasTo: this.owner.address,
-            callbacks: []
-        }).send({
-            from: this.owner.address,
-            amount: toNano(2)
-        }));
+        await locklift.tracing.trace(
+            this.contract.methods
+                .transferOwnership({
+                    newOwner: newOwner.address,
+                    remainingGasTo: this.owner.address,
+                    callbacks: [],
+                })
+                .send({
+                    from: this.owner.address,
+                    amount: toNano(2),
+                }),
+        );
         this.owner = newOwner;
     }
 
     async mint(mint_amount: any, user: Account) {
-        await locklift.tracing.trace(this.contract.methods.mint({
-            amount: mint_amount,
-            recipient: user.address,
-            deployWalletValue: locklift.utils.toNano(1),
-            remainingGasTo: this.owner.address,
-            notify: false,
-            payload: ''
-        }).send({
-            amount: toNano(5),
-            from: this.owner.address
-        }));
+        await locklift.tracing.trace(
+            this.contract.methods
+                .mint({
+                    amount: mint_amount,
+                    recipient: user.address,
+                    deployWalletValue: locklift.utils.toNano(1),
+                    remainingGasTo: this.owner.address,
+                    notify: false,
+                    payload: "",
+                })
+                .send({
+                    amount: toNano(5),
+                    from: this.owner.address,
+                }),
+        );
 
         const walletAddr = await this.walletAddr(user.address);
         logger.log(`User token wallet: ${walletAddr.toString()}`);

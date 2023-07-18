@@ -1,14 +1,14 @@
-import {bn, deployUser} from "./utils/common";
-import {Account} from 'locklift/everscale-client';
-import {Token} from "./utils/wrappers/token";
-import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, lockliftChai, toNano, zeroAddress} from "locklift";
-import chai, {expect} from "chai";
-import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
-import {GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi} from "../build/factorySource";
-import {GravixAccount} from "./utils/wrappers/vault_acc";
+import { bn, deployUser } from "./utils/common";
+import { Account } from "locklift/everscale-client";
+import { Token } from "./utils/wrappers/token";
+import { TokenWallet } from "./utils/wrappers/token_wallet";
+import { Address, Contract, lockliftChai, toNano, zeroAddress } from "locklift";
+import chai, { expect } from "chai";
+import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
+import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
+import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
-import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
+import { closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding } from "./utils/orders";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -22,7 +22,7 @@ describe("Testing main orders flow", async function () {
     let stg_root: Token;
     const USDT_DECIMALS = 10 ** 6;
     const PRICE_DECIMALS = 10 ** 8;
-    const LEVERAGE_DECIMALS = 10**6;
+    const LEVERAGE_DECIMALS = 10 ** 6;
     const PERCENT_100 = bn(1_000_000_000_000);
     const REF_OPEN_FEE_RATE = PERCENT_100.idiv(10);
     const REF_CLOSE_FEE_RATE = PERCENT_100.idiv(10);
@@ -31,20 +31,20 @@ describe("Testing main orders flow", async function () {
     const LONG_POS = 0;
     const SHORT_POS = 1;
     const empty_event = {
-        eventData: '',
+        eventData: "",
         eventBlock: 0,
         eventIndex: 0,
         eventTransaction: 0,
-        eventBlockNumber: 0
-    }
+        eventBlockNumber: 0,
+    };
 
     const empty_price = {
         price: 0,
         serverTime: 0,
         oracleTime: 0,
-        ticker: '',
-        signature: ''
-    }
+        ticker: "",
+        signature: "",
+    };
 
     let vault: GravixVault;
     let priceNode: Contract<PriceNodeAbi>;
@@ -59,8 +59,8 @@ describe("Testing main orders flow", async function () {
     // left - btc, right - eth
     let btc_eth_mock: Contract<PairMockAbi>;
 
-    const eth_addr = new Address('0:1111111111111111111111111111111111111111111111111111111111111111');
-    const btc_addr = new Address('0:2222222222222222222222222222222222222222222222222222222222222222');
+    const eth_addr = new Address("0:1111111111111111111111111111111111111111111111111111111111111111");
+    const btc_addr = new Address("0:2222222222222222222222222222222222222222222222222222222222222222");
 
     const basic_config: MarketConfig = {
         priceSource: 0,
@@ -75,27 +75,27 @@ describe("Testing main orders flow", async function () {
             baseSpreadRate: 1000000000, // 0.1%
             baseDynamicSpreadRate: 1000000000, // 0.1%
             borrowBaseRatePerHour: 0, // disable by default
-            fundingBaseRatePerHour: 0 // disable by default
+            fundingBaseRatePerHour: 0, // disable by default
         },
         scheduleEnabled: false,
-        workingHours: []
-    }
+        workingHours: [],
+    };
 
-    describe('Setup contracts', async function() {
-        it('Run fixtures', async function() {
+    describe("Setup contracts", async function () {
+        it("Run fixtures", async function () {
             await locklift.deployments.fixture();
-            owner = locklift.deployments.getAccount('Owner').account;
-            user = locklift.deployments.getAccount('User').account;
-            user1 = locklift.deployments.getAccount('User1').account;
-            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>('Vault'), owner);
-            stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>('StgUSDT'), owner);
-            usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>('USDT'), owner);
-            eth_usdt_mock = locklift.deployments.getContract('ETH_USDT');
+            owner = locklift.deployments.getAccount("Owner").account;
+            user = locklift.deployments.getAccount("User").account;
+            user1 = locklift.deployments.getAccount("User1").account;
+            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner);
+            stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
+            usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
+            eth_usdt_mock = locklift.deployments.getContract("ETH_USDT");
             user_usdt_wallet = await usdt_root.wallet(user);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
         });
-    })
+    });
 
     describe("Running scenarios", async function () {
         let pool_balance: BigNumber;
@@ -105,27 +105,25 @@ describe("Testing main orders flow", async function () {
             const oracle: Oracle = {
                 dex: {
                     targetToken: eth_addr,
-                    path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
+                    path: [{ addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
                 },
-                priceNode: {ticker: '', maxOracleDelay: 0, maxServerDelay: 0}
-            }
+                priceNode: { ticker: "", maxOracleDelay: 0, maxServerDelay: 0 },
+            };
 
             await locklift.tracing.trace(vault.addMarkets([basic_config]));
             await locklift.tracing.trace(vault.setOracles([[0, oracle]]));
         });
 
-        it('Provide liquidity', async function () {
-            locklift.tracing.setAllowedCodesForAddress(user.address, {compute: [60]});
+        it("Provide liquidity", async function () {
+            locklift.tracing.setAllowedCodesForAddress(user.address, { compute: [60] });
 
             const deposit_amount = 10000000 * USDT_DECIMALS;
-            const {traceTree} = await locklift.tracing.trace(vault.addLiquidity(user_usdt_wallet, deposit_amount));
+            const { traceTree } = await locklift.tracing.trace(vault.addLiquidity(user_usdt_wallet, deposit_amount));
             await traceTree?.beautyPrint();
-            expect(traceTree).to
-                .emit("LiquidityPoolDeposit")
-                .withNamedArgs({
-                    usdtAmountIn: deposit_amount.toString(),
-                    stgUsdtAmountOut: deposit_amount.toString()
-                });
+            expect(traceTree).to.emit("LiquidityPoolDeposit").withNamedArgs({
+                usdtAmountIn: deposit_amount.toString(),
+                stgUsdtAmountOut: deposit_amount.toString(),
+            });
 
             const details = await vault.details();
             expect(details._poolAssets.stgUsdtSupply).to.be.eq(deposit_amount.toString());
@@ -137,11 +135,11 @@ describe("Testing main orders flow", async function () {
             expect(user_stg_bal.toString()).to.be.eq(deposit_amount.toString());
         });
 
-        describe('Basic scenarios: open fee, pnl, close fee, spreads, liq price checked', async function () {
+        describe("Basic scenarios: open fee, pnl, close fee, spreads, liq price checked", async function () {
             const market_idx = 0;
 
-            describe('Test solo long positions', async function () {
-                it('Pnl+, 1x leverage, open/close 1000$/1100$', async function () {
+            describe("Test solo long positions", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
                     await testMarketPosition(
                         vault,
                         eth_usdt_mock,
@@ -152,12 +150,10 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
-                        1100 * USDT_DECIMALS
+                        1100 * USDT_DECIMALS,
                     );
                 });
             });
-
-
         });
     });
 });

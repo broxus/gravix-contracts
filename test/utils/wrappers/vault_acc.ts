@@ -1,6 +1,6 @@
-import {Address, Contract} from "locklift";
-import {GravixAccountAbi} from "../../../build/factorySource";
-import {Account} from 'locklift/everscale-client'
+import { Address, Contract } from "locklift";
+import { GravixAccountAbi } from "../../../build/factorySource";
+import { Account } from "locklift/everscale-client";
 
 const logger = require("mocha-logger");
 
@@ -14,7 +14,7 @@ export class GravixAccount {
     }
 
     static async from_addr(addr: Address) {
-        const contract = await locklift.factory.getDeployedContract('GravixAccount', addr);
+        const contract = await locklift.factory.getDeployedContract("GravixAccount", addr);
         return new GravixAccount(contract);
     }
 
@@ -23,20 +23,22 @@ export class GravixAccount {
     }
 
     async getPositionView(
-      positionKey: number,
-      assetPrice: number | string,
-      funding: { accShortUSDFundingPerShare: number; accLongUSDFundingPerShare: number; }
+        positionKey: number,
+        assetPrice: number | string,
+        funding: { accShortUSDFundingPerShare: number; accLongUSDFundingPerShare: number },
     ) {
-        return await this.contract.methods.getPositionView({
-            input: {
-                positionKey: positionKey,
-                assetPrice: assetPrice,
-                funding: {
-                    accShortUSDFundingPerShare: funding.accShortUSDFundingPerShare,
-                    accLongUSDFundingPerShare: funding.accLongUSDFundingPerShare
-                }
-            },
-            answerId: 0
-        }).call();
+        return await this.contract.methods
+            .getPositionView({
+                input: {
+                    positionKey: positionKey,
+                    assetPrice: assetPrice,
+                    funding: {
+                        accShortUSDFundingPerShare: funding.accShortUSDFundingPerShare,
+                        accLongUSDFundingPerShare: funding.accLongUSDFundingPerShare,
+                    },
+                },
+                answerId: 0,
+            })
+            .call();
     }
 }
