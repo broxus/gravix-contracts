@@ -170,41 +170,139 @@ THROW 0
 CALL $sendTransactions_00fc8573_internal_macro$
 
 .macro sendTransactions_00fc8573_internal_macro
-.loc ../node_modules/@broxus/contracts/contracts/access/ExternalOwner.tsol, 14
-GETGLOB 5
-DUP
-ISNULL
-PUSHCONT {
-	DROP
-	PUSHINT 0
-}
-IF
-GETGLOB 10
-EQUAL
-THROWIFNOT 1101
-.loc ../contracts/test/TestWallet.tsol, 45
+.loc ../contracts/test/TestWallet.tsol, 44
 ACCEPT
-.loc ../contracts/test/TestWallet.tsol, 47
+.loc ../contracts/test/TestWallet.tsol, 49
 PUSHINT 0
+REVERSE 6, 0
+MYADDR
+NEWC
+STSLICECONST x62_
+STSLICE
+PUSHINT 9789369574394656757036770681243717074945
+STUR 135
+ROLLREV 6
+NEWC
+STSLICECONST x5049a4ff
+SWAP
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+SWAP
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+SWAP
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+ROLLREV 3
+NEWC
+SWAP
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+SWAP
+UNPAIR
+XCHG S2
+STU 32
+STDICT
+STU 256
+STBREFR
+STBREFR
+ENDC
+PUSHINT 0
+SENDRAWMSG
+.loc ../contracts/test/TestWallet.tsol, 0
+
+.macro _sendTransactions
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/test/TestWallet.tsol, 52
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDREF
+ENDS
+CTOS
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+LDU 256
+ENDS
+.loc ../contracts/test/TestWallet.tsol, 0
+CALLREF {
+	CALL $_sendTransactions_8da297f0_internal_macro$
+}
+IFREF {
+	CALL $upd_only_time_in_c4$
+}
+THROW 0
+
+.globl	_sendTransactions_8da297f0_internal
+.type	_sendTransactions_8da297f0_internal, @function
+CALL $_sendTransactions_8da297f0_internal_macro$
+
+.macro _sendTransactions_8da297f0_internal_macro
+.loc ../contracts/test/TestWallet.tsol, 63
+ACCEPT
+.loc ../contracts/test/TestWallet.tsol, 65
+PUSHINT 50
+.loc ../contracts/test/TestWallet.tsol, 66
+OVER
 PUSHCONT {
-	PUSH2 S0, S5
+	PUSH2 S0, S7
 	FIRST
 	LESS
 }
 PUSHCONT {
-	.loc ../contracts/test/TestWallet.tsol, 48
-	PUSH2 S0, S4
+	.loc ../contracts/test/TestWallet.tsol, 67
+	PUSH3 S0, S2, S1
+	ADD
+	GEQ
+	IFRETALT
+	.loc ../contracts/test/TestWallet.tsol, 70
+	PUSH2 S0, S6
 	SECOND
 	PUSHINT 32
 	DICTUGET
 	THROWIFNOT 50
 	PLDU 128
-	PUSH2 S1, S6
+	PUSH2 S1, S8
 	SECOND
 	PUSHINT 32
 	DICTUGET
 	THROWIFNOT 50
-	PUSH2 S2, S5
+	PUSH2 S2, S7
 	SECOND
 	PUSHINT 32
 	DICTUGET
@@ -219,27 +317,87 @@ PUSHCONT {
 	STGRAMS
 	PUSHINT 1
 	STUR 107
-	PUSH2 S1, S2
+	PUSH2 S1, S4
 	SECOND
 	PUSHINT 32
 	DICTUGETREF
 	THROWIFNOT 50
 	STREFR
 	ENDC
-	PUSH2 S1, S3
+	PUSH2 S1, S5
 	SECOND
 	PUSHINT 32
 	DICTUGET
 	THROWIFNOT 50
 	PLDU 8
 	SENDRAWMSG
-	.loc ../contracts/test/TestWallet.tsol, 47
+	.loc ../contracts/test/TestWallet.tsol, 66
 	INC
 	.loc ../contracts/test/TestWallet.tsol, 0
 }
-WHILE
-BLKDROP 6
+WHILEBRK
+DROP
+.loc ../contracts/test/TestWallet.tsol, 72
+DUP2
+ADD
+PUSH S7
+FIRST
+LESS
+PUSHCONT {
+	.loc ../contracts/test/TestWallet.tsol, 73
+	DUP2
+	ADD
+	POP S2
+	.loc ../contracts/test/TestWallet.tsol, 74
+	PUSH3 S1, S2, S3
+	PUSH3 S7, S8, S9
+	MYADDR
+	NEWC
+	STSLICECONST x62_
+	STSLICE
+	PUSHINT 9789369574394656757036770681243717074945
+	STUR 135
+	ROLLREV 6
+	NEWC
+	STSLICECONST x5049a4ff
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
+	ROLLREV 3
+	NEWC
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
+	STU 256
+	STBREFR
+	STBREFR
+	ENDC
+	PUSHINT 0
+	SENDRAWMSG
+	.loc ../contracts/test/TestWallet.tsol, 0
+}
+IF
 .loc ../contracts/test/TestWallet.tsol, 0
+BLKDROP 7
 
 .macro sendTransaction
 DROP
@@ -630,6 +788,12 @@ IFJMPREF {
 	EQUAL
 	IFJMPREF {
 		CALL $sendTransaction$
+	}
+	DUP
+	PUSHINT 1347003647
+	EQUAL
+	IFJMPREF {
+		CALL $_sendTransactions$
 	}
 	DUP
 	PUSHINT 1482330212

@@ -40,12 +40,39 @@ contract TestWallet is Account {
     )
         public
         view
-        onlyOwner
     {
         tvm.accept();
 
-        for (uint i = 0; i < dest.length; i++) {
+//        for (uint i = 0; i < dest.length; i++) {
+//            dest[i].transfer(value[i], bounce[i], flags[i], payload[i]);
+//        }
+        this._sendTransactions(dest, value, bounce, flags, payload, 0);
+    }
+
+    function _sendTransactions(
+        address[] dest,
+        uint128[] value,
+        bool[] bounce,
+        uint8[] flags,
+        TvmCell[] payload,
+        uint256 _idx
+    )
+        public
+        view
+    {
+        tvm.accept();
+
+        uint256 batchLimit = 50;
+        for (uint i = _idx; i < dest.length; i++) {
+            if (i >= _idx + batchLimit) {
+                break;
+            }
             dest[i].transfer(value[i], bounce[i], flags[i], payload[i]);
         }
+        if (_idx + batchLimit < dest.length) {
+            _idx += batchLimit;
+            this._sendTransactions(dest, value, bounce, flags, payload, _idx);
+        }
+
     }
 }

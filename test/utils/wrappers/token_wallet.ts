@@ -1,6 +1,7 @@
 import { Address, Contract, toNano } from "locklift";
 import { FactorySource } from "../../../build/factorySource";
 import { Account } from "locklift/everscale-client";
+import { runTargets } from "../common";
 
 export class TokenWallet {
     public contract: Contract<FactorySource["TokenWalletUpgradeable"]>;
@@ -48,5 +49,28 @@ export class TokenWallet {
                 amount: value || toNano(5),
                 from: owner.address,
             });
+    }
+
+    async multiTransfer(amounts: number[], receiver: Address, payload = "", value: any) {
+        let notify = payload !== "";
+
+        const owner = this._owner as Account;
+        debugger;
+        return runTargets(
+            owner,
+            Array.from({ length: amounts.length }, () => this.contract),
+            Array.from({ length: amounts.length }, () => "transfer"),
+            Array.from({ length: amounts.length }, (_, i) => {
+                return {
+                    amount: amounts[i],
+                    recipient: receiver,
+                    deployWalletValue: 0,
+                    remainingGasTo: owner.address,
+                    notify: notify,
+                    payload: payload,
+                };
+            }),
+            Array.from({ length: amounts.length }, () => value),
+        );
     }
 }
