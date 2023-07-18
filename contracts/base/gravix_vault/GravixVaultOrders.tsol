@@ -792,14 +792,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDATION ------------------------------------------
     // ----------------------------------------------------------------------------------
-    // @notice 3 ever for every market + 1 ever for every position
+    // @notice 3 ever for every market + 1.05 ever for every position
     // @dev Aggregate by market to minimize requests to oracle
     function liquidatePositions(
         mapping (uint32 => LiquidationData) liquidations, Callback.CallMeta meta
     ) external view onlyActive reserveAndSendGas(meta) {
         // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
         for ((uint32 marketIdx, LiquidationData liqData) : liquidations) {
-            require (liqData.positions.length <= 250, Errors.BAD_INPUT); // we dont want to fail on action phase later
 
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
@@ -807,7 +806,14 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(liqData.price, oracleConf.priceNode)) {
                 uint128 value = uint128(liqData.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
-                this.self_liquidatePositions{value: value}(msg.sender, marketIdx, liqData.positions, liqData.price.price, meta);
+                this.self_liquidatePositions{value: value}(
+                    msg.sender,
+                    marketIdx,
+                    liqData.positions,
+                    liqData.price.price,
+                    meta,
+                    0
+                );
                 continue;
             }
 
@@ -823,25 +829,41 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
-    ) external override onlyOracleProxy(nonce) reserveAndSendGas(meta) {
-        _liquidatePositions(liquidator, marketIdx, positions, assetPrice, meta);
+    ) external override onlyOracleProxy(nonce) {
+        tvm.rawReserve(_reserve(), 0);
+        this.self_liquidatePositions{
+                value: 0,
+                flag: MsgFlag.ALL_NOT_RESERVED,
+                bounce: false
+        }(
+            liquidator,
+            marketIdx,
+            positions,
+            assetPrice,
+            meta,
+            0
+        );
     }
+
 
     function self_liquidatePositions(
-        address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
-    ) external reserveAndSendGas(meta) {
+        address liquidator,
+        uint32 marketIdx,
+        PositionIdx[] positions,
+        uint128 assetPrice,
+        Callback.CallMeta meta,
+        uint256 _startIdx
+    ) external {
         require (msg.sender == address(this), Errors.BAD_SENDER);
-        _liquidatePositions(liquidator, marketIdx, positions, assetPrice, meta);
-    }
+        tvm.rawReserve(_reserve(), 0);
 
-    function _liquidatePositions(
-        address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
-    ) internal {
+        uint256 batchSize = 50;
         Funding _funding = _updateFunding(marketIdx, assetPrice);
-        for (PositionIdx position: positions) {
+        for (uint i = _startIdx; i < positions.length && i < _startIdx + batchSize; i++) {
+            PositionIdx position = positions[i];
             address gravixAcc = getGravixAccountAddress(position.user);
             // reserve 0.01 ever here to cover computation costs of iterating, needed for big arrays
-            IGravixAccount(gravixAcc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.01 ever}(
+            IGravixAccount(gravixAcc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.06 ever}(
                 liquidator,
                 position.positionKey,
                 marketIdx,
@@ -849,6 +871,23 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 _funding,
                 meta
             );
+        }
+
+        if (_startIdx + batchSize < positions.length) {
+            this.self_liquidatePositions{
+                    value: 0,
+                    flag: MsgFlag.ALL_NOT_RESERVED,
+                    bounce: false
+            }(
+                liquidator,
+                marketIdx,
+                positions,
+                assetPrice,
+                meta,
+                _startIdx + batchSize
+            );
+        } else {
+            meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
         }
     }
 

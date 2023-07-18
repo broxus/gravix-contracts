@@ -120,8 +120,6 @@ describe("Testing main orders flow", async function () {
                 const price = 1000 * USDT_DECIMALS;
                 await setPrice(eth_usdt_mock, price);
 
-                const posKeys: Array<number> = [];
-
                 const collateral = 100 * USDT_DECIMALS;
                 const leverage = 100000000;
                 const pos_type = LONG_POS;
@@ -163,27 +161,24 @@ describe("Testing main orders flow", async function () {
                         .call()
                 ).payload;
 
-                // for (let _ of Array.from({ length: 5 })) {
-                await locklift.transactions.waitFinalized(
-                    user_usdt_wallet.multiTransfer(
-                        Array.from({ length: 80 }, () => collateral),
-                        vault.address,
-                        payload,
-                        toNano(2.1),
-                    ),
-                );
-                // }
+                for (let _ of Array.from({ length: 5 })) {
+                    await locklift.transactions.waitFinalized(
+                        user_usdt_wallet.multiTransfer(
+                            Array.from({ length: 50 }, () => collateral),
+                            vault.address,
+                            payload,
+                            toNano(2.1),
+                        ),
+                    );
+                }
                 const acc = await vault.account(user);
-                // const view1 = await acc.getPositionView(posKeys[0], price * 100, {
-                //     accLongUSDFundingPerShare: 0,
-                //     accShortUSDFundingPerShare: 0,
-                // });
-                console.log(await acc.positions());
-                // move price to liquidate first one, but don't touch second one
-                // just 1$ down 1st position liq price
-                // const new_price = bn(view1.positionView.liquidationPrice).minus(PRICE_DECIMALS);
-                // await setPrice(eth_usdt_mock, new_price.idiv(100).toFixed());
-
+                const positions = await acc.positions();
+                const view1 = await acc.getPositionView(positions[0][0] as unknown as number, price * 100, {
+                    accLongUSDFundingPerShare: 0,
+                    accShortUSDFundingPerShare: 0,
+                });
+                const new_price = bn(view1.positionView.liquidationPrice).minus(PRICE_DECIMALS);
+                await setPrice(eth_usdt_mock, new_price.idiv(100).toFixed());
                 // now try liquidate
                 const { traceTree } = await locklift.tracing.trace(
                     vault.liquidatePositions([
@@ -191,56 +186,19 @@ describe("Testing main orders flow", async function () {
                             market_idx,
                             {
                                 price: empty_price,
-                                positions: posKeys.map(positionKey => ({ user: user.address, positionKey })),
+                                positions: positions.map(([positionKey]) => ({
+                                    user: user.address,
+                                    positionKey: positionKey as unknown as number,
+                                })),
                             },
                         ],
                     ]),
+                    { raise: false },
                 );
                 await traceTree?.beautyPrint();
-                // expect(traceTree).to.emit("LiquidatePosition").withNamedArgs({
-                //     user: user.address,
-                //     positionKey: pos_key1,
-                // });
-                // expect(traceTree).to.emit("LiquidatePositionRevert").withNamedArgs({
-                //     user: user.address,
-                //     positionKey: pos_key2,
-                // });
+                console.log(`Gas used: ${traceTree?.totalGasUsed()}`);
 
-                // now liquidate 2nd position
-            });
-
-            it("Add market with borrow fee > 0", async function () {
-                let new_config = basic_config;
-                new_config.fees.borrowBaseRatePerHour = 1000000000; // 0.1% per hour
-                new_config.fees.fundingBaseRatePerHour = 0;
-
-                const oracle: Oracle = {
-                    dex: {
-                        targetToken: eth_addr,
-                        path: [{ addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
-                    },
-                    priceNode: { ticker: "", maxOracleDelay: 0, maxServerDelay: 0 },
-                };
-
-                await locklift.tracing.trace(vault.addMarkets([new_config]));
-                market_idx = Number((await vault.contract.methods.getDetails({ answerId: 0 }).call())._marketCount) - 1;
-                await locklift.tracing.trace(vault.setOracles([[market_idx, oracle]]));
-            });
-
-            it("Test liquidation price moves when borrow fee accumulate", async function () {
-                const price = 1000 * USDT_DECIMALS;
-                await setPrice(eth_usdt_mock, price);
-
-                const pos_key = await openMarketOrder(
-                    vault,
-                    eth_usdt_mock,
-                    user,
-                    user_usdt_wallet,
-                    market_idx,
-                    LONG_POS,
-                    100 * USDT_DECIMALS,
-                    100000000,
-                );
+                expect(traceTree).to.emit("LiquidatePosition").count(250);
             });
         });
     });

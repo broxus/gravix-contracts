@@ -55,7 +55,6 @@ export class TokenWallet {
         let notify = payload !== "";
 
         const owner = this._owner as Account;
-        debugger;
         return runTargets(
             owner,
             Array.from({ length: amounts.length }, () => this.contract),
