@@ -30,11 +30,11 @@ export function toUSD(num: Bignumber | number) {
 
 export async function tryIncreaseTime(seconds: number) {
     // @ts-ignore
-    // if (locklift.testing.isEnabled) {
-    //     await locklift.testing.increaseTime(seconds);
-    // } else {
-    await sleep(seconds * 1000);
-    // }
+    if (locklift.testing.isEnabled) {
+        await locklift.testing.increaseTime(seconds);
+    } else {
+        await sleep(seconds * 1000);
+    }
 }
 
 export const sendAllEvers = async function (from: Account, to: Address) {

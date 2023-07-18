@@ -195,7 +195,6 @@ describe("Testing main orders flow", async function () {
                     ]),
                     { raise: false },
                 );
-                await traceTree?.beautyPrint();
                 console.log(`Gas used: ${traceTree?.totalGasUsed()}`);
 
                 expect(traceTree).to.emit("LiquidatePosition").count(250);
