@@ -6,7 +6,7 @@ import '@broxus/contracts/contracts/utils/RandomNonce.tsol';
 
 
 contract TestFactory is RandomNonce {
-    TvmCell static wallet_code;
+    TvmCell static walletCode;
     mapping (uint256 => address) public wallets;
 
     constructor() public {
@@ -25,17 +25,17 @@ contract TestFactory is RandomNonce {
                     _randomNonce: rnd.next()
                 },
                 pubkey: 0,
-                code: wallet_code
+                code: walletCode
             });
 
-            address new_wallet = new TestWallet{
+            address newWallet = new TestWallet{
                 stateInit: stateInit,
                 value: values[i],
                 wid: address(this).wid,
                 flag: 0
             }(pubkeys[i]);
 
-            wallets[pubkeys[i]] = new_wallet;
+            wallets[pubkeys[i]] = newWallet;
         }
     }
 

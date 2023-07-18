@@ -1,15 +1,12 @@
-import {bn, deployUser, setupPairMock, setupTokenRoot, setupVault, tryIncreaseTime} from "./utils/common";
+import {bn} from "./utils/common";
 import {Account} from 'locklift/everscale-client';
 import {Token} from "./utils/wrappers/token";
 import {TokenWallet} from "./utils/wrappers/token_wallet";
-import {Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress} from "locklift";
-import chai, {expect, use} from "chai";
+import {Address, Contract, lockliftChai, toNano, WalletTypes, zeroAddress} from "locklift";
+import chai, {expect} from "chai";
 import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi} from "../build/factorySource";
 import {GravixAccount} from "./utils/wrappers/vault_acc";
-import BigNumber from "bignumber.js";
-import {closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding} from "./utils/orders";
-import {sign} from "crypto";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -52,7 +49,7 @@ describe('Testing liquidity pool mechanics', async function() {
   const btc_addr = new Address('0:2222222222222222222222222222222222222222222222222222222222222222');
 
   const basic_config: MarketConfig = {
-    priceSource: 2,
+    priceSource: 1,
     maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
     maxShortsUSD: 100_000 * USDT_DECIMALS, // 100k
     noiWeight: 100,
@@ -95,7 +92,7 @@ describe('Testing liquidity pool mechanics', async function() {
           ]
         }).send({from: owner.address, amount: toNano(1)}));
 
-        await locklift.tracing.trace(priceNode.methods.setMaxActionsPerTx({new_max: 2})
+        await locklift.tracing.trace(priceNode.methods.setMaxActionsPerTx({newMax: 2})
           .send({from: owner.address, amount: toNano(1)}));
       });
 
@@ -168,7 +165,6 @@ describe('Testing liquidity pool mechanics', async function() {
       it("Add market to vault", async function () {
         // eth market
         const oracle: Oracle = {
-          chainlink: {chainID: 0, ticker: '', ttl: 0},
           dex: {
             targetToken: eth_addr,
             path: [{addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address}]
@@ -189,13 +185,13 @@ describe('Testing liquidity pool mechanics', async function() {
         expect(traceTree).to
           .emit("LiquidityPoolDeposit")
           .withNamedArgs({
-            usdt_amount_in: deposit_amount.toString(),
-            stg_usdt_amount_out: deposit_amount.toString()
+            usdtAmountIn: deposit_amount.toString(),
+            stgUsdtAmountOut: deposit_amount.toString()
           });
 
         const details = await vault.details();
-        expect(details._stgUsdtSupply).to.be.eq(deposit_amount.toString());
-        expect(details._poolBalance).to.be.eq(deposit_amount.toString());
+        expect(details._poolAssets.stgUsdtSupply).to.be.eq(deposit_amount.toString());
+        expect(details._poolAssets.balance).to.be.eq(deposit_amount.toString());
 
         user_stg_wallet = await stg_root.wallet(user);
         const user_stg_bal = await user_stg_wallet.balance();

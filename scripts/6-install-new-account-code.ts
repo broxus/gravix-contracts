@@ -30,7 +30,7 @@ const main = async () => {
 
   const acc_artifacts = await locklift.factory.getContractArtifacts('GravixAccount');
   await locklift.tracing.trace(vault.methods.updateGravixAccountCode({
-    code: acc_artifacts.code, meta: {send_gas_to: manager.address, call_id: 0, nonce: 0}
+    code: acc_artifacts.code, meta: {sendGasTo: manager.address, callId: 0, nonce: 0}
   }).send({from: manager.address, amount: toNano(1)}));
 
   spinner.succeed(`New account code installed`);

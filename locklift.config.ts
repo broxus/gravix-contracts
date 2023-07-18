@@ -4,7 +4,7 @@ import * as dotenv from "dotenv";
 import "locklift-verifier";
 import "locklift-deploy";
 import { Deployments } from "locklift-deploy";
-
+dotenv.config();
 
 declare global {
   const locklift: import("locklift").Locklift<FactorySource>;
@@ -15,8 +15,7 @@ declare module "locklift" {
     deployments: Deployments<FactorySource>;
   }
 }
-dotenv.config();
-
+const LOCAL_NODE_URL = process.env.LOCAL_NODE_URL || 'http://localhost'
 
 const config: LockliftConfig = {
   verifier: {
@@ -60,7 +59,7 @@ const config: LockliftConfig = {
         type: "graphql",
         data: {
           // @ts-ignore
-          endpoints: ["http://localhost:5000/graphql"],
+          endpoints: [`${LOCAL_NODE_URL}/graphql`],
           latencyDetectionInterval: 1000,
           local: true,
         },
@@ -71,13 +70,13 @@ const config: LockliftConfig = {
         key: "172af540e43a524763dd53b26a066d472a97c4de37d5498170564510608250c3",
       },
       tracing: {
-        endpoint: 'http://localhost:5000/graphql',
+        endpoint: `${LOCAL_NODE_URL}/graphql`,
       },
 
       keys: {
         // Use everdev to generate your phrase
         // !!! Never commit it in your repos !!!
-        // phrase: "action inject penalty envelope rabbit element slim tornado dinner pizza off blood",
+        phrase: process.env.LOCAL_PHRASE,
         amount: 500
       },
     },

@@ -24,91 +24,91 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     }
 
     // @param price - 8 decimals number
-    function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
-        new_price = _type == IGravixVault.PositionType.Long ?
+    function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 newPrice) {
+        newPrice = _type == IGravixVault.PositionType.Long ?
             math.muldiv(price, (Constants.HUNDRED_PERCENT + spread), Constants.HUNDRED_PERCENT) :
             math.muldiv(price, (Constants.HUNDRED_PERCENT - spread), Constants.HUNDRED_PERCENT);
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
     }
 
-    function applyCloseSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 new_price) {
-        new_price = _type == IGravixVault.PositionType.Long ?
+    function applyCloseSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 newPrice) {
+        newPrice = _type == IGravixVault.PositionType.Long ?
             math.muldiv(price, (Constants.HUNDRED_PERCENT - spread), Constants.HUNDRED_PERCENT) :
             math.muldiv(price, (Constants.HUNDRED_PERCENT + spread), Constants.HUNDRED_PERCENT);
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } new_price;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
     }
 
-    function getPosition(uint32 pos_key) external view responsible returns (Position position) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } positions[pos_key];
+    function getPosition(uint32 posKey) external view responsible returns (Position position) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } positions[posKey];
     }
 
-    function getPositionsView(ViewInput[] inputs) external view responsible returns (PositionView[] positions_views) {
+    function getPositionsView(ViewInput[] inputs) external view responsible returns (PositionView[] positionsViews) {
         for (ViewInput input: inputs) {
-            positions_views.push(getPositionView(input));
+            positionsViews.push(getPositionView(input));
         }
 
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }positions_views;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }positionsViews;
     }
 
-    function getPositionView(ViewInput input) public view responsible returns (PositionView position_view) {
+    function getPositionView(ViewInput input) public view responsible returns (PositionView positionView) {
         Position position = positions[input.positionKey];
         require (position.createdAt != 0, Errors.POSITION_NOT_FOUND);
 
-        bool is_long = position.positionType == IGravixVault.PositionType.Long;
+        bool isLong = position.positionType == IGravixVault.PositionType.Long;
 
         uint128 collateral = position.initialCollateral - position.openFee;
-        uint128 leveraged_position_usd = math.muldiv(collateral, position.leverage, Constants.LEVERAGE_BASE);
-        uint128 leveraged_position_asset = math.muldiv(leveraged_position_usd, Constants.PRICE_DECIMALS, position.openPrice);
+        uint128 leveragedPositionUsd = math.muldiv(collateral, position.leverage, Constants.LEVERAGE_BASE);
+        uint128 leveragedPositionAsset = math.muldiv(leveragedPositionUsd, Constants.PRICE_DECIMALS, position.openPrice);
 
         // borrow fee
-        uint32 time_passed = now - position.createdAt;
-        uint128 borrow_fee_share = math.muldiv(position.borrowBaseRatePerHour, time_passed, Constants.HOUR);
-        uint128 borrow_fee_usd = math.muldiv(borrow_fee_share, leveraged_position_usd, Constants.HUNDRED_PERCENT);
+        uint32 timePassed = now - position.createdAt;
+        uint128 borrowFeeShare = math.muldiv(position.borrowBaseRatePerHour, timePassed, Constants.HOUR);
+        uint128 borrowFeeUsd = math.muldiv(borrowFeeShare, leveragedPositionUsd, Constants.HUNDRED_PERCENT);
 
         // funding
-        int256 new_acc_funding = is_long ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
-        int256 funding_debt = math.muldiv(leveraged_position_asset, position.accUSDFundingPerShare, Constants.SCALING_FACTOR);
-        // if funding_fee > 0, trader pays
-        int256 funding_fee_usd = math.muldiv(leveraged_position_asset, new_acc_funding, Constants.SCALING_FACTOR) - funding_debt;
+        int256 newAccFunding = isLong ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
+        int256 fundingDebt = math.muldiv(leveragedPositionAsset, position.accUSDFundingPerShare, Constants.SCALING_FACTOR);
+        // if fundingFee > 0, trader pays
+        int256 fundingFeeUsd = math.muldiv(leveragedPositionAsset, newAccFunding, Constants.SCALING_FACTOR) - fundingDebt;
         // close price
-        uint128 close_price = applyCloseSpread(input.assetPrice, position.positionType, position.baseSpreadRate);
+        uint128 closePrice = applyCloseSpread(input.assetPrice, position.positionType, position.baseSpreadRate);
         // pnl (no funding and borrow fees)
-        // (close_price/open_price - 1)
-        int256 pnl = int256(math.muldiv(close_price, Constants.SCALING_FACTOR, position.openPrice)) - Constants.SCALING_FACTOR;
+        // (closePrice/openPrice - 1)
+        int256 pnl = int256(math.muldiv(closePrice, Constants.SCALING_FACTOR, position.openPrice)) - Constants.SCALING_FACTOR;
         // * (-1) for shorts
-        pnl = is_long ? pnl : -pnl;
+        pnl = isLong ? pnl : -pnl;
         // * collateral * leverage
-        pnl = math.muldiv(pnl, leveraged_position_usd, Constants.SCALING_FACTOR);
+        pnl = math.muldiv(pnl, leveragedPositionUsd, Constants.SCALING_FACTOR);
         // liquidation price
         // collateral * 0.9
-        int256 liq_price_dist = math.muldiv(collateral, (Constants.HUNDRED_PERCENT - position.liquidationThresholdRate),  Constants.HUNDRED_PERCENT);
-        // - borrow_fee - funding_fee_usd
-        liq_price_dist -= borrow_fee_usd + funding_fee_usd;
-        // * open_price / collateral / leverage
-        liq_price_dist = math.muldiv(position.openPrice, liq_price_dist, leveraged_position_usd);
+        int256 liqPriceDist = math.muldiv(collateral, (Constants.HUNDRED_PERCENT - position.liquidationThresholdRate),  Constants.HUNDRED_PERCENT);
+        // - borrowFee - fundingFeeUsd
+        liqPriceDist -= borrowFeeUsd + fundingFeeUsd;
+        // * openPrice / collateral / leverage
+        liqPriceDist = math.muldiv(position.openPrice, liqPriceDist, leveragedPositionUsd);
 
-        int256 _liq_price_raw = is_long ?
-            math.muldiv(position.openPrice - liq_price_dist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - position.baseSpreadRate) :
-            math.muldiv(position.openPrice + liq_price_dist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + position.baseSpreadRate);
-        uint128 liq_price = uint128(math.max(_liq_price_raw, 0)); // price cant be negative
+        int256 _liqPrice_raw = isLong ?
+            math.muldiv(position.openPrice - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - position.baseSpreadRate) :
+            math.muldiv(position.openPrice + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + position.baseSpreadRate);
+        uint128 liqPrice = uint128(math.max(_liqPrice_raw, 0)); // price cant be negative
 
-        int256 up_pos = leveraged_position_usd + pnl - funding_fee_usd - borrow_fee_usd;
-        uint128 close_fee = uint128(math.muldiv(math.max(up_pos, 0), position.closeFeeRate, Constants.HUNDRED_PERCENT));
+        int256 upPos = leveragedPositionUsd + pnl - fundingFeeUsd - borrowFeeUsd;
+        uint128 closeFee = uint128(math.muldiv(math.max(upPos, 0), position.closeFeeRate, Constants.HUNDRED_PERCENT));
 
         // now check if position could be liquidated
-        //        int256 current_collateral = collateral - borrow_fee - funding_fee + pnl;
-        //        uint128 liq_threshold = math.muldiv(collateral, position.liquidationThresholdRate, Constants.HUNDRED_PERCENT);
-        //        bool liquidate = current_collateral <= liq_threshold;
-        bool liquidate = is_long ? input.assetPrice <= liq_price : input.assetPrice >= liq_price;
+        //        int256 currentCollateral = collateral - borrowFee - fundingFee + pnl;
+        //        uint128 liqThreshold = math.muldiv(collateral, position.liquidationThresholdRate, Constants.HUNDRED_PERCENT);
+        //        bool liquidate = currentCollateral <= liqThreshold;
+        bool liquidate = isLong ? input.assetPrice <= liqPrice : input.assetPrice >= liqPrice;
 
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }PositionView(
             position,
-            leveraged_position_usd,
-            close_price,
-            borrow_fee_usd,
-            funding_fee_usd,
-            close_fee,
-            liq_price,
+            leveragedPositionUsd,
+            closePrice,
+            borrowFeeUsd,
+            fundingFeeUsd,
+            closeFee,
+            liqPrice,
             pnl,
             liquidate,
             now
@@ -132,10 +132,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
                 root: vault,
                 platformType: PlatformTypes.GravixAccount,
                 initialData: _initialData,
-                platformCode: platform_code
+                platformCode: platformCode
             },
             pubkey: 0,
-            code: platform_code
+            code: platformCode
         });
     }
 

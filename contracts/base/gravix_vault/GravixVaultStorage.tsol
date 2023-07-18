@@ -6,39 +6,27 @@ import "../../libraries/Constants.tsol";
 
 
 abstract contract GravixVaultStorage is IGravixVault {
-    uint32 static deploy_nonce;
+    uint32 static deployNonce;
 
-    address owner;
-    address manager;
-    address marketManager;
+    Managers managers;
 
-    address oracle;
     address priceNode;
     uint256 pricePubkey;
 
-    address usdt;
-    address usdtWallet;
-    address stgUsdt;
-    address stgUsdtWallet;
+    TokenData usdt;
+    TokenData stgUsdt;
 
-    address treasury;
-    address projectFund;
-    address devFund;
+    Treasuries treasuries;
 
-    TvmCell static oracleProxyCode;
     TvmCell static platformCode;
-    TvmCell static gravixAccountCode;
-    uint32 gravixAccountVersion;
-    uint32 oracleProxyVersion;
     uint32 gravixVaultVersion;
+    CodeWithVersion oracleProxyCode;
+    CodeWithVersion gravixAccountCode;
 
     // liquidity pool staff
-    uint128 poolBalance; // liquidity deposits
-    uint128 stgUsdtSupply; // amount of minted stgUsdt
-    uint128 targetPrice;
+    PoolAssets poolAssets;
 
-    uint128 insuranceFund; // collected fees, pnl and etc.
-    uint128 insuranceFundLimit;
+    InsuranceFund insuranceFund;
     // 50%, 30%, 20%
     uint64[3] insuranceFundOverflowDistributionSchema = [
         Constants.HUNDRED_PERCENT / 2,
@@ -70,8 +58,10 @@ abstract contract GravixVaultStorage is IGravixVault {
     uint128 minPositionCollateral = 5 * Constants.USDT_DECIMALS; // 5$
 
     bool paused;
-    uint64 liquidationThresholdRate = 100_000_000_000; // 10%
-    uint64 liquidatorRewardShare = 20_000_000_000; // 2%. Share of liquidated collateral that liquidator collect
+    LiquidationParams liquidationParams = LiquidationParams({
+        thresholdRate: 100_000_000_000, // 10%,
+        rewardShare: 20_000_000_000 // 2%. Share of liquidated collateral that liquidator collect,
+    });
 
     uint64[2] openFeeDistributionSchema = [Constants.HUNDRED_PERCENT, 0];
     uint64[2] closeFeeDistributionSchema = [0, Constants.HUNDRED_PERCENT];
@@ -86,8 +76,24 @@ abstract contract GravixVaultStorage is IGravixVault {
 
     mapping (uint32 => OracleConfig) oracleConfigs;
 
-    uint32 request_nonce = 0;
-    mapping (uint32 => PendingMarketOrder) pending_market_requests;
+    uint32 requestNonce = 0;
+    mapping (uint32 => PendingMarketOrder) pendingMarketRequests;
 
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
+
+    // region dummy fields
+    bool dummy1;
+    bool dummy2;
+    bool dummy3;
+    bool dummy4;
+    bool dummy5;
+    bool dummy6;
+    bool dummy7;
+    bool dummy8;
+    bool dummy9;
+    bool dummy10;
+    bool dummy11;
+    bool dummy12;
+    bool dummy13;
+    //endregion
 }

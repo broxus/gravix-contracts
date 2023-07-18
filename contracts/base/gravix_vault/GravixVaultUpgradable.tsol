@@ -15,15 +15,23 @@ import {RPlatform as Platform} from "../../Platform.tsol";
 
 abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function updateGravixAccountCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSendGas(meta) {
-        gravixAccountCode = code;
-        gravixAccountVersion += 1;
-        emit GravixAccountCodeUpdate(meta.call_id, gravixAccountVersion - 1, gravixAccountVersion);
+        gravixAccountCode.code = code;
+        gravixAccountCode.version += 1;
+        emit GravixAccountCodeUpdate(
+            meta.callId,
+            gravixAccountCode.version - 1,
+            gravixAccountCode.version
+        );
     }
 
     function updateOracleProxyCode(TvmCell code, Callback.CallMeta meta) external onlyManager reserveAndSendGas(meta) {
-        oracleProxyCode = code;
-        oracleProxyVersion += 1;
-        emit OracleProxyCodeUpdate(meta.call_id, oracleProxyVersion - 1, oracleProxyVersion);
+        oracleProxyCode.code = code;
+        oracleProxyCode.version += 1;
+        emit OracleProxyCodeUpdate(
+            meta.callId,
+            oracleProxyCode.version - 1,
+            oracleProxyCode.version
+        );
     }
 
     function upgradeGravixAccount(Callback.CallMeta meta) external view reserve {
@@ -48,28 +56,38 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         }
     }
 
-    function _upgradeGravixAccountByContract(address gravix_acc, uint128 value, Callback.CallMeta meta) internal view {
+    function _upgradeGravixAccountByContract(address gravixAcc, uint128 value, Callback.CallMeta meta) internal view {
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
-        IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(gravixAccountCode, gravixAccountVersion, meta);
+        IGravixAccount(gravixAcc).upgrade{ value: value, flag: flag }(
+            gravixAccountCode.code,
+            gravixAccountCode.version,
+            meta
+        );
     }
 
     function _upgradeGravixAccountByUser(address user, uint128 value, Callback.CallMeta meta) internal view {
-        address gravix_acc = getGravixAccountAddress(user);
+        address gravixAcc = getGravixAccountAddress(user);
         uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
-        IGravixAccount(gravix_acc).upgrade{ value: value, flag: flag }(gravixAccountCode, gravixAccountVersion, meta);
+        IGravixAccount(gravixAcc).upgrade{ value: value, flag: flag }(
+            gravixAccountCode.code,
+            gravixAccountCode.version,
+            meta
+        );
     }
 
     function onGravixAccountUpgrade(
         address user,
-        uint32 old_version,
-        uint32 new_version,
+        uint32 oldVersion,
+        uint32 newVersion,
         Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        emit GravixAccountUpgrade(meta.call_id, user, old_version, new_version);
+        emit GravixAccountUpgrade(meta.callId, user, oldVersion, newVersion);
     }
 
-    function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
-        emit GravixAccountDeploy(meta.call_id, user);
+    function onGravixAccountDeploy(
+        address user, Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
+        emit GravixAccountDeploy(meta.callId, user);
     }
 
     function deployGravixAccount(
@@ -81,15 +99,15 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     }
 
     function _deployGravixAccount(address user, address referrer) internal view returns (address) {
-        TvmBuilder constructor_params;
+        TvmBuilder constructorParams;
 
-        constructor_params.store(gravixAccountVersion); // 32
-        constructor_params.store(gravixAccountVersion); // 32
-        constructor_params.store(referrer); // 267
+        constructorParams.store(gravixAccountCode.version); // 32
+        constructorParams.store(gravixAccountCode.version); // 32
+        constructorParams.store(referrer); // 267
 
         return new Platform{
             stateInit: _buildGravixAccountInitData(_buildGravixAccountParams(user)),
             value: Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
-        }(gravixAccountCode, constructor_params.toCell(), user);
+        }(gravixAccountCode.code, constructorParams.toCell(), user);
     }
 }

@@ -5,11 +5,11 @@ import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
 import "@broxus/tip3/contracts/interfaces/IAcceptTokensBurnCallback.tsol";
 import "./IGravixAccount.tsol";
 import "../libraries/Callback.tsol";
-import "./IEthereumEvent.tsol";
 import "./IPriceNode.tsol";
+import "./IOldGravixVault.tsol";
 
 
-interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
+interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback, IOldGravixVault {
     enum Action {MarketOrder, LiquidityDeposit, LiquidityWithdraw, InsuranceDeposit, AddCollateral, RemoveCollateral }
 
     struct Time {
@@ -35,7 +35,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         DateTime to;
     }
 
-    enum OracleType { ChainlinkProxy, Dex, PriceNode }
+    enum OracleType { Dex, PriceNode }
     struct Pair {
         address addr;
         address leftRoot;
@@ -48,12 +48,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Pair[] path;
     }
 
-    struct ChainlinkOracle {
-        string ticker;
-        uint32 ttl;
-        uint16 chainID;
-    }
-
     struct PriceNode {
         string ticker;
         uint32 maxOracleDelay;
@@ -62,7 +56,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     struct OracleConfig {
         DexOracle dex;
-        ChainlinkOracle chainlink;
         PriceNode priceNode;
     }
 
@@ -106,7 +99,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     }
 
     struct LiquidationData {
-        IEthereumEvent.EthereumEventOracleData eventData;
         IPriceNode.Price price;
         PositionIdx[] positions;
     }
@@ -126,7 +118,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
-        IEthereumEvent.EthereumEventOracleData eventData;
         IPriceNode.Price price;
         address referrer;
         Callback.CallMeta meta;
@@ -149,185 +140,222 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         int256 accShortUSDFundingPerShare;
     }
 
-    event NewOwner(uint32 call_id, address new_owner);
-    event GravixAccountCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
-    event OracleProxyCodeUpdate(uint32 call_id, uint32 old_version, uint32 new_version);
-    event GravixAccountUpgrade(uint32 call_id, address user, uint32 old_version, uint32 new_version);
-    event GravixAccountDeploy(uint32 call_id, address user);
-    event ActionRevert(uint32 call_id, address user);
-    event MaxPoolUtilRatioUpdate(uint32 call_id, uint64 new_ratio);
-    event MaxPnlRateUpdate(uint32 call_id, uint64 new_ratio);
-    event TotalNOILimit(uint32 call_id, bool new_state);
-    event InsuranceFundLimitUpdate(uint32 call_id, uint128 new_limit);
+    struct TokenData {
+        address root;
+        address wallet;
+    }
+
+    struct CodeWithVersion {
+        TvmCell code;
+        uint32 version;
+    }
+
+    struct Managers {
+        address owner;
+        address manager;
+        address marketManager;
+    }
+
+    struct PoolAssets {
+        uint128 balance; // liquidity deposits
+        uint128 stgUsdtSupply; // amount of minted stgUsdt
+        uint128 targetPrice;
+    }
+
+    struct InsuranceFund {
+        uint128 balance; // collected fees, pnl and etc.
+        uint128 limit;
+    }
+
+    struct LiquidationParams {
+        uint64 thresholdRate;
+        uint64 rewardShare;
+    }
+
+    struct Treasuries {
+        address treasury;
+        address projectFund;
+        address devFund;
+    }
+
+    event NewOwner(uint32 callId, address newOwner);
+    event GravixAccountCodeUpdate(uint32 callId, uint32 oldVersion, uint32 newVersion);
+    event OracleProxyCodeUpdate(uint32 callId, uint32 oldVersion, uint32 newVersion);
+    event GravixAccountUpgrade(uint32 callId, address user, uint32 oldVersion, uint32 newVersion);
+    event GravixAccountDeploy(uint32 callId, address user);
+    event ActionRevert(uint32 callId, address user);
+    event MaxPoolUtilRatioUpdate(uint32 callId, uint64 newRatio);
+    event MaxPnlRateUpdate(uint32 callId, uint64 newRatio);
+    event TotalNOILimit(uint32 callId, bool newState);
+    event InsuranceFundLimitUpdate(uint32 callId, uint128 newLimit);
     event MarketOrder(
-        uint32 call_id,
+        uint32 callId,
         address user,
-        uint32 market_idx,
-        PositionType position_type,
+        uint32 marketIdx,
+        PositionType positionType,
         uint128 collateral,
-        uint128 expected_price,
+        uint128 expectedPrice,
         uint32 leverage,
-        uint64 max_slippage_rate,
-        uint32 position_key
+        uint64 maxSlippageRate,
+        uint32 positionKey
     );
-    event MarketOrderExecutionRevert(uint32 call_id, address user, uint32 position_key);
+    event MarketOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
     event MarketOrderExecution(
-        uint32 call_id,
+        uint32 callId,
         address user,
         IGravixAccount.Position position,
-        uint32 position_key
+        uint32 positionKey
     );
     event ReferralPayment(
-        uint32 call_id,
+        uint32 callId,
         address referrer,
         address referral,
         uint128 amount
     );
     event ReferralBalanceWithdraw(
-        uint32 call_id,
+        uint32 callId,
         address user,
         uint128 amount
     );
     event OraclePriceRequested(
-        uint32 call_id,
-        uint32 market_idx
+        uint32 callId,
+        uint32 marketIdx
     );
     event NewMarket(
-        uint32 call_id,
+        uint32 callId,
         MarketConfig market
     );
     event MarketConfigUpdate(
-        uint32 call_id,
-        uint32 market_idx,
+        uint32 callId,
+        uint32 marketIdx,
         MarketConfig market
     );
-    event MarketScheduleUpdate(uint32 call_id, uint32 market_idx, mapping (uint8 => TimeInterval[]));
-    event MarketWeekends(uint32 call_id, uint32 market_idx, DateTimeInterval weekend);
-    event MarketWeekendsCleared(uint32 call_id, uint32 market_idx);
-    event MarketPause(uint32 call_id, uint32 market_idx, bool new_state);
-    event NewMarketManager(uint32 call_id, address new_manager);
-    event NewManager(uint32 call_id, address new_manager);
-    event Pause(uint32 call_id, bool new_state);
-    event LiquidatorRewardShareUpdate(uint32 call_id, uint64 new_share);
-    event LiquidationThresholdRateUpdate(uint32 call_id, uint64 new_rate);
-    event OpenCloseFeeSchemaUpdate(uint32 call_id, uint64[2] new_open_fee_schema, uint64[2] new_close_fee_schema);
-    event NewOracle(uint32 call_id, address oracle);
-    event NewPriceNode(uint32 call_id, address price_node);
-    event NewPricePubkey(uint32 call_id, uint256 new_pubkey);
-    event MarketOracleConfigUpdate(uint32 call_id, uint32 market_idx, OracleConfig oracle);
-    event NewTreasury(uint32 call_id, address new_treasury);
-    event NewProjectFund(uint32 call_id, address new_project_fund);
-    event NewDevFund(uint32 call_id, address new_dev_fund);
-    event InsuranceFundDeposit(uint32 call_id, address user, uint128 amount);
-    event InsuranceFundWithdraw(uint32 call_id, uint128 treasury, uint128 project_fund, uint128 dev_fund);
-    event InsuranceFundOverflowDistributionSchemaUpdate(uint32 call_id, uint64[3] new_schema);
-    event ReferralFeeSchemaUpdate(uint32 call_id, uint64[3] new_schema);
-    event GrandReferralFeeSchemaUpdate(uint32 call_id, uint64[3] new_schema);
-    event MinPositionCollateralUpdate(uint32 call_id, uint128 new_val);
+    event MarketScheduleUpdate(uint32 callId, uint32 marketIdx, mapping (uint8 => TimeInterval[]));
+    event MarketWeekends(uint32 callId, uint32 marketIdx, DateTimeInterval weekend);
+    event MarketWeekendsCleared(uint32 callId, uint32 marketIdx);
+    event MarketPause(uint32 callId, uint32 marketIdx, bool newState);
+    event NewMarketManager(uint32 callId, address newManager);
+    event NewManager(uint32 callId, address newManager);
+    event Pause(uint32 callId, bool newState);
+    event LiquidatorRewardShareUpdate(uint32 callId, uint64 newShare);
+    event LiquidationThresholdRateUpdate(uint32 callId, uint64 newRate);
+    event OpenCloseFeeSchemaUpdate(uint32 callId, uint64[2] newOpenFeeSchema, uint64[2] newCloseFeeSchema);
+    event NewPriceNode(uint32 callId, address priceNode);
+    event NewPricePubkey(uint32 callId, uint256 newPubkey);
+    event MarketOracleConfigUpdate(uint32 callId, uint32 marketIdx, OracleConfig oracle);
+    event NewTreasury(uint32 callId, address newTreasury);
+    event NewProjectFund(uint32 callId, address newProjectFund);
+    event NewDevFund(uint32 callId, address newDevFund);
+    event InsuranceFundDeposit(uint32 callId, address user, uint128 amount);
+    event InsuranceFundWithdraw(uint32 callId, uint128 treasury, uint128 projectFund, uint128 devFund);
+    event InsuranceFundOverflowDistributionSchemaUpdate(uint32 callId, uint64[3] newSchema);
+    event ReferralFeeSchemaUpdate(uint32 callId, uint64[3] newSchema);
+    event GrandReferralFeeSchemaUpdate(uint32 callId, uint64[3] newSchema);
+    event MinPositionCollateralUpdate(uint32 callId, uint128 newVal);
 
-    event CancelMarketOrderRevert(uint32 call_id, address user, uint32 position_key);
-    event CancelMarketOrder(uint32 call_id, address user, uint32 position_key);
-    event ClosePositionRevert(uint32 call_id, address user, uint32 position_key, uint32 market_idx);
-    event ClosePosition(uint32 call_id, address user, uint32 position_key, IGravixAccount.PositionView position_view);
-    event AddPositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, IGravixAccount.Position updated_pos);
-    event AddPositionCollateralRevert(uint32 call_id, address user, uint32 market_idx, uint32 position_key, uint128 amount);
-    event RemovePositionCollateral(uint32 call_id, address user, uint32 position_key, uint128 amount, IGravixAccount.Position updated_pos);
-    event RemovePositionCollateralRevert(uint32 call_id, address user, uint32 position_key, uint32 market_idx, uint128 amount);
-    event Debt(uint32 call_id, address user, uint128 debt);
-    event LiquidatePosition(uint32 call_id, address user, address liquidator, uint32 position_key, IGravixAccount.PositionView position_view);
-    event LiquidatePositionRevert(uint32 call_id, address liquidator, address user, uint32 position_key, uint32 market_idx);
-    event LiquidityPoolDeposit(uint32 call_id, address user, uint128 usdt_amount_in, uint128 stg_usdt_amount_out);
-    event LiquidityPoolWithdraw(uint32 call_id, address user, uint128 usdt_amount_out, uint128 stg_usdt_amount_in);
+    event CancelMarketOrderRevert(uint32 callId, address user, uint32 positionKey);
+    event CancelMarketOrder(uint32 callId, address user, uint32 positionKey);
+    event ClosePositionRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
+    event ClosePosition(uint32 callId, address user, uint32 positionKey, IGravixAccount.PositionView positionView);
+    event AddPositionCollateral(uint32 callId, address user, uint32 positionKey, uint128 amount, IGravixAccount.Position updatedPos);
+    event AddPositionCollateralRevert(uint32 callId, address user, uint32 marketIdx, uint32 positionKey, uint128 amount);
+    event RemovePositionCollateral(uint32 callId, address user, uint32 positionKey, uint128 amount, IGravixAccount.Position updatedPos);
+    event RemovePositionCollateralRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx, uint128 amount);
+    event Debt(uint32 callId, address user, uint128 debt);
+    event LiquidatePosition(uint32 callId, address user, address liquidator, uint32 positionKey, IGravixAccount.PositionView positionView);
+    event LiquidatePositionRevert(uint32 callId, address liquidator, address user, uint32 positionKey, uint32 marketIdx);
+    event LiquidityPoolDeposit(uint32 callId, address user, uint128 usdtAmountIn, uint128 stgUsdtAmountOut);
+    event LiquidityPoolWithdraw(uint32 callId, address user, uint128 usdtAmountOut, uint128 stgUsdtAmountIn);
     event LiquidityPoolFees(uint128 fees);
 
     function receiveTokenWalletAddress(address wallet) external;
     function onGravixAccountDeploy(address user, Callback.CallMeta meta) external view;
     function onGravixAccountUpgrade(
         address user,
-        uint32 old_version,
-        uint32 new_version,
+        uint32 oldVersion,
+        uint32 newVersion,
         Callback.CallMeta meta
     ) external view;
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
-        uint32 position_key,
-        uint32 market_idx,
+        uint32 positionKey,
+        uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
-        PositionType position_type,
-        uint128 asset_price,
+        PositionType positionType,
+        uint128 assetPrice,
         Callback.CallMeta meta
     ) external;
-    function finish_requestMarketOrder(uint32 req_nonce, PendingMarketOrder request, uint32 position_key) external;
+    function finish_requestMarketOrder(uint32 reqNonce, PendingMarketOrder request, uint32 positionKey) external;
     function revert_executeMarketOrder(
-        address user, uint32 position_key, uint32 market_idx, uint128 collateral, uint128 position_size_usd, uint128 asset_price, PositionType position_type, Callback.CallMeta meta
+        address user, uint32 positionKey, uint32 marketIdx, uint128 collateral, uint128 positionSizeUsd, uint128 assetPrice, PositionType positionType, Callback.CallMeta meta
     ) external;
     function finish_executeMarketOrder(
         address user,
-        uint32 position_key,
-        IGravixAccount.Position opened_position,
+        uint32 positionKey,
+        IGravixAccount.Position openedPosition,
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
     ) external;
-    function revert_cancelMarketOrder(address user, uint32 position_key, Callback.CallMeta meta) external view;
-    function finish_cancelMarketOrder(address user, uint32 position_key, uint128 collateral, Callback.CallMeta meta) external;
-    function revert_closePosition(address user, uint32 position_key, uint32 market_idx, Callback.CallMeta meta) external view;
+    function revert_cancelMarketOrder(address user, uint32 positionKey, Callback.CallMeta meta) external view;
+    function finish_cancelMarketOrder(address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta) external;
+    function revert_closePosition(address user, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta) external view;
     function oracle_closePosition(
         uint64 nonce,
         address user,
-        uint32 position_key,
-        uint32 market_idx,
-        uint128 asset_price,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
         Callback.CallMeta meta
     ) external;
     function finish_closePosition(
         address user,
-        uint32 position_key,
-        uint128 asset_price,
-        IGravixAccount.PositionView order_view,
+        uint32 positionKey,
+        uint128 assetPrice,
+        IGravixAccount.PositionView orderView,
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
     ) external;
     function oracle_liquidatePositions(
-        uint64 nonce, address liquidator, uint32 market_idx, PositionIdx[] positions, uint128 asset_price, Callback.CallMeta meta
+        uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
     ) external;
     function revert_liquidatePositions(
-        address user, address liquidator, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+        address user, address liquidator, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external view;
     function finish_liquidatePositions(
         address user,
         address liquidator,
-        uint32 position_key,
-        uint128 asset_price,
-        IGravixAccount.PositionView position_view,
+        uint32 positionKey,
+        uint128 assetPrice,
+        IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
     ) external;
     function revert_addCollateral(
-        address user, uint128 amount, uint32 market_idx, uint32 position_key, Callback.CallMeta meta
+        address user, uint128 amount, uint32 marketIdx, uint32 positionKey, Callback.CallMeta meta
     ) external;
     function finish_addCollateral(
         address user,
         uint128 amount,
         IGravixAccount.Position position,
-        uint32 old_leverage,
-        uint32 position_key,
+        uint32 oldLeverage,
+        uint32 positionKey,
         Callback.CallMeta meta
     ) external;
     function revert_removeCollateral(
-        address user, uint128 amount, uint32 position_key, uint32 market_idx, Callback.CallMeta meta
+        address user, uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external;
     function finish_removeCollateral(
         address user,
         uint128 amount,
         IGravixAccount.Position position,
-        uint32 old_leverage,
-        uint32 position_key,
+        uint32 oldLeverage,
+        uint32 positionKey,
         Callback.CallMeta meta
     ) external;
-    function finish_withdrawReferralBalance(address user, uint128 ref_bal, Callback.CallMeta meta) external view;
+    function finish_withdrawReferralBalance(address user, uint128 refBal, Callback.CallMeta meta) external view;
 }

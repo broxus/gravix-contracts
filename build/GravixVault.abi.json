@@ -9,9 +9,10 @@
 				{"name":"_owner","type":"address"},
 				{"name":"_usdt","type":"address"},
 				{"name":"_stg_usdt","type":"address"},
-				{"name":"_oracle","type":"address"},
 				{"name":"_priceNode","type":"address"},
-				{"name":"_pricePubkey","type":"uint256"}
+				{"name":"_pricePubkey","type":"uint256"},
+				{"name":"_gravixAccountCode","type":"cell"},
+				{"name":"_oracleProxyCode","type":"cell"}
 			],
 			"outputs": [
 			]
@@ -20,7 +21,7 @@
 			"name": "upgrade",
 			"inputs": [
 				{"name":"code","type":"cell"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -28,8 +29,8 @@
 		{
 			"name": "transferOwnership",
 			"inputs": [
-				{"name":"new_owner","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newOwner","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -37,8 +38,8 @@
 		{
 			"name": "setMarketManager",
 			"inputs": [
-				{"name":"new_manager","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newManager","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -46,17 +47,8 @@
 		{
 			"name": "setManager",
 			"inputs": [
-				{"name":"new_manager","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setOracle",
-			"inputs": [
-				{"name":"new_oracle","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newManager","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -64,8 +56,8 @@
 		{
 			"name": "setPriceNode",
 			"inputs": [
-				{"name":"new_node","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newNode","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -73,8 +65,8 @@
 		{
 			"name": "setPricePubkey",
 			"inputs": [
-				{"name":"new_pubkey","type":"uint256"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newPubkey","type":"uint256"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -82,8 +74,8 @@
 		{
 			"name": "setPause",
 			"inputs": [
-				{"name":"new_state","type":"bool"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newState","type":"bool"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -91,8 +83,8 @@
 		{
 			"name": "setLiquidationThresholdRate",
 			"inputs": [
-				{"name":"new_rate","type":"uint64"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newRate","type":"uint64"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -100,8 +92,8 @@
 		{
 			"name": "setLiquidatorRewardShare",
 			"inputs": [
-				{"name":"new_share","type":"uint64"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newShare","type":"uint64"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -109,8 +101,8 @@
 		{
 			"name": "setMaxPoolUtilRatio",
 			"inputs": [
-				{"name":"new_ratio","type":"uint64"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newRatio","type":"uint64"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -118,8 +110,8 @@
 		{
 			"name": "setMaxPnlRate",
 			"inputs": [
-				{"name":"new_max_rate","type":"uint64"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newMaxRate","type":"uint64"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -127,8 +119,8 @@
 		{
 			"name": "setTotalNOILimit",
 			"inputs": [
-				{"name":"new_state","type":"bool"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newState","type":"bool"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -136,9 +128,9 @@
 		{
 			"name": "setOpenCloseFeeDistributionSchema",
 			"inputs": [
-				{"name":"new_open_fee_schema","type":"uint64[]"},
-				{"name":"new_close_fee_schema","type":"uint64[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newOpenFeeSchema","type":"uint64[]"},
+				{"name":"newCloseFeeSchema","type":"uint64[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -146,8 +138,8 @@
 		{
 			"name": "setTreasury",
 			"inputs": [
-				{"name":"new_treasury","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newTreasury","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -155,8 +147,8 @@
 		{
 			"name": "setProjectFund",
 			"inputs": [
-				{"name":"new_project_fund","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newProjectFund","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -164,8 +156,8 @@
 		{
 			"name": "setDevFund",
 			"inputs": [
-				{"name":"new_dev_fund","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newDevFund","type":"address"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -173,8 +165,8 @@
 		{
 			"name": "setInsuranceFundLimit",
 			"inputs": [
-				{"name":"new_limit","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newLimit","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -182,8 +174,8 @@
 		{
 			"name": "setInsuranceFundOverflowDistributionSchema",
 			"inputs": [
-				{"name":"new_schema","type":"uint64[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newSchema","type":"uint64[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -191,8 +183,8 @@
 		{
 			"name": "setReferralFeeSchema",
 			"inputs": [
-				{"name":"new_schema","type":"uint64[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newSchema","type":"uint64[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -200,8 +192,8 @@
 		{
 			"name": "setGrandReferralFeeSchema",
 			"inputs": [
-				{"name":"new_schema","type":"uint64[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newSchema","type":"uint64[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -209,8 +201,8 @@
 		{
 			"name": "setMinPositionCollateral",
 			"inputs": [
-				{"name":"new_val","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"newVal","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -251,10 +243,10 @@
 		{
 			"name": "validateOrderParams",
 			"inputs": [
-				{"name":"market_idx","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"max_slippage","type":"uint64"}
+				{"name":"maxSlippage","type":"uint64"}
 			],
 			"outputs": [
 				{"name":"correct","type":"bool"}
@@ -263,9 +255,9 @@
 		{
 			"name": "finish_requestMarketOrder",
 			"inputs": [
-				{"name":"req_nonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"eventData","type":"tuple"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}],"name":"request","type":"tuple"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"reqNonce","type":"uint32"},
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"request","type":"tuple"},
+				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -273,7 +265,7 @@
 		{
 			"name": "withdrawReferralBalance",
 			"inputs": [
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -282,8 +274,8 @@
 			"name": "finish_withdrawReferralBalance",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"ref_bal","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"refBal","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -293,13 +285,13 @@
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"position_type","type":"uint8"},
-				{"name":"asset_price","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionType","type":"uint8"},
+				{"name":"assetPrice","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -308,13 +300,13 @@
 			"name": "revert_executeMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
-				{"name":"position_size_asset","type":"uint128"},
-				{"name":"asset_price","type":"uint128"},
-				{"name":"position_type","type":"uint8"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionSizeAsset","type":"uint128"},
+				{"name":"assetPrice","type":"uint128"},
+				{"name":"positionType","type":"uint8"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -323,11 +315,11 @@
 			"name": "finish_executeMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"new_pos","type":"tuple"},
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"newPos","type":"tuple"},
 				{"name":"referrer","type":"address"},
 				{"name":"grandReferrer","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -337,30 +329,30 @@
 			"inputs": [
 				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"asset_price","type":"uint128"}
+				{"name":"assetPrice","type":"uint128"}
 			],
 			"outputs": [
-				{"name":"position_size_asset","type":"uint128"}
+				{"name":"positionSizeAsset","type":"uint128"}
 			]
 		},
 		{
 			"name": "getDynamicSpread",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"position_size_asset","type":"uint128"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_type","type":"uint8"}
+				{"name":"positionSizeAsset","type":"uint128"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionType","type":"uint8"}
 			],
 			"outputs": [
-				{"name":"dynamic_spread","type":"uint64"}
+				{"name":"dynamicSpread","type":"uint64"}
 			]
 		},
 		{
 			"name": "cancelMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -369,8 +361,8 @@
 			"name": "revert_cancelMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -379,9 +371,9 @@
 			"name": "finish_cancelMarketOrder",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -390,11 +382,10 @@
 			"name": "forceClosePositions",
 			"inputs": [
 				{"name":"users","type":"address[]"},
-				{"name":"position_keys","type":"uint32[]"},
-				{"name":"market_idx","type":"uint32[]"},
-				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_datas","type":"tuple[]"},
+				{"name":"positionKeys","type":"uint32[]"},
+				{"name":"marketIdx","type":"uint32[]"},
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"prices","type":"tuple[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -403,10 +394,10 @@
 			"name": "forceClosePositionsWithPrice",
 			"inputs": [
 				{"name":"users","type":"address[]"},
-				{"name":"position_keys","type":"uint32[]"},
-				{"name":"market_idx","type":"uint32[]"},
-				{"name":"asset_prices","type":"uint128[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKeys","type":"uint32[]"},
+				{"name":"marketIdx","type":"uint32[]"},
+				{"name":"assetPrices","type":"uint128[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -414,11 +405,10 @@
 		{
 			"name": "closePosition",
 			"inputs": [
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -428,10 +418,10 @@
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"asset_price","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"assetPrice","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -440,9 +430,9 @@
 			"name": "revert_closePosition",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -451,12 +441,12 @@
 			"name": "finish_closePosition",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"asset_price","type":"uint128"},
-				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"position_view","type":"tuple"},
+				{"name":"positionKey","type":"uint32"},
+				{"name":"assetPrice","type":"uint128"},
+				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"positionView","type":"tuple"},
 				{"name":"referrer","type":"address"},
 				{"name":"grandReferrer","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -466,9 +456,9 @@
 			"inputs": [
 				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -479,9 +469,9 @@
 				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"},
 				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},
-				{"name":"old_leverage","type":"uint32"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"oldLeverage","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -490,9 +480,9 @@
 			"name": "removeCollateral",
 			"inputs": [
 				{"name":"amount","type":"uint128"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -502,9 +492,9 @@
 			"inputs": [
 				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -515,9 +505,9 @@
 				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"},
 				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},
-				{"name":"old_leverage","type":"uint32"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"oldLeverage","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -525,8 +515,8 @@
 		{
 			"name": "liquidatePositions",
 			"inputs": [
-				{"components":[{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"eventData","type":"tuple"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"}],"name":"liquidations","type":"map(uint32,tuple)"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"}],"name":"liquidations","type":"map(uint32,tuple)"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -536,9 +526,9 @@
 			"inputs": [
 				{"name":"user","type":"address"},
 				{"name":"liquidator","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -548,10 +538,10 @@
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
 				{"name":"liquidator","type":"address"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
-				{"name":"asset_price","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"assetPrice","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -560,10 +550,10 @@
 			"name": "self_liquidatePositions",
 			"inputs": [
 				{"name":"liquidator","type":"address"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
-				{"name":"asset_price","type":"uint128"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"assetPrice","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -573,12 +563,12 @@
 			"inputs": [
 				{"name":"user","type":"address"},
 				{"name":"liquidator","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"asset_price","type":"uint128"},
-				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"position_view","type":"tuple"},
+				{"name":"positionKey","type":"uint32"},
+				{"name":"assetPrice","type":"uint128"},
+				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"positionView","type":"tuple"},
 				{"name":"referrer","type":"address"},
 				{"name":"grandReferrer","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -586,11 +576,11 @@
 		{
 			"name": "checkPositionAllowed",
 			"inputs": [
-				{"name":"market_idx","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"asset_price","type":"uint128"},
-				{"name":"position_type","type":"uint8"}
+				{"name":"assetPrice","type":"uint128"},
+				{"name":"positionType","type":"uint8"}
 			],
 			"outputs": [
 				{"name":"value0","type":"uint16"}
@@ -608,17 +598,17 @@
 		{
 			"name": "getFundingRates",
 			"inputs": [
-				{"name":"market_idx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
-				{"name":"long_rate_per_hour","type":"int128"},
-				{"name":"short_rate_per_hour","type":"int128"}
+				{"name":"longRatePerHour","type":"int128"},
+				{"name":"shortRatePerHour","type":"int128"}
 			]
 		},
 		{
 			"name": "marketOpen",
 			"inputs": [
-				{"name":"market_idx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 				{"name":"open","type":"bool"}
@@ -627,8 +617,8 @@
 		{
 			"name": "addMarkets",
 			"inputs": [
-				{"components":[{"name":"priceSource","type":"uint8"},{"name":"maxLongsUSD","type":"uint128"},{"name":"maxShortsUSD","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"}],"name":"new_markets","type":"tuple[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"priceSource","type":"uint8"},{"name":"maxLongsUSD","type":"uint128"},{"name":"maxShortsUSD","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"}],"name":"newMarkets","type":"tuple[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -636,8 +626,8 @@
 		{
 			"name": "setMarketsConfigs",
 			"inputs": [
-				{"components":[{"name":"priceSource","type":"uint8"},{"name":"maxLongsUSD","type":"uint128"},{"name":"maxShortsUSD","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"}],"name":"new_configs","type":"map(uint32,tuple)"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"priceSource","type":"uint8"},{"name":"maxLongsUSD","type":"uint128"},{"name":"maxShortsUSD","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"}],"name":"newConfigs","type":"map(uint32,tuple)"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -645,8 +635,8 @@
 		{
 			"name": "setOracleConfigs",
 			"inputs": [
-				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"new_oracles","type":"map(uint32,tuple)"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"newOracles","type":"map(uint32,tuple)"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -664,7 +654,7 @@
 			"name": "setMarketsPause",
 			"inputs": [
 				{"name":"pause","type":"map(uint32,bool)"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -672,8 +662,8 @@
 		{
 			"name": "setMarketsWorkingHours",
 			"inputs": [
-				{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"market_to_working_hours","type":"map(uint32,map(uint8,tuple[]))"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"marketToWorkingHours","type":"map(uint32,map(uint8,tuple[]))"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -681,9 +671,9 @@
 		{
 			"name": "setMarketsCommonWorkingHours",
 			"inputs": [
-				{"name":"market_idx","type":"uint32[]"},
-				{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"working_hours","type":"map(uint8,tuple[])"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"marketIdx","type":"uint32[]"},
+				{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -691,9 +681,9 @@
 		{
 			"name": "addMarketsWeekends",
 			"inputs": [
-				{"name":"market_idx","type":"uint32[]"},
-				{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"new_weekends","type":"tuple[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"marketIdx","type":"uint32[]"},
+				{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"newWeekends","type":"tuple[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -701,9 +691,9 @@
 		{
 			"name": "addMarketsCommonWeekends",
 			"inputs": [
-				{"name":"market_idx","type":"uint32[]"},
-				{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"new_weekends","type":"tuple"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"marketIdx","type":"uint32[]"},
+				{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"newWeekends","type":"tuple"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -711,8 +701,8 @@
 		{
 			"name": "clearMarketsWeekends",
 			"inputs": [
-				{"name":"market_idx","type":"uint32[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"marketIdx","type":"uint32[]"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -739,7 +729,7 @@
 			"name": "getMarketWorkingHours",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 				{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"value0","type":"map(uint8,tuple[])"}
@@ -749,7 +739,7 @@
 			"name": "getMarketWeekends",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 				{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"value0","type":"map(uint32,tuple)"}
@@ -759,7 +749,7 @@
 			"name": "getMarket",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 				{"components":[{"name":"priceSource","type":"uint8"},{"name":"totalLongsAsset","type":"uint128"},{"name":"totalShortsAsset","type":"uint128"},{"name":"maxTotalLongsUSD","type":"uint128"},{"name":"maxTotalShortsUSD","type":"uint128"},{"name":"lastNoiUpdatePrice","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"components":[{"name":"accLongUSDFundingPerShare","type":"int256"},{"name":"accShortUSDFundingPerShare","type":"int256"}],"name":"funding","type":"tuple"},{"name":"lastFundingUpdateTime","type":"uint32"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"name":"paused","type":"bool"}],"name":"_market","type":"tuple"}
@@ -780,23 +770,23 @@
 				{"name":"answerId","type":"uint32"}
 			],
 			"outputs": [
-				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"_oracle_configs","type":"map(uint32,tuple)"}
+				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"_oracle_configs","type":"map(uint32,tuple)"}
 			]
 		},
 		{
 			"name": "getOracleConfig",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
-				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"_oracle","type":"tuple"}
+				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"_oracle","type":"tuple"}
 			]
 		},
 		{
 			"name": "withdrawInsuranceFundOverflow",
 			"inputs": [
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -805,20 +795,20 @@
 			"name": "usdtToStgUsdt",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"usdt_amount","type":"uint128"}
+				{"name":"usdtAmount","type":"uint128"}
 			],
 			"outputs": [
-				{"name":"stg_amount","type":"uint128"}
+				{"name":"stgAmount","type":"uint128"}
 			]
 		},
 		{
 			"name": "stgUsdtToUsdt",
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
-				{"name":"stg_amount","type":"uint128"}
+				{"name":"stgAmount","type":"uint128"}
 			],
 			"outputs": [
-				{"name":"usdt_amount","type":"uint128"}
+				{"name":"usdtAmount","type":"uint128"}
 			]
 		},
 		{
@@ -827,8 +817,8 @@
 				{"name":"answerId","type":"uint32"}
 			],
 			"outputs": [
-				{"name":"in_price","type":"uint128"},
-				{"name":"out_price","type":"uint128"}
+				{"name":"inPrice","type":"uint128"},
+				{"name":"outPrice","type":"uint128"}
 			]
 		},
 		{
@@ -843,7 +833,7 @@
 			"name": "updateGravixAccountCode",
 			"inputs": [
 				{"name":"code","type":"cell"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -852,7 +842,7 @@
 			"name": "updateOracleProxyCode",
 			"inputs": [
 				{"name":"code","type":"cell"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -860,7 +850,7 @@
 		{
 			"name": "upgradeGravixAccount",
 			"inputs": [
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -869,7 +859,7 @@
 			"name": "forceUpgradeGravixAccountsByUsers",
 			"inputs": [
 				{"name":"users","type":"address[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -878,7 +868,7 @@
 			"name": "forceUpgradeGravixAccountsByContracts",
 			"inputs": [
 				{"name":"contracts","type":"address[]"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -887,9 +877,9 @@
 			"name": "onGravixAccountUpgrade",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"name":"old_version","type":"uint32"},
-				{"name":"new_version","type":"uint32"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"oldVersion","type":"uint32"},
+				{"name":"newVersion","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -898,7 +888,7 @@
 			"name": "onGravixAccountDeploy",
 			"inputs": [
 				{"name":"user","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -908,7 +898,7 @@
 			"inputs": [
 				{"name":"answerId","type":"uint32"},
 				{"name":"referrer","type":"address"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 				{"name":"account","type":"address"}
@@ -920,24 +910,14 @@
 				{"name":"answerId","type":"uint32"}
 			],
 			"outputs": [
-				{"name":"_owner","type":"address"},
-				{"name":"_manager","type":"address"},
-				{"name":"_marketManager","type":"address"},
-				{"name":"_oracle","type":"address"},
+				{"components":[{"name":"owner","type":"address"},{"name":"manager","type":"address"},{"name":"marketManager","type":"address"}],"name":"_managers","type":"tuple"},
 				{"name":"_priceNode","type":"address"},
 				{"name":"_pricePubkey","type":"uint256"},
-				{"name":"_usdt","type":"address"},
-				{"name":"_usdtWallet","type":"address"},
-				{"name":"_stgUsdt","type":"address"},
-				{"name":"_stgUsdtWallet","type":"address"},
-				{"name":"_treasury","type":"address"},
-				{"name":"_projectFund","type":"address"},
-				{"name":"_devFund","type":"address"},
-				{"name":"_poolBalance","type":"uint128"},
-				{"name":"_stgUsdtSupply","type":"uint128"},
-				{"name":"_targetPrice","type":"uint128"},
-				{"name":"_insuranceFund","type":"uint128"},
-				{"name":"_insuranceFundLimit","type":"uint128"},
+				{"components":[{"name":"root","type":"address"},{"name":"wallet","type":"address"}],"name":"_usdtToken","type":"tuple"},
+				{"components":[{"name":"root","type":"address"},{"name":"wallet","type":"address"}],"name":"_stgUsdtToken","type":"tuple"},
+				{"components":[{"name":"treasury","type":"address"},{"name":"projectFund","type":"address"},{"name":"devFund","type":"address"}],"name":"_treasuries","type":"tuple"},
+				{"components":[{"name":"balance","type":"uint128"},{"name":"stgUsdtSupply","type":"uint128"},{"name":"targetPrice","type":"uint128"}],"name":"_poolAssets","type":"tuple"},
+				{"components":[{"name":"balance","type":"uint128"},{"name":"limit","type":"uint128"}],"name":"_insuranceFunds","type":"tuple"},
 				{"name":"_insuranceFundOverflowDistributionSchema","type":"uint64[]"},
 				{"name":"_referralFeeSchema","type":"uint64[]"},
 				{"name":"_grandReferralFeeSchema","type":"uint64[]"},
@@ -948,8 +928,7 @@
 				{"name":"_maxPnlRate","type":"uint64"},
 				{"name":"_minPositionCollateral","type":"uint128"},
 				{"name":"_paused","type":"bool"},
-				{"name":"_liquidationThresholdRate","type":"uint64"},
-				{"name":"_liquidatorRewardShare","type":"uint64"},
+				{"components":[{"name":"thresholdRate","type":"uint64"},{"name":"rewardShare","type":"uint64"}],"name":"_liquidation","type":"tuple"},
 				{"name":"_openFeeDistributionSchema","type":"uint64[]"},
 				{"name":"_closeFeeDistributionSchema","type":"uint64[]"},
 				{"name":"_marketCount","type":"uint32"}
@@ -961,27 +940,24 @@
 				{"name":"answerId","type":"uint32"}
 			],
 			"outputs": [
-				{"name":"_oracleProxyCode","type":"cell"},
+				{"components":[{"name":"code","type":"cell"},{"name":"version","type":"uint32"}],"name":"_oracleProxy","type":"tuple"},
 				{"name":"_platformCode","type":"cell"},
-				{"name":"_gravixAccountCode","type":"cell"},
-				{"name":"_oracleProxyVersion","type":"uint32"},
-				{"name":"_gravixAccountVersion","type":"uint32"},
+				{"components":[{"name":"code","type":"cell"},{"name":"version","type":"uint32"}],"name":"_gravixAccount","type":"tuple"},
 				{"name":"_gravixVaultVersion","type":"uint32"}
 			]
 		},
 		{
 			"name": "encodeMarketOrder",
 			"inputs": [
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_type","type":"uint8"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionType","type":"uint8"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"expected_price","type":"uint128"},
-				{"name":"max_slippage_rate","type":"uint64"},
-				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
+				{"name":"expectedPrice","type":"uint128"},
+				{"name":"maxSlippageRate","type":"uint64"},
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},
 				{"name":"referrer","type":"address"},
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"}
+				{"name":"callId","type":"uint32"}
 			],
 			"outputs": [
 				{"name":"payload","type":"cell"}
@@ -990,15 +966,14 @@
 		{
 			"name": "decodeMarketOrder",
 			"inputs": [
-				{"name":"action_payload","type":"cell"}
+				{"name":"actionPayload","type":"cell"}
 			],
 			"outputs": [
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_type","type":"uint8"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionType","type":"uint8"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"expected_price","type":"uint128"},
-				{"name":"max_slippage_rate","type":"uint64"},
-				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
+				{"name":"expectedPrice","type":"uint128"},
+				{"name":"maxSlippageRate","type":"uint64"},
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},
 				{"name":"referrer","type":"address"}
 			]
@@ -1006,10 +981,10 @@
 		{
 			"name": "encodeAddCollateral",
 			"inputs": [
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_key","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"}
+				{"name":"callId","type":"uint32"}
 			],
 			"outputs": [
 				{"name":"payload","type":"cell"}
@@ -1018,18 +993,18 @@
 		{
 			"name": "decodeAddCollateral",
 			"inputs": [
-				{"name":"action_payload","type":"cell"}
+				{"name":"actionPayload","type":"cell"}
 			],
 			"outputs": [
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"}
 			]
 		},
 		{
 			"name": "encodeLiquidityDeposit",
 			"inputs": [
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"}
+				{"name":"callId","type":"uint32"}
 			],
 			"outputs": [
 				{"name":"payload","type":"cell"}
@@ -1039,7 +1014,7 @@
 			"name": "encodeLiquidityWithdraw",
 			"inputs": [
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"}
+				{"name":"callId","type":"uint32"}
 			],
 			"outputs": [
 				{"name":"payload","type":"cell"}
@@ -1049,7 +1024,7 @@
 			"name": "encodeInsuranceDeposit",
 			"inputs": [
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"}
+				{"name":"callId","type":"uint32"}
 			],
 			"outputs": [
 				{"name":"payload","type":"cell"}
@@ -1060,8 +1035,8 @@
 			"inputs": [
 				{"name":"action","type":"uint8"},
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"},
-				{"name":"action_payload","type":"cell"}
+				{"name":"callId","type":"uint32"},
+				{"name":"actionPayload","type":"cell"}
 			],
 			"outputs": [
 				{"name":"payload","type":"cell"}
@@ -1075,8 +1050,8 @@
 			"outputs": [
 				{"name":"action","type":"uint8"},
 				{"name":"nonce","type":"uint32"},
-				{"name":"call_id","type":"uint32"},
-				{"name":"action_payload","type":"cell"},
+				{"name":"callId","type":"uint32"},
+				{"name":"actionPayload","type":"cell"},
 				{"name":"correct","type":"bool"}
 			]
 		},
@@ -1125,17 +1100,15 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"deploy_nonce","type":"uint32"},
-		{"key":2,"name":"oracleProxyCode","type":"cell"},
-		{"key":3,"name":"platformCode","type":"cell"},
-		{"key":4,"name":"gravixAccountCode","type":"cell"}
+		{"key":1,"name":"deployNonce","type":"uint32"},
+		{"key":2,"name":"platformCode","type":"cell"}
 	],
 	"events": [
 		{
 			"name": "NewOwner",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_owner","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newOwner","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1143,9 +1116,9 @@
 		{
 			"name": "GravixAccountCodeUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"old_version","type":"uint32"},
-				{"name":"new_version","type":"uint32"}
+				{"name":"callId","type":"uint32"},
+				{"name":"oldVersion","type":"uint32"},
+				{"name":"newVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1153,9 +1126,9 @@
 		{
 			"name": "OracleProxyCodeUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"old_version","type":"uint32"},
-				{"name":"new_version","type":"uint32"}
+				{"name":"callId","type":"uint32"},
+				{"name":"oldVersion","type":"uint32"},
+				{"name":"newVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1163,10 +1136,10 @@
 		{
 			"name": "GravixAccountUpgrade",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"old_version","type":"uint32"},
-				{"name":"new_version","type":"uint32"}
+				{"name":"oldVersion","type":"uint32"},
+				{"name":"newVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1174,7 +1147,7 @@
 		{
 			"name": "GravixAccountDeploy",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"}
 			],
 			"outputs": [
@@ -1183,7 +1156,7 @@
 		{
 			"name": "ActionRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"}
 			],
 			"outputs": [
@@ -1192,8 +1165,8 @@
 		{
 			"name": "MaxPoolUtilRatioUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_ratio","type":"uint64"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newRatio","type":"uint64"}
 			],
 			"outputs": [
 			]
@@ -1201,8 +1174,8 @@
 		{
 			"name": "MaxPnlRateUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_ratio","type":"uint64"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newRatio","type":"uint64"}
 			],
 			"outputs": [
 			]
@@ -1210,8 +1183,8 @@
 		{
 			"name": "TotalNOILimit",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_state","type":"bool"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newState","type":"bool"}
 			],
 			"outputs": [
 			]
@@ -1219,8 +1192,8 @@
 		{
 			"name": "InsuranceFundLimitUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_limit","type":"uint128"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newLimit","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -1228,15 +1201,15 @@
 		{
 			"name": "MarketOrder",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_type","type":"uint8"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionType","type":"uint8"},
 				{"name":"collateral","type":"uint128"},
-				{"name":"expected_price","type":"uint128"},
+				{"name":"expectedPrice","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
-				{"name":"max_slippage_rate","type":"uint64"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"maxSlippageRate","type":"uint64"},
+				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1244,9 +1217,9 @@
 		{
 			"name": "MarketOrderExecutionRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1254,10 +1227,10 @@
 		{
 			"name": "MarketOrderExecution",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1265,7 +1238,7 @@
 		{
 			"name": "ReferralPayment",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"referrer","type":"address"},
 				{"name":"referral","type":"address"},
 				{"name":"amount","type":"uint128"}
@@ -1276,7 +1249,7 @@
 		{
 			"name": "ReferralBalanceWithdraw",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"}
 			],
@@ -1286,8 +1259,8 @@
 		{
 			"name": "OraclePriceRequested",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1295,7 +1268,7 @@
 		{
 			"name": "NewMarket",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"components":[{"name":"priceSource","type":"uint8"},{"name":"maxLongsUSD","type":"uint128"},{"name":"maxShortsUSD","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"}],"name":"market","type":"tuple"}
 			],
 			"outputs": [
@@ -1304,8 +1277,8 @@
 		{
 			"name": "MarketConfigUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"components":[{"name":"priceSource","type":"uint8"},{"name":"maxLongsUSD","type":"uint128"},{"name":"maxShortsUSD","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint8,tuple[])"}],"name":"market","type":"tuple"}
 			],
 			"outputs": [
@@ -1314,8 +1287,8 @@
 		{
 			"name": "MarketScheduleUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"value2","type":"map(uint8,tuple[])"}
 			],
 			"outputs": [
@@ -1324,8 +1297,8 @@
 		{
 			"name": "MarketWeekends",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"weekend","type":"tuple"}
 			],
 			"outputs": [
@@ -1334,8 +1307,8 @@
 		{
 			"name": "MarketWeekendsCleared",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1343,9 +1316,9 @@
 		{
 			"name": "MarketPause",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"new_state","type":"bool"}
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"newState","type":"bool"}
 			],
 			"outputs": [
 			]
@@ -1353,8 +1326,8 @@
 		{
 			"name": "NewMarketManager",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_manager","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newManager","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1362,8 +1335,8 @@
 		{
 			"name": "NewManager",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_manager","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newManager","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1371,8 +1344,8 @@
 		{
 			"name": "Pause",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_state","type":"bool"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newState","type":"bool"}
 			],
 			"outputs": [
 			]
@@ -1380,8 +1353,8 @@
 		{
 			"name": "LiquidatorRewardShareUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_share","type":"uint64"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newShare","type":"uint64"}
 			],
 			"outputs": [
 			]
@@ -1389,8 +1362,8 @@
 		{
 			"name": "LiquidationThresholdRateUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_rate","type":"uint64"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newRate","type":"uint64"}
 			],
 			"outputs": [
 			]
@@ -1398,18 +1371,9 @@
 		{
 			"name": "OpenCloseFeeSchemaUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_open_fee_schema","type":"uint64[]"},
-				{"name":"new_close_fee_schema","type":"uint64[]"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "NewOracle",
-			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"oracle","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newOpenFeeSchema","type":"uint64[]"},
+				{"name":"newCloseFeeSchema","type":"uint64[]"}
 			],
 			"outputs": [
 			]
@@ -1417,8 +1381,8 @@
 		{
 			"name": "NewPriceNode",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"price_node","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"priceNode","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1426,8 +1390,8 @@
 		{
 			"name": "NewPricePubkey",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_pubkey","type":"uint256"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newPubkey","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -1435,9 +1399,9 @@
 		{
 			"name": "MarketOracleConfigUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
-				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracle","type":"tuple"}
+				{"name":"callId","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracle","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -1445,8 +1409,8 @@
 		{
 			"name": "NewTreasury",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_treasury","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newTreasury","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1454,8 +1418,8 @@
 		{
 			"name": "NewProjectFund",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_project_fund","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newProjectFund","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1463,8 +1427,8 @@
 		{
 			"name": "NewDevFund",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_dev_fund","type":"address"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newDevFund","type":"address"}
 			],
 			"outputs": [
 			]
@@ -1472,7 +1436,7 @@
 		{
 			"name": "InsuranceFundDeposit",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"amount","type":"uint128"}
 			],
@@ -1482,10 +1446,10 @@
 		{
 			"name": "InsuranceFundWithdraw",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"treasury","type":"uint128"},
-				{"name":"project_fund","type":"uint128"},
-				{"name":"dev_fund","type":"uint128"}
+				{"name":"projectFund","type":"uint128"},
+				{"name":"devFund","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -1493,8 +1457,8 @@
 		{
 			"name": "InsuranceFundOverflowDistributionSchemaUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_schema","type":"uint64[]"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newSchema","type":"uint64[]"}
 			],
 			"outputs": [
 			]
@@ -1502,8 +1466,8 @@
 		{
 			"name": "ReferralFeeSchemaUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_schema","type":"uint64[]"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newSchema","type":"uint64[]"}
 			],
 			"outputs": [
 			]
@@ -1511,8 +1475,8 @@
 		{
 			"name": "GrandReferralFeeSchemaUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_schema","type":"uint64[]"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newSchema","type":"uint64[]"}
 			],
 			"outputs": [
 			]
@@ -1520,8 +1484,8 @@
 		{
 			"name": "MinPositionCollateralUpdate",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
-				{"name":"new_val","type":"uint128"}
+				{"name":"callId","type":"uint32"},
+				{"name":"newVal","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -1529,9 +1493,9 @@
 		{
 			"name": "CancelMarketOrderRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1539,9 +1503,9 @@
 		{
 			"name": "CancelMarketOrder",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"}
+				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1549,10 +1513,10 @@
 		{
 			"name": "ClosePositionRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1560,10 +1524,10 @@
 		{
 			"name": "ClosePosition",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"position_view","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"positionView","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -1571,11 +1535,11 @@
 		{
 			"name": "AddPositionCollateral",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
 				{"name":"amount","type":"uint128"},
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"updated_pos","type":"tuple"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"updatedPos","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -1583,10 +1547,10 @@
 		{
 			"name": "AddPositionCollateralRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"market_idx","type":"uint32"},
-				{"name":"position_key","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
 				{"name":"amount","type":"uint128"}
 			],
 			"outputs": [
@@ -1595,11 +1559,11 @@
 		{
 			"name": "RemovePositionCollateral",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
 				{"name":"amount","type":"uint128"},
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"updated_pos","type":"tuple"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"updatedPos","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -1607,10 +1571,10 @@
 		{
 			"name": "RemovePositionCollateralRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"},
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
 				{"name":"amount","type":"uint128"}
 			],
 			"outputs": [
@@ -1619,7 +1583,7 @@
 		{
 			"name": "Debt",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"debt","type":"uint128"}
 			],
@@ -1629,11 +1593,11 @@
 		{
 			"name": "LiquidatePosition",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"liquidator","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"position_view","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"components":[{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"position","type":"tuple"},{"name":"positionSizeUSD","type":"uint128"},{"name":"closePrice","type":"uint128"},{"name":"borrowFee","type":"uint128"},{"name":"fundingFee","type":"int256"},{"name":"closeFee","type":"uint128"},{"name":"liquidationPrice","type":"uint128"},{"name":"pnl","type":"int256"},{"name":"liquidate","type":"bool"},{"name":"viewTime","type":"uint32"}],"name":"positionView","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -1641,11 +1605,11 @@
 		{
 			"name": "LiquidatePositionRevert",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"liquidator","type":"address"},
 				{"name":"user","type":"address"},
-				{"name":"position_key","type":"uint32"},
-				{"name":"market_idx","type":"uint32"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1653,10 +1617,10 @@
 		{
 			"name": "LiquidityPoolDeposit",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"usdt_amount_in","type":"uint128"},
-				{"name":"stg_usdt_amount_out","type":"uint128"}
+				{"name":"usdtAmountIn","type":"uint128"},
+				{"name":"stgUsdtAmountOut","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -1664,10 +1628,10 @@
 		{
 			"name": "LiquidityPoolWithdraw",
 			"inputs": [
-				{"name":"call_id","type":"uint32"},
+				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"usdt_amount_out","type":"uint128"},
-				{"name":"stg_usdt_amount_in","type":"uint128"}
+				{"name":"usdtAmountOut","type":"uint128"},
+				{"name":"stgUsdtAmountIn","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -1685,31 +1649,19 @@
 		{"name":"_pubkey","type":"uint256"},
 		{"name":"_timestamp","type":"uint64"},
 		{"name":"_constructorFlag","type":"bool"},
-		{"name":"deploy_nonce","type":"uint32"},
-		{"name":"owner","type":"address"},
-		{"name":"manager","type":"address"},
-		{"name":"marketManager","type":"address"},
-		{"name":"oracle","type":"address"},
+		{"name":"deployNonce","type":"uint32"},
+		{"components":[{"name":"owner","type":"address"},{"name":"manager","type":"address"},{"name":"marketManager","type":"address"}],"name":"managers","type":"tuple"},
 		{"name":"priceNode","type":"address"},
 		{"name":"pricePubkey","type":"uint256"},
-		{"name":"usdt","type":"address"},
-		{"name":"usdtWallet","type":"address"},
-		{"name":"stgUsdt","type":"address"},
-		{"name":"stgUsdtWallet","type":"address"},
-		{"name":"treasury","type":"address"},
-		{"name":"projectFund","type":"address"},
-		{"name":"devFund","type":"address"},
-		{"name":"oracleProxyCode","type":"cell"},
+		{"components":[{"name":"root","type":"address"},{"name":"wallet","type":"address"}],"name":"usdt","type":"tuple"},
+		{"components":[{"name":"root","type":"address"},{"name":"wallet","type":"address"}],"name":"stgUsdt","type":"tuple"},
+		{"components":[{"name":"treasury","type":"address"},{"name":"projectFund","type":"address"},{"name":"devFund","type":"address"}],"name":"treasuries","type":"tuple"},
 		{"name":"platformCode","type":"cell"},
-		{"name":"gravixAccountCode","type":"cell"},
-		{"name":"gravixAccountVersion","type":"uint32"},
-		{"name":"oracleProxyVersion","type":"uint32"},
 		{"name":"gravixVaultVersion","type":"uint32"},
-		{"name":"poolBalance","type":"uint128"},
-		{"name":"stgUsdtSupply","type":"uint128"},
-		{"name":"targetPrice","type":"uint128"},
-		{"name":"insuranceFund","type":"uint128"},
-		{"name":"insuranceFundLimit","type":"uint128"},
+		{"components":[{"name":"code","type":"cell"},{"name":"version","type":"uint32"}],"name":"oracleProxyCode","type":"tuple"},
+		{"components":[{"name":"code","type":"cell"},{"name":"version","type":"uint32"}],"name":"gravixAccountCode","type":"tuple"},
+		{"components":[{"name":"balance","type":"uint128"},{"name":"stgUsdtSupply","type":"uint128"},{"name":"targetPrice","type":"uint128"}],"name":"poolAssets","type":"tuple"},
+		{"components":[{"name":"balance","type":"uint128"},{"name":"limit","type":"uint128"}],"name":"insuranceFund","type":"tuple"},
 		{"name":"insuranceFundOverflowDistributionSchema","type":"uint64[]"},
 		{"name":"referralFeeSchema","type":"uint64[]"},
 		{"name":"grandReferralFeeSchema","type":"uint64[]"},
@@ -1720,16 +1672,28 @@
 		{"name":"maxPnlRate","type":"uint64"},
 		{"name":"minPositionCollateral","type":"uint128"},
 		{"name":"paused","type":"bool"},
-		{"name":"liquidationThresholdRate","type":"uint64"},
-		{"name":"liquidatorRewardShare","type":"uint64"},
+		{"components":[{"name":"thresholdRate","type":"uint64"},{"name":"rewardShare","type":"uint64"}],"name":"liquidationParams","type":"tuple"},
 		{"name":"openFeeDistributionSchema","type":"uint64[]"},
 		{"name":"closeFeeDistributionSchema","type":"uint64[]"},
 		{"name":"marketCount","type":"uint32"},
 		{"components":[{"name":"priceSource","type":"uint8"},{"name":"totalLongsAsset","type":"uint128"},{"name":"totalShortsAsset","type":"uint128"},{"name":"maxTotalLongsUSD","type":"uint128"},{"name":"maxTotalShortsUSD","type":"uint128"},{"name":"lastNoiUpdatePrice","type":"uint128"},{"name":"noiWeight","type":"uint16"},{"components":[{"name":"accLongUSDFundingPerShare","type":"int256"},{"name":"accShortUSDFundingPerShare","type":"int256"}],"name":"funding","type":"tuple"},{"name":"lastFundingUpdateTime","type":"uint32"},{"name":"maxLeverage","type":"uint32"},{"name":"depthAsset","type":"uint128"},{"components":[{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"baseDynamicSpreadRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"fundingBaseRatePerHour","type":"uint64"}],"name":"fees","type":"tuple"},{"name":"scheduleEnabled","type":"bool"},{"name":"paused","type":"bool"}],"name":"markets","type":"map(uint32,tuple)"},
 		{"components":[{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"workingHours","type":"map(uint32,map(uint8,tuple[]))"},
 		{"components":[{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"from","type":"tuple"},{"components":[{"name":"year","type":"uint16"},{"name":"month","type":"uint8"},{"name":"day","type":"uint8"},{"name":"hour","type":"uint8"},{"name":"minute","type":"uint8"}],"name":"to","type":"tuple"}],"name":"weekends","type":"map(uint32,map(uint32,tuple))"},
-		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracleConfigs","type":"map(uint32,tuple)"},
-		{"name":"request_nonce","type":"uint32"},
-		{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"eventData","type":"tuple"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"}],"name":"pending_market_requests","type":"map(uint32,tuple)"}
+		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracleConfigs","type":"map(uint32,tuple)"},
+		{"name":"requestNonce","type":"uint32"},
+		{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"pendingMarketRequests","type":"map(uint32,tuple)"},
+		{"name":"dummy1","type":"bool"},
+		{"name":"dummy2","type":"bool"},
+		{"name":"dummy3","type":"bool"},
+		{"name":"dummy4","type":"bool"},
+		{"name":"dummy5","type":"bool"},
+		{"name":"dummy6","type":"bool"},
+		{"name":"dummy7","type":"bool"},
+		{"name":"dummy8","type":"bool"},
+		{"name":"dummy9","type":"bool"},
+		{"name":"dummy10","type":"bool"},
+		{"name":"dummy11","type":"bool"},
+		{"name":"dummy12","type":"bool"},
+		{"name":"dummy13","type":"bool"}
 	]
 }

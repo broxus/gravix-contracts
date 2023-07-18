@@ -7,7 +7,7 @@ import "../interfaces/ITWAPOracle.tsol";
 
 
 contract PairMock is ITWAPOracle {
-    uint32 static deploy_nonce;
+    uint32 static deployNonce;
 
     Rate public _rate;
     uint128[] public _reserves;
@@ -16,14 +16,14 @@ contract PairMock is ITWAPOracle {
         tvm.accept();
     }
 
-    function setReserves(uint128[] new_reserves) external {
+    function setReserves(uint128[] newReserves) external {
         tvm.accept();
-        _reserves = new_reserves;
+        _reserves = newReserves;
     }
 
-    function setRate(Rate new_rate) external {
+    function setRate(Rate newRate) external {
         tvm.accept();
-        _rate = new_rate;
+        _rate = newRate;
     }
 
     /// @notice Get observation by timestamp

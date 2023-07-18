@@ -7,13 +7,11 @@
 			"name": "constructor",
 			"inputs": [
 				{"name":"_usdt","type":"address"},
-				{"name":"_price_node","type":"address"},
-				{"name":"_oracle","type":"address"},
-				{"name":"_market_idx","type":"uint32"},
-				{"name":"_price_source","type":"uint8"},
-				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"_oracle_config","type":"tuple"},
-				{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"_event_data","type":"tuple"},
-				{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"_meta","type":"tuple"}
+				{"name":"_priceNode","type":"address"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_priceSource","type":"uint8"},
+				{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"_oracleConfig","type":"tuple"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -22,10 +20,10 @@
 			"name": "setExecuteCallback",
 			"inputs": [
 				{"name":"_user","type":"address"},
-				{"name":"_position_key","type":"uint32"},
+				{"name":"_positionKey","type":"uint32"},
 				{"name":"_collateral","type":"uint128"},
 				{"name":"_leverage","type":"uint32"},
-				{"name":"_position_type","type":"uint8"}
+				{"name":"_positionType","type":"uint8"}
 			],
 			"outputs": [
 			]
@@ -34,7 +32,7 @@
 			"name": "setCloseCallback",
 			"inputs": [
 				{"name":"_user","type":"address"},
-				{"name":"_position_key","type":"uint32"}
+				{"name":"_positionKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -53,25 +51,6 @@
 			"inputs": [
 				{"name":"price","type":"uint128"},
 				{"name":"ticker","type":"string"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "onPriceReceived",
-			"inputs": [
-				{"name":"price","type":"int256"},
-				{"name":"timestamp","type":"uint256"},
-				{"name":"value2","type":"uint256"},
-				{"name":"value3","type":"cell"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "onPriceRejected",
-			"inputs": [
-				{"name":"value0","type":"cell"}
 			],
 			"outputs": [
 			]
@@ -101,21 +80,19 @@
 		{"name":"vault","type":"address"},
 		{"name":"nonce","type":"uint64"},
 		{"name":"usdt","type":"address"},
-		{"name":"oracle","type":"address"},
-		{"name":"price_node","type":"address"},
-		{"name":"market_idx","type":"uint32"},
-		{"name":"price_source","type":"uint8"},
-		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"ttl","type":"uint32"},{"name":"chainID","type":"uint16"}],"name":"chainlink","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracle_config","type":"tuple"},
-		{"components":[{"name":"eventTransaction","type":"uint256"},{"name":"eventIndex","type":"uint32"},{"name":"eventData","type":"cell"},{"name":"eventBlockNumber","type":"uint32"},{"name":"eventBlock","type":"uint256"}],"name":"event_data","type":"tuple"},
-		{"components":[{"name":"call_id","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"send_gas_to","type":"address"}],"name":"meta","type":"tuple"},
-		{"name":"position_key","type":"uint32"},
+		{"name":"priceNode","type":"address"},
+		{"name":"marketIdx","type":"uint32"},
+		{"name":"priceSource","type":"uint8"},
+		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracleConfig","type":"tuple"},
+		{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"},
+		{"name":"positionKey","type":"uint32"},
 		{"name":"user","type":"address"},
 		{"name":"collateral","type":"uint128"},
 		{"name":"leverage","type":"uint32"},
-		{"name":"position_type","type":"uint8"},
+		{"name":"positionType","type":"uint8"},
 		{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
 		{"name":"liquidator","type":"address"},
 		{"name":"callbackType","type":"uint8"},
-		{"name":"pair_reserves","type":"map(address,uint128[])"}
+		{"name":"pairReserves","type":"map(address,uint128[])"}
 	]
 }

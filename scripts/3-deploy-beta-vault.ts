@@ -43,7 +43,7 @@ const main = async () => {
     console.log('Set oracle');
 
     await vault.contract.methods.transferOwnership(
-        {new_owner: owner, meta: {call_id: 0, send_gas_to: owner, nonce: 0}}
+        {newOwner: owner, meta: {callId: 0, sendGasTo: owner, nonce: 0}}
     ).send({from: user.address, amount: toNano(2)});
     console.log('Ownership transferred');
 };
