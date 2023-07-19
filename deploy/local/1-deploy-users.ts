@@ -1,4 +1,4 @@
-import { toNano, WalletTypes } from "locklift";
+import { getRandomNonce, toNano, WalletTypes } from "locklift";
 
 //region migrating markets
 //endregion
@@ -10,15 +10,25 @@ export default async () => {
                 signerId: "0", // locklift.keystore.getSigner("0") <- id for getting access to the signer
                 accountSettings: {
                     type: WalletTypes.EverWallet,
-                    value: locklift.utils.toNano(50),
+                    value: locklift.utils.toNano(50000),
                 },
             },
             {
                 deploymentName: "User", // user-defined custom account name
                 signerId: "1",
                 accountSettings: {
-                    type: WalletTypes.EverWallet,
-                    value: locklift.utils.toNano(50),
+                    type: WalletTypes.MsigAccount,
+                    mSigType: "SafeMultisig",
+                    contract: "TestWallet",
+                    initParams: {
+                        _randomNonce: getRandomNonce(),
+                    },
+                    value: locklift.utils.toNano(50000),
+                    constructorParams: {
+                        ownerPubkey: `0x${await locklift.keystore
+                            .getSigner("1")
+                            .then(res => res?.publicKey.toString())}`,
+                    },
                 },
             },
             {

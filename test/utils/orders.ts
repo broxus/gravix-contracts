@@ -14,7 +14,7 @@ const PERCENT_100 = bn(1_000_000_000_000);
 const SCALING_FACTOR = bn(10).pow(18);
 const ptype = { 0: "long", 1: "short" };
 
-async function getPrice(pair: Contract<PairMockAbi>): Promise<number> {
+export async function getPrice(pair: Contract<PairMockAbi>): Promise<number> {
     const reserves = (await pair.methods._reserves().call())._reserves;
     return Number(reserves[1]) * 100; // 6 to 8 decimals
 }
@@ -40,7 +40,7 @@ export async function openMarketOrder(
     collateral: number,
     leverage: number,
     referrer = zeroAddress,
-) {
+): Promise<number> {
     const initial_price = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({ marketIdx: market_idx, answerId: 0 }).call())._market;
 
@@ -95,7 +95,6 @@ export async function openMarketOrder(
         ),
         { allowedCodes: { compute: [null] }, raise: false },
     );
-    await traceTree?.beautyPrint();
     const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
