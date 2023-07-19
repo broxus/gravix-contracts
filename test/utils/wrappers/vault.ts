@@ -232,6 +232,9 @@ export class GravixVault {
                 liquidations: liquidations,
                 meta: { callId: callId, nonce: 0, sendGasTo: this.owner.address },
             })
-            .send({ from: this.owner.address, amount: toNano(10) });
+            .send({
+                from: this.owner.address,
+                amount: toNano(3 + liquidations.flatMap(([, { positions }]) => positions).length * 1.05),
+            });
     }
 }
