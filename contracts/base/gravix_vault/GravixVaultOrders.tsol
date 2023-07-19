@@ -829,8 +829,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
-    ) external override onlyOracleProxy(nonce) {
-        tvm.rawReserve(_reserve(), 0);
+    ) external override onlyOracleProxy(nonce) reserve {
         this.self_liquidatePositions{
                 value: 0,
                 flag: MsgFlag.ALL_NOT_RESERVED,
@@ -853,16 +852,14 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         uint128 assetPrice,
         Callback.CallMeta meta,
         uint256 _startIdx
-    ) external {
+    ) external reserve {
         require (msg.sender == address(this), Errors.BAD_SENDER);
-        tvm.rawReserve(_reserve(), 0);
 
-        uint256 batchSize = 50;
         Funding _funding = _updateFunding(marketIdx, assetPrice);
-        for (uint i = _startIdx; i < positions.length && i < _startIdx + batchSize; i++) {
+        for (uint i = _startIdx; i < positions.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
             PositionIdx position = positions[i];
             address gravixAcc = getGravixAccountAddress(position.user);
-            // reserve 0.01 ever here to cover computation costs of iterating, needed for big arrays
+            // reserve 0.06 ever here to cover computation costs of iterating, needed for big arrays
             IGravixAccount(gravixAcc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.06 ever}(
                 liquidator,
                 position.positionKey,
@@ -873,7 +870,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             );
         }
 
-        if (_startIdx + batchSize < positions.length) {
+        if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < positions.length) {
             this.self_liquidatePositions{
                     value: 0,
                     flag: MsgFlag.ALL_NOT_RESERVED,
@@ -884,7 +881,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 positions,
                 assetPrice,
                 meta,
-                _startIdx + batchSize
+                _startIdx + Constants.LIQUIDATION_BATCH_SIZE
             );
         } else {
             meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);

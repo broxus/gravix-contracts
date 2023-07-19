@@ -160,8 +160,7 @@ describe("Testing main orders flow", async function () {
                         })
                         .call()
                 ).payload;
-
-                for (let _ of Array.from({ length: 5 })) {
+                for (let _ of Array.from({ length: 6 })) {
                     await locklift.transactions.waitFinalized(
                         user_usdt_wallet.multiTransfer(
                             Array.from({ length: 50 }, () => collateral),
@@ -197,7 +196,7 @@ describe("Testing main orders flow", async function () {
                 );
                 console.log(`Gas used: ${traceTree?.totalGasUsed()}`);
 
-                expect(traceTree).to.emit("LiquidatePosition").count(250);
+                expect(traceTree).to.emit("LiquidatePosition").count(300);
             });
         });
     });
