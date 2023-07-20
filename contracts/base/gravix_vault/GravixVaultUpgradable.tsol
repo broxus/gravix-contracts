@@ -81,7 +81,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserve {
         if (_accountVersion == gravixAccountCode.version) {
-            _user.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false});
+            _sendCallbackOrGas(_user, _meta.nonce, false, _meta.sendGasTo);
         } else {
             _upgradeGravixAccountByContract(msg.sender, 0, _meta);
         }
