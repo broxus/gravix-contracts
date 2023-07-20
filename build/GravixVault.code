@@ -15550,7 +15550,7 @@ RAWRESERVE
 DEPTH
 ADDCONST -2
 PICK
-PUSHINT 1000000000
+PUSHINT 500000000
 GEQ
 THROWIFNOT 1004
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 40
@@ -15631,7 +15631,7 @@ RAWRESERVE
 DEPTH
 ADDCONST -2
 PICK
-PUSHINT 1000000000
+PUSHINT 500000000
 PUSH S3
 FIRST
 INC
@@ -15652,7 +15652,7 @@ PUSHCONT {
 	PUSHINT 32
 	DICTUGET
 	THROWIFNOT 50
-	PUSHINT 1000000000
+	PUSHINT 500000000
 	PUSH S3
 	CALLREF {
 		CALL $_upgradeGravixAccountByUser_bc101454_internal_macro$
@@ -15734,7 +15734,7 @@ RAWRESERVE
 DEPTH
 ADDCONST -2
 PICK
-PUSHINT 1000000000
+PUSHINT 500000000
 PUSH S3
 FIRST
 INC
@@ -15755,7 +15755,7 @@ PUSHCONT {
 	PUSHINT 32
 	DICTUGET
 	THROWIFNOT 50
-	PUSHINT 1000000000
+	PUSHINT 500000000
 	PUSH S3
 	CALLREF {
 		CALL $_upgradeGravixAccountByContract_853b9324_internal_macro$
@@ -19263,50 +19263,6 @@ POP S2
 UFITS 256
 .loc ../contracts/libraries/DateTime.tsol, 0
 
-.globl	DateTime_with_obj__ethDiv_7c6f9b67
-.type	DateTime_with_obj__ethDiv_7c6f9b67, @function
-CALL $DateTime_with_obj__ethDiv_7c6f9b67_macro$
-
-.macro DateTime_with_obj__ethDiv_7c6f9b67_macro
-.loc ../contracts/libraries/DateTime.tsol, 45
-OVER
-LESSINT 0
-OVER
-LESSINT 0
-OR
-PUSHCONT {
-	.loc ../contracts/libraries/DateTime.tsol, 46
-	PUXC S1, S-1
-	DIVC
-	.loc ../contracts/libraries/DateTime.tsol, 0
-}
-IFJMP
-.loc ../contracts/libraries/DateTime.tsol, 48
-PUXC S1, S-1
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj__ethDiv_7c6f9b67
-.type	DateTime_no_obj__ethDiv_7c6f9b67, @function
-CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-
-.macro DateTime_no_obj__ethDiv_7c6f9b67_macro
-.loc ../contracts/libraries/DateTime.tsol, 45
-OVER
-LESSINT 0
-OVER
-LESSINT 0
-OR
-PUSHCONT {
-	.loc ../contracts/libraries/DateTime.tsol, 46
-	DIVC
-	.loc ../contracts/libraries/DateTime.tsol, 0
-}
-IFJMP
-.loc ../contracts/libraries/DateTime.tsol, 48
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 0
-
 .globl	DateTime_with_obj__daysFromDate_1e0582e9
 .type	DateTime_with_obj__daysFromDate_1e0582e9, @function
 CALL $DateTime_with_obj__daysFromDate_1e0582e9_macro$
@@ -19503,6 +19459,50 @@ SUB
 FITS 256
 .loc ../contracts/libraries/DateTime.tsol, 76
 UFITS 256
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_with_obj__ethDiv_7c6f9b67
+.type	DateTime_with_obj__ethDiv_7c6f9b67, @function
+CALL $DateTime_with_obj__ethDiv_7c6f9b67_macro$
+
+.macro DateTime_with_obj__ethDiv_7c6f9b67_macro
+.loc ../contracts/libraries/DateTime.tsol, 45
+OVER
+LESSINT 0
+OVER
+LESSINT 0
+OR
+PUSHCONT {
+	.loc ../contracts/libraries/DateTime.tsol, 46
+	PUXC S1, S-1
+	DIVC
+	.loc ../contracts/libraries/DateTime.tsol, 0
+}
+IFJMP
+.loc ../contracts/libraries/DateTime.tsol, 48
+PUXC S1, S-1
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj__ethDiv_7c6f9b67
+.type	DateTime_no_obj__ethDiv_7c6f9b67, @function
+CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+
+.macro DateTime_no_obj__ethDiv_7c6f9b67_macro
+.loc ../contracts/libraries/DateTime.tsol, 45
+OVER
+LESSINT 0
+OVER
+LESSINT 0
+OR
+PUSHCONT {
+	.loc ../contracts/libraries/DateTime.tsol, 46
+	DIVC
+	.loc ../contracts/libraries/DateTime.tsol, 0
+}
+IFJMP
+.loc ../contracts/libraries/DateTime.tsol, 48
+DIV
 .loc ../contracts/libraries/DateTime.tsol, 0
 
 .globl	DateTime_with_obj_getDayOfWeek_22f8a2b8

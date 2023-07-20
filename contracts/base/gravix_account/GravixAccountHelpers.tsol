@@ -115,13 +115,13 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         );
     }
 
-    function _getGravixAccountAddress(address user) internal view returns (address) {
-        return address(tvm.hash(_buildGravixAccountInitData(_buildGravixAccountParams(user))));
+    function _getGravixAccountAddress(address _user) internal view returns (address) {
+        return address(tvm.hash(_buildGravixAccountInitData(_buildGravixAccountParams(_user))));
     }
 
-    function _buildGravixAccountParams(address user) internal pure returns (TvmCell) {
+    function _buildGravixAccountParams(address _user) internal pure returns (TvmCell) {
         TvmBuilder builder;
-        builder.store(user);
+        builder.store(_user);
         return builder.toCell();
     }
 
@@ -140,7 +140,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     }
 
     function requestUpgrade(address _user,uint32 _currentVersion, Callback.CallMeta _meta) internal view {
-        IGravixVault(vault).onGravixAccountRequestUpgrade{value: 0.3 ever}(
+        IGravixVault(vault).onGravixAccountRequestUpgrade{value: Gas.GRAVIX_ACC_UPGRADE_VALUE}(
             _user,
             _currentVersion,
             _meta
