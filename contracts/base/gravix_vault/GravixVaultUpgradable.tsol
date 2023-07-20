@@ -75,6 +75,17 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         );
     }
 
+    function onGravixAccountRequestUpgrade(
+        address _user,
+        uint32 _accountVersion,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        if (_accountVersion == gravixAccountCode.version) {
+            _user.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false});
+        } else {
+            _upgradeGravixAccountByContract(msg.sender, 0, _meta);
+        }
+    }
     function onGravixAccountUpgrade(
         address user,
         uint32 oldVersion,

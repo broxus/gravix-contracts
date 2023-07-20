@@ -8,7 +8,13 @@ import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
-import { closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding } from "./utils/orders";
+import {
+    closeOrder,
+    openMarketWithTestsOrder,
+    setPrice,
+    testMarketPosition,
+    testPositionFunding,
+} from "./utils/orders";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);

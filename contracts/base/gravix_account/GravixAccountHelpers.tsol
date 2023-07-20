@@ -139,6 +139,14 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         });
     }
 
+    function requestUpgrade(address _user,uint32 _currentVersion, Callback.CallMeta _meta) internal view {
+        IGravixVault(vault).onGravixAccountRequestUpgrade{value: 0.3 ever}(
+            _user,
+            _currentVersion,
+            _meta
+        );
+    }
+
 
     function _reserve() internal pure returns (uint128) {
         return math.max(address(this).balance - msg.value, CONTRACT_MIN_BALANCE);
