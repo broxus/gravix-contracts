@@ -6,7 +6,6 @@ import "../../libraries/Callback.tsol";
 import "../../interfaces/IGravixAccount.tsol";
 import "./GravixVaultOrders.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
-import "locklift/src/console.tsol";
 
 
 abstract contract GravixVaultBase is GravixVaultOrders {
@@ -218,7 +217,9 @@ abstract contract GravixVaultBase is GravixVaultOrders {
 
             address gravixAcc = _deployGravixAccount(request.user, request.referrer);
             IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                _requestNonce, request
+                _requestNonce,
+                request,
+                gravixAccountCode.version
             );
         }
     }

@@ -95,7 +95,7 @@ contract GravixVault is GravixVaultBase {
             address _owner,
             address _manager,
             address _marketManager,
-            address _oracle,
+            , //address _oracle
             address _priceNode,
             uint256 _pricePubkey,
             address _usdt,
@@ -312,6 +312,8 @@ contract GravixVault is GravixVaultBase {
         // endregion
 
         pendingMarketRequests = _pendingMarketRequests;
+
+        _meta.sendGasTo.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
     }
 
 }

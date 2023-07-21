@@ -59,9 +59,15 @@ interface IGravixAccount {
     }
 
     function process_requestMarketOrder(
-        uint32 reqNonce, IGravixVault.PendingMarketOrder pendingRequest
+        uint32 reqNonce,
+        IGravixVault.PendingMarketOrder pendingRequest,
+        uint32 accountVersion
     ) external;
-    function process_cancelMarketOrder(uint32 positionKey, Callback.CallMeta meta) external;
+    function process_cancelMarketOrder(
+        uint32 positionKey,
+        Callback.CallMeta meta,
+        uint32 accountVersion
+    ) external;
     function process_executeMarketOrder(
         uint32 positionKey,
         uint32 marketIdx,
@@ -70,14 +76,16 @@ interface IGravixAccount {
         uint128 assetPrice,
         uint64 dynamicSpread,
         int256 accUSDFundingPerShare,
-        Callback.CallMeta meta
+        Callback.CallMeta meta,
+        uint32 accountVersion
     ) external;
     function process_closePosition(
         uint32 positionKey,
         uint32 marketIdx,
         uint128 assetPrice,
         IGravixVault.Funding funding,
-        Callback.CallMeta meta
+        Callback.CallMeta meta,
+        uint32 accountVersion
     ) external;
     function process_liquidatePositions(
         address liquidator,
@@ -85,13 +93,15 @@ interface IGravixAccount {
         uint32 marketIdx,
         uint128 assetPrice,
         IGravixVault.Funding funding,
-        Callback.CallMeta meta
+        Callback.CallMeta meta,
+        uint32 accountVersion
     ) external;
     function process_addCollateral(
         uint128 amount,
         uint32 marketIdx,
         uint32 positionKey,
-        Callback.CallMeta meta
+        Callback.CallMeta meta,
+        uint32 accountVersion
     ) external;
     function process_removeCollateral(
         uint128 amount,
@@ -99,7 +109,8 @@ interface IGravixAccount {
         uint32 marketIdx,
         uint32 maxLeverage,
         uint128 minCollateral,
-        Callback.CallMeta meta
+        Callback.CallMeta meta,
+        uint32 accountVersion
     ) external;
     function process_sendReferrerFee(
         uint128 amount, Callback.CallMeta meta

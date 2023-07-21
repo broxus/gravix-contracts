@@ -21,7 +21,12 @@ export class GravixAccount {
     async positions() {
         return (await this.contract.methods.positions().call()).positions;
     }
-
+    async getDetails() {
+        return this.contract.methods.getDetails({ answerId: 0 }).call();
+    }
+    async getVersion() {
+        return this.getDetails().then(res => res._currentVersion);
+    }
     async getPositionView(
         positionKey: number,
         assetPrice: number | string,

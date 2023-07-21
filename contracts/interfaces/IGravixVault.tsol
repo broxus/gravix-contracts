@@ -199,6 +199,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 maxSlippageRate,
         uint32 positionKey
     );
+    event MarketOrderRequestRevert(uint32 callId, address user);
     event MarketOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
     event MarketOrderExecution(
         uint32 callId,
@@ -288,6 +289,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function finish_requestMarketOrder(uint32 reqNonce, PendingMarketOrder request, uint32 positionKey) external;
+    function revert_requestMarketOrder(uint32 _reqNonce, PendingMarketOrder _pendRequest) external;
     function revert_executeMarketOrder(
         address user, uint32 positionKey, uint32 marketIdx, uint128 collateral, uint128 positionSizeUsd, uint128 assetPrice, PositionType positionType, Callback.CallMeta meta
     ) external;
@@ -358,4 +360,5 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function finish_withdrawReferralBalance(address user, uint128 refBal, Callback.CallMeta meta) external view;
+    function onGravixAccountRequestUpgrade(address _user, uint32 _accountVersion, Callback.CallMeta _meta) external;
 }
