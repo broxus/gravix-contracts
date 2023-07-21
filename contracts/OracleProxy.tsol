@@ -100,7 +100,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         _collectPrice(liquidator);
     }
 
-    function _collectPrice(address sendGasTo) internal view {
+    function _collectPrice(address /*sendGasTo*/) internal view {
         if (priceSource == IGravixVault.OracleType.Dex) {
             _collectPriceFromDex();
         } else if (priceSource == IGravixVault.OracleType.PriceNode) {

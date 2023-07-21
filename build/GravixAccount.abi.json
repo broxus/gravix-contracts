@@ -51,8 +51,9 @@
 		{
 			"name": "process_requestMarketOrder",
 			"inputs": [
-				{"name":"reqNonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"pendingRequest","type":"tuple"}
+				{"name":"_reqNonce","type":"uint32"},
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendingRequest","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -69,14 +70,15 @@
 		{
 			"name": "process_executeMarketOrder",
 			"inputs": [
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
-				{"name":"positionSizeAsset","type":"uint128"},
-				{"name":"positionType","type":"uint8"},
-				{"name":"assetPrice","type":"uint128"},
-				{"name":"dynamicSpread","type":"uint64"},
-				{"name":"accUSDFundingPerShare","type":"int256"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_positionSizeAsset","type":"uint128"},
+				{"name":"_positionType","type":"uint8"},
+				{"name":"_assetPrice","type":"uint128"},
+				{"name":"_dynamicSpread","type":"uint64"},
+				{"name":"_accUSDFundingPerShare","type":"int256"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -84,8 +86,9 @@
 		{
 			"name": "process_cancelMarketOrder",
 			"inputs": [
-				{"name":"positionKey","type":"uint32"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_positionKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -93,12 +96,13 @@
 		{
 			"name": "process_liquidatePositions",
 			"inputs": [
-				{"name":"liquidator","type":"address"},
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
-				{"name":"assetPrice","type":"uint128"},
-				{"components":[{"name":"accLongUSDFundingPerShare","type":"int256"},{"name":"accShortUSDFundingPerShare","type":"int256"}],"name":"funding","type":"tuple"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_liquidator","type":"address"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_assetPrice","type":"uint128"},
+				{"components":[{"name":"accLongUSDFundingPerShare","type":"int256"},{"name":"accShortUSDFundingPerShare","type":"int256"}],"name":"_funding","type":"tuple"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -106,11 +110,12 @@
 		{
 			"name": "process_closePosition",
 			"inputs": [
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
-				{"name":"assetPrice","type":"uint128"},
-				{"components":[{"name":"accLongUSDFundingPerShare","type":"int256"},{"name":"accShortUSDFundingPerShare","type":"int256"}],"name":"funding","type":"tuple"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_assetPrice","type":"uint128"},
+				{"components":[{"name":"accLongUSDFundingPerShare","type":"int256"},{"name":"accShortUSDFundingPerShare","type":"int256"}],"name":"_funding","type":"tuple"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -121,7 +126,8 @@
 				{"name":"amount","type":"uint128"},
 				{"name":"marketIdx","type":"uint32"},
 				{"name":"positionKey","type":"uint32"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -129,12 +135,13 @@
 		{
 			"name": "process_removeCollateral",
 			"inputs": [
-				{"name":"amount","type":"uint128"},
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
-				{"name":"maxLeverage","type":"uint32"},
-				{"name":"minCollateral","type":"uint128"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_amount","type":"uint128"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_maxLeverage","type":"uint32"},
+				{"name":"_minCollateral","type":"uint128"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"},
+				{"name":"_accountVersion","type":"uint32"}
 			],
 			"outputs": [
 			]

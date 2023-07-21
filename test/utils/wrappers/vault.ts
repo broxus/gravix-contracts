@@ -1,4 +1,4 @@
-import { Address, Contract, toNano, zeroAddress } from "locklift";
+import { Address, Contract, getRandomNonce, toNano, zeroAddress } from "locklift";
 import { GravixVaultAbi } from "../../../build/factorySource";
 import { Account } from "locklift/everscale-client";
 import { TokenWallet } from "./token_wallet";
@@ -131,6 +131,22 @@ export class GravixVault {
             .send({ from: user.address, amount: toNano(1) });
     }
 
+    async setNewAccountCode(code?: string) {
+        return this.contract.methods
+            .updateGravixAccountCode({
+                code: code || locklift.factory.getContractArtifacts("GravixAccount").code,
+                meta: {
+                    callId: getRandomNonce(),
+                    sendGasTo: this.owner.address,
+                    nonce: 0,
+                },
+            })
+            .send({
+                from: this.owner.address,
+                amount: toNano(2),
+            });
+    }
+
     async getDynamicSpread(marketIdx: number, positionSizeAsset: number, positionType: 0 | 1) {
         return (
             await this.contract.methods
@@ -174,7 +190,7 @@ export class GravixVault {
     }
 
     async addCollateral(
-        from_wallet: TokenWallet,
+        fromWallet: TokenWallet,
         user: Account,
         amount: number,
         positionKey: number,
@@ -192,7 +208,7 @@ export class GravixVault {
                 .call()
         ).payload;
 
-        return from_wallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+        return fromWallet.transfer(amount, this.contract.address, payload, toNano(2.1));
     }
 
     async removeCollateral(user: Account, amount: number, positionKey: number, marketIdx: number | string, callId = 0) {
@@ -206,7 +222,7 @@ export class GravixVault {
             .send({ from: user.address, amount: toNano(2.1) });
     }
 
-    async closePosition(user: Account, positionKey: number, marketIdx: number | string, referrer: Address, callId = 0) {
+    async closePosition(user: Account, positionKey: number, marketIdx: number | string, callId = 0) {
         return await this.contract.methods
             .closePosition({
                 positionKey: positionKey,

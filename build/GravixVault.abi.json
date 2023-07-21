@@ -253,6 +253,15 @@
 			]
 		},
 		{
+			"name": "revert_requestMarketOrder",
+			"inputs": [
+				{"name":"_reqNonce","type":"uint32"},
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "finish_requestMarketOrder",
 			"inputs": [
 				{"name":"reqNonce","type":"uint32"},
@@ -875,6 +884,16 @@
 			]
 		},
 		{
+			"name": "onGravixAccountRequestUpgrade",
+			"inputs": [
+				{"name":"_user","type":"address"},
+				{"name":"_accountVersion","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "onGravixAccountUpgrade",
 			"inputs": [
 				{"name":"user","type":"address"},
@@ -1211,6 +1230,15 @@
 				{"name":"leverage","type":"uint32"},
 				{"name":"maxSlippageRate","type":"uint64"},
 				{"name":"positionKey","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "MarketOrderRequestRevert",
+			"inputs": [
+				{"name":"callId","type":"uint32"},
+				{"name":"user","type":"address"}
 			],
 			"outputs": [
 			]

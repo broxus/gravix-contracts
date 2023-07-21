@@ -29,8 +29,7 @@ export async function setPrice(pair: Contract<PairMockAbi>, price: number | stri
         })
         .sendExternal({ publicKey: signer?.publicKey as string });
 }
-
-export async function openMarketOrder(
+export async function getOpenPositionInfo(
     vault: GravixVault,
     pair: Contract<PairMockAbi>,
     user: Account,
@@ -39,13 +38,12 @@ export async function openMarketOrder(
     pos_type: 0 | 1,
     collateral: number,
     leverage: number,
-    referrer = zeroAddress,
-): Promise<number> {
-    const initial_price = Number(await getPrice(pair));
+) {
+    const initialPrice = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({ marketIdx: market_idx, answerId: 0 }).call())._market;
 
     const position = collateral * (leverage / 1000000);
-    const position_in_asset = (position * PRICE_DECIMALS) / initial_price;
+    const position_in_asset = (position * PRICE_DECIMALS) / initialPrice;
 
     let new_noi;
     if (pos_type === 0) {
@@ -57,14 +55,82 @@ export async function openMarketOrder(
     }
     new_noi = new_noi.lt(0) ? bn(0) : new_noi;
     const dynamic_spread = new_noi.times(market.fees.baseDynamicSpreadRate).idiv(market.depthAsset);
-    const total_spread = bn(market.fees.baseSpreadRate).plus(dynamic_spread);
+    const totalSpread = bn(market.fees.baseSpreadRate).plus(dynamic_spread);
 
-    const price_multiplier = pos_type == 0 ? PERCENT_100.plus(total_spread) : PERCENT_100.minus(total_spread);
-    const expected_price = price_multiplier.times(initial_price).idiv(PERCENT_100);
+    const price_multiplier = pos_type == 0 ? PERCENT_100.plus(totalSpread) : PERCENT_100.minus(totalSpread);
+    return {
+        expectedPrice: price_multiplier.times(initialPrice).idiv(PERCENT_100),
+        position,
+        market,
+        initialPrice,
+        totalSpread,
+    };
+}
+export async function openMarketOrder({
+    marketIdx,
+    vault,
+    user,
+    userWallet,
+    collateral,
+    leverage,
+    referrer = zeroAddress,
+    pair,
+    posType,
+}: {
+    vault: GravixVault;
+    pair: Contract<PairMockAbi>;
+    user: Account;
+    userWallet: TokenWallet;
+    marketIdx: number;
+    posType: 0 | 1;
+    collateral: number;
+    leverage: number;
+    referrer?: Address;
+}) {
+    const { expectedPrice } = await getOpenPositionInfo(
+        vault,
+        pair,
+        user,
+        userWallet,
+        marketIdx,
+        posType,
+        collateral,
+        leverage,
+    );
 
-    // console.log(expected_price.toFixed());
-    // pre-deploy acc, because we don't have bounces yet
-    // await locklift.tracing.trace(vault.deployGravixAccount(user));
+    return vault.openPosition(
+        userWallet,
+        collateral,
+        marketIdx,
+        posType,
+        leverage,
+        expectedPrice.toString(),
+        0,
+        referrer,
+        getRandomNonce(),
+    );
+}
+export async function openMarketWithTestsOrder(
+    vault: GravixVault,
+    pair: Contract<PairMockAbi>,
+    user: Account,
+    user_wallet: TokenWallet,
+    market_idx: number,
+    pos_type: 0 | 1,
+    collateral: number,
+    leverage: number,
+    referrer = zeroAddress,
+): Promise<number> {
+    const { position, expectedPrice, market, initialPrice, totalSpread } = await getOpenPositionInfo(
+        vault,
+        pair,
+        user,
+        user_wallet,
+        market_idx,
+        pos_type,
+        collateral,
+        leverage,
+    );
 
     const res = (
         await vault.contract.methods
@@ -73,7 +139,7 @@ export async function openMarketOrder(
                 leverage: leverage,
                 collateral: collateral,
                 positionType: pos_type,
-                assetPrice: expected_price.toString(),
+                assetPrice: expectedPrice.toString(),
             })
             .call()
     ).value0;
@@ -88,7 +154,7 @@ export async function openMarketOrder(
             market_idx,
             pos_type,
             leverage,
-            expected_price.toString(),
+            expectedPrice.toString(),
             0,
             referrer,
             callId,
@@ -107,7 +173,7 @@ export async function openMarketOrder(
             callId: callId.toFixed(),
             user: user.address,
             collateral: collateral.toString(),
-            expectedPrice: expected_price.toFixed(),
+            expectedPrice: expectedPrice.toFixed(),
             leverage: leverage.toString(),
             positionType: pos_type.toString(),
             maxSlippageRate: "0",
@@ -119,7 +185,7 @@ export async function openMarketOrder(
             user: user.address,
             position: {
                 positionType: pos_type.toString(),
-                openPrice: expected_price.toFixed(),
+                openPrice: expectedPrice.toFixed(),
                 openFee: open_fee_expected.toFixed(),
             },
         });
@@ -164,7 +230,7 @@ export async function openMarketOrder(
                 answerId: 0,
                 input: {
                     positionKey: pos_key,
-                    assetPrice: initial_price,
+                    assetPrice: initialPrice,
                     funding: {
                         accLongUSDFundingPerShare: 0,
                         accShortUSDFundingPerShare: 0,
@@ -187,14 +253,14 @@ export async function openMarketOrder(
         .idiv(PERCENT_100);
 
     const position_up = col_up.times(leverage).idiv(1000000);
-    const liq_price_dist = expected_price
+    const liq_price_dist = expectedPrice
         .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view.fundingFee))
         .div(col_up)
         .times(1000000)
         .div(leverage)
         .integerValue(BigNumber.ROUND_FLOOR);
 
-    let liq_price = pos_type == 0 ? expected_price.minus(liq_price_dist) : expected_price.plus(liq_price_dist);
+    let liq_price = pos_type == 0 ? expectedPrice.minus(liq_price_dist) : expectedPrice.plus(liq_price_dist);
     liq_price =
         pos_type == 0
             ? liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate))
@@ -205,12 +271,12 @@ export async function openMarketOrder(
 
     logger.log(
         `Open ${ptype[pos_type]} position,`,
-        `market price - ${toUSD(initial_price / 100)}$,`,
+        `market price - ${toUSD(initialPrice / 100)}$,`,
         // @ts-ignore
-        `open price - ${toUSD(expected_price / 100)}\$,`,
+        `open price - ${toUSD(expectedPrice / 100)}\$,`,
         // @ts-ignore
         `liquidation price - ${toUSD(liq_price / 100)}\$,`,
-        `spread - ${total_spread.div(10 ** 10).toFixed(3)}\%,`,
+        `spread - ${totalSpread.div(10 ** 10).toFixed(3)}\%,`,
         `collateral - ${toUSD(col_up)}\$,`,
         `position size - ${toUSD(position_up)}\$,`,
         `open fee - ${toUSD(open_fee_expected)}\$`,
@@ -260,7 +326,7 @@ export async function closeOrder(
     // const details_prev = await vault.details();
     const callId = getRandomNonce();
     const { traceTree: traceTree1 } = await locklift.tracing.trace(
-        vault.closePosition(user, pos_key, pos_view1.position.marketIdx, referrer, callId),
+        vault.closePosition(user, pos_key, pos_view1.position.marketIdx, callId),
     );
 
     const event = await vault.getEvent("ClosePosition");
@@ -436,7 +502,7 @@ export async function testMarketPosition(
 ) {
     await setPrice(pair, initial_price);
     // OPEN POSITION
-    const pos_key = await openMarketOrder(
+    const pos_key = await openMarketWithTestsOrder(
         vault,
         pair,
         user,
@@ -447,7 +513,6 @@ export async function testMarketPosition(
         leverage,
         referrer,
     );
-
     if (ttl > 0) {
         await tryIncreaseTime(ttl);
     }
@@ -480,7 +545,7 @@ export async function testPositionFunding(
     )._market;
     await setPrice(pair, initial_price);
     // market has 15k$ depth, open pos on 10k$
-    const pos_key = await openMarketOrder(
+    const pos_key = await openMarketWithTestsOrder(
         vault,
         pair,
         user,

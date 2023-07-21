@@ -109,7 +109,35 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         pendingMarketRequests[requestNonce] = newRequest;
         address gravixAcc = getGravixAccountAddress(user);
-        IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(requestNonce, newRequest);
+        IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            requestNonce,
+            newRequest,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_requestMarketOrder(
+        uint32 _reqNonce,
+        PendingMarketOrder _pendRequest
+    ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        delete pendingMarketRequests[_reqNonce];
+        emit MarketOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
+        if (_pendRequest.collateral > 0) {
+            _transfer(
+                usdt.wallet,
+                _pendRequest.collateral,
+                _pendRequest.user,
+                _makeCell(_pendRequest.meta.nonce),
+                _pendRequest.meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(
+                _pendRequest.user,
+                _pendRequest.meta.nonce,
+                false, _pendRequest.meta.sendGasTo
+            );
+        }
     }
 
     function finish_requestMarketOrder(
@@ -362,11 +390,16 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 assetPrice,
                 dynamicSpread,
                 funding,
-                meta
+                meta,
+                gravixAccountCode.version
             );
         } else {
             // order cant be executed now, some limits reached and etc.
-            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(positionKey, meta);
+            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                positionKey,
+                meta,
+                gravixAccountCode.version
+            );
         }
     }
 
@@ -454,7 +487,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
         address gravixAcc = getGravixAccountAddress(user);
-        IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(positionKey, meta);
+        IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            positionKey,
+            meta,
+            gravixAccountCode.version
+        );
     }
 
     function revert_cancelMarketOrder(
@@ -587,7 +624,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             marketIdx,
             assetPrice,
             _funding,
-            meta
+            meta,
+            gravixAccountCode.version
         );
     }
 
@@ -670,7 +708,11 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     ) internal view {
         address gravixAcc = getGravixAccountAddress(user);
         IGravixAccount(gravixAcc).process_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            amount, marketIdx, positionKey, meta
+            amount,
+            marketIdx,
+            positionKey,
+            meta,
+            gravixAccountCode.version
         );
     }
 
@@ -738,7 +780,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
 
         address gravixAcc = getGravixAccountAddress(msg.sender);
         IGravixAccount(gravixAcc).process_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            amount, positionKey, marketIdx, markets[marketIdx].maxLeverage, minPositionCollateral, meta
+            amount,
+            positionKey,
+            marketIdx,
+            markets[marketIdx].maxLeverage,
+            minPositionCollateral,
+            meta,
+            gravixAccountCode.version
         );
     }
 
@@ -866,7 +914,8 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
                 marketIdx,
                 assetPrice,
                 _funding,
-                meta
+                meta,
+                gravixAccountCode.version
             );
         }
 

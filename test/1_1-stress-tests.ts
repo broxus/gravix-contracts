@@ -7,7 +7,7 @@ import { bn } from "./utils/common";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
-import { getPrice, openMarketOrder, setPrice } from "./utils/orders";
+import { getPrice, openMarketWithTestsOrder, setPrice } from "./utils/orders";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);

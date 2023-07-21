@@ -8,7 +8,13 @@ import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
-import { closeOrder, openMarketOrder, setPrice, testMarketPosition, testPositionFunding } from "./utils/orders";
+import {
+    closeOrder,
+    openMarketWithTestsOrder,
+    setPrice,
+    testMarketPosition,
+    testPositionFunding,
+} from "./utils/orders";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -328,7 +334,7 @@ describe("Testing main orders flow", async function () {
 
                 it("Opening positions at 1000$", async function () {
                     await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
-                    long_pos_key = await openMarketOrder(
+                    long_pos_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -338,7 +344,7 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                     );
-                    short_pos_key = await openMarketOrder(
+                    short_pos_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -348,7 +354,7 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                     );
-                    long_pos2_key = await openMarketOrder(
+                    long_pos2_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -358,7 +364,7 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                     );
-                    short_pos2_key = await openMarketOrder(
+                    short_pos2_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -485,7 +491,7 @@ describe("Testing main orders flow", async function () {
 
                 it("Longs > shorts", async function () {
                     // big long
-                    const pos_key = await openMarketOrder(
+                    const pos_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -514,7 +520,7 @@ describe("Testing main orders flow", async function () {
 
                 it("Shorts > longs", async function () {
                     // big short
-                    const pos_key = await openMarketOrder(
+                    const pos_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -568,7 +574,7 @@ describe("Testing main orders flow", async function () {
                 const price = 1000 * USDT_DECIMALS;
                 await setPrice(eth_usdt_mock, price);
 
-                const pos_key1 = await openMarketOrder(
+                const pos_key1 = await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user,
@@ -579,7 +585,7 @@ describe("Testing main orders flow", async function () {
                     100000000,
                 );
 
-                const pos_key2 = await openMarketOrder(
+                const pos_key2 = await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user,
@@ -684,7 +690,7 @@ describe("Testing main orders flow", async function () {
                 const price = 1000 * USDT_DECIMALS;
                 await setPrice(eth_usdt_mock, price);
 
-                const pos_key = await openMarketOrder(
+                const pos_key = await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user,
@@ -703,7 +709,7 @@ describe("Testing main orders flow", async function () {
             describe("Add collateral", async function () {
                 it("Open position", async function () {
                     await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
-                    pos_key = await openMarketOrder(
+                    pos_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -748,7 +754,7 @@ describe("Testing main orders flow", async function () {
 
             describe("Remove collateral", async function () {
                 it("Open position", async function () {
-                    pos_key = await openMarketOrder(
+                    pos_key = await openMarketWithTestsOrder(
                         vault,
                         eth_usdt_mock,
                         user,
@@ -809,7 +815,7 @@ describe("Testing main orders flow", async function () {
 
             it("Pnl+, 100x leverage, open at 1000$", async function () {
                 await setPrice(eth_usdt_mock, 1000 * USDT_DECIMALS);
-                long_pos_key = await openMarketOrder(
+                long_pos_key = await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user,
@@ -876,7 +882,7 @@ describe("Testing main orders flow", async function () {
                         .send({ from: owner.address, amount: toNano(1) }),
                 );
 
-                user1_long_pos_key = await openMarketOrder(
+                user1_long_pos_key = await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user1,
@@ -920,7 +926,7 @@ describe("Testing main orders flow", async function () {
                 user4 = await deployUser();
                 const user4_usdt_wallet = await usdt_root.mint(1000000000, user4);
 
-                await openMarketOrder(
+                await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user4,
@@ -939,7 +945,7 @@ describe("Testing main orders flow", async function () {
                 // remember our original referrer
 
                 // try to change referrer
-                await openMarketOrder(
+                await openMarketWithTestsOrder(
                     vault,
                     eth_usdt_mock,
                     user1,
