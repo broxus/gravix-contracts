@@ -5,6 +5,7 @@ import "../../libraries/Gas.tsol";
 import "../../libraries/Callback.tsol";
 import "../../interfaces/IGravixAccount.tsol";
 import "./GravixVaultOrders.tsol";
+import "locklift/src/console.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
@@ -160,10 +161,22 @@ abstract contract GravixVaultBase is GravixVaultOrders {
             bool correct
         ) = decodeTokenTransfer(payload);
         bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
-
+        console.log(format("action {} exception {}",uint(action), exception ? 1 : 0));
         if (msg.sender == usdt.wallet) {
             if (!exception && action == Action.MarketOrder) {
-                exception = exception || !_handleMarketOrder(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = exception || !_handleMarketOrder(
+                    sender,
+                    amount,
+                    actionPayload,
+                    Callback.CallMeta(callId, nonce, remainingGasTo)
+                );
+            } if (!exception && action == Action.LimitOrder) {
+               exception = exception || !_handleLimitOrder(
+                    sender,
+                    amount,
+                    actionPayload,
+                    Callback.CallMeta(callId, nonce, remainingGasTo)
+                );
             } else if (!exception && action == Action.LiquidityDeposit) {
                 _handleUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else if (!exception && action == Action.InsuranceDeposit) {
@@ -217,6 +230,18 @@ abstract contract GravixVaultBase is GravixVaultOrders {
 
             address gravixAcc = _deployGravixAccount(request.user, request.referrer);
             IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _requestNonce,
+                request,
+                gravixAccountCode.version
+            );
+        }
+        if (functionId == tvm.functionId(IGravixAccount.process_requestLimitOrder)) {
+            tvm.rawReserve(_reserve(), 0);
+            uint32 _requestNonce = slice.decode(uint32);
+            PendingLimitOrder request = pendingLimitRequests[_requestNonce];
+
+            address gravixAcc = _deployGravixAccount(request.user, request.referrer);
+            IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _requestNonce,
                 request,
                 gravixAccountCode.version

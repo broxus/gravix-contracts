@@ -177,9 +177,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
     function process_requestLimitOrder(
         uint32 _reqNonce,
-        uint128 _positionSizeAsset,
         IGravixVault.PendingLimitOrder _pendingRequest,
-        uint128 _assetPrice,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
@@ -188,14 +186,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             requestUpgrade(user, currentVersion, _pendingRequest.meta);
 
             IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user,
                 _reqNonce,
-                _pendingRequest.marketIdx,
-                _pendingRequest.collateral,
-                _positionSizeAsset,
-                _assetPrice,
-                _pendingRequest.positionType,
-                _pendingRequest.meta
+                _pendingRequest
             );
             return;
         }
@@ -216,40 +208,30 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         // check if request exists + double check market idx
         if (_pendingRequest.collateral == 0) {
             IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user,
                 _reqNonce,
-                _pendingRequest.marketIdx,
-                0,
-                _positionSizeAsset,
-                _assetPrice,
-                _pendingRequest.positionType,
-                _pendingRequest.meta
+                _pendingRequest
             );
             return;
         }
 
-        uint128 openPrice = applyOpenSpread(
-            _assetPrice,
-            _pendingRequest.positionType,
-            _pendingRequest.baseSpreadRate
-        );
+        bool isPriceOk;
+        if (_pendingRequest.orderType == IGravixVault.LimitOrderType.Limit) {
+            isPriceOk = _pendingRequest.positionType == IGravixVault.PositionType.Long
+                ? _pendingRequest.targetPrice < _pendingRequest.assetPrice
+                : _pendingRequest.targetPrice > _pendingRequest.assetPrice;
+        }
 
+        if (_pendingRequest.orderType == IGravixVault.LimitOrderType.Stop) {
+            isPriceOk = _pendingRequest.positionType == IGravixVault.PositionType.Long
+                ? _pendingRequest.targetPrice > _pendingRequest.assetPrice
+                : _pendingRequest.targetPrice < _pendingRequest.assetPrice;
+        }
 
-        // todo handle for long and short
-        bool isPriceOk = _pendingRequest.positionType == IGravixVault.PositionType.Long
-            ? _assetPrice >= openPrice
-            : _assetPrice <= openPrice;
 
         if (!isPriceOk) {
             IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user,
                 _reqNonce,
-                _pendingRequest.marketIdx,
-                0,
-                _positionSizeAsset,
-                _assetPrice,
-                _pendingRequest.positionType,
-                _pendingRequest.meta
+                _pendingRequest
             );
             return;
         }

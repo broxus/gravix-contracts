@@ -18,8 +18,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         AddCollateral,
         RemoveCollateral,
 
-        LimitOrder,
-        StopOrder
+        LimitOrder
     }
 
     enum LimitOrderType { Limit, Stop }
@@ -150,6 +149,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 borrowBaseRatePerHour; // %
         IPriceNode.Price price;
         address referrer;
+        uint128 assetPrice;
+        uint128 positionSizeAsset;
         Callback.CallMeta meta;
     }
 
@@ -238,13 +239,14 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 positionKey
     );
 
-    event LimitOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
+    event LimitOrderRequestRevert(uint32 callId, address user);
 
     event LimitOrder(
         uint32 callId,
         address user,
         uint32 marketIdx,
         PositionType positionType,
+        LimitOrderType limitType,
         uint128 collateral,
         uint128 targetPrice,
         uint32 leverage,
@@ -365,15 +367,10 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function finish_cancelMarketOrder(address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta) external;
 
     function revert_requestLimitOrder(
-        address user,
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 collateral,
-        uint128 positionSizeAsset,
-        uint128 assetPrice,
-        PositionType positionType,
-        Callback.CallMeta meta
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest
     ) external;
+
     function finish_requestLimitOrder(
         uint32 reqNonce,
         PendingLimitOrder request,

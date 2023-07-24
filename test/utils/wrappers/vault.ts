@@ -160,7 +160,7 @@ export class GravixVault {
         ).dynamicSpread;
     }
 
-    async openPosition(
+    async openMarketPosition(
         from_wallet: TokenWallet,
         amount: number,
         marketIdx: number,
@@ -187,6 +187,45 @@ export class GravixVault {
                 .call()
         ).payload;
         return await from_wallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+    }
+
+    async openLimitPosition({
+        callId = 0,
+        limitType,
+        positionType,
+        leverage,
+        referrer,
+        marketIdx,
+        targetPrice,
+        amount,
+        fromWallet,
+    }: {
+        fromWallet: TokenWallet;
+        amount: number;
+        marketIdx: number;
+        positionType: 0 | 1; // 0 - short, 1 - long
+        leverage: number;
+        targetPrice: number | string;
+        referrer: Address;
+        limitType: 0 | 1; // 0 - limit, 1 - stop
+        callId: number;
+    }) {
+        const payload = (
+            await this.contract.methods
+                .encodeLimitOrder({
+                    _marketIdx: marketIdx,
+                    _positionType: positionType,
+                    _leverage: leverage,
+                    _targetPrice: targetPrice,
+                    _price: empty_price,
+                    _callId: callId,
+                    _referrer: referrer,
+                    _nonce: 0,
+                    _limitOrderType: limitType,
+                })
+                .call()
+        ).payload;
+        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(2.1));
     }
 
     async addCollateral(

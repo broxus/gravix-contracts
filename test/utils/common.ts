@@ -3,6 +3,7 @@ import { Address, Contract, getRandomNonce, toNano, WalletTypes, zeroAddress } f
 import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import Bignumber from "bignumber.js";
+import { LimitType, PosType } from "./constants";
 
 const logger = require("mocha-logger");
 const { expect } = require("chai");
@@ -265,4 +266,30 @@ export const setupPairMock = async function () {
     );
 
     return mock;
+};
+
+export const getPriceForLimitOrder = ({
+    currentPrice,
+    limitType,
+    posType,
+    isWrong,
+}: {
+    currentPrice: number;
+    posType: PosType;
+    limitType: LimitType;
+    isWrong: boolean;
+}) => {
+    if (limitType === LimitType.Limit) {
+        if (posType === PosType.Long) {
+            return currentPrice + (isWrong ? 1 : -1);
+        } else {
+            return currentPrice + (isWrong ? -1 : 1);
+        }
+    } else {
+        if (posType === PosType.Long) {
+            return currentPrice + (isWrong ? -1 : 1);
+        } else {
+            return currentPrice + (isWrong ? 1 : -1);
+        }
+    }
 };

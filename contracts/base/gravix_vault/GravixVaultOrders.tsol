@@ -268,6 +268,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     ) external override onlyOracleProxy(_nonce) reserve {
         Market _market = markets[_marketIdx];
         requestNonce += 1;
+        uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
         PendingLimitOrder newRequest = PendingLimitOrder(
             _user,
             _marketIdx,
@@ -283,39 +284,37 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             _market.fees.borrowBaseRatePerHour,
             _price,
             _referrer,
+            _assetPrice,
+            positionSizeAsset,
             _meta
         );
         pendingLimitRequests[requestNonce] = newRequest;
 
 
-        _requestLimitOrder(newRequest, requestNonce, _assetPrice);
+        _requestLimitOrder(newRequest, requestNonce);
     }
 
     function revert_requestLimitOrder(
-        address user,
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 collateral,
-        uint128 positionSizeAsset,
-        uint128 assetPrice,
-        PositionType positionType,
-        Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
-        emit LimitOrderExecutionRevert(meta.callId, user, positionKey);
-
-        delete pendingLimitRequests[positionKey];
-
-        _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
-
-        // too high slippage
-        if (collateral > 0) {
-            collateralReserve -= collateral;
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest
+    ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        delete pendingLimitRequests[_reqNonce];
+        emit LimitOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
+        if (_pendRequest.collateral > 0) {
             _transfer(
-                usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+                usdt.wallet,
+                _pendRequest.collateral,
+                _pendRequest.user,
+                _makeCell(_pendRequest.meta.nonce),
+                _pendRequest.meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
             );
         } else {
-            // tried to execute non-existent order
-            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
+            _sendCallbackOrGas(
+                _pendRequest.user,
+                _pendRequest.meta.nonce,
+                false, _pendRequest.meta.sendGasTo
+            );
         }
     }
 
@@ -332,6 +331,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             request.user,
             request.marketIdx,
             request.positionType,
+            request.orderType,
             request.collateral,
             request.targetPrice,
             request.leverage,
@@ -633,17 +633,14 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
     function _requestLimitOrder(
         IGravixVault.PendingLimitOrder _pendingLimitOrder,
-        uint32 _requestNonce,
-        uint128 _assetPrice
+        uint32 _requestNonce
     ) internal {
         // reserve should be
         address gravixAcc = getGravixAccountAddress(_pendingLimitOrder.user);
 
         IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _requestNonce,
-            _requestNonce,
             _pendingLimitOrder,
-            _assetPrice,
             gravixAccountCode.version
         );
     }

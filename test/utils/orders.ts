@@ -3,8 +3,9 @@ import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import BigNumber from "bignumber.js";
 import { PairMockAbi } from "../../build/factorySource";
-import { bn, toUSD, tryIncreaseTime } from "./common";
+import { bn, getPriceForLimitOrder, toUSD, tryIncreaseTime } from "./common";
 import { TokenWallet } from "./wrappers/token_wallet";
+import { LimitType, PosType } from "./constants";
 
 const logger = require("mocha-logger");
 const { expect } = require("chai");
@@ -98,7 +99,7 @@ export async function openMarketOrder({
         leverage,
     );
 
-    return vault.openPosition(
+    return vault.openMarketPosition(
         userWallet,
         collateral,
         marketIdx,
@@ -148,7 +149,7 @@ export async function openMarketWithTestsOrder(
     const callId = getRandomNonce();
     const details_prev = await vault.details();
     const { traceTree } = await locklift.tracing.trace(
-        vault.openPosition(
+        vault.openMarketPosition(
             user_wallet,
             collateral,
             market_idx,
@@ -271,6 +272,190 @@ export async function openMarketWithTestsOrder(
 
     logger.log(
         `Open ${ptype[pos_type]} position,`,
+        `market price - ${toUSD(initialPrice / 100)}$,`,
+        // @ts-ignore
+        `open price - ${toUSD(expectedPrice / 100)}\$,`,
+        // @ts-ignore
+        `liquidation price - ${toUSD(liq_price / 100)}\$,`,
+        `spread - ${totalSpread.div(10 ** 10).toFixed(3)}\%,`,
+        `collateral - ${toUSD(col_up)}\$,`,
+        `position size - ${toUSD(position_up)}\$,`,
+        `open fee - ${toUSD(open_fee_expected)}\$`,
+    );
+
+    return pos_key;
+}
+
+export async function openLimitWithTestsOrder({
+    user,
+    userWallet,
+    marketIdx,
+    posType,
+    collateral,
+    leverage,
+    referrer = zeroAddress,
+    limitType,
+    pair,
+    vault,
+}: {
+    vault: GravixVault;
+    pair: Contract<PairMockAbi>;
+    user: Account;
+    userWallet: TokenWallet;
+    marketIdx: number;
+    posType: PosType;
+    limitType: LimitType;
+    collateral: number;
+    leverage: number;
+    referrer: Address;
+}): Promise<number> {
+    const { position, expectedPrice, market, initialPrice, totalSpread } = await getOpenPositionInfo(
+        vault,
+        pair,
+        user,
+        userWallet,
+        marketIdx,
+        posType,
+        collateral,
+        leverage,
+    );
+
+    const res = (
+        await vault.contract.methods
+            .checkPositionAllowed({
+                marketIdx: marketIdx,
+                leverage: leverage,
+                collateral: collateral,
+                positionType: posType,
+                assetPrice: expectedPrice.toString(),
+            })
+            .call()
+    ).value0;
+    expect(res.toString()).to.be.eq("0");
+
+    const callId = getRandomNonce();
+    const details_prev = await vault.details();
+    const targetPrice = getPriceForLimitOrder({
+        limitType,
+        currentPrice: initialPrice,
+        posType,
+        isWrong: false,
+    });
+    const { traceTree } = await locklift.tracing.trace(
+        vault.openLimitPosition({
+            limitType,
+            callId,
+            amount: collateral,
+            targetPrice,
+            referrer,
+            leverage,
+
+            positionType: posType,
+            marketIdx: marketIdx,
+            fromWallet: userWallet,
+        }),
+        { allowedCodes: { compute: [null] }, raise: false },
+    );
+    await traceTree?.beautyPrint();
+    debugger;
+    const account = await vault.account(user);
+    // @ts-ignore
+    // const [pos_key, pos] = (await account.positions()).pop();
+
+    let open_fee_expected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
+
+    expect(traceTree).to.emit("LimitOrder").withNamedArgs({
+        callId: callId.toFixed(),
+        user: user.address,
+        collateral: collateral.toString(),
+        targetPrice: targetPrice.toString(),
+        leverage: leverage.toString(),
+        positionType: posType.toString(),
+        limitType: limitType.toString(),
+        marketIdx: marketIdx.toString(),
+    });
+    debugger;
+    const event = await vault.getEvent("MarketOrderExecution");
+    const details = await vault.details();
+    const acc_details = await account.contract.methods.getDetails({ answerId: 0 }).call();
+    const col_up = bn(collateral).minus(open_fee_expected);
+
+    let pool_increase = open_fee_expected;
+    if (!acc_details._referrer.equals(zeroAddress)) {
+        pool_increase = pool_increase.minus(open_fee_expected.idiv(10));
+
+        expect(traceTree)
+            .to.emit("ReferralPayment")
+            .withNamedArgs({
+                callId: callId.toFixed(),
+                referral: user.address,
+                referrer: acc_details._referrer.toString(),
+                amount: open_fee_expected.idiv(10).toFixed(),
+            });
+    }
+    if (!acc_details._grandReferrer.equals(zeroAddress)) {
+        pool_increase = pool_increase.minus(open_fee_expected.idiv(100));
+
+        expect(traceTree)
+            .to.emit("ReferralPayment")
+            .withNamedArgs({
+                callId: callId.toFixed(),
+                referral: user.address,
+                referrer: acc_details._grandReferrer.toString(),
+                amount: open_fee_expected.idiv(100).toFixed(),
+            });
+    }
+
+    expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(col_up).toFixed());
+    expect(details._poolAssets.balance).to.be.eq(bn(details_prev._poolAssets.balance).plus(pool_increase).toFixed());
+
+    const pos_view = (
+        await account.contract.methods
+            .getPositionView({
+                answerId: 0,
+                input: {
+                    positionKey: pos_key,
+                    assetPrice: initialPrice,
+                    funding: {
+                        accLongUSDFundingPerShare: 0,
+                        accShortUSDFundingPerShare: 0,
+                    },
+                },
+            })
+            .call()
+    ).positionView;
+
+    const leveraged_usd = bn(pos_view.position.initialCollateral)
+        .minus(pos_view.position.openFee)
+        .times(pos_view.position.leverage)
+        .idiv(1000000);
+
+    const time_passed = bn(pos_view.viewTime).minus(pos_view.position.createdAt);
+    const borrow_fee = time_passed
+        .times(pos_view.position.borrowBaseRatePerHour)
+        .idiv(3600)
+        .times(leveraged_usd)
+        .idiv(PERCENT_100);
+
+    const position_up = col_up.times(leverage).idiv(1000000);
+    const liq_price_dist = expectedPrice
+        .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view.fundingFee))
+        .div(col_up)
+        .times(1000000)
+        .div(leverage)
+        .integerValue(BigNumber.ROUND_FLOOR);
+
+    let liq_price = posType == 0 ? expectedPrice.minus(liq_price_dist) : expectedPrice.plus(liq_price_dist);
+    liq_price =
+        posType == 0
+            ? liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate))
+            : liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
+    liq_price = liq_price.isNegative() ? bn(0) : liq_price;
+
+    expect(pos_view.liquidationPrice.toString()).to.be.eq(liq_price.toString());
+
+    logger.log(
+        `Open ${ptype[posType]} position,`,
         `market price - ${toUSD(initialPrice / 100)}$,`,
         // @ts-ignore
         `open price - ${toUSD(expectedPrice / 100)}\$,`,
@@ -521,6 +706,58 @@ export async function testMarketPosition(
     await setPrice(pair, finish_price);
     await closeOrder(vault, pair, user, user_wallet, pos_key, referrer);
 }
+
+export const testLimitPosition = async ({
+    ttl = 0,
+    referrer = zeroAddress,
+    user,
+    userWallet,
+    collateral,
+    leverage,
+    initialPrice,
+    finishPrice,
+    pair,
+    marketIdx,
+    posType,
+    vault,
+    limitType,
+}: {
+    vault: GravixVault;
+    pair: Contract<PairMockAbi>;
+    user: Account;
+    userWallet: TokenWallet;
+    marketIdx: number;
+    posType: PosType;
+    limitType: LimitType;
+    collateral: number;
+    leverage: number;
+    initialPrice: number;
+    finishPrice: number;
+    ttl?: number;
+    referrer?: Address;
+}) => {
+    const market = (
+        await vault.contract.methods
+            .getMarket({
+                marketIdx,
+                answerId: 0,
+            })
+            .call()
+    )._market;
+    await setPrice(pair, initialPrice);
+    const key = await openLimitWithTestsOrder({
+        user,
+        vault,
+        pair,
+        referrer,
+        leverage,
+        collateral,
+        posType,
+        marketIdx,
+        userWallet,
+        limitType,
+    });
+};
 
 export async function testPositionFunding(
     vault: GravixVault,
