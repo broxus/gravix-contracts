@@ -288,7 +288,35 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         pendingLimitRequests[requestNonce] = newRequest;
 
 
-        _executeLimitOrder(newRequest, _assetPrice);
+        _executeLimitOrder(newRequest, requestNonce, _assetPrice);
+    }
+
+    function revert_executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint128 positionSizeAsset,
+        uint128 assetPrice,
+        PositionType positionType,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        emit LimitOrderExecutionRevert(meta.callId, user, positionKey);
+
+        delete pendingLimitRequests[positionKey];
+
+        _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
+
+        // too high slippage
+        if (collateral > 0) {
+            collateralReserve -= collateral;
+            _transfer(
+                usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            // tried to execute non-existent order
+            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
+        }
     }
 
     function finish_requestLimitOrder(
@@ -607,6 +635,7 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
     }
     function _executeLimitOrder(
         IGravixVault.PendingLimitOrder _pendingLimitOrder,
+        uint32 _requestNonce,
         uint128 _assetPrice
     ) internal {
         // reserve should be
@@ -634,19 +663,13 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             int256 funding = _pendingLimitOrder.positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
 
             IGravixAccount(gravixAcc).process_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _requestNonce,
+                _requestNonce,
                 _pendingLimitOrder,
                 _assetPrice,
                 funding,
                 gravixAccountCode.version
             );
-        } else {
-            // order cant be executed now, some limits reached and etc.
-            // todo
-//            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-//                positionKey,
-//                meta,
-//                gravixAccountCode.version
-//            );
         }
     }
     // @param collateral - order collateral, 6 decimals number

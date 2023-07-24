@@ -4654,11 +4654,144 @@ DICTUSETREF
 PUSHINT 43
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 291
-SWAP
+PUSHINT 41
+GETGLOBVAR
+ROT
 CALLREF {
-	CALL $_executeLimitOrder_eb8e4639_internal_macro$
+	CALL $_executeLimitOrder_e7335448_internal_macro$
 }
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
+
+.macro revert_executeLimitOrder
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 294
+OVER
+PUSHCONT {
+	LDREF
+	ENDS
+	CTOS
+}
+IF
+LDMSGADDR
+LDU 32
+LDU 32
+LDU 128
+LDU 128
+LDREF
+ENDS
+CTOS
+LDU 128
+LDU 8
+OVER
+GTINT 1
+THROWIF 73
+LDU 32
+LDU 32
+LDMSGADDR
+ROLLREV 3
+TRIPLE
+SWAP
+ENDS
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
+CALLREF {
+	CALL $revert_executeLimitOrder_abd44735_internal_macro$
+}
+DROP
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro revert_executeLimitOrder_abd44735_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 294
+PUSH S7
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
+CALLREF {
+	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
+}
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 343
+GETGLOB 9
+SDEQ
+THROWIFNOT 2000
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 358
+CALLREF {
+	CALL $_reserve_413ab4a8_internal_macro$
+}
+PUSHINT 0
+RAWRESERVE
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 304
+PUSH3 S6, S7, S0
+FIRST
+PUSHSLICE xc00000000000000000000000000f2d7579
+NEWC
+STSLICE
+STU 32
+STSLICE
+STU 32
+ENDC
+PUSHINT 0
+SENDRAWMSG
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 306
+ROLL 6
+PUSHINT 43
+GETGLOBVAR
+PUSHINT 32
+DICTUDEL
+DROP
+PUSHINT 43
+SETGLOBVAR
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 308
+ROLL 5
+BLKSWAP 3, 2
+CALLREF {
+	CALL $_removePositionFromMarket_05d8247f_internal_macro$
+}
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 311
+OVER
+GTINT 0
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 312
+	GETGLOB 26
+	PUSH S2
+	SUB
+	UFITS 128
+	SETGLOB 26
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 313
+	GETGLOB 14
+	SECOND
+	PUSH3 S2, S3, S1
+	SECOND
+	CALLREF {
+		CALL $_makeCell_67dcfcc8_internal_macro$
+	}
+	PUSH S4
+	THIRD
+	PUSHPOW2 7
+	CALLREF {
+		CALL $_transfer_601b185b_internal_macro$
+	}
+}
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 318
+	PUSH2 S2, S0
+	SECOND
+	FALSE
+	PUSH S3
+	THIRD
+	CALLREF {
+		CALL $_sendCallbackOrGas_a7c3a26f_internal_macro$
+	}
+}
+IFELSE
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
+BLKDROP 3
 
 .macro finish_requestLimitOrder
 DROP
@@ -4669,7 +4802,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 294
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 322
 OVER
 PUSHCONT {
 	LDU 32
@@ -4756,7 +4889,7 @@ CALLREF {
 THROW 0
 
 .macro finish_requestLimitOrder_f152835d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 294
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 322
 OVER
 FIRST
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
@@ -4773,7 +4906,7 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 299
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 327
 ROT
 PUSHINT 43
 GETGLOBVAR
@@ -4782,14 +4915,14 @@ DICTUDEL
 DROP
 PUSHINT 43
 SETGLOBVAR
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 300
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 328
 OVER
 INDEX 3
 GETGLOB 26
 ADD
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 302
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 330
 OVER
 INDEX 6
 PUSH S2
@@ -4832,13 +4965,13 @@ SENDRAWMSG
 CALL $_sendOpenOrderOracleRequest_0554529d_internal_macro$
 
 .macro _sendOpenOrderOracleRequest_0554529d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 327
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 355
 ROLL 4
 SWAP
 CALLREF {
 	CALL $_deployOracleProxy_35c622c3_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 328
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 356
 REVERSE 5, 1
 NEWC
 STSLICECONST x62_
@@ -4864,13 +4997,13 @@ SENDRAWMSG
 CALL $_sendOpenOrderOracleLimitRequest_2c99df12_internal_macro$
 
 .macro _sendOpenOrderOracleLimitRequest_2c99df12_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 346
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 374
 ROLL 8
 SWAP
 CALLREF {
 	CALL $_deployOracleProxy_35c622c3_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 347
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 375
 ROLLREV 9
 REVERSE 9, 0
 ROLL 9
@@ -4912,11 +5045,11 @@ SENDRAWMSG
 CALL $_sendCloseOrderOracleRequest_edca3e5b_internal_macro$
 
 .macro _sendCloseOrderOracleRequest_edca3e5b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 366
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 394
 CALLREF {
 	CALL $_deployOracleProxy_35c622c3_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 367
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 395
 XCHG S1, S2
 NEWC
 STSLICECONST x62_
@@ -4939,19 +5072,19 @@ SENDRAWMSG
 CALL $_sendLiquidationOracleRequest_1b5b047c_internal_macro$
 
 .macro _sendLiquidationOracleRequest_1b5b047c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 376
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 404
 XCHG S1, S2
 CALLREF {
 	CALL $_deployOracleProxy_35c622c3_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 377
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 405
 OVER
 FIRST
 UFITS 128
 PUSHINT 1050000000
 MUL
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 378
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 406
 SWAP
 XCHG S2, S3
 NEWC
@@ -4981,7 +5114,7 @@ SENDRAWMSG
 CALL $_deployOracleProxy_35c622c3_internal_macro$
 
 .macro _deployOracleProxy_35c622c3_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 384
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 412
 OVER
 PUSHINT 37
 GETGLOBVAR
@@ -5039,7 +5172,7 @@ PUSHCONT {
 }
 IFELSE
 FIRST
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 385
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 413
 PUSH S2
 PUSHINT 40
 GETGLOBVAR
@@ -5079,7 +5212,7 @@ IFREFELSEREF
 	TRIPLE
 	PAIR
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 387
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 415
 OVER2
 FIRST
 PUSHSLICE xc00000000000000000000000002aed4cf3
@@ -5090,10 +5223,10 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 389
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 417
 LTIME
 ADDRAND
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 390
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 418
 SWAP
 ROLL 3
 GETGLOB 12
@@ -5197,7 +5330,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 399
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 427
 OVER
 PUSHCONT {
 	LDU 32
@@ -5242,19 +5375,19 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 400
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 428
 DEPTH
 ADDCONST -2
 PICK
 PUSHINT 2000000000
 GEQ
 THROWIFNOT 1004
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 402
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 430
 GETGLOB 9
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 403
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 431
 NEWC
 STSLICECONST x62_
 STSLICE
@@ -5284,7 +5417,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 406
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 434
 OVER
 PUSHCONT {
 	LDREF
@@ -5314,7 +5447,7 @@ IFREF {
 THROW 0
 
 .macro finish_withdrawReferralBalance_4e28fd99_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 406
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 434
 PUSH S2
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -5330,11 +5463,11 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 409
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 437
 OVER
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 410
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 438
 	PUSH3 S1, S2, S0
 	FIRST
 	PUSHSLICE xc000000000000000000000000033469ac8
@@ -5346,7 +5479,7 @@ PUSHCONT {
 	ENDC
 	PUSHINT 0
 	SENDRAWMSG
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 411
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 439
 	GETGLOB 14
 	SECOND
 	PUSH3 S2, S3, S1
@@ -5362,7 +5495,7 @@ PUSHCONT {
 	}
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 415
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 443
 	PUSH2 S2, S0
 	SECOND
 	FALSE
@@ -5381,12 +5514,12 @@ BLKDROP 3
 CALL $_sendReferrerFee_d5a2f88b_internal_macro$
 
 .macro _sendReferrerFee_d5a2f88b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 420
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 448
 PUSH S3
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 422
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 450
 PUSH S2
 BLKSWAP 2, 4
 XCPU S1, S4
@@ -5410,7 +5543,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 428
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 456
 XCHG S1, S2
 NEWC
 STSLICECONST x62_
@@ -5438,15 +5571,15 @@ SENDRAWMSG
 CALL $_distributeReferralFee_464ff909_internal_macro$
 
 .macro _distributeReferralFee_464ff909_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 441
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 469
 BLKPUSH 2, 5
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 442
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 470
 PUSHREFSLICE {
 	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
 }
 SDEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 443
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 471
 	PUSH2 S6, S2
 	GETGLOB 24
 	SECOND
@@ -5457,16 +5590,16 @@ PUSHCONT {
 	PUSHINT 1000000000000
 	MULDIV
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 444
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 472
 	DUP2
 	SUB
 	UFITS 128
 	POP S2
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 445
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 473
 	DUP
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 446
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 474
 		PUSH3 S6, S4, S0
 		PUSH S5
 		CALLREF {
@@ -5479,14 +5612,14 @@ PUSHCONT {
 	DROP
 }
 IFNOT
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 449
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 477
 PUSH S4
 PUSHREFSLICE {
 	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
 }
 SDEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 450
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 478
 	PUSH2 S6, S2
 	GETGLOB 25
 	SECOND
@@ -5497,16 +5630,16 @@ PUSHCONT {
 	PUSHINT 1000000000000
 	MULDIV
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 451
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 479
 	DUP2
 	SUB
 	UFITS 128
 	POP S2
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 452
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 480
 	DUP
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 453
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 481
 		BLKPUSH 2, 5
 		PUSH2 S2, S4
 		CALLREF {
@@ -5527,14 +5660,14 @@ BLKDROP2 6, 1
 CALL $_collectOpenFeeAndReferral_d38b8a73_internal_macro$
 
 .macro _collectOpenFeeAndReferral_d38b8a73_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 461
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 489
 ROLLREV 4
 PUSHINT 0
 ROLL 5
 CALLREF {
 	CALL $_distributeReferralFee_464ff909_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 462
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 490
 CALLREF {
 	CALL $_collectOpenFee_419bf765_internal_macro$
 }
@@ -5545,14 +5678,14 @@ CALLREF {
 CALL $_collectCloseFeeAndReferral_ee06876b_internal_macro$
 
 .macro _collectCloseFeeAndReferral_ee06876b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 468
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 496
 ROLLREV 4
 PUSHINT 1
 ROLL 5
 CALLREF {
 	CALL $_distributeReferralFee_464ff909_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 469
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 497
 CALLREF {
 	CALL $_collectCloseFee_8b1909c0_internal_macro$
 }
@@ -5563,14 +5696,14 @@ CALLREF {
 CALL $_collectPnlAndReferral_1739b4b8_internal_macro$
 
 .macro _collectPnlAndReferral_1739b4b8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 475
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 503
 ROLLREV 4
 PUSHINT 2
 ROLL 5
 CALLREF {
 	CALL $_distributeReferralFee_464ff909_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 504
 CALLREF {
 	CALL $_increaseInsuranceFund_4ab09332_internal_macro$
 }
@@ -5585,7 +5718,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 491
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 519
 OVER
 PUSHCONT {
 	LDU 64
@@ -5643,7 +5776,7 @@ CALLREF {
 THROW 0
 
 .macro oracle_executeMarketOrder_ce683732_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 491
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 519
 ROLL 8
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 348
 CALLREF {
@@ -5659,7 +5792,7 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 502
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 530
 CALLREF {
 	CALL $_executeOrder_3af33a51_internal_macro$
 }
@@ -5670,37 +5803,37 @@ CALLREF {
 CALL $_executeOrder_3af33a51_internal_macro$
 
 .macro _executeOrder_3af33a51_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 525
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 553
 BLKSWAP 2, 3
 PUSH S3
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 526
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 554
 PUSH3 S0, S4, S3
 CALLREF {
 	CALL $getDynamicSpread_aa75633f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 528
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 556
 PUSH2 S5, S3
 CALLREF {
 	CALL $_updateFunding_4e7c360e_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 529
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 557
 PUSH3 S6, S2, S4
 PUSH S8
 CALLREF {
 	CALL $_addPositionToMarketOrReturnErr_c261430f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 531
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 559
 ROLL 9
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 532
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 560
 SWAP
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 548
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 576
 	GETGLOB 20
 	SECOND
 	PUSH3 S5, S9, S1
@@ -5722,7 +5855,7 @@ PUSHCONT {
 	STU 32
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 533
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 561
 	PUSH S6
 	PUSHCONT {
 		OVER
@@ -5733,7 +5866,7 @@ PUSHCONT {
 		FIRST
 	}
 	IFELSE
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 535
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 563
 	GETGLOB 20
 	SECOND
 	PUSH S6
@@ -5784,7 +5917,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 558
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 586
 OVER
 PUSHCONT {
 	LDREF
@@ -5823,7 +5956,7 @@ CALLREF {
 THROW 0
 
 .macro revert_executeMarketOrder_185329a4_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 558
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 586
 PUSH S7
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -5839,7 +5972,7 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 568
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 596
 ROLL 6
 PUSH2 S7, S1
 FIRST
@@ -5852,23 +5985,23 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 570
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 598
 ROLL 5
 BLKSWAP 3, 2
 CALLREF {
 	CALL $_removePositionFromMarket_05d8247f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 573
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 601
 OVER
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 574
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 602
 	GETGLOB 26
 	PUSH S2
 	SUB
 	UFITS 128
 	SETGLOB 26
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 575
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 603
 	GETGLOB 14
 	SECOND
 	PUSH3 S2, S3, S1
@@ -5884,7 +6017,7 @@ PUSHCONT {
 	}
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 580
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 608
 	PUSH2 S2, S0
 	SECOND
 	FALSE
@@ -5907,7 +6040,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 584
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 612
 OVER
 PUSHCONT {
 	LDREF
@@ -5968,7 +6101,7 @@ CALLREF {
 THROW 0
 
 .macro finish_executeMarketOrder_30d3a133_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 584
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 612
 PUSH S5
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -5988,7 +6121,7 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 364
 ROLLREV 6
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 592
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 620
 PUSH S3
 INDEX 3
 SWAP2
@@ -5996,14 +6129,14 @@ PUSH2 S6, S3
 CALLREF {
 	CALL $_collectOpenFeeAndReferral_d38b8a73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 593
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 621
 OVER
 INDEX 3
 GETGLOB 26
 SUBR
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 595
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 623
 OVER
 THIRD
 PUSH S2
@@ -6013,7 +6146,7 @@ INDEX 5
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 596
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 624
 PUSH S2
 FIRST
 XCPU S1, S3
@@ -6023,7 +6156,7 @@ SECOND
 CALLREF {
 	CALL $_removePositionFromMarket_05d8247f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 598
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 626
 OVER
 THIRD
 PUSH S2
@@ -6037,7 +6170,7 @@ INDEX 4
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 599
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 627
 PUSH S2
 FIRST
 XCPU S1, S3
@@ -6047,7 +6180,7 @@ SECOND
 CALLREF {
 	CALL $_addPositionToMarket_a9b72b36_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 601
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 629
 ROLL 3
 SWAP
 FIRST
@@ -6097,56 +6230,56 @@ CALLREF {
 }
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 
-.globl	_executeLimitOrder_eb8e4639_internal
-.type	_executeLimitOrder_eb8e4639_internal, @function
-CALL $_executeLimitOrder_eb8e4639_internal_macro$
+.globl	_executeLimitOrder_e7335448_internal
+.type	_executeLimitOrder_e7335448_internal, @function
+CALL $_executeLimitOrder_e7335448_internal_macro$
 
-.macro _executeLimitOrder_eb8e4639_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 613
-OVER
-INDEX 3
+.macro _executeLimitOrder_e7335448_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 642
 PUSH S2
+INDEX 3
+PUSH S3
 INDEX 6
 PUSH S2
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 618
-PUSH2 S0, S2
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 647
+PUSH2 S0, S3
 SECOND
-PUSH S4
+PUSH S5
 THIRD
 CALLREF {
 	CALL $getDynamicSpread_aa75633f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 624
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 653
 DROP
-PUSH S2
+PUSH S3
 SECOND
 PUSH S2
 CALLREF {
 	CALL $_updateFunding_4e7c360e_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 625
-PUSH S3
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 654
+PUSH S4
 SECOND
 ROT
-PUSH2 S3, S4
+PUSH2 S3, S5
 THIRD
 CALLREF {
 	CALL $_addPositionToMarketOrReturnErr_c261430f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 632
-PUSH S3
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 661
+PUSH S4
 FIRST
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 633
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 662
 SWAP
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 634
-	PUSH S3
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 663
+	PUSH S4
 	THIRD
 	PUSHCONT {
 		OVER
@@ -6157,19 +6290,22 @@ PUSHCONT {
 		FIRST
 	}
 	IFELSE
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 636
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 665
 	GETGLOB 20
 	SECOND
 	SWAP
-	PUSH3 S4, S5, S2
+	PUSH3 S4, S6, S5
+	PUSH2 S8, S5
 	NEWC
 	STSLICECONST x62_
 	STSLICE
 	PUSHINT 1
 	STUR 111
-	ROLLREV 4
+	ROLLREV 6
 	NEWC
-	STSLICECONST x13524814
+	STSLICECONST x08d5d0dc
+	STU 32
+	STU 128
 	SWAP
 	UNTUPLE 15
 	REVERSE 16, 0
@@ -6177,11 +6313,11 @@ PUSHCONT {
 	STU 32
 	STU 8
 	STU 128
+	ROLLREV 14
+	NEWC
 	STU 128
 	STU 8
 	STU 32
-	ROLLREV 11
-	NEWC
 	STU 64
 	STU 64
 	STU 64
@@ -6219,14 +6355,14 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IFNOT
-BLKDROP 4
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
+BLKDROP 5
 
 .macro calculatePositionAssetSize
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 655
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 678
 LDU 128
 LDU 32
 LDU 128
@@ -6267,7 +6403,7 @@ THROW 0
 CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 
 .macro calculatePositionAssetSize_d45aee73_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 656
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 679
 ROTREV
 PUSHINT 1000000
 MULDIV
@@ -6287,7 +6423,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 659
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 682
 LDU 32
 GETGLOB 4
 ROT
@@ -6360,9 +6496,9 @@ THROW 0
 CALL $getDynamicSpread_aa75633f_internal_macro$
 
 .macro getDynamicSpread_aa75633f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 664
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 687
 PUSHINT 0
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 666
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 689
 ROT
 PUSHINT 37
 GETGLOBVAR
@@ -6419,29 +6555,29 @@ PUSHCONT {
 	TUPLE 14
 }
 IFELSE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 668
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 691
 ROT
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 672
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 695
 	DUP
 	THIRD
 	PUSH S3
 	RSHIFT 1
 	ADD
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 673
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 696
 	PUSH2 S0, S1
 	SECOND
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 669
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 692
 	DUP
 	SECOND
 	PUSH S3
 	RSHIFT 1
 	ADD
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 670
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 693
 	PUSH2 S0, S1
 	THIRD
 }
@@ -6451,7 +6587,7 @@ MIN
 SUB
 UFITS 128
 POP S2
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 675
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 698
 TUCK
 INDEX 11
 INDEX 3
@@ -6459,7 +6595,7 @@ ROT
 INDEX 10
 MULDIV
 UFITS 64
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 676
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 699
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -6480,7 +6616,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 681
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 704
 OVER
 PUSHCONT {
 	LDREF
@@ -6526,19 +6662,19 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 682
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 705
 DEPTH
 ADDCONST -2
 PICK
 PUSHINT 2000000000
 GEQ
 THROWIFNOT 1004
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 684
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 707
 ROT
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 685
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 708
 GETGLOB 20
 SECOND
 SWAP
@@ -6574,7 +6710,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 692
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 715
 OVER
 PUSHCONT {
 	LDREF
@@ -6604,7 +6740,7 @@ IFREF {
 THROW 0
 
 .macro revert_cancelMarketOrder_3a7844f0_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 692
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 715
 PUSH S2
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -6625,7 +6761,7 @@ RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 370
 SWAP
 XCHG S1, S3
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 695
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 718
 FIRST
 PUSHSLICE xc000000000000000000000000016eaa23f
 NEWC
@@ -6657,7 +6793,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 698
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 721
 OVER
 PUSHCONT {
 	LDREF
@@ -6689,7 +6825,7 @@ CALLREF {
 THROW 0
 
 .macro finish_cancelMarketOrder_c7a257c9_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 698
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 721
 PUSH S3
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -6705,13 +6841,13 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 701
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 724
 GETGLOB 26
 PUSH S2
 SUB
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 703
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 726
 ROT
 PUSH2 S3, S1
 FIRST
@@ -6724,7 +6860,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 704
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 727
 GETGLOB 14
 SECOND
 SWAP2
@@ -6750,7 +6886,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 710
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 733
 OVER
 PUSHCONT {
 	LDU 32
@@ -6829,21 +6965,21 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 376
 ROLLREV 5
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 717
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 740
 PUSH S4
 FIRST
 PUSH S4
 FIRST
 EQUAL
 THROWIFNOT 1005
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 718
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 741
 PUSH S4
 FIRST
 PUSH S3
 FIRST
 EQUAL
 THROWIFNOT 1005
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 719
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 742
 DEPTH
 ADDCONST -2
 PICK
@@ -6853,7 +6989,7 @@ FIRST
 MUL
 GEQ
 THROWIFNOT 1004
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 721
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 744
 PUSHINT 0
 PUSHCONT {
 	PUSH2 S0, S5
@@ -6862,7 +6998,7 @@ PUSHCONT {
 }
 PUSHCONT {
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 722
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 745
 		PUSH2 S0, S3
 		SECOND
 		PUSHINT 32
@@ -6925,7 +7061,7 @@ PUSHCONT {
 		}
 		IFELSE
 		FIRST
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 723
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 746
 		PUSH2 S1, S4
 		SECOND
 		PUSHINT 32
@@ -6970,7 +7106,7 @@ IFREFELSEREF
 			TRIPLE
 			PAIR
 }
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 726
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 749
 		SWAP
 		EQINT 1
 		DUP
@@ -6998,7 +7134,7 @@ IFREFELSEREF
 		}
 		IF
 		PUSHCONT {
-			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 727
+			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 750
 			PUSH2 S1, S6
 			SECOND
 			PUSHINT 32
@@ -7039,12 +7175,12 @@ IFREFELSEREF
 			CALLREF {
 				CALL $_closePosition_48419fab_internal_macro$
 			}
-			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 730
+			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 753
 			DROP
 			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 		}
 		IFJMP
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 733
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 756
 		DROP
 		PUSH2 S0, S3
 		SECOND
@@ -7056,7 +7192,7 @@ IFREFELSEREF
 		CALLREF {
 			CALL $_deployOracleProxy_35c622c3_internal_macro$
 		}
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 734
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 757
 		PUSH2 S1, S5
 		SECOND
 		PUSHINT 32
@@ -7095,7 +7231,7 @@ IFREFELSEREF
 		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	}
 	CALLX
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 721
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 744
 	INC
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
@@ -7122,7 +7258,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 742
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 765
 OVER
 PUSHCONT {
 	LDU 32
@@ -7201,28 +7337,28 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 376
 ROLLREV 5
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 749
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 772
 PUSH S4
 FIRST
 PUSH S4
 FIRST
 EQUAL
 THROWIFNOT 1005
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 750
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 773
 PUSH S3
 FIRST
 PUSH S3
 FIRST
 EQUAL
 THROWIFNOT 1005
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 751
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 774
 PUSH S2
 FIRST
 PUSH S2
 FIRST
 EQUAL
 THROWIFNOT 1005
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 752
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 775
 DEPTH
 ADDCONST -2
 PICK
@@ -7232,7 +7368,7 @@ FIRST
 MUL
 GEQ
 THROWIFNOT 1004
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 754
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 777
 PUSHINT 0
 PUSHCONT {
 	PUSH2 S0, S5
@@ -7240,7 +7376,7 @@ PUSHCONT {
 	LESS
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 755
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 778
 	PUSH2 S0, S5
 	SECOND
 	PUSHINT 32
@@ -7272,7 +7408,7 @@ PUSHCONT {
 	CALLREF {
 		CALL $_closePosition_48419fab_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 754
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 777
 	INC
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
@@ -7299,7 +7435,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 761
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 784
 OVER
 PUSHCONT {
 	LDU 32
@@ -7367,20 +7503,20 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 359
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 767
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 790
 	DEPTH
 	ADDCONST -2
 	PICK
 	PUSHINT 2000000000
 	GEQ
 	THROWIFNOT 1004
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 771
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 794
 	PUSH S2
 	CALLREF {
 		CALL $marketOpen_fd98500f_internal_macro$
 	}
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 772
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 795
 		SWAP2
 		SWAP
 		GETGLOB 9
@@ -7396,7 +7532,7 @@ PUSHCONT {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 773
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 796
 		GETGLOB 9
 		OVER
 		SECOND
@@ -7406,12 +7542,12 @@ PUSHCONT {
 		CALLREF {
 			CALL $_sendCallbackOrGas_a7c3a26f_internal_macro$
 		}
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 774
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 797
 		DROP
 		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	}
 	IFNOTJMP
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 777
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 800
 	PUSH S2
 	PUSHINT 37
 	GETGLOBVAR
@@ -7469,7 +7605,7 @@ PUSHCONT {
 	}
 	IFELSE
 	FIRST
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 778
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 801
 	PUSH S3
 	PUSHINT 40
 	GETGLOBVAR
@@ -7509,7 +7645,7 @@ IFREFELSEREF
 		TRIPLE
 		PAIR
 }
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 781
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 804
 	SWAP
 	EQINT 1
 	DUP
@@ -7523,7 +7659,7 @@ IFREFELSEREF
 	}
 	IF
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 782
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 805
 		GETGLOB 9
 		BLKSWAP 3, 3
 		FIRST
@@ -7532,12 +7668,12 @@ IFREFELSEREF
 		CALLREF {
 			CALL $_closePosition_48419fab_internal_macro$
 		}
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 783
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 806
 		DROP
 		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	}
 	IFJMP
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 786
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 809
 	DROP
 	GETGLOB 9
 	BLKSWAP 2, 3
@@ -7547,7 +7683,7 @@ IFREFELSEREF
 	}
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	DROP
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 761
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 784
 }
 CALLX
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -7561,7 +7697,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 795
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 818
 OVER
 PUSHCONT {
 	LDU 64
@@ -7598,7 +7734,7 @@ CALLREF {
 THROW 0
 
 .macro oracle_closePosition_9ac349d3_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 795
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 818
 ROLL 5
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 348
 CALLREF {
@@ -7614,7 +7750,7 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 803
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 826
 ROLLREV 4
 PUSHINT 0
 ROLL 5
@@ -7628,22 +7764,22 @@ CALLREF {
 CALL $_closePosition_48419fab_internal_macro$
 
 .macro _closePosition_48419fab_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 814
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 837
 OVER
 PUSHINT 0
 PUSHPOW2 7
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 815
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 838
 BLKPUSH 2, 4
 CALLREF {
 	CALL $_updateFunding_4e7c360e_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 816
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 839
 ROLL 7
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 817
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 840
 GETGLOB 20
 SECOND
 ROLLREV 3
@@ -7692,7 +7828,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 827
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 850
 OVER
 PUSHCONT {
 	LDREF
@@ -7723,7 +7859,7 @@ IFREF {
 THROW 0
 
 .macro revert_closePosition_e689807d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 827
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 850
 PUSH S3
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -7744,7 +7880,7 @@ RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 370
 SWAP
 REVERSE 4, 1
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 830
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 853
 FIRST
 PUSHSLICE xc000000000000000000000000061b0edef
 NEWC
@@ -7777,7 +7913,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 833
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 856
 OVER
 PUSHCONT {
 	LDREF
@@ -7854,7 +7990,7 @@ CALLREF {
 THROW 0
 
 .macro finish_closePosition_5e3a402b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 833
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 856
 PUSH S6
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -7870,20 +8006,20 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 843
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 866
 PUSH S3
 INDEX2 0, 2
 PUSH S4
 INDEX2 0, 3
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 844
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 867
 GETGLOB 26
 OVER
 SUB
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 846
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 869
 PUSH2 S0, S4
 FIRST
 INDEX 6
@@ -7893,7 +8029,7 @@ INDEX 4
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 847
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 870
 PUSH S5
 INDEX2 0, 0
 SWAP
@@ -7903,17 +8039,17 @@ INDEX2 0, 1
 CALLREF {
 	CALL $_removePositionFromMarket_05d8247f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 854
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 877
 PUSH S4
 INDEX 8
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 856
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 879
 	PUSH3 S0, S3, S2
 	PUSH2 S9, S4
 	CALLREF {
 		CALL $_collectPnlAndReferral_1739b4b8_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 858
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 881
 	PUSH3 S4, S5, S6
 	PUSH2 S9, S4
 	FIRST
@@ -7974,7 +8110,7 @@ PUSHCONT {
 	ENDC
 	PUSHINT 0
 	SENDRAWMSG
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 859
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 882
 	PUSH2 S6, S1
 	SECOND
 	TRUE
@@ -7986,17 +8122,17 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 861
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 884
 	DUP
 	GETGLOB 30
 	PUSHINT 1000000000000
 	MULDIV
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 862
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 885
 	PUSH S5
 	INDEX 7
 	MIN
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 864
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 887
 	PUSH S5
 	INDEX 3
 	SUB
@@ -8005,7 +8141,7 @@ PUSHCONT {
 	INDEX 4
 	SUB
 	FITS 256
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 865
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 888
 	PUSH S5
 	INDEX 5
 	BLKPUSH 2, 5
@@ -8013,13 +8149,13 @@ PUSHCONT {
 	CALLREF {
 		CALL $_collectCloseFeeAndReferral_ee06876b_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 867
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 890
 	PUSHINT 0
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 868
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 891
 	OVER
 	LESSINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 870
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 893
 		OVER
 		ABS
 		FITS 256
@@ -8032,11 +8168,11 @@ PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	}
 	IF
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 872
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 895
 	OVER
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 874
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 897
 		OVER
 		UFITS 128
 		CALLREF {
@@ -8046,7 +8182,7 @@ PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	}
 	IF
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 877
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 900
 	PUSH3 S6, S7, S8
 	PUSH S6
 	FIRST
@@ -8103,7 +8239,7 @@ PUSHCONT {
 	ENDC
 	PUSHINT 0
 	SENDRAWMSG
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 879
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 902
 	PUSH S2
 	ROT
 	ADD
@@ -8116,7 +8252,7 @@ PUSHCONT {
 	SUB
 	FITS 256
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 880
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 903
 	GETGLOB 14
 	SECOND
 	XCPU S1, S9
@@ -8131,11 +8267,11 @@ PUSHCONT {
 	CALLREF {
 		CALL $_transfer_601b185b_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 881
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 904
 	DUP
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 882
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 905
 		PUSH3 S0, S7, S2
 		FIRST
 		PUSHSLICE xc000000000000000000000000073d6a843
@@ -8162,12 +8298,12 @@ BLKDROP 7
 CALL $_handleAddCollateral_db2ab25b_internal_macro$
 
 .macro _handleAddCollateral_db2ab25b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 890
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 913
 SWAP
 CALLREF {
 	CALL $decodeAddCollateral_dd98792d_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 892
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 915
 OVER
 CALLREF {
 	CALL $marketOpen_fd98500f_internal_macro$
@@ -8177,13 +8313,13 @@ PUSHCONT {
 	FALSE
 }
 IFNOTJMP
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 893
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 916
 ROT
 XCHG S3, S4
 CALLREF {
 	CALL $_addCollateral_fc1088f5_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 894
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 917
 TRUE
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 
@@ -8192,12 +8328,12 @@ TRUE
 CALL $_addCollateral_fc1088f5_internal_macro$
 
 .macro _addCollateral_fc1088f5_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 904
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 927
 ROLL 3
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 905
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 928
 GETGLOB 20
 SECOND
 SWAP
@@ -8235,7 +8371,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 914
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 937
 OVER
 PUSHCONT {
 	LDREF
@@ -8268,7 +8404,7 @@ CALLREF {
 THROW 0
 
 .macro revert_addCollateral_753011a8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 914
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 937
 PUSH S4
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -8284,7 +8420,7 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 917
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 940
 PUSH S3
 SWAP2
 XCPU S1, S5
@@ -8301,7 +8437,7 @@ STU 128
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 919
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 942
 GETGLOB 14
 SECOND
 SWAP2
@@ -8327,7 +8463,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 924
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 947
 OVER
 PUSHCONT {
 	LDREF
@@ -8415,7 +8551,7 @@ CALLREF {
 THROW 0
 
 .macro finish_addCollateral_fb1d5cf2_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 924
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 947
 PUSH S5
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -8435,31 +8571,31 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 364
 ROLLREV 6
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 932
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 955
 GETGLOB 26
 PUSH S5
 ADD
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 934
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 957
 PUSH S3
 THIRD
 PUSH S4
 INDEX 3
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 935
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 958
 PUSH2 S0, S5
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 937
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 960
 ROLL 4
 PUSH S5
 INDEX 5
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 938
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 961
 XCPU S1, S4
 INDEX 6
 PUSH S5
@@ -8467,11 +8603,11 @@ INDEX 5
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 942
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 965
 DUP2
 NEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 943
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 966
 	PUSH S4
 	FIRST
 	PUSHINT 37
@@ -8529,7 +8665,7 @@ PUSHCONT {
 		TUPLE 14
 	}
 	IFELSE
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 945
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 968
 	PUSH S5
 	FIRST
 	PUSH2 S3, S1
@@ -8539,7 +8675,7 @@ PUSHCONT {
 	CALLREF {
 		CALL $_removePositionFromMarket_05d8247f_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 952
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 975
 	PUSH S5
 	FIRST
 	PUSH S2
@@ -8553,7 +8689,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 960
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 983
 DROP2
 XCHG S1, S2
 XCHG S1, S4
@@ -8614,7 +8750,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 963
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 986
 OVER
 PUSHCONT {
 	LDU 128
@@ -8667,20 +8803,20 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 359
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 966
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 989
 	DEPTH
 	ADDCONST -2
 	PICK
 	PUSHINT 2000000000
 	GEQ
 	THROWIFNOT 1004
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 970
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 993
 	OVER
 	CALLREF {
 		CALL $marketOpen_fd98500f_internal_macro$
 	}
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 971
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 994
 		ROLLREV 3
 		SWAP
 		GETGLOB 9
@@ -8697,7 +8833,7 @@ PUSHCONT {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 972
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 995
 		GETGLOB 9
 		OVER
 		SECOND
@@ -8710,12 +8846,12 @@ PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 	}
 	IFNOTJMP
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 976
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 999
 	GETGLOB 9
 	CALLREF {
 		CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 977
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1000
 	GETGLOB 20
 	SECOND
 	ROT
@@ -8806,7 +8942,7 @@ PUSHCONT {
 	ENDC
 	PUSHPOW2 7
 	SENDRAWMSG
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 963
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 986
 }
 CALLX
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -8820,7 +8956,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 988
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1011
 OVER
 PUSHCONT {
 	LDREF
@@ -8853,7 +8989,7 @@ CALLREF {
 THROW 0
 
 .macro revert_removeCollateral_ad61c68e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 988
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1011
 PUSH S4
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -8875,7 +9011,7 @@ RAWRESERVE
 SWAP
 XCHG S1, S5
 XCHG S2, S3
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 991
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1014
 FIRST
 PUSHSLICE xc000000000000000000000000022ce5397
 NEWC
@@ -8909,7 +9045,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 994
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1017
 OVER
 PUSHCONT {
 	LDREF
@@ -8997,7 +9133,7 @@ CALLREF {
 THROW 0
 
 .macro finish_removeCollateral_e827840c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 994
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1017
 PUSH S5
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -9013,31 +9149,31 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1002
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1025
 GETGLOB 26
 PUSH S5
 SUB
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1004
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1027
 PUSH S3
 THIRD
 PUSH S4
 INDEX 3
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1005
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1028
 PUSH2 S0, S5
 ADD
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1007
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1030
 ROLL 4
 PUSH S5
 INDEX 5
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1008
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1031
 XCPU S1, S4
 INDEX 6
 PUSH S5
@@ -9045,11 +9181,11 @@ INDEX 5
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1012
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1035
 DUP2
 NEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1013
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1036
 	PUSH S4
 	FIRST
 	PUSHINT 37
@@ -9107,7 +9243,7 @@ PUSHCONT {
 		TUPLE 14
 	}
 	IFELSE
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1015
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1038
 	PUSH S5
 	FIRST
 	PUSH2 S3, S1
@@ -9117,7 +9253,7 @@ PUSHCONT {
 	CALLREF {
 		CALL $_removePositionFromMarket_05d8247f_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1022
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1045
 	PUSH S5
 	FIRST
 	PUSH S2
@@ -9131,7 +9267,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1030
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1053
 DROP2
 ROT
 PUSH S3
@@ -9173,7 +9309,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1031
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1054
 GETGLOB 14
 SECOND
 SWAP2
@@ -9199,7 +9335,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1040
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1063
 OVER
 PUSHCONT {
 	LDDICT
@@ -9250,7 +9386,7 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 376
 ROTREV
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1044
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1067
 PUSH2 S1, S1
 PUSHINT 32
 DICTUMIN
@@ -9284,7 +9420,7 @@ PUSHCONT {
 }
 PUSHCONT {
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1046
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1069
 		OVER
 		PUSHINT 37
 		GETGLOBVAR
@@ -9342,7 +9478,7 @@ PUSHCONT {
 		}
 		IFELSE
 		FIRST
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1047
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1070
 		PUSH S2
 		PUSHINT 40
 		GETGLOBVAR
@@ -9382,7 +9518,7 @@ IFREFELSEREF
 			TRIPLE
 			PAIR
 }
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1050
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1073
 		SWAP
 		EQINT 1
 		DUP
@@ -9398,7 +9534,7 @@ IFREFELSEREF
 		}
 		IF
 		PUSHCONT {
-			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1051
+			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1074
 			OVER
 			INDEX2 1, 0
 			PUSHINT 1050000000
@@ -9407,7 +9543,7 @@ IFREFELSEREF
 			PUSHINT 500000000
 			ADD
 			UFITS 128
-			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1052
+			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1075
 			PUSHINT 0
 			PUSH2 S7, S3
 			INDEX2 0, 0
@@ -9449,12 +9585,12 @@ IFREFELSEREF
 			ENDC
 			PUSHINT 0
 			SENDRAWMSG
-			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1060
+			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1083
 			DROP
 			.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 		}
 		IFJMP
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1063
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1086
 		DROP
 		GETGLOB 9
 		BLKPUSH 2, 2
@@ -9517,7 +9653,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1067
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1090
 OVER
 PUSHCONT {
 	LDREF
@@ -9552,7 +9688,7 @@ IFREF {
 THROW 0
 
 .macro revert_liquidatePositions_8285ee35_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1067
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1090
 PUSH S4
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -9574,7 +9710,7 @@ RAWRESERVE
 SWAP
 XCHG S4, S5
 REVERSE 5, 1
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1070
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1093
 FIRST
 PUSHREFSLICE {
 	.blob xc0000000000000000000000001
@@ -9617,7 +9753,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1073
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1096
 OVER
 PUSHCONT {
 	LDU 64
@@ -9658,7 +9794,7 @@ CALLREF {
 THROW 0
 
 .macro oracle_liquidatePositions_062c4909_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1073
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1096
 ROLL 5
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 348
 CALLREF {
@@ -9674,7 +9810,7 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1076
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1099
 PUSHINT 0
 REVERSE 6, 0
 MYADDR
@@ -9722,7 +9858,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1091
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1114
 OVER
 PUSHCONT {
 	LDREF
@@ -9766,17 +9902,17 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1099
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1122
 GETGLOB 9
 MYADDR
 SDEQ
 THROWIFNOT 1007
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1101
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1124
 PUSH2 S4, S2
 CALLREF {
 	CALL $_updateFunding_4e7c360e_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1102
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1125
 OVER
 PUSHCONT {
 	PUSH2 S0, S5
@@ -9792,7 +9928,7 @@ PUSHCONT {
 	IF
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1103
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1126
 	PUSH2 S0, S5
 	SECOND
 	PUSHINT 32
@@ -9804,13 +9940,13 @@ PUSHCONT {
 		ENDS
 		PAIR
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1104
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1127
 	DUP
 	FIRST
 	CALLREF {
 		CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1106
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1129
 	GETGLOB 20
 	SECOND
 	PUSH3 S6, S4, S7
@@ -9859,20 +9995,20 @@ PUSHCONT {
 	ENDC
 	PUSHINT 0
 	SENDRAWMSG
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1102
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1125
 	INC
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 WHILE
 DROP2
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1117
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1140
 DUP
 ADDCONST 50
 PUSH S4
 FIRST
 LESS
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1118
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1141
 	DUP
 	ADDCONST 50
 	PUSH3 S2, S3, S4
@@ -9910,7 +10046,7 @@ PUSHCONT {
 	STBREFR
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1131
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1154
 	OVER
 	THIRD
 	NEWC
@@ -9935,7 +10071,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1135
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1158
 OVER
 PUSHCONT {
 	LDREF
@@ -10016,7 +10152,7 @@ CALLREF {
 THROW 0
 
 .macro finish_liquidatePositions_17543166_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1135
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1158
 PUSH S7
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
 CALLREF {
@@ -10032,20 +10168,20 @@ CALLREF {
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1146
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1169
 PUSH S3
 INDEX2 0, 2
 PUSH S4
 INDEX2 0, 3
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1147
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1170
 GETGLOB 26
 OVER
 SUB
 UFITS 128
 SETGLOB 26
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1150
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1173
 PUSH2 S0, S4
 FIRST
 INDEX 6
@@ -10055,7 +10191,7 @@ INDEX 4
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1151
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1174
 PUSH S5
 INDEX2 0, 0
 SWAP
@@ -10065,7 +10201,7 @@ INDEX2 0, 1
 CALLREF {
 	CALL $_removePositionFromMarket_05d8247f_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1158
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1181
 DUP
 PUSHINT 33
 GETGLOBVAR
@@ -10073,7 +10209,7 @@ SECOND
 PUSHINT 1000000000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1160
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1183
 TUCK
 SUB
 UFITS 128
@@ -10082,7 +10218,7 @@ PUSH2 S8, S4
 CALLREF {
 	CALL $_collectPnlAndReferral_1739b4b8_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1162
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1185
 SWAP2
 SWAP
 PUSH3 S4, S5, S3
@@ -10144,7 +10280,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1164
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1187
 GETGLOB 14
 SECOND
 SWAP
@@ -10160,7 +10296,7 @@ PUSHINT 1
 CALLREF {
 	CALL $_transfer_601b185b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1165
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1188
 TUCK
 SECOND
 TRUE
@@ -10180,7 +10316,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1176
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1199
 LDU 32
 LDU 128
 LDU 32
@@ -10226,13 +10362,13 @@ THROW 0
 CALL $checkPositionAllowed_2ddd5155_internal_macro$
 
 .macro checkPositionAllowed_2ddd5155_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1183
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1206
 SWAP2
 PUSH S3
 CALLREF {
 	CALL $calculatePositionAssetSize_d45aee73_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1184
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1207
 ROTREV
 CALLREF {
 	CALL $_calculatePositionImpactAndCheckAllowed_e225e56a_internal_macro$
@@ -10245,7 +10381,7 @@ BLKDROP2 2, 1
 CALL $_marketNOI_ec5aff11_internal_macro$
 
 .macro _marketNOI_ec5aff11_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1189
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1212
 DUP
 SECOND
 OVER
@@ -10276,16 +10412,16 @@ NIP
 CALL $_addPositionToMarketOrReturnErr_c261430f_internal_macro$
 
 .macro _addPositionToMarketOrReturnErr_c261430f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1202
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1225
 PUSH S3
 ROLLREV 3
 CALLREF {
 	CALL $_calculatePositionImpactAndCheckAllowed_e225e56a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1207
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1230
 DUP
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1208
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1231
 	PUSH S3
 	PUSHINT 37
 	GETGLOBVAR
@@ -10330,13 +10466,13 @@ PUSHCONT {
 	DICTUSETREF
 	PUSHINT 37
 	SETGLOBVAR
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1209
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1232
 	OVER
 	SETGLOB 27
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IFNOT
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1211
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1234
 BLKDROP2 3, 1
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 
@@ -10345,7 +10481,7 @@ BLKDROP2 3, 1
 CALL $_calculatePositionImpactAndCheckAllowed_e225e56a_internal_macro$
 
 .macro _calculatePositionImpactAndCheckAllowed_e225e56a_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1218
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1241
 PUSHINT 0
 BLKPUSH 8, 0
 PAIR
@@ -10357,7 +10493,7 @@ DUP
 TUPLE 14
 PUSHINT 0
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1224
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1247
 BLKSWAP 2, 5
 PUSH S6
 ROLL 6
@@ -10367,21 +10503,21 @@ CALLREF {
 }
 POP S3
 POP S3
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1226
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1249
 PUSH S2
 THIRD
 PUSH S4
 PUSHINT 100000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1227
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1250
 PUSH S3
 SECOND
 ROLL 5
 PUSHINT 100000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1229
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1252
 XCPU S1, S4
 INDEX 4
 GREATER
@@ -10390,13 +10526,13 @@ INDEX 3
 GREATER
 OR
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1229
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1252
 	DROP
 	PUSHINT 2002
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1231
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1254
 GETGLOB 28
 DUP
 PUSHCONT {
@@ -10412,7 +10548,7 @@ PUSHCONT {
 }
 IF
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1235
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1258
 	DROP
 	PUSHINT 2003
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -10425,7 +10561,7 @@ IF
 CALL $_calculatePositionImpact_16bc38e6_internal_macro$
 
 .macro _calculatePositionImpact_16bc38e6_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1247
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1270
 ROLL 4
 PUSHINT 37
 GETGLOBVAR
@@ -10482,23 +10618,23 @@ PUSHCONT {
 	TUPLE 14
 }
 IFELSE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1248
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1271
 GETGLOB 27
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1250
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1273
 OVER
 CALLREF {
 	CALL $_marketNOI_ec5aff11_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1251
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1274
 PUSH S2
 INDEX 5
 PUSHINT 100000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1253
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1276
 ROLL 4
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1256
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1279
 	PUSH S3
 	PUSHCONT {
 		PUSH S2
@@ -10519,7 +10655,7 @@ PUSHCONT {
 	SETINDEX 2
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1254
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1277
 	PUSH S3
 	PUSHCONT {
 		PUSH S2
@@ -10541,17 +10677,17 @@ PUSHCONT {
 }
 IFELSE
 POP S3
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1259
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1282
 PUSH S2
 CALLREF {
 	CALL $_marketNOI_ec5aff11_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1260
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1283
 PUSH S5
 PUSHINT 100000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1262
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1285
 XCPU S1, S3
 INDEX 6
 PUSHINT 100
@@ -10561,7 +10697,7 @@ PUSH S2
 SUBR
 UFITS 128
 POP S2
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1263
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1286
 PUSH S2
 INDEX 6
 PUSHINT 100
@@ -10569,7 +10705,7 @@ MULDIV
 UFITS 128
 ADD
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1265
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1288
 ROLL 3
 PUXC S2, S-1
 SETINDEX 5
@@ -10582,7 +10718,7 @@ BLKDROP2 2, 2
 CALL $_addPositionToMarket_a9b72b36_internal_macro$
 
 .macro _addPositionToMarket_a9b72b36_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1276
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1299
 PUSH S3
 ROLLREV 3
 FALSE
@@ -10641,7 +10777,7 @@ SETGLOB 27
 CALL $_removePositionFromMarket_05d8247f_internal_macro$
 
 .macro _removePositionFromMarket_05d8247f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1289
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1312
 PUSH S3
 ROLLREV 3
 TRUE
@@ -10700,7 +10836,7 @@ SETGLOB 27
 CALL $_updateFunding_4e7c360e_internal_macro$
 
 .macro _updateFunding_4e7c360e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1300
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1323
 OVER
 PUSHINT 37
 GETGLOBVAR
@@ -10757,27 +10893,27 @@ PUSHCONT {
 	TUPLE 14
 }
 IFELSE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1301
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1324
 DUP
 INDEX 8
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1301
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1324
 	NOW
 	SETINDEX 8
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IFNOT
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1303
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1326
 DUP
 ROT
 CALLREF {
 	CALL $_getUpdatedFunding_f29aabc8_internal_macro$
 }
 SETINDEX 7
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1304
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1327
 NOW
 SETINDEX 8
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1306
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1329
 PUSHINT 37
 GETGLOBVAR
 OVER
@@ -10822,7 +10958,7 @@ PUSHINT 32
 DICTUSETREF
 PUSHINT 37
 SETGLOBVAR
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1307
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1330
 INDEX 7
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 
@@ -10835,7 +10971,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1312
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1335
 LDDICT
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -10870,9 +11006,9 @@ IFREF {
 THROW 0
 
 .macro getUpdatedFunding_9dca0327_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1312
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1335
 NEWDICT
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1315
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1338
 XCPU S1, S0
 PUSHINT 32
 DICTUMIN
@@ -10892,7 +11028,7 @@ PUSHCONT {
 	NOT
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1316
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1339
 	OVER
 	PUSHINT 37
 	GETGLOBVAR
@@ -10991,15 +11127,15 @@ BLKDROP 4
 CALL $_getUpdatedFunding_f29aabc8_internal_macro$
 
 .macro _getUpdatedFunding_f29aabc8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1321
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1344
 PUSHINT 0
 DUP
 PAIR
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1322
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1345
 PUSH S2
 INDEX 8
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1322
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1345
 	PUSH S2
 	NOW
 	SETINDEX 8
@@ -11007,12 +11143,12 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
 }
 IFNOT
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1323
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1346
 PUSH S2
 CALLREF {
 	CALL $_getFundingRates_d23ad37c_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1325
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1348
 PUSH S4
 INDEX 7
 FIRST
@@ -11029,7 +11165,7 @@ FITS 256
 PUXC S2, S-1
 SETINDEX 0
 POP S2
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1332
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1355
 PUSH S3
 INDEX 7
 SECOND
@@ -11051,7 +11187,7 @@ SETINDEX 1
 CALL $_calculateFunding_cf764afd_internal_macro$
 
 .macro _calculateFunding_cf764afd_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1349
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1372
 PUSH S3
 EQINT 0
 PUSH S3
@@ -11062,7 +11198,7 @@ PUSHCONT {
 	PUSHINT 0
 }
 IFJMP
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1351
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1374
 ROLL 3
 PUSHINT 1000000000000000000
 MUL
@@ -11071,7 +11207,7 @@ PUSH S3
 PUSHINT 1000000000000
 MULDIV
 FITS 256
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1352
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1375
 NOW
 ROT
 SUB
@@ -11079,12 +11215,12 @@ UFITS 32
 PUSHINT 3600
 MULDIV
 FITS 256
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1353
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1376
 SWAP
 PUSHINT 100000000
 MULDIV
 FITS 256
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1354
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1377
 SWAP
 DIV
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -11098,7 +11234,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1358
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1381
 LDU 32
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -11140,7 +11276,7 @@ THROW 0
 CALL $getFundingRates_9c7b9555_internal_macro$
 
 .macro getFundingRates_9c7b9555_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1359
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1382
 PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
@@ -11206,10 +11342,10 @@ CALLREF {
 CALL $_getFundingRates_d23ad37c_internal_macro$
 
 .macro _getFundingRates_d23ad37c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1363
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1386
 PUSHINT 0
 PUSH2 S0, S1
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1364
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1387
 SECOND
 PUSH S3
 THIRD
@@ -11218,7 +11354,7 @@ FITS 256
 ABS
 FITS 256
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1365
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1388
 PUSH S3
 INDEX 11
 INDEX 5
@@ -11231,23 +11367,23 @@ UFITS 128
 PUSHINT 1000000000000000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1371
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1394
 PUSH S3
 SECOND
 PUSH S4
 THIRD
 GEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1372
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1395
 	DUP
 	FITS 128
 	POP S3
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1373
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1396
 	PUSH S3
 	THIRD
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1374
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1397
 		PUSHINT -1
 		PUSH2 S1, S4
 		SECOND
@@ -11264,16 +11400,16 @@ PUSHCONT {
 	IF
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1379
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1402
 	DUP
 	FITS 128
 	POP S2
-	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1380
+	.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1403
 	PUSH S3
 	SECOND
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1381
+		.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1404
 		PUSHINT -1
 		PUSH2 S1, S4
 		THIRD
@@ -11290,7 +11426,7 @@ PUSHCONT {
 	IF
 }
 IFELSE
-.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1384
+.loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 1407
 DROP
 BLKDROP2 1, 2
 .loc ../contracts/base/gravix_vault/GravixVaultOrders.tsol, 0
@@ -19723,51 +19859,6 @@ CALLREF {
 }
 THROW 60
 
-.globl	DateTime_with_obj_timestampFromDateTime_5e05bd6d
-.type	DateTime_with_obj_timestampFromDateTime_5e05bd6d, @function
-CALL $DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro$
-
-.macro DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro
-.loc ../contracts/libraries/DateTime.tsol, 130
-PUSH S5
-BLKSWAP 2, 4
-CALLREF {
-	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
-}
-PUSHINT 86400
-MUL
-ROLL 3
-PUSHINT 3600
-MUL
-ADD
-ROT
-MULCONST 60
-ADD
-ADD
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj_timestampFromDateTime_5e05bd6d
-.type	DateTime_no_obj_timestampFromDateTime_5e05bd6d, @function
-CALL $DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro$
-
-.macro DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro
-.loc ../contracts/libraries/DateTime.tsol, 130
-BLKSWAP 3, 3
-CALLREF {
-	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
-}
-PUSHINT 86400
-MUL
-ROLL 3
-PUSHINT 3600
-MUL
-ADD
-ROT
-MULCONST 60
-ADD
-ADD
-.loc ../contracts/libraries/DateTime.tsol, 0
-
 .globl	DateTime_with_obj_timestampToDateTime_ea1c1690
 .type	DateTime_with_obj_timestampToDateTime_ea1c1690, @function
 CALL $DateTime_with_obj_timestampToDateTime_ea1c1690_macro$
@@ -19847,246 +19938,49 @@ PUSHINT 60
 MOD
 .loc ../contracts/libraries/DateTime.tsol, 0
 
-.globl	DateTime_with_obj__daysFromDate_1e0582e9
-.type	DateTime_with_obj__daysFromDate_1e0582e9, @function
-CALL $DateTime_with_obj__daysFromDate_1e0582e9_macro$
+.globl	DateTime_with_obj_timestampFromDateTime_5e05bd6d
+.type	DateTime_with_obj_timestampFromDateTime_5e05bd6d, @function
+CALL $DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro$
 
-.macro DateTime_with_obj__daysFromDate_1e0582e9_macro
-.loc ../contracts/libraries/DateTime.tsol, 65
-PUSH S2
-PUSHINT 1970
-GEQ
-THROWIFNOT 100
-.loc ../contracts/libraries/DateTime.tsol, 66
-PUSH S2
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 67
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 68
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 70
-PUSHINT 32075
-SUB
-FITS 256
-PUSHINT 1461
-PUSH S3
-PUSHINT 4800
-ADD
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
+.macro DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro
+.loc ../contracts/libraries/DateTime.tsol, 130
+PUSH S5
+BLKSWAP 2, 4
 CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
 }
-ADD
-FITS 256
+PUSHINT 86400
 MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 367
-PUSH S2
-ADDCONST -2
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-MULCONST 12
-FITS 256
-SUB
-FITS 256
-MUL
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 3
 ROLL 3
-PUSHINT 4900
-ADD
-FITS 256
-ROLL 3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 100
-DIV
+PUSHINT 3600
 MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-SUB
-FITS 256
-PUSHINT 2440588
-SUB
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 76
-UFITS 256
+ADD
+ROT
+MULCONST 60
+ADD
+ADD
 .loc ../contracts/libraries/DateTime.tsol, 0
 
-.globl	DateTime_no_obj__daysFromDate_1e0582e9
-.type	DateTime_no_obj__daysFromDate_1e0582e9, @function
-CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
+.globl	DateTime_no_obj_timestampFromDateTime_5e05bd6d
+.type	DateTime_no_obj_timestampFromDateTime_5e05bd6d, @function
+CALL $DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro$
 
-.macro DateTime_no_obj__daysFromDate_1e0582e9_macro
-.loc ../contracts/libraries/DateTime.tsol, 65
-PUSH S2
-PUSHINT 1970
-GEQ
-THROWIFNOT 100
-.loc ../contracts/libraries/DateTime.tsol, 66
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 67
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 68
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 70
-PUSHINT 32075
-SUB
-FITS 256
-PUSHINT 1461
-PUSH S3
-PUSHINT 4800
-ADD
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
+.macro DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro
+.loc ../contracts/libraries/DateTime.tsol, 130
+BLKSWAP 3, 3
 CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
 }
-ADD
-FITS 256
+PUSHINT 86400
 MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 367
-PUSH S2
-ADDCONST -2
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-MULCONST 12
-FITS 256
-SUB
-FITS 256
-MUL
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 3
 ROLL 3
-PUSHINT 4900
-ADD
-FITS 256
-ROLL 3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 100
-DIV
+PUSHINT 3600
 MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-SUB
-FITS 256
-PUSHINT 2440588
-SUB
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 76
-UFITS 256
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_with_obj__ethDiv_7c6f9b67
-.type	DateTime_with_obj__ethDiv_7c6f9b67, @function
-CALL $DateTime_with_obj__ethDiv_7c6f9b67_macro$
-
-.macro DateTime_with_obj__ethDiv_7c6f9b67_macro
-.loc ../contracts/libraries/DateTime.tsol, 45
-OVER
-LESSINT 0
-OVER
-LESSINT 0
-OR
-PUSHCONT {
-	.loc ../contracts/libraries/DateTime.tsol, 46
-	PUXC S1, S-1
-	DIVC
-	.loc ../contracts/libraries/DateTime.tsol, 0
-}
-IFJMP
-.loc ../contracts/libraries/DateTime.tsol, 48
-PUXC S1, S-1
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj__ethDiv_7c6f9b67
-.type	DateTime_no_obj__ethDiv_7c6f9b67, @function
-CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-
-.macro DateTime_no_obj__ethDiv_7c6f9b67_macro
-.loc ../contracts/libraries/DateTime.tsol, 45
-OVER
-LESSINT 0
-OVER
-LESSINT 0
-OR
-PUSHCONT {
-	.loc ../contracts/libraries/DateTime.tsol, 46
-	DIVC
-	.loc ../contracts/libraries/DateTime.tsol, 0
-}
-IFJMP
-.loc ../contracts/libraries/DateTime.tsol, 48
-DIV
+ADD
+ROT
+MULCONST 60
+ADD
+ADD
 .loc ../contracts/libraries/DateTime.tsol, 0
 
 .globl	DateTime_with_obj__daysToDate_90059aed
@@ -20353,6 +20247,248 @@ POP S2
 UFITS 256
 .loc ../contracts/libraries/DateTime.tsol, 0
 
+.globl	DateTime_with_obj__ethDiv_7c6f9b67
+.type	DateTime_with_obj__ethDiv_7c6f9b67, @function
+CALL $DateTime_with_obj__ethDiv_7c6f9b67_macro$
+
+.macro DateTime_with_obj__ethDiv_7c6f9b67_macro
+.loc ../contracts/libraries/DateTime.tsol, 45
+OVER
+LESSINT 0
+OVER
+LESSINT 0
+OR
+PUSHCONT {
+	.loc ../contracts/libraries/DateTime.tsol, 46
+	PUXC S1, S-1
+	DIVC
+	.loc ../contracts/libraries/DateTime.tsol, 0
+}
+IFJMP
+.loc ../contracts/libraries/DateTime.tsol, 48
+PUXC S1, S-1
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj__ethDiv_7c6f9b67
+.type	DateTime_no_obj__ethDiv_7c6f9b67, @function
+CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+
+.macro DateTime_no_obj__ethDiv_7c6f9b67_macro
+.loc ../contracts/libraries/DateTime.tsol, 45
+OVER
+LESSINT 0
+OVER
+LESSINT 0
+OR
+PUSHCONT {
+	.loc ../contracts/libraries/DateTime.tsol, 46
+	DIVC
+	.loc ../contracts/libraries/DateTime.tsol, 0
+}
+IFJMP
+.loc ../contracts/libraries/DateTime.tsol, 48
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_with_obj__daysFromDate_1e0582e9
+.type	DateTime_with_obj__daysFromDate_1e0582e9, @function
+CALL $DateTime_with_obj__daysFromDate_1e0582e9_macro$
+
+.macro DateTime_with_obj__daysFromDate_1e0582e9_macro
+.loc ../contracts/libraries/DateTime.tsol, 65
+PUSH S2
+PUSHINT 1970
+GEQ
+THROWIFNOT 100
+.loc ../contracts/libraries/DateTime.tsol, 66
+PUSH S2
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 67
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 68
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 70
+PUSHINT 32075
+SUB
+FITS 256
+PUSHINT 1461
+PUSH S3
+PUSHINT 4800
+ADD
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 367
+PUSH S2
+ADDCONST -2
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+MULCONST 12
+FITS 256
+SUB
+FITS 256
+MUL
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 3
+ROLL 3
+PUSHINT 4900
+ADD
+FITS 256
+ROLL 3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 100
+DIV
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+SUB
+FITS 256
+PUSHINT 2440588
+SUB
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 76
+UFITS 256
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj__daysFromDate_1e0582e9
+.type	DateTime_no_obj__daysFromDate_1e0582e9, @function
+CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
+
+.macro DateTime_no_obj__daysFromDate_1e0582e9_macro
+.loc ../contracts/libraries/DateTime.tsol, 65
+PUSH S2
+PUSHINT 1970
+GEQ
+THROWIFNOT 100
+.loc ../contracts/libraries/DateTime.tsol, 66
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 67
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 68
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 70
+PUSHINT 32075
+SUB
+FITS 256
+PUSHINT 1461
+PUSH S3
+PUSHINT 4800
+ADD
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 367
+PUSH S2
+ADDCONST -2
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+MULCONST 12
+FITS 256
+SUB
+FITS 256
+MUL
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 3
+ROLL 3
+PUSHINT 4900
+ADD
+FITS 256
+ROLL 3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 100
+DIV
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+SUB
+FITS 256
+PUSHINT 2440588
+SUB
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 76
+UFITS 256
+.loc ../contracts/libraries/DateTime.tsol, 0
+
 .globl	DateTime_with_obj_getDayOfWeek_22f8a2b8
 .type	DateTime_with_obj_getDayOfWeek_22f8a2b8, @function
 CALL $DateTime_with_obj_getDayOfWeek_22f8a2b8_macro$
@@ -20386,11 +20522,11 @@ INC
 
 .macro public_function_selector
 DUP
-PUSHINT 1094704576
+PUSHINT 1091731520
 LEQ
 IFJMPREF {
 	DUP
-	PUSHINT 264918055
+	PUSHINT 261280394
 	LEQ
 	IFJMPREF {
 		DUP
@@ -20423,9 +20559,15 @@ IFJMPREF {
 			}
 		}
 		DUP
-		PUSHINT 93514290
+		PUSHINT 89573979
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 71011940
+			EQUAL
+			IFJMPREF {
+				CALL $revert_executeLimitOrder$
+			}
 			DUP
 			PUSHINT 71616830
 			EQUAL
@@ -20444,17 +20586,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setTreasury$
 			}
+		}
+		DUP
+		PUSHINT 187842694
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 93514290
 			EQUAL
 			IFJMPREF {
 				CALL $checkSign$
 			}
-		}
-		DUP
-		PUSHINT 223894846
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 150828372
 			EQUAL
@@ -20473,17 +20615,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $encodeMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 261280394
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 223894846
 			EQUAL
 			IFJMPREF {
 				CALL $setLiquidationThresholdRate$
 			}
-		}
-		DUP
-		PUSHINT 264918055
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 247773776
 			EQUAL
@@ -20502,22 +20644,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $usdtToStgUsdt$
 			}
+		}
+	}
+	DUP
+	PUSHINT 589592053
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 299010468
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 264918055
 			EQUAL
 			IFJMPREF {
 				CALL $getGravixAccountAddress$
 			}
-		}
-	}
-	DUP
-	PUSHINT 610402309
-	LEQ
-	IFJMPREF {
-		DUP
-		PUSHINT 315623222
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 267172059
 			EQUAL
@@ -20536,17 +20678,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $revert_removeCollateral$
 			}
+		}
+		DUP
+		PUSHINT 379532313
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 315623222
 			EQUAL
 			IFJMPREF {
 				CALL $finish_cancelMarketOrder$
 			}
-		}
-		DUP
-		PUSHINT 491501929
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 351916886
 			EQUAL
@@ -20565,17 +20707,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $finish_executeMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 565278305
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 491501929
 			EQUAL
 			IFJMPREF {
 				CALL $getCodes$
 			}
-		}
-		DUP
-		PUSHINT 568382654
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 510267413
 			EQUAL
@@ -20594,17 +20736,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $decodeTokenTransfer$
 			}
+		}
+		DUP
+		PUSHINT 589592053
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 568382654
 			EQUAL
 			IFJMPREF {
 				CALL $upgrade$
 			}
-		}
-		DUP
-		PUSHINT 610402309
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 579666856
 			EQUAL
@@ -20623,22 +20765,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $forceClosePositions$
 			}
+		}
+	}
+	DUP
+	PUSHINT 860970136
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 647668493
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 610402309
 			EQUAL
 			IFJMPREF {
 				CALL $setMarketsCommonWorkingHours$
 			}
-		}
-	}
-	DUP
-	PUSHINT 863352096
-	LEQ
-	IFJMPREF {
-		DUP
-		PUSHINT 682981493
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 643597393
 			EQUAL
@@ -20657,17 +20799,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $revert_cancelMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 773109784
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 682981493
 			EQUAL
 			IFJMPREF {
 				CALL $forceClosePositionsWithPrice$
 			}
-		}
-		DUP
-		PUSHINT 780474452
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 686033319
 			EQUAL
@@ -20686,17 +20828,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $getMarket$
 			}
+		}
+		DUP
+		PUSHINT 802788579
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 780474452
 			EQUAL
 			IFJMPREF {
 				CALL $finish_requestMarketOrder$
 			}
-		}
-		DUP
-		PUSHINT 807628409
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 781149731
 			EQUAL
@@ -20715,17 +20857,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $validateTimeInterval$
 			}
+		}
+		DUP
+		PUSHINT 860970136
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 807628409
 			EQUAL
 			IFJMPREF {
 				CALL $revert_closePosition$
 			}
-		}
-		DUP
-		PUSHINT 863352096
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 814317962
 			EQUAL
@@ -20744,22 +20886,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $stgUsdtToUsdt$
 			}
+		}
+	}
+	DUP
+	PUSHINT 1091731520
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 918680811
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 863352096
 			EQUAL
 			IFJMPREF {
 				CALL $finish_addCollateral$
 			}
-		}
-	}
-	DUP
-	PUSHINT 1094704576
-	LEQ
-	IFJMPREF {
-		DUP
-		PUSHINT 925683974
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 866620707
 			EQUAL
@@ -20778,17 +20920,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setTotalNOILimit$
 			}
+		}
+		DUP
+		PUSHINT 949794317
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 925683974
 			EQUAL
 			IFJMPREF {
 				CALL $checkPrice$
 			}
-		}
-		DUP
-		PUSHINT 956094269
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 935780399
 			EQUAL
@@ -20807,17 +20949,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $calculatePositionAssetSize$
 			}
+		}
+		DUP
+		PUSHINT 987055988
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 956094269
 			EQUAL
 			IFJMPREF {
 				CALL $encodeLiquidityDeposit$
 			}
-		}
-		DUP
-		PUSHINT 1002726366
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 968656511
 			EQUAL
@@ -20836,17 +20978,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $oracle_executeMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 1091731520
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1002726366
 			EQUAL
 			IFJMPREF {
 				CALL $decodeAddCollateral$
 			}
-		}
-		DUP
-		PUSHINT 1094704576
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1009059346
 			EQUAL
@@ -20865,12 +21007,6 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $forceUpgradeGravixAccountsByContracts$
 			}
-			DUP
-			PUSHINT 1094704576
-			EQUAL
-			IFJMPREF {
-				CALL $revert_addCollateral$
-			}
 		}
 	}
 }
@@ -20879,13 +21015,19 @@ PUSHINT 2132577113
 LEQ
 IFJMPREF {
 	DUP
-	PUSHINT 1418208498
+	PUSHINT 1396355438
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 1239843297
+		PUSHINT 1222698803
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 1094704576
+			EQUAL
+			IFJMPREF {
+				CALL $revert_addCollateral$
+			}
 			DUP
 			PUSHINT 1156155968
 			EQUAL
@@ -20904,17 +21046,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $decodeMarketOrder$
 			}
+		}
+		DUP
+		PUSHINT 1280044228
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1239843297
 			EQUAL
 			IFJMPREF {
 				CALL $setPricePubkey$
 			}
-		}
-		DUP
-		PUSHINT 1333059264
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1243748251
 			EQUAL
@@ -20933,17 +21075,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $oracle_closePosition$
 			}
+		}
+		DUP
+		PUSHINT 1368331614
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1333059264
 			EQUAL
 			IFJMPREF {
 				CALL $getMarketWeekends$
 			}
-		}
-		DUP
-		PUSHINT 1371162683
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1345850728
 			EQUAL
@@ -20962,17 +21104,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $onGravixAccountRequestUpgrade$
 			}
+		}
+		DUP
+		PUSHINT 1396355438
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1371162683
 			EQUAL
 			IFJMPREF {
 				CALL $getDynamicSpread$
 			}
-		}
-		DUP
-		PUSHINT 1418208498
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1373802292
 			EQUAL
@@ -20991,22 +21133,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setMaxPoolUtilRatio$
 			}
+		}
+	}
+	DUP
+	PUSHINT 1739861605
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 1511855509
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1418208498
 			EQUAL
 			IFJMPREF {
 				CALL $stgUsdtPrice$
 			}
-		}
-	}
-	DUP
-	PUSHINT 1745391003
-	LEQ
-	IFJMPREF {
-		DUP
-		PUSHINT 1515869711
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1446876287
 			EQUAL
@@ -21025,17 +21167,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $encodeTokenTransfer$
 			}
+		}
+		DUP
+		PUSHINT 1587106804
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1515869711
 			EQUAL
 			IFJMPREF {
 				CALL $finish_removeCollateral$
 			}
-		}
-		DUP
-		PUSHINT 1598947791
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1573628814
 			EQUAL
@@ -21054,17 +21196,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $getFundingRates$
 			}
+		}
+		DUP
+		PUSHINT 1622165144
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1598947791
 			EQUAL
 			IFJMPREF {
 				CALL $removeCollateral$
 			}
-		}
-		DUP
-		PUSHINT 1643400842
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1620027263
 			EQUAL
@@ -21083,17 +21225,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $withdrawReferralBalance$
 			}
+		}
+		DUP
+		PUSHINT 1739861605
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1643400842
 			EQUAL
 			IFJMPREF {
 				CALL $validateMarketConfig$
 			}
-		}
-		DUP
-		PUSHINT 1745391003
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1694671823
 			EQUAL
@@ -21112,12 +21254,6 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $encodeAddCollateral$
 			}
-			DUP
-			PUSHINT 1745391003
-			EQUAL
-			IFJMPREF {
-				CALL $onAcceptTokensBurn$
-			}
 		}
 	}
 	DUP
@@ -21125,9 +21261,15 @@ IFJMPREF {
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 1910190440
+		PUSHINT 1893244873
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 1745391003
+			EQUAL
+			IFJMPREF {
+				CALL $onAcceptTokensBurn$
+			}
 			DUP
 			PUSHINT 1811541104
 			EQUAL
@@ -21146,17 +21288,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $onAcceptTokensTransfer$
 			}
+		}
+		DUP
+		PUSHINT 1955353588
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1910190440
 			EQUAL
 			IFJMPREF {
 				CALL $finish_liquidatePositions$
 			}
-		}
-		DUP
-		PUSHINT 1972661195
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1934918785
 			EQUAL
@@ -21175,17 +21317,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $updateGravixAccountCode$
 			}
+		}
+		DUP
+		PUSHINT 2006511915
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1972661195
 			EQUAL
 			IFJMPREF {
 				CALL $revert_requestMarketOrder$
 			}
-		}
-		DUP
-		PUSHINT 2011637505
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1979337915
 			EQUAL
@@ -21204,18 +21346,23 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setOracleConfigs$
 			}
+		}
+		DUP
+		PUSHINT 2132577113
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 2011637505
 			EQUAL
 			IFJMPREF {
 				CALL $addMarkets$
 			}
-		}
-		DUP
-		PUSHINT 2132577113
-		EQUAL
-		IFJMPREF {
-			CALL $oracle_executeLimitOrder$
+			DUP
+			PUSHINT 2132577113
+			EQUAL
+			IFJMPREF {
+				CALL $oracle_executeLimitOrder$
+			}
 		}
 	}
 }
