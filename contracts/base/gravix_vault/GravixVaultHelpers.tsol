@@ -149,17 +149,26 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function encodeLimitOrder(
-        uint32 marketIdx,
-        PositionType positionType,
-        uint32 leverage,
-        uint128 targetPrice,
-        IPriceNode.Price price,
-        address referrer,
-        uint32 nonce,
-        uint32 callId
-    ) external pure returns (TvmCell payload) {
-        TvmCell cell = abi.encode(marketIdx, positionType, leverage, targetPrice, price, referrer);
-        return encodeTokenTransfer(Action.MarketOrder, nonce, callId, cell);
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint32 _leverage,
+        uint128 _targetPrice,
+        IPriceNode.Price _price,
+        LimitOrderType _limitOrderType,
+        address _referrer,
+        uint32 _nonce,
+        uint32 _callId
+    ) external pure returns (TvmCell) {
+        TvmCell cell = abi.encode(
+            _marketIdx,
+            _positionType,
+            _leverage,
+            _targetPrice,
+            _limitOrderType,
+            _price,
+            _referrer
+        );
+        return encodeTokenTransfer(Action.MarketOrder, _nonce, _callId, cell);
     }
 
     function decodeLimitOrder(
@@ -169,12 +178,30 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         PositionType positionType,
         uint32 leverage,
         uint128 targetPrice,
+        LimitOrderType _limitOrderType,
         IPriceNode.Price price,
         address referrer
     ) {
         (
-        marketIdx, positionType, leverage, targetPrice, price, referrer
-        ) = abi.decode(actionPayload, (uint32, PositionType, uint32, uint128, uint64, IPriceNode.Price, address));
+            marketIdx,
+            positionType,
+            leverage,
+            targetPrice,
+            _limitOrderType,
+            price,
+            referrer
+        ) = abi.decode(
+            actionPayload,
+                (
+                    uint32,
+                    PositionType,
+                    uint32,
+                    uint128,
+                    LimitOrderType,
+                    IPriceNode.Price,
+                    address
+                )
+        );
     }
 
     function encodeAddCollateral(

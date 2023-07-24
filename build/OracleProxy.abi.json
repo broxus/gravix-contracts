@@ -29,6 +29,22 @@
 			]
 		},
 		{
+			"name": "setRequestLimitCallback",
+			"inputs": [
+				{"name":"_user","type":"address"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_collateral","type":"uint128"},
+				{"name":"_leverage","type":"uint32"},
+				{"name":"_positionType","type":"uint8"},
+				{"name":"_limitOrderType","type":"uint8"},
+				{"name":"_referer","type":"address"},
+				{"name":"_targetPrice","type":"uint128"},
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"_userPrice","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setCloseCallback",
 			"inputs": [
 				{"name":"_user","type":"address"},
@@ -90,6 +106,10 @@
 		{"name":"collateral","type":"uint128"},
 		{"name":"leverage","type":"uint32"},
 		{"name":"positionType","type":"uint8"},
+		{"name":"limitOrderType","type":"uint8"},
+		{"name":"referer","type":"address"},
+		{"name":"targetPrice","type":"uint128"},
+		{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"userPrice","type":"tuple"},
 		{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
 		{"name":"liquidator","type":"address"},
 		{"name":"callbackType","type":"uint8"},

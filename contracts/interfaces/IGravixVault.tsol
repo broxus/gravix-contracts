@@ -22,6 +22,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         StopOrder
     }
 
+    enum LimitOrderType { Limit, Stop }
+
     struct Time {
         uint8 hour;
         uint8 minute;
@@ -139,6 +141,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         PositionType positionType;
         uint128 collateral;
         uint128 targetPrice;
+        LimitOrderType orderType;
         uint32 leverage;
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
@@ -326,17 +329,23 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 assetPrice,
         Callback.CallMeta meta
     ) external;
+
+
     function oracle_executeLimitOrder(
-        uint64 nonce,
-        address user,
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 collateral,
-        uint32 leverage,
-        PositionType positionType,
-        uint128 assetPrice,
-        Callback.CallMeta meta
+        uint64 _nonce,
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _targetPrice,
+        LimitOrderType _limitOrderType,
+        IPriceNode.Price _price,
+        address _referrer,
+        Callback.CallMeta _meta,
+        uint128 _assetPrice
     ) external;
+
     function finish_requestMarketOrder(uint32 reqNonce, PendingMarketOrder request, uint32 positionKey) external;
     function revert_requestMarketOrder(uint32 _reqNonce, PendingMarketOrder _pendRequest) external;
     function revert_executeMarketOrder(

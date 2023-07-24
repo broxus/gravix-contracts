@@ -31,6 +31,10 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     uint128 collateral;
     uint32 leverage;
     IGravixVault.PositionType positionType;
+    IGravixVault.LimitOrderType limitOrderType;
+    address referer;
+    uint128 targetPrice;
+    IPriceNode.Price userPrice;
 
     // this is set for liquidations
     IGravixVault.PositionIdx[] positions;
@@ -81,12 +85,17 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         callbackType = CallbackType.Execute;
         _collectPrice(user);
     }
-    function setExecuteLimitCallback(
+
+    function setRequestLimitCallback(
         address _user,
         uint32 _positionKey,
         uint128 _collateral,
         uint32 _leverage,
-        IGravixVault.PositionType _positionType
+        IGravixVault.PositionType _positionType,
+        IGravixVault.LimitOrderType _limitOrderType,
+        address _referer,
+        uint128 _targetPrice,
+        IPriceNode.Price _userPrice
     ) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
@@ -96,6 +105,10 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         leverage = _leverage;
         positionType = _positionType;
         callbackType = CallbackType.ExecuteLimit;
+        limitOrderType = _limitOrderType;
+        referer = _referer;
+        targetPrice = _targetPrice;
+        userPrice = _userPrice;
         _collectPrice(user);
     }
 
@@ -162,13 +175,17 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
             IGravixVault(vault).oracle_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,
                 user,
-                positionKey,
                 marketIdx,
+                positionType,
                 collateral,
                 leverage,
-                positionType,
-                price,
-                meta
+                targetPrice,
+                limitOrderType,
+                userPrice,
+                referer,
+                meta,
+                price
+
             );
         } else if (callbackType == CallbackType.Close) {
             IGravixVault(vault).oracle_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(

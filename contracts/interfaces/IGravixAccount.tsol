@@ -91,21 +91,12 @@ interface IGravixAccount {
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;
-    function process_requestLimitOrder(
-        uint32 reqNonce,
-        IGravixVault.PendingLimitOrder pendingRequest,
-        uint32 accountVersion
-    ) external;
+
     function process_executeLimitOrder(
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 positionSize,
-        IGravixVault.PositionType positionType,
-        uint128 assetPrice,
-        uint64 dynamicSpread,
-        int256 accUSDFundingPerShare,
-        Callback.CallMeta meta,
-        uint32 accountVersion
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint128 _assetPrice,
+        int256 _accUSDFundingPerShare,
+        uint32 _accountVersion
     ) external;
     function process_closePosition(
         uint32 positionKey,

@@ -84,6 +84,17 @@
 			]
 		},
 		{
+			"name": "process_executeLimitOrder",
+			"inputs": [
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"targetPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendingRequest","type":"tuple"},
+				{"name":"_assetPrice","type":"uint128"},
+				{"name":"_accUSDFundingPerShare","type":"int256"},
+				{"name":"_accountVersion","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "process_cancelMarketOrder",
 			"inputs": [
 				{"name":"_positionKey","type":"uint32"},
@@ -233,6 +244,14 @@
 			]
 		},
 		{
+			"name": "limitOrders",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"targetPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"}],"name":"limitOrders","type":"map(uint32,tuple)"}
+			]
+		},
+		{
 			"name": "positions",
 			"inputs": [
 			],
@@ -257,6 +276,7 @@
 		{"name":"referralBalance","type":"uint128"},
 		{"name":"platformCode","type":"cell"},
 		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"}],"name":"marketOrders","type":"map(uint32,tuple)"},
+		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"targetPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"}],"name":"limitOrders","type":"map(uint32,tuple)"},
 		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"}],"name":"positions","type":"map(uint32,tuple)"},
 		{"name":"requestCounter","type":"uint32"},
 		{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"firstRequest","type":"tuple"},
