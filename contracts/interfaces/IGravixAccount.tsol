@@ -92,12 +92,11 @@ interface IGravixAccount {
         uint32 accountVersion
     ) external;
 
-    function process_executeLimitOrder(
-        uint32 positionKey,
+    function process_requestLimitOrder(
+        uint32 reqNonce,
         uint128 positionSizeAsset,
         IGravixVault.PendingLimitOrder _pendingRequest,
         uint128 _assetPrice,
-        int256 _accUSDFundingPerShare,
         uint32 _accountVersion
     ) external;
     function process_closePosition(

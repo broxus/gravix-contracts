@@ -175,22 +175,21 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_executeLimitOrder(
-            uint32 positionKey,
-            uint128 _positionSizeAsset,
-            IGravixVault.PendingLimitOrder _pendingRequest,
-            uint128 _assetPrice,
-            int256 _accUSDFundingPerShare,
-            uint32 _accountVersion
+    function process_requestLimitOrder(
+        uint32 _reqNonce,
+        uint128 _positionSizeAsset,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint128 _assetPrice,
+        uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
         if (_accountVersion != currentVersion) {
 
             requestUpgrade(user, currentVersion, _pendingRequest.meta);
 
-            IGravixVault(vault).revert_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
-                positionKey,
+                _reqNonce,
                 _pendingRequest.marketIdx,
                 _pendingRequest.collateral,
                 _positionSizeAsset,
@@ -216,9 +215,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         // check if request exists + double check market idx
         if (_pendingRequest.collateral == 0) {
-            IGravixVault(vault).revert_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
-                requestCounter,
+                _reqNonce,
                 _pendingRequest.marketIdx,
                 0,
                 _positionSizeAsset,
@@ -242,9 +241,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             : _assetPrice <= openPrice;
 
         if (!isPriceOk) {
-            IGravixVault(vault).revert_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
-                positionKey,
+                _reqNonce,
                 _pendingRequest.marketIdx,
                 0,
                 _positionSizeAsset,
@@ -255,33 +254,10 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        uint128 leveragedPositionUsd = math.muldiv(_pendingRequest.collateral, _pendingRequest.leverage, Constants.LEVERAGE_BASE);
-        uint128 openFee = math.muldiv(leveragedPositionUsd, _pendingRequest.openFeeRate, Constants.HUNDRED_PERCENT);
-
-        Position openedPosition = Position(
-            _pendingRequest.marketIdx,
-            _pendingRequest.positionType,
-            _pendingRequest.collateral,
-            openFee,
-            openPrice,
-            _assetPrice,
-            _pendingRequest.leverage,
-            _accUSDFundingPerShare,
-            _pendingRequest.borrowBaseRatePerHour,
-            _pendingRequest.baseSpreadRate,
-            _pendingRequest.closeFeeRate,
-            _pendingRequest.liquidationThresholdRate,
-            now
-        );
-        positions[requestCounter] = openedPosition;
-
-        IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user,
-            requestCounter,
-            openedPosition,
-            referrer,
-            grandReferrer,
-            _pendingRequest.meta
+        IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _reqNonce,
+            _pendingRequest,
+            requestCounter
         );
     }
 

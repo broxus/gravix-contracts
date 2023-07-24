@@ -333,7 +333,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     ) external;
 
 
-    function oracle_executeLimitOrder(
+    function oracle_requestLimitOrder(
         uint64 _nonce,
         address _user,
         uint32 _marketIdx,
@@ -364,7 +364,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function revert_cancelMarketOrder(address user, uint32 positionKey, Callback.CallMeta meta) external view;
     function finish_cancelMarketOrder(address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta) external;
 
-    function revert_executeLimitOrder(
+    function revert_requestLimitOrder(
         address user,
         uint32 positionKey,
         uint32 marketIdx,
