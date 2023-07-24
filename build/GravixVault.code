@@ -13746,20 +13746,38 @@ ENDC
 PUSHINT 0
 SENDRAWMSG
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 88
-GETGLOB 18
-SWAP
-ROLL 3
-PUSH S3
+OVER
 SECOND
 CALLREF {
 	CALL $_makeCell_67dcfcc8_internal_macro$
 }
-ROLL 4
+TRUE
+ROLL 3
 THIRD
+PUSHINT 100000000
+BLKSWAP 2, 4
+GETGLOB 18
+NEWC
+STSLICECONST x62_
+STSLICE
+PUSHINT 1
+STUR 111
+ROLLREV 6
+NEWC
+STSLICECONST x73e22143
+STU 128
+STSLICE
+STU 128
+ROLLREV 3
+NEWC
+STSLICE
+STI 1
+STREF
+STBREFR
+STBREFR
+ENDC
 PUSHPOW2 7
-CALLREF {
-	CALL $_transfer_601b185b_internal_macro$
-}
+SENDRAWMSG
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 
 .macro usdtToStgUsdt
@@ -13771,7 +13789,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 91
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 98
 LDU 32
 GETGLOB 4
 ROT
@@ -13839,17 +13857,17 @@ THROW 0
 CALL $usdtToStgUsdt_0b67f73c_internal_macro$
 
 .macro usdtToStgUsdt_0b67f73c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 91
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 98
 PUSHINT 0
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 92
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 99
 GETGLOB 31
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 95
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 102
 	CALLREF {
 		CALL $stgUsdtPrice_b446aa01_internal_macro$
 	}
 	DROP
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 96
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 103
 	PUSH S2
 	PUSHINT 100000000
 	ROT
@@ -13857,12 +13875,12 @@ PUSHCONT {
 	UFITS 128
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 93
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 100
 	OVER
 }
 IFELSE
 NIP
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 98
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 105
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -13883,7 +13901,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 101
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 108
 LDU 32
 GETGLOB 4
 ROT
@@ -13951,29 +13969,29 @@ THROW 0
 CALL $stgUsdtToUsdt_c8866735_internal_macro$
 
 .macro stgUsdtToUsdt_c8866735_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 101
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 108
 PUSHINT 0
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 102
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 109
 GETGLOB 31
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 105
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 112
 	CALLREF {
 		CALL $stgUsdtPrice_b446aa01_internal_macro$
 	}
 	NIP
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 106
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 113
 	PUXC S2, S-1
 	PUSHINT 100000000
 	MULDIV
 	UFITS 128
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 103
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 110
 	OVER
 }
 IFELSE
 NIP
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 108
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 115
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -13994,7 +14012,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 113
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 120
 LDU 32
 GETGLOB 4
 ROT
@@ -14068,20 +14086,20 @@ THROW 0
 CALL $stgUsdtPrice_b446aa01_internal_macro$
 
 .macro stgUsdtPrice_b446aa01_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 113
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 120
 PUSHINT 0
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 114
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 121
 GETGLOB 31
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 118
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 125
 	GETGLOB 30
 	PUSHINT 100000000
 	GETGLOB 31
 	MULDIV
 	UFITS 128
 	NIP
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 120
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 127
 	PUSHINT 32
 	GETGLOBVAR
 	GTINT 0
@@ -14096,14 +14114,14 @@ PUSHCONT {
 	POP S2
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 115
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 122
 	PUSHINT 100000000
 	DUP
 	POP S3
 	NIP
 }
 IFELSE
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 122
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 129
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -14123,7 +14141,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 125
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 132
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 CALLREF {
@@ -14161,14 +14179,14 @@ THROW 0
 CALL $poolDebt_ade1a170_internal_macro$
 
 .macro poolDebt_ade1a170_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 126
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 133
 GETGLOB 31
 PUSHINT 32
 GETGLOBVAR
 PUSHINT 100000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 127
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 134
 GETGLOB 30
 OVER
 GEQ
@@ -14188,7 +14206,7 @@ NIP
 CALL $_collectOpenFee_419bf765_internal_macro$
 
 .macro _collectOpenFee_419bf765_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 133
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 140
 PUSHINT 47
 GETGLOBVAR
 SWAP
@@ -14202,7 +14220,7 @@ CALLREF {
 CALL $_collectCloseFee_8b1909c0_internal_macro$
 
 .macro _collectCloseFee_8b1909c0_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 137
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 144
 PUSHINT 48
 GETGLOBVAR
 SWAP
@@ -14216,7 +14234,7 @@ CALLREF {
 CALL $_collectFeeWithSchema_bfde5bb6_internal_macro$
 
 .macro _collectFeeWithSchema_bfde5bb6_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 141
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 148
 DUP
 PUSHINT 0
 ROLL 3
@@ -14228,15 +14246,15 @@ PLDU 64
 PUSHINT 1000000000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 142
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 149
 TUCK
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 144
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 151
 DUP
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 144
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 151
 	DUP
 	CALLREF {
 		CALL $_increaseInsuranceFund_4ab09332_internal_macro$
@@ -14244,18 +14262,18 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 145
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 152
 DROP
 DUP
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 146
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 153
 	GETGLOB 30
 	OVER
 	ADD
 	UFITS 128
 	SETGLOB 30
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 147
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 154
 	DUP
 	PUSHSLICE xc000000000000000000000000032833471
 	NEWC
@@ -14264,7 +14282,7 @@ PUSHCONT {
 	ENDC
 	PUSHINT 0
 	SENDRAWMSG
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 149
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 156
 	PUSHINT 32
 	GETGLOBVAR
 	GTINT 0
@@ -14278,7 +14296,7 @@ PUSHCONT {
 	}
 	IF
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 149
+		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 156
 		PUSHINT 0
 		PUSHINT 32
 		SETGLOBVAR
@@ -14296,15 +14314,15 @@ DROP
 CALL $_decreaseInsuranceFund_74c0e3b6_internal_macro$
 
 .macro _decreaseInsuranceFund_74c0e3b6_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 153
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 160
 PUSHINT 0
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 154
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 161
 OVER
 PUSHINT 33
 GETGLOBVAR
 LEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 155
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 162
 	PUSHINT 33
 	GETGLOBVAR
 	PUSH S2
@@ -14312,17 +14330,17 @@ PUSHCONT {
 	UFITS 128
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 157
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 164
 	OVER
 	PUSHINT 33
 	GETGLOBVAR
 	SUB
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 159
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 166
 	PUSHINT 32
 	GETGLOBVAR
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 160
+		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 167
 		CALLREF {
 			CALL $stgUsdtPrice_b446aa01_internal_macro$
 		}
@@ -14332,27 +14350,27 @@ PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 	}
 	IFNOT
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 162
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 169
 	DUP
 	GETGLOB 30
 	GREATER
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 163
+		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 170
 		GETGLOB 30
 		SUB
 		UFITS 128
 		NIP
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 164
+		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 171
 		GETGLOB 30
 		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 	}
 	IF
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 166
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 173
 	GETGLOB 30
 	SUBR
 	UFITS 128
 	SETGLOB 30
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 167
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 174
 	PUSHINT 0
 }
 IFELSE
@@ -14366,32 +14384,32 @@ NIP
 CALL $_increaseInsuranceFund_4ab09332_internal_macro$
 
 .macro _increaseInsuranceFund_4ab09332_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 172
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 179
 PUSHINT 32
 GETGLOBVAR
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 173
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 180
 	CALLREF {
 		CALL $poolDebt_ade1a170_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 174
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 181
 	PUSH2 S0, S1
 	MIN
 	GETGLOB 30
 	ADD
 	UFITS 128
 	SETGLOB 30
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 175
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 182
 	OVER
 	MIN
 	SUB
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 176
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 183
 	DUP
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 176
+		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 183
 		PUSHINT 0
 		PUSHINT 32
 		SETGLOBVAR
@@ -14401,7 +14419,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 178
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 185
 PUSHINT 33
 GETGLOBVAR
 ADD
@@ -17832,293 +17850,6 @@ CALLREF {
 }
 THROW 60
 
-.globl	DateTime_with_obj_timestampFromDateTime_5e05bd6d
-.type	DateTime_with_obj_timestampFromDateTime_5e05bd6d, @function
-CALL $DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro$
-
-.macro DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro
-.loc ../contracts/libraries/DateTime.tsol, 130
-PUSH S5
-BLKSWAP 2, 4
-CALLREF {
-	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
-}
-PUSHINT 86400
-MUL
-ROLL 3
-PUSHINT 3600
-MUL
-ADD
-ROT
-MULCONST 60
-ADD
-ADD
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj_timestampFromDateTime_5e05bd6d
-.type	DateTime_no_obj_timestampFromDateTime_5e05bd6d, @function
-CALL $DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro$
-
-.macro DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro
-.loc ../contracts/libraries/DateTime.tsol, 130
-BLKSWAP 3, 3
-CALLREF {
-	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
-}
-PUSHINT 86400
-MUL
-ROLL 3
-PUSHINT 3600
-MUL
-ADD
-ROT
-MULCONST 60
-ADD
-ADD
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_with_obj__daysFromDate_1e0582e9
-.type	DateTime_with_obj__daysFromDate_1e0582e9, @function
-CALL $DateTime_with_obj__daysFromDate_1e0582e9_macro$
-
-.macro DateTime_with_obj__daysFromDate_1e0582e9_macro
-.loc ../contracts/libraries/DateTime.tsol, 65
-PUSH S2
-PUSHINT 1970
-GEQ
-THROWIFNOT 100
-.loc ../contracts/libraries/DateTime.tsol, 66
-PUSH S2
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 67
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 68
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 70
-PUSHINT 32075
-SUB
-FITS 256
-PUSHINT 1461
-PUSH S3
-PUSHINT 4800
-ADD
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 367
-PUSH S2
-ADDCONST -2
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-MULCONST 12
-FITS 256
-SUB
-FITS 256
-MUL
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 3
-ROLL 3
-PUSHINT 4900
-ADD
-FITS 256
-ROLL 3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 100
-DIV
-MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-SUB
-FITS 256
-PUSHINT 2440588
-SUB
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 76
-UFITS 256
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj__daysFromDate_1e0582e9
-.type	DateTime_no_obj__daysFromDate_1e0582e9, @function
-CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
-
-.macro DateTime_no_obj__daysFromDate_1e0582e9_macro
-.loc ../contracts/libraries/DateTime.tsol, 65
-PUSH S2
-PUSHINT 1970
-GEQ
-THROWIFNOT 100
-.loc ../contracts/libraries/DateTime.tsol, 66
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 67
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 68
-ROT
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 70
-PUSHINT 32075
-SUB
-FITS 256
-PUSHINT 1461
-PUSH S3
-PUSHINT 4800
-ADD
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 367
-PUSH S2
-ADDCONST -2
-FITS 256
-PUSH S3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-MULCONST 12
-FITS 256
-SUB
-FITS 256
-MUL
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 3
-ROLL 3
-PUSHINT 4900
-ADD
-FITS 256
-ROLL 3
-ADDCONST -14
-FITS 256
-PUSHINT 12
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-ADD
-FITS 256
-PUSHINT 100
-DIV
-MUL
-FITS 256
-PUSHINT 4
-CALLREF {
-	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-}
-SUB
-FITS 256
-PUSHINT 2440588
-SUB
-FITS 256
-.loc ../contracts/libraries/DateTime.tsol, 76
-UFITS 256
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_with_obj__ethDiv_7c6f9b67
-.type	DateTime_with_obj__ethDiv_7c6f9b67, @function
-CALL $DateTime_with_obj__ethDiv_7c6f9b67_macro$
-
-.macro DateTime_with_obj__ethDiv_7c6f9b67_macro
-.loc ../contracts/libraries/DateTime.tsol, 45
-OVER
-LESSINT 0
-OVER
-LESSINT 0
-OR
-PUSHCONT {
-	.loc ../contracts/libraries/DateTime.tsol, 46
-	PUXC S1, S-1
-	DIVC
-	.loc ../contracts/libraries/DateTime.tsol, 0
-}
-IFJMP
-.loc ../contracts/libraries/DateTime.tsol, 48
-PUXC S1, S-1
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj__ethDiv_7c6f9b67
-.type	DateTime_no_obj__ethDiv_7c6f9b67, @function
-CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
-
-.macro DateTime_no_obj__ethDiv_7c6f9b67_macro
-.loc ../contracts/libraries/DateTime.tsol, 45
-OVER
-LESSINT 0
-OVER
-LESSINT 0
-OR
-PUSHCONT {
-	.loc ../contracts/libraries/DateTime.tsol, 46
-	DIVC
-	.loc ../contracts/libraries/DateTime.tsol, 0
-}
-IFJMP
-.loc ../contracts/libraries/DateTime.tsol, 48
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 0
-
 .globl	DateTime_with_obj_timestampToDateTime_ea1c1690
 .type	DateTime_with_obj_timestampToDateTime_ea1c1690, @function
 CALL $DateTime_with_obj_timestampToDateTime_ea1c1690_macro$
@@ -18459,6 +18190,293 @@ SWAP
 UFITS 256
 POP S2
 .loc ../contracts/libraries/DateTime.tsol, 112
+UFITS 256
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_with_obj_timestampFromDateTime_5e05bd6d
+.type	DateTime_with_obj_timestampFromDateTime_5e05bd6d, @function
+CALL $DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro$
+
+.macro DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro
+.loc ../contracts/libraries/DateTime.tsol, 130
+PUSH S5
+BLKSWAP 2, 4
+CALLREF {
+	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
+}
+PUSHINT 86400
+MUL
+ROLL 3
+PUSHINT 3600
+MUL
+ADD
+ROT
+MULCONST 60
+ADD
+ADD
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj_timestampFromDateTime_5e05bd6d
+.type	DateTime_no_obj_timestampFromDateTime_5e05bd6d, @function
+CALL $DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro$
+
+.macro DateTime_no_obj_timestampFromDateTime_5e05bd6d_macro
+.loc ../contracts/libraries/DateTime.tsol, 130
+BLKSWAP 3, 3
+CALLREF {
+	CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
+}
+PUSHINT 86400
+MUL
+ROLL 3
+PUSHINT 3600
+MUL
+ADD
+ROT
+MULCONST 60
+ADD
+ADD
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_with_obj__ethDiv_7c6f9b67
+.type	DateTime_with_obj__ethDiv_7c6f9b67, @function
+CALL $DateTime_with_obj__ethDiv_7c6f9b67_macro$
+
+.macro DateTime_with_obj__ethDiv_7c6f9b67_macro
+.loc ../contracts/libraries/DateTime.tsol, 45
+OVER
+LESSINT 0
+OVER
+LESSINT 0
+OR
+PUSHCONT {
+	.loc ../contracts/libraries/DateTime.tsol, 46
+	PUXC S1, S-1
+	DIVC
+	.loc ../contracts/libraries/DateTime.tsol, 0
+}
+IFJMP
+.loc ../contracts/libraries/DateTime.tsol, 48
+PUXC S1, S-1
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj__ethDiv_7c6f9b67
+.type	DateTime_no_obj__ethDiv_7c6f9b67, @function
+CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+
+.macro DateTime_no_obj__ethDiv_7c6f9b67_macro
+.loc ../contracts/libraries/DateTime.tsol, 45
+OVER
+LESSINT 0
+OVER
+LESSINT 0
+OR
+PUSHCONT {
+	.loc ../contracts/libraries/DateTime.tsol, 46
+	DIVC
+	.loc ../contracts/libraries/DateTime.tsol, 0
+}
+IFJMP
+.loc ../contracts/libraries/DateTime.tsol, 48
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_with_obj__daysFromDate_1e0582e9
+.type	DateTime_with_obj__daysFromDate_1e0582e9, @function
+CALL $DateTime_with_obj__daysFromDate_1e0582e9_macro$
+
+.macro DateTime_with_obj__daysFromDate_1e0582e9_macro
+.loc ../contracts/libraries/DateTime.tsol, 65
+PUSH S2
+PUSHINT 1970
+GEQ
+THROWIFNOT 100
+.loc ../contracts/libraries/DateTime.tsol, 66
+PUSH S2
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 67
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 68
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 70
+PUSHINT 32075
+SUB
+FITS 256
+PUSHINT 1461
+PUSH S3
+PUSHINT 4800
+ADD
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 367
+PUSH S2
+ADDCONST -2
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+MULCONST 12
+FITS 256
+SUB
+FITS 256
+MUL
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 3
+ROLL 3
+PUSHINT 4900
+ADD
+FITS 256
+ROLL 3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 100
+DIV
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+SUB
+FITS 256
+PUSHINT 2440588
+SUB
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 76
+UFITS 256
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj__daysFromDate_1e0582e9
+.type	DateTime_no_obj__daysFromDate_1e0582e9, @function
+CALL $DateTime_no_obj__daysFromDate_1e0582e9_macro$
+
+.macro DateTime_no_obj__daysFromDate_1e0582e9_macro
+.loc ../contracts/libraries/DateTime.tsol, 65
+PUSH S2
+PUSHINT 1970
+GEQ
+THROWIFNOT 100
+.loc ../contracts/libraries/DateTime.tsol, 66
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 67
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 68
+ROT
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 70
+PUSHINT 32075
+SUB
+FITS 256
+PUSHINT 1461
+PUSH S3
+PUSHINT 4800
+ADD
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 367
+PUSH S2
+ADDCONST -2
+FITS 256
+PUSH S3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+MULCONST 12
+FITS 256
+SUB
+FITS 256
+MUL
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 3
+ROLL 3
+PUSHINT 4900
+ADD
+FITS 256
+ROLL 3
+ADDCONST -14
+FITS 256
+PUSHINT 12
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+ADD
+FITS 256
+PUSHINT 100
+DIV
+MUL
+FITS 256
+PUSHINT 4
+CALLREF {
+	CALL $DateTime_no_obj__ethDiv_7c6f9b67_macro$
+}
+SUB
+FITS 256
+PUSHINT 2440588
+SUB
+FITS 256
+.loc ../contracts/libraries/DateTime.tsol, 76
 UFITS 256
 .loc ../contracts/libraries/DateTime.tsol, 0
 

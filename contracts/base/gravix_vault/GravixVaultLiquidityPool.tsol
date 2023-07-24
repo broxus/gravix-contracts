@@ -85,7 +85,14 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
 
         emit LiquidityPoolWithdraw(meta.call_id, user, usdt_amount, stg_usdt_amount);
 
-        _transfer(usdtWallet, usdt_amount, user, _makeCell(meta.nonce), meta.send_gas_to, MsgFlag.ALL_NOT_RESERVED);
+        ITokenWallet(usdtWallet).transfer{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            usdt_amount,
+            user,
+            Constants.DEPLOY_TOKEN_WALLET_VALUE,
+            meta.send_gas_to,
+            true,
+            _makeCell(meta.nonce)
+        );
     }
 
     function usdtToStgUsdt(uint128 usdt_amount) public view responsible returns (uint128 stg_amount) {
