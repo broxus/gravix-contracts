@@ -22,6 +22,18 @@ interface IGravixAccount {
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
     }
+    struct LimitOrder {
+        uint32 marketIdx;
+        IGravixVault.PositionType positionType;
+        uint128 collateral; // 6 decimals number
+        uint128 targetPrice; // 8 decimals number
+        uint32 leverage; // 2 decimals number
+        uint64 openFeeRate; // %
+        uint64 closeFeeRate; // %
+        uint64 baseSpreadRate; // %
+        uint64 liquidationThresholdRate; // %
+        uint64 borrowBaseRatePerHour; // %
+    }
 
     struct Position {
         uint32 marketIdx;
@@ -69,6 +81,22 @@ interface IGravixAccount {
         uint32 accountVersion
     ) external;
     function process_executeMarketOrder(
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 positionSize,
+        IGravixVault.PositionType positionType,
+        uint128 assetPrice,
+        uint64 dynamicSpread,
+        int256 accUSDFundingPerShare,
+        Callback.CallMeta meta,
+        uint32 accountVersion
+    ) external;
+    function process_requestLimitOrder(
+        uint32 reqNonce,
+        IGravixVault.PendingLimitOrder pendingRequest,
+        uint32 accountVersion
+    ) external;
+    function process_executeLimitOrder(
         uint32 positionKey,
         uint32 marketIdx,
         uint128 positionSize,

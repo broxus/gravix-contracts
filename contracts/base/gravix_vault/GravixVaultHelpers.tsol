@@ -148,6 +148,35 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         ) = abi.decode(actionPayload, (uint32, PositionType, uint32, uint128, uint64, IPriceNode.Price, address));
     }
 
+    function encodeLimitOrder(
+        uint32 marketIdx,
+        PositionType positionType,
+        uint32 leverage,
+        uint128 targetPrice,
+        IPriceNode.Price price,
+        address referrer,
+        uint32 nonce,
+        uint32 callId
+    ) external pure returns (TvmCell payload) {
+        TvmCell cell = abi.encode(marketIdx, positionType, leverage, targetPrice, price, referrer);
+        return encodeTokenTransfer(Action.MarketOrder, nonce, callId, cell);
+    }
+
+    function decodeLimitOrder(
+        TvmCell actionPayload
+    ) public pure returns (
+        uint32 marketIdx,
+        PositionType positionType,
+        uint32 leverage,
+        uint128 targetPrice,
+        IPriceNode.Price price,
+        address referrer
+    ) {
+        (
+        marketIdx, positionType, leverage, targetPrice, price, referrer
+        ) = abi.decode(actionPayload, (uint32, PositionType, uint32, uint128, uint64, IPriceNode.Price, address));
+    }
+
     function encodeAddCollateral(
         uint32 marketIdx, uint32 positionKey, uint32 nonce, uint32 callId
     ) public pure returns (TvmCell payload) {
@@ -180,7 +209,11 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function decodeTokenTransfer(TvmCell payload) public pure returns (
-        Action action, uint32 nonce, uint32 callId, TvmCell actionPayload, bool correct
+        Action action,
+        uint32 nonce,
+        uint32 callId,
+        TvmCell actionPayload,
+        bool correct
     ){
         // check if payload assembled correctly
         TvmSlice slice = payload.toSlice();

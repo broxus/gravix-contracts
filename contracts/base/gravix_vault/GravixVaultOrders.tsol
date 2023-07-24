@@ -189,6 +189,207 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         );
     }
 
+    function _handleLimitOrder(
+        address _user,
+        uint128 collateral,
+        TvmCell orderParamsPayload,
+        Callback.CallMeta meta
+    ) internal returns (bool) {
+        (
+            uint32 marketIdx,
+            PositionType positionType,
+            uint32 leverage,
+            uint128 targetPrice,
+            IPriceNode.Price price,
+            address referrer
+        ) = decodeLimitOrder(orderParamsPayload);
+
+        if (!validateOrderParams(marketIdx, collateral, leverage, 0)) return false;
+        // TODO check position allowed
+        if (!marketOpen(marketIdx)) return false;
+
+        return true;
+    }
+
+    function _limitOrder(
+        address user,
+        uint32 marketIdx,
+        PositionType positionType,
+        uint128 collateral,
+        uint32 leverage,
+        uint128 targetPrice,
+        IPriceNode.Price price,
+        address referrer,
+        Callback.CallMeta meta
+    ) internal {
+        Market _market = markets[marketIdx];
+        requestNonce += 1;
+
+        PendingLimitOrder newRequest = PendingLimitOrder(
+            user,
+            marketIdx,
+            positionType,
+            collateral,
+            targetPrice,
+            leverage,
+            _market.fees.openFeeRate,
+            _market.fees.closeFeeRate,
+            _market.fees.baseSpreadRate,
+            liquidationParams.thresholdRate,
+            _market.fees.borrowBaseRatePerHour,
+            price,
+            referrer,
+            meta
+        );
+
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            requestNonce,
+            newRequest,
+            gravixAccountCode.version
+        );
+    }
+    function finish_requestLimitOrder(
+        uint32 reqNonce,
+        PendingLimitOrder request,
+        uint32 positionKey
+    ) external override onlyGravixAccount(request.user) reserve {
+        delete pendingLimitRequests[reqNonce];
+        collateralReserve += request.collateral;
+
+        emit LimitOrder(
+            request.meta.callId,
+            request.user,
+            request.marketIdx,
+            request.positionType,
+            request.collateral,
+            request.targetPrice,
+            request.leverage,
+            positionKey
+        );
+
+        OracleType priceSource = markets[request.marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[request.marketIdx];
+
+        // if market uses offchain oracle and we have valid price, we can execute order right now
+        if (priceSource == OracleType.PriceNode && checkPrice(request.price, oracleConf.priceNode)) {
+            _executeLimitOrder(
+                request.user,
+                positionKey,
+                request.marketIdx,
+                request.collateral,
+                request.leverage,
+                request.positionType,
+                request.price.price,
+                request.meta
+            );
+            return;
+        }
+
+        _sendOpenOrderOracleRequest(
+            request.user,
+            positionKey,
+            request.marketIdx,
+            request.collateral,
+            request.leverage,
+            request.positionType,
+            request.meta
+        );
+    }
+    function finish_requestLimitOrder(
+        uint32 reqNonce,
+        PendingLimitOrder request,
+        uint32 positionKey
+    ) external override onlyGravixAccount(request.user) reserve {
+        delete pendingLimitRequests[reqNonce];
+        collateralReserve += request.collateral;
+
+        emit LimitOrder(
+            request.meta.callId,
+            request.user,
+            request.marketIdx,
+            request.positionType,
+            request.collateral,
+            request.targetPrice,
+            request.leverage,
+            positionKey
+        );
+
+        OracleType priceSource = markets[request.marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[request.marketIdx];
+
+        // if market uses offchain oracle and we have valid price, we can execute order right now
+        if (priceSource == OracleType.PriceNode && checkPrice(request.price, oracleConf.priceNode)) {
+            _executeLimitOrder(
+                request.user,
+                positionKey,
+                request.marketIdx,
+                request.collateral,
+                request.leverage,
+                request.positionType,
+                request.price.price,
+                request.meta
+            );
+            return;
+        }
+
+        _sendOpenOrderOracleRequest(
+            request.user,
+            positionKey,
+            request.marketIdx,
+            request.collateral,
+            request.leverage,
+            request.positionType,
+            request.meta
+        );
+    }
+    function finish_requestLimitOrder(
+        uint32 reqNonce,
+        PendingLimitOrder request,
+        uint32 positionKey
+    ) external override onlyGravixAccount(request.user) reserve {
+        delete pendingLimitRequests[reqNonce];
+        collateralReserve += request.collateral;
+
+        emit LimitOrder(
+            request.meta.callId,
+            request.user,
+            request.marketIdx,
+            request.positionType,
+            request.collateral,
+            request.targetPrice,
+            request.leverage,
+            positionKey
+        );
+
+        OracleType priceSource = markets[request.marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[request.marketIdx];
+
+        // if market uses offchain oracle and we have valid price, we can execute order right now
+        if (priceSource == OracleType.PriceNode && checkPrice(request.price, oracleConf.priceNode)) {
+            _executeLimitOrder(
+                request.user,
+                positionKey,
+                request.marketIdx,
+                request.collateral,
+                request.leverage,
+                request.positionType,
+                request.price.price,
+                request.meta
+            );
+            return;
+        }
+
+        _sendOpenOrderOracleRequest(
+            request.user,
+            positionKey,
+            request.marketIdx,
+            request.collateral,
+            request.leverage,
+            request.positionType,
+            request.meta
+        );
+    }
     // ----------------------------------------------------------------------------------
     // --------------------------- ORACLE REQUEST ---------------------------------------
     // ----------------------------------------------------------------------------------
@@ -403,6 +604,29 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
         }
     }
 
+    function oracle_executeLimitOrder(
+        uint64 nonce,
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType positionType,
+        uint128 assetPrice,
+        Callback.CallMeta meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        _executeLimitOrder(
+            user,
+            positionKey,
+            marketIdx,
+            collateral,
+            leverage,
+            positionType,
+            assetPrice,
+            meta
+        );
+    }
+
     function revert_executeMarketOrder(
         address user,
         uint32 positionKey,
@@ -453,7 +677,48 @@ abstract contract GravixVaultOrders is GravixVaultMarkets {
             positionKey
         );
     }
+    function _executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType positionType,
+        uint128 assetPrice,
+        Callback.CallMeta meta
+    ) internal {
+        // reserve should be
+        uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
+        uint64 dynamicSpread = getDynamicSpread(positionSizeAsset, marketIdx, positionType);
 
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        uint16 _error = _addPositionToMarketOrReturnErr(marketIdx, positionSizeAsset, assetPrice, positionType);
+
+        address gravixAcc = getGravixAccountAddress(user);
+        if (_error == 0) {
+            int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
+
+            IGravixAccount(gravixAcc).process_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                positionKey,
+                marketIdx,
+                positionSizeAsset,
+                positionType,
+                assetPrice,
+                dynamicSpread,
+                funding,
+                meta,
+                gravixAccountCode.version
+            );
+        } else {
+            // order cant be executed now, some limits reached and etc.
+            // todo
+//            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+//                positionKey,
+//                meta,
+//                gravixAccountCode.version
+//            );
+        }
+    }
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
     // @param assetPrice - position price, 8 decimals number
