@@ -103,104 +103,15 @@ contract GravixVault is GravixVaultBase {
     }
 
     function onCodeUpgrade(TvmCell upgrade_data) private {
-        delete pending_market_requests;
-
-//        Callback.CallMeta meta;
-//        (
-//            meta,
-//            owner,
-//            manager,
-//            marketManager,
-//            oracle,
-//            priceNode,
-//            pricePubkey,
-//            usdt,
-//            usdtWallet,
-//            stgUsdt,
-//            stgUsdtWallet,
-//            treasury,
-//            projectFund,
-//            devFund,
-//            oracleProxyCode,
-//            platformCode,
-//            gravixAccountCode,
-//            gravixAccountVersion,
-//            oracleProxyVersion,
-//            gravixVaultVersion,
-//            poolBalance, // liquidity deposits
-//            stgUsdtSupply, // amount of minted stgUsdt
-//            targetPrice,
-//            insuranceFund, // collected fees, pnl and etc.
-//            insuranceFundLimit,
-//            insuranceFundOverflowDistributionSchema,
-//            referralFeeSchema,
-//            grandReferralFeeSchema,
-//            collateralReserve, // sum of all usdt provided as a collateral for open order
-//            totalNOI,
-//            totalNOILimitEnabled,
-//            maxPoolUtilRatio,
-//            maxPnlRate,
-//            minPositionCollateral,
-//            paused,
-//            liquidationThresholdRate,
-//            liquidatorRewardShare,
-//            openFeeDistributionSchema,
-//            closeFeeDistributionSchema,
-//            marketCount,
-//            markets,
-//            workingHours,
-//            weekends,
-//            oracleConfigs,
-//            pending_market_requests
-//        ) = abi.decode(
-//            upgrade_data,
-//            (
-//                Callback.CallMeta,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                uint256,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                address,
-//                TvmCell,
-//                TvmCell,
-//                TvmCell,
-//                uint32,
-//                uint32,
-//                uint32,
-//                uint128,
-//                uint128,
-//                uint128,
-//                uint128,
-//                uint128,
-//                uint64[3],
-//                uint64[3],
-//                uint64[3],
-//                uint128,
-//                uint128,
-//                bool,
-//                uint64,
-//                uint64,
-//                uint128,
-//                bool,
-//                uint64,
-//                uint64,
-//                uint64[2],
-//                uint64[2],
-//                uint32,
-//                mapping (uint32 => Market),
-//                mapping (uint32 => mapping (uint8 => TimeInterval[])),
-//                mapping (uint32 => mapping (uint32 => DateTimeInterval)),
-//                mapping (uint32 => OracleConfig),
-//                mapping (uint32 => PendingMarketOrder)
-//            )
-//        );
+        tvm.rawReserve(_reserve(), 0);
+        TvmCell dummy;
+        ITokenWallet(usdtWallet).transfer{value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false}(
+            530 * 10 ** 6,
+            owner,
+            0,
+            owner,
+            false,
+            dummy
+        );
     }
 }
