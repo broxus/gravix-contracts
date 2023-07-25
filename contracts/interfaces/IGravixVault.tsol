@@ -153,7 +153,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 marketIdx;
         PositionType positionType;
         uint128 collateral;
-        uint128 targetPrice;
+        uint128 triggerPrice;
         LimitOrderType orderType;
         uint32 leverage;
         uint64 openFeeRate; // %
@@ -248,6 +248,12 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event MarketOrderRequestRevert(uint32 callId, address user);
     event MarketOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
     event MarketOrderExecution(
+        uint32 callId,
+        address user,
+        IGravixAccount.Position position,
+        uint32 positionKey
+    );
+    event LimitOrderExecution(
         uint32 callId,
         address user,
         IGravixAccount.Position position,
@@ -420,6 +426,17 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         IGravixAccount.PositionView orderView,
         address referrer,
         address grandReferrer,
+        Callback.CallMeta meta
+    ) external;
+
+    function revert_executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint128 positionSizeAsset,
+        uint128 assetPrice,
+        PositionType positionType,
         Callback.CallMeta meta
     ) external;
     function oracle_executeLimitOrder(

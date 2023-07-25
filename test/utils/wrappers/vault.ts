@@ -186,7 +186,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(5));
     }
 
     async openLimitPosition({

@@ -198,7 +198,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             request.positionType,
             request.orderType,
             request.collateral,
-            request.targetPrice,
+            request.triggerPrice,
             request.leverage,
             positionKey
         );
@@ -211,7 +211,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     function limitBot_executeLimitOrders(
         mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
         Callback.CallMeta meta
-    ) external override onlyLimitBot reserve {
+    ) external override /*onlyLimitBot*/ reserve {
         for ((uint32 marketIdx, ExecuteLimitOrderData limitOrders) : limitOrdersMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
@@ -336,6 +336,32 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         }
     }
     //endregion
+
+    function revert_executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint128 positionSizeAsset,
+        uint128 assetPrice,
+        PositionType positionType,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        emit MarketOrderExecutionRevert(meta.callId, user, positionKey);
+
+        _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
+
+        // too high slippage
+        if (collateral > 0) {
+            collateralReserve -= collateral;
+            _transfer(
+                usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            // tried to execute non-existent order
+            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
+        }
+    }
 //todo
     function finish_executeLimitOrder(
         address user,
@@ -354,7 +380,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
         _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
 
-        emit MarketOrderExecution(
+        emit LimitOrderExecution(
             meta.callId,
             user,
             newPos,

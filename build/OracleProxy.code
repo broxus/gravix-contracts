@@ -589,20 +589,44 @@ PUSHCONT {
 		STU 128
 		STBREFR
 		STBREFR
-		STBREFR
-		ENDC
-		PUSHPOW2 7
-		SENDRAWMSG
-		.loc ../contracts/OracleProxy.tsol, 0
 	}
 	PUSHCONT {
 		GETGLOB 30
 		EQINT 2
 		PUSHCONT {
+			.loc ../contracts/OracleProxy.tsol, 204
+			GETGLOB 17
+			OVER
+			GETGLOB 28
+			GETGLOB 11
+			GETGLOB 10
+			NEWC
+			STSLICECONST x62_
+			STSLICE
+			PUSHINT 1
+			STUR 111
+			ROLLREV 4
+			NEWC
+			STSLICECONST x6c5b0426
+			STU 64
+			SWAP
+			UNPAIR
+			XCHG S2
+			STU 32
+			STDICT
+			STU 128
+			SWAP
+			UNTRIPLE
+			REVERSE 4, 0
+			STU 32
+			STU 32
+			STSLICE
+		}
+		PUSHCONT {
 			GETGLOB 30
 			EQINT 3
 			PUSHCONT {
-				.loc ../contracts/OracleProxy.tsol, 206
+				.loc ../contracts/OracleProxy.tsol, 212
 				GETGLOB 17
 				OVER
 				GETGLOB 14
@@ -624,7 +648,7 @@ PUSHCONT {
 				STU 32
 			}
 			PUSHCONT {
-				.loc ../contracts/OracleProxy.tsol, 215
+				.loc ../contracts/OracleProxy.tsol, 221
 				GETGLOB 17
 				OVER
 				GETGLOB 27
@@ -660,13 +684,8 @@ PUSHCONT {
 			NEWC
 			STSLICE
 			STBREFR
-			STBREFR
-			ENDC
-			PUSHPOW2 7
-			SENDRAWMSG
-			.loc ../contracts/OracleProxy.tsol, 0
 		}
-		IFNOT
+		IFELSE
 	}
 	IFELSE
 }
@@ -707,15 +726,14 @@ PUSHCONT {
 	STU 32
 	STSLICE
 	STBREFR
-	STBREFR
-	ENDC
-	PUSHPOW2 7
-	SENDRAWMSG
-	.loc ../contracts/OracleProxy.tsol, 0
 }
 IFELSE
-DROP
+STBREFR
+ENDC
+PUSHPOW2 7
+SENDRAWMSG
 .loc ../contracts/OracleProxy.tsol, 0
+DROP
 
 .macro onPriceCallback
 DROP
@@ -726,7 +744,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/OracleProxy.tsol, 226
+.loc ../contracts/OracleProxy.tsol, 232
 LDU 128
 LDREF
 ENDS
@@ -741,19 +759,19 @@ CALLREF {
 THROW 0
 
 .macro onPriceCallback_97007284_internal_macro
-.loc ../contracts/OracleProxy.tsol, 228
+.loc ../contracts/OracleProxy.tsol, 234
 GETGLOB 9
 GETGLOB 13
 SDEQ
 THROWIFNOT 1007
-.loc ../contracts/OracleProxy.tsol, 230
+.loc ../contracts/OracleProxy.tsol, 236
 HASHCU
 GETGLOB 16
 INDEX2 1, 0
 HASHCU
 EQUAL
 THROWIFNOT 1005
-.loc ../contracts/OracleProxy.tsol, 232
+.loc ../contracts/OracleProxy.tsol, 238
 CALLREF {
 	CALL $_sendCallback_af038cfa_internal_macro$
 }
@@ -764,15 +782,15 @@ CALLREF {
 CALL $_reject_90c6aafd_internal_macro$
 
 .macro _reject_90c6aafd_internal_macro
-.loc ../contracts/OracleProxy.tsol, 237
+.loc ../contracts/OracleProxy.tsol, 243
 GETGLOB 30
 EQINT 4
 PUSHCONT {
-	.loc ../contracts/OracleProxy.tsol, 238
+	.loc ../contracts/OracleProxy.tsol, 244
 	GETGLOB 29
 }
 PUSHCONT {
-	.loc ../contracts/OracleProxy.tsol, 240
+	.loc ../contracts/OracleProxy.tsol, 246
 	GETGLOB 19
 }
 IFELSE
@@ -797,7 +815,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/OracleProxy.tsol, 245
+.loc ../contracts/OracleProxy.tsol, 251
 OVER
 PUSHCONT {
 	LDREF
@@ -854,20 +872,20 @@ CALLREF {
 THROW 0
 
 .macro onRateCallback_92299ec0_internal_macro
-.loc ../contracts/OracleProxy.tsol, 251
+.loc ../contracts/OracleProxy.tsol, 257
 OVER
 MYADDR
 SDEQ
 THROWIFNOT 1007
-.loc ../contracts/OracleProxy.tsol, 253
+.loc ../contracts/OracleProxy.tsol, 259
 DUP
 CTOS
 LDU 256
 ENDS
-.loc ../contracts/OracleProxy.tsol, 254
+.loc ../contracts/OracleProxy.tsol, 260
 GETGLOB 16
 FIRST
-.loc ../contracts/OracleProxy.tsol, 255
+.loc ../contracts/OracleProxy.tsol, 261
 GETGLOB 9
 BLKPUSH 2, 2
 INDEX2 1, 1
@@ -891,7 +909,7 @@ CALLREF {
 FIRST
 SDEQ
 THROWIFNOT 1007
-.loc ../contracts/OracleProxy.tsol, 257
+.loc ../contracts/OracleProxy.tsol, 263
 GETGLOB 9
 GETGLOB 31
 NEWC
@@ -904,7 +922,7 @@ ROTREV
 PUSHINT 267
 DICTSETB
 SETGLOB 31
-.loc ../contracts/OracleProxy.tsol, 259
+.loc ../contracts/OracleProxy.tsol, 265
 PUSHINT 0
 NEWDICT
 PAIR
@@ -959,12 +977,12 @@ OVER
 INDEX2 1, 0
 EQUAL
 PUSHCONT {
-	.loc ../contracts/OracleProxy.tsol, 261
+	.loc ../contracts/OracleProxy.tsol, 267
 	DUP
 	FIRST
-	.loc ../contracts/OracleProxy.tsol, 262
+	.loc ../contracts/OracleProxy.tsol, 268
 	PUSHINT 1000000000000000000
-	.loc ../contracts/OracleProxy.tsol, 264
+	.loc ../contracts/OracleProxy.tsol, 270
 	PUSH S2
 	INDEX2 1, 1
 	PUSHINT 0
@@ -996,9 +1014,9 @@ PUSHCONT {
 		NOT
 	}
 	PUSHCONT {
-		.loc ../contracts/OracleProxy.tsol, 265
+		.loc ../contracts/OracleProxy.tsol, 271
 		PUSHINT 0
-		.loc ../contracts/OracleProxy.tsol, 266
+		.loc ../contracts/OracleProxy.tsol, 272
 		OVER
 		FIRST
 		GETGLOB 31
@@ -1014,13 +1032,13 @@ PUSHCONT {
 		}
 		IFELSE
 		PAIR
-		.loc ../contracts/OracleProxy.tsol, 268
+		.loc ../contracts/OracleProxy.tsol, 274
 		PUSH S2
 		SECOND
 		PUSH S7
 		SDEQ
 		PUSHCONT {
-			.loc ../contracts/OracleProxy.tsol, 269
+			.loc ../contracts/OracleProxy.tsol, 275
 			PUSHINT 1
 			OVER
 			SECOND
@@ -1039,7 +1057,7 @@ PUSHCONT {
 			MULDIV
 			UFITS 128
 			POP S2
-			.loc ../contracts/OracleProxy.tsol, 270
+			.loc ../contracts/OracleProxy.tsol, 276
 			PUSH S2
 			THIRD
 			POP S7
@@ -1050,7 +1068,7 @@ PUSHCONT {
 			PUSH S7
 			SDEQ
 			PUSHCONT {
-				.loc ../contracts/OracleProxy.tsol, 272
+				.loc ../contracts/OracleProxy.tsol, 278
 				PUSHINT 0
 				OVER
 				SECOND
@@ -1069,20 +1087,20 @@ PUSHCONT {
 				MULDIV
 				UFITS 128
 				POP S2
-				.loc ../contracts/OracleProxy.tsol, 273
+				.loc ../contracts/OracleProxy.tsol, 279
 				PUSH S2
 				SECOND
 				POP S7
 			}
 			PUSHCONT {
-				.loc ../contracts/OracleProxy.tsol, 275
+				.loc ../contracts/OracleProxy.tsol, 281
 				PUSHINT 4000
 				THROWANY
 			}
 			IFELSE
 		}
 		IFELSE
-		.loc ../contracts/OracleProxy.tsol, 277
+		.loc ../contracts/OracleProxy.tsol, 283
 		DROP
 		PUXC S4, S-1
 		PUSHINT 1000000000000000000
@@ -1096,18 +1114,18 @@ PUSHCONT {
 	}
 	WHILE
 	BLKDROP 3
-	.loc ../contracts/OracleProxy.tsol, 281
+	.loc ../contracts/OracleProxy.tsol, 287
 	PUSHINT 4000
 	ROT
 	GETGLOB 12
 	SDEQ
 	THROWANYIFNOT
-	.loc ../contracts/OracleProxy.tsol, 283
+	.loc ../contracts/OracleProxy.tsol, 289
 	PUSHINT 1000000000
 	PUSHINT 1000000000000000000
 	MULDIV
 	UFITS 128
-	.loc ../contracts/OracleProxy.tsol, 284
+	.loc ../contracts/OracleProxy.tsol, 290
 	MULCONST 100
 	UFITS 128
 	CALLREF {

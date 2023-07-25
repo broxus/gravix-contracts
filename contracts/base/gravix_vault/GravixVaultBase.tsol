@@ -167,7 +167,6 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             bool correct
         ) = decodeTokenTransfer(payload);
         bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
-        console.log(format("action {} exception {}",uint(action), exception ? 1 : 0));
         if (msg.sender == usdt.wallet) {
             if (!exception && action == Action.MarketOrder) {
                 exception = exception || !_handleMarketOrder(
@@ -176,7 +175,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
                     actionPayload,
                     Callback.CallMeta(callId, nonce, remainingGasTo)
                 );
-            } if (!exception && action == Action.LimitOrder) {
+            } else if (!exception && action == Action.LimitOrder) {
                exception = exception || !_handleLimitOrder(
                     sender,
                     amount,
