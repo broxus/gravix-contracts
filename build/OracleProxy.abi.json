@@ -45,6 +45,15 @@
 			]
 		},
 		{
+			"name": "setExecuteLimitCallback",
+			"inputs": [
+				{"name":"_limitOrdersExecutor","type":"address"},
+				{"components":[{"name":"positionKey","type":"uint32"},{"name":"marketIdx","type":"uint32"},{"name":"collateral","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"user","type":"address"}],"name":"_limitPositions","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setCloseCallback",
 			"inputs": [
 				{"name":"_user","type":"address"},
@@ -111,6 +120,7 @@
 		{"name":"targetPrice","type":"uint128"},
 		{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"userPrice","type":"tuple"},
 		{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"}],"name":"positions","type":"tuple[]"},
+		{"components":[{"name":"positionKey","type":"uint32"},{"name":"marketIdx","type":"uint32"},{"name":"collateral","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"user","type":"address"}],"name":"limitPositions","type":"tuple[]"},
 		{"name":"liquidator","type":"address"},
 		{"name":"callbackType","type":"uint8"},
 		{"name":"pairReserves","type":"map(address,uint128[])"}

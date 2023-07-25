@@ -219,13 +219,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
                 uint128 value = uint128(limitOrders.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
-                this.self_liquidatePositions{value: value}(
-                    msg.sender,
-                    marketIdx,
-                    liqData.positions,
-                    liqData.price.price,
-                    meta,
-                    0
+                this.self_executeLimitOrders{value: value}(
+                    limitOrders.positions,
+                    limitOrders.price.price,
+                    meta
                 );
                 continue;
             }
@@ -239,9 +236,26 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
     }
 
-    function self_executeLimitOrders() external reserve {
+    function self_executeLimitOrders(
+        LimitPositionIdx[] limitPositions,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external reserve {
         require (msg.sender == address(this), Errors.BAD_SENDER);
+        for (LimitPositionIdx limitPosition : limitPositions) {
+            _executeLimitOrder(
+                limitPosition.user,
+                limitPosition.positionKey,
+                limitPosition.marketIdx,
+                limitPosition.collateral,
+                limitPosition.leverage,
+                limitPosition.positionType,
+                _assetPrice,
+                _meta
+            );
+        }
 
+        _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
     function _sendExecuteLimitOracleRequest(
@@ -301,7 +315,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         if (_error == 0) {
             int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
             // todo add constant value
-            IGravixAccount(gravixAcc).process_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixAccount(gravixAcc).process_executeLimitOrder{value: 1 ever}(
                 positionKey,
                 marketIdx,
                 positionSizeAsset,
@@ -314,11 +328,11 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         } else {
             //todo
             // order cant be executed now, some limits reached and etc.
-            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                positionKey,
-                meta,
-                gravixAccountCode.version
-            );
+//            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+//                positionKey,
+//                meta,
+//                gravixAccountCode.version
+//            );
         }
     }
     //endregion

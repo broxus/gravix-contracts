@@ -401,6 +401,18 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 assetPrice,
         Callback.CallMeta meta
     ) external;
+    function finish_executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        IGravixAccount.Position openedPosition,
+        address referrer,
+        address grandReferrer,
+        Callback.CallMeta meta
+    ) external;
+    function limitBot_executeLimitOrders(
+        mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
+        Callback.CallMeta meta
+    ) external;
     function finish_closePosition(
         address user,
         uint32 positionKey,
@@ -409,6 +421,12 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address referrer,
         address grandReferrer,
         Callback.CallMeta meta
+    ) external;
+    function oracle_executeLimitOrder(
+        uint64 _nonce,
+        LimitPositionIdx[] limitPositions,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
     ) external;
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta

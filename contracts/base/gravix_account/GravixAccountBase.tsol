@@ -273,9 +273,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
 
-
-        bool isPriceOk;
-
         bool isPriceOk;
         if (request.limitOrderType == IGravixVault.LimitOrderType.Limit) {
             isPriceOk = request.positionType == IGravixVault.PositionType.Long
@@ -289,7 +286,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 : request.targetPrice <= _assetPrice;
         }
 
-        // add base + dynamic spread
+        // add base spread
         uint128 openPrice = applyOpenSpread(
             request.targetPrice,
             request.positionType,
@@ -297,20 +294,15 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
 
         if (!isPriceOk) {
-            IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _marketIdx, request.collateral,
-                _positionSizeAsset, _assetPrice, _positionType, _meta
-            );
+            //todo
+//            IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+//                user, _positionKey, _marketIdx, request.collateral,
+//                _positionSizeAsset, _assetPrice, _positionType, _meta
+//            );
             return;
         }
         delete limitOrders[_positionKey];
 
-        // add base spread
-        uint128 openPrice = applyOpenSpread(
-            request.targetPrice,
-            request.positionType,
-            request.baseSpreadRate
-        );
         uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
         uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
 
@@ -331,7 +323,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
         positions[_positionKey] = openedPosition;
 
-        IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user, _positionKey, openedPosition, referrer, grandReferrer, _meta
         );
     }
