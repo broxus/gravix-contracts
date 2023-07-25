@@ -24,7 +24,10 @@ interface IOracleProxy {
         uint128 _targetPrice,
         IPriceNode.Price _userPrice
     ) external;
-
+    function setExecuteLimitCallback(
+        address _limitOrdersExecutor,
+        IGravixVault.LimitPositionIdx[] _limitPositions
+    ) external;
     function setCloseCallback(address _user, uint32 _position_key) external;
     function setLiquidationCallback(address _liquidator, IGravixVault.PositionIdx[] _positions) external;
 }

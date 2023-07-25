@@ -38,9 +38,10 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
 
     // this is set for liquidations
     IGravixVault.PositionIdx[] positions;
+    IGravixVault.LimitPositionIdx[] limitPositions;
     address liquidator;
 
-    enum CallbackType { Execute, ExecuteLimit, Close, Liquidation }
+    enum CallbackType { Execute, RequestLimit, ExecuteLimit, Close, Liquidation }
     CallbackType callbackType;
     // dex oracle utility staff
     // pair addr => current reserves
@@ -104,12 +105,24 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         collateral = _collateral;
         leverage = _leverage;
         positionType = _positionType;
-        callbackType = CallbackType.ExecuteLimit;
+        callbackType = CallbackType.RequestLimit;
         limitOrderType = _limitOrderType;
         referer = _referer;
         targetPrice = _targetPrice;
         userPrice = _userPrice;
         _collectPrice(user);
+    }
+
+    function setExecuteLimitCallback(
+        address _limitOrdersExecutor,
+        IGravixVault.LimitPositionIdx[] _limitPositions
+    ) external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+
+        user = _limitOrdersExecutor;
+        callbackType = CallbackType.ExecuteLimit;
+        limitPositions = _limitPositions;
+        _collectPrice(_limitOrdersExecutor);
     }
 
     function setCloseCallback(address _user, uint32 _positionKey) external {
@@ -171,7 +184,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 price,
                 meta
             );
-        } else if (callbackType == CallbackType.ExecuteLimit) {
+        } else if (callbackType == CallbackType.RequestLimit) {
             IGravixVault(vault).oracle_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,
                 user,
@@ -187,6 +200,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 price
 
             );
+        } else if (callbackType == CallbackType.ExecuteLimit) {
+
         } else if (callbackType == CallbackType.Close) {
             IGravixVault(vault).oracle_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,

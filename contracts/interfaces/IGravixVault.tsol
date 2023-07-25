@@ -109,9 +109,23 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 positionKey;
     }
 
+    struct LimitPositionIdx {
+        uint32 positionKey;
+        uint32 marketIdx;
+        uint128 collateral;
+        uint32 leverage;
+        PositionType positionType;
+        address user;
+    }
+
     struct LiquidationData {
         IPriceNode.Price price;
         PositionIdx[] positions;
+    }
+
+    struct ExecuteLimitOrderData {
+        IPriceNode.Price price;
+        LimitPositionIdx[] positions;
     }
 
     enum PositionType { Long, Short }
@@ -185,6 +199,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address owner;
         address manager;
         address marketManager;
+        address limitBot;
     }
 
     struct PoolAssets {
@@ -288,6 +303,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event OpenCloseFeeSchemaUpdate(uint32 callId, uint64[2] newOpenFeeSchema, uint64[2] newCloseFeeSchema);
     event NewPriceNode(uint32 callId, address priceNode);
     event NewPricePubkey(uint32 callId, uint256 newPubkey);
+    event NewLimitBot(uint32 callId, address limitBot);
     event MarketOracleConfigUpdate(uint32 callId, uint32 marketIdx, OracleConfig oracle);
     event NewTreasury(uint32 callId, address newTreasury);
     event NewProjectFund(uint32 callId, address newProjectFund);

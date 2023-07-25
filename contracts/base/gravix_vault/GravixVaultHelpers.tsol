@@ -350,6 +350,11 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         _;
     }
 
+    modifier onlyLimitBot() {
+        require (msg.sender == managers.limitBot, Errors.NOT_LIMIT_BOT);
+        _;
+    }
+
     function _reserve() internal pure returns (uint128) {
         return math.max(address(this).balance - msg.value, CONTRACT_MIN_BALANCE);
     }

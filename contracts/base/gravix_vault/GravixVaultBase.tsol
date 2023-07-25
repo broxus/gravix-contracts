@@ -37,6 +37,11 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         emit NewPricePubkey(meta.callId, newPubkey);
     }
 
+    function setLimitBot(address _newLimitBot, Callback.CallMeta _meta) external onlyOwner reserveAndSendGas(_meta) {
+        managers.limitBot = _newLimitBot;
+        emit NewLimitBot(_meta.callId, _newLimitBot);
+    }
+
     function setPause(bool newState, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         paused = newState;
         emit Pause(meta.callId, newState);

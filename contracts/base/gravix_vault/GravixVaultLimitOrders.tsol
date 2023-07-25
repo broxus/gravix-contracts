@@ -4,19 +4,16 @@ pragma ever-solidity ^0.62.0;
 import "../../interfaces/IGravixAccount.tsol";
 import "../../interfaces/IOracleProxy.tsol";
 import "../../libraries/Callback.tsol";
-import "../../libraries/Gas.tsol";
 import "./GravixVaultMarkets.tsol";
 import "./GravixVaultOrdersBase.tsol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
-import "@broxus/tip3/contracts/interfaces/ITokenRootUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/ITokenWalletUpgradeable.tsol";
-import "locklift/src/console.tsol";
+
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
 abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
+    // region request order
     function _handleLimitOrder(
         address _user,
         uint128 collateral,
@@ -206,6 +203,149 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             positionKey
         );
 
+    }
+
+    //endregion
+
+    // region limit bot
+    function limitBot_executeLimitOrders(
+        mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
+        Callback.CallMeta meta
+    ) external override onlyLimitBot reserve {
+        for ((uint32 marketIdx, ExecuteLimitOrderData limitOrders) : limitOrdersMap) {
+            OracleType priceSource = markets[marketIdx].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+            // if market uses offchain oracle and we have valid price, we can liquidate positions right now
+            if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
+                uint128 value = uint128(limitOrders.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+                this.self_liquidatePositions{value: value}(
+                    msg.sender,
+                    marketIdx,
+                    liqData.positions,
+                    liqData.price.price,
+                    meta,
+                    0
+                );
+                continue;
+            }
+
+            _sendExecuteLimitOracleRequest(
+                marketIdx,
+                limitOrders.positions,
+                meta
+            );
+        }
+
+    }
+
+    function self_executeLimitOrders() external reserve {
+        require (msg.sender == address(this), Errors.BAD_SENDER);
+
+    }
+
+    function _sendExecuteLimitOracleRequest(
+        uint32 _marketIdx,
+        LimitPositionIdx[] _limitPositions,
+        Callback.CallMeta _meta
+    ) internal {
+        address proxy = _deployOracleProxy(_marketIdx, _meta);
+        IOracleProxy(proxy).setExecuteLimitCallback{
+            value: 0,
+            flag: MsgFlag.ALL_NOT_RESERVED
+        }(
+        //todo msg.sneder?
+            msg.sender,
+            _limitPositions
+        );
+    }
+    function oracle_executeLimitOrder(
+        uint64 _nonce,
+        LimitPositionIdx[] limitPositions,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external override onlyOracleProxy(_nonce) reserve {
+        for (LimitPositionIdx limitPosition : limitPositions) {
+            _executeLimitOrder(
+                limitPosition.user,
+                limitPosition.positionKey,
+                limitPosition.marketIdx,
+                limitPosition.collateral,
+                limitPosition.leverage,
+                limitPosition.positionType,
+                _assetPrice,
+                _meta
+            );
+        }
+
+        _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+    }
+
+    function _executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint32 leverage,
+        PositionType positionType,
+        uint128 assetPrice,
+        Callback.CallMeta meta
+    ) internal {
+        // reserve should be
+        uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
+
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        uint16 _error = _addPositionToMarketOrReturnErr(marketIdx, positionSizeAsset, assetPrice, positionType);
+
+        address gravixAcc = getGravixAccountAddress(user);
+        if (_error == 0) {
+            int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
+            // todo add constant value
+            IGravixAccount(gravixAcc).process_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                positionKey,
+                marketIdx,
+                positionSizeAsset,
+                positionType,
+                assetPrice,
+                funding,
+                meta,
+                gravixAccountCode.version
+            );
+        } else {
+            //todo
+            // order cant be executed now, some limits reached and etc.
+            IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                positionKey,
+                meta,
+                gravixAccountCode.version
+            );
+        }
+    }
+    //endregion
+//todo
+    function finish_executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        IGravixAccount.Position newPos,
+        address referrer,
+        address grandReferrer,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
+        _collectOpenFeeAndReferral(newPos.openFee, referrer, grandReferrer, user, meta);
+        collateralReserve -= newPos.openFee;
+
+        uint128 positionSizeAssetRaw = calculatePositionAssetSize(newPos.initialCollateral, newPos.leverage, newPos.markPrice);
+        _removePositionFromMarket(newPos.marketIdx, positionSizeAssetRaw, newPos.markPrice, newPos.positionType);
+
+        uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
+        _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
+
+        emit MarketOrderExecution(
+            meta.callId,
+            user,
+            newPos,
+            positionKey
+        );
     }
 
 }
