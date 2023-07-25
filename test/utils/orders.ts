@@ -374,7 +374,6 @@ export async function openLimitWithTestsOrder({
         limitType: limitType.toString(),
         marketIdx: marketIdx.toString(),
     });
-    debugger;
     const event = await vault.getEvent("MarketOrderExecution");
     const details = await vault.details();
     const acc_details = await account.contract.methods.getDetails({ answerId: 0 }).call();

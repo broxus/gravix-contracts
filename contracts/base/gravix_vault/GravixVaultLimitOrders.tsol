@@ -1,0 +1,211 @@
+pragma ever-solidity ^0.62.0;
+
+
+import "../../interfaces/IGravixAccount.tsol";
+import "../../interfaces/IOracleProxy.tsol";
+import "../../libraries/Callback.tsol";
+import "../../libraries/Gas.tsol";
+import "./GravixVaultMarkets.tsol";
+import "./GravixVaultOrdersBase.tsol";
+import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
+import "@broxus/tip3/contracts/interfaces/ITokenRootUpgradeable.tsol";
+import "@broxus/tip3/contracts/interfaces/ITokenWalletUpgradeable.tsol";
+import "locklift/src/console.tsol";
+import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
+
+
+abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
+
+    function _handleLimitOrder(
+        address _user,
+        uint128 collateral,
+        TvmCell orderParamsPayload,
+        Callback.CallMeta meta
+    ) internal returns (bool) {
+        (
+            uint32 marketIdx,
+            PositionType positionType,
+            uint32 leverage,
+            uint128 targetPrice,
+            LimitOrderType limitOrderType,
+            IPriceNode.Price price,
+            address referrer
+        ) = decodeLimitOrder(orderParamsPayload);
+
+        if (!validateOrderParams(marketIdx, collateral, leverage, 0)) return false;
+        // TODO check position allowed
+        if (!marketOpen(marketIdx)) return false;
+
+        _limitOrder(
+            _user,
+            marketIdx,
+            positionType,
+            collateral,
+            leverage,
+            targetPrice,
+            limitOrderType,
+            price,
+            referrer,
+            meta
+        );
+        return true;
+    }
+
+    function _limitOrder(
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _targetPrice,
+        LimitOrderType _limitOrderType,
+        IPriceNode.Price _price,
+        address _referrer,
+        Callback.CallMeta _meta
+    ) internal {
+
+        _sendOpenOrderOracleLimitRequest(
+            _user,
+            requestNonce,
+            _marketIdx,
+            _collateral,
+            _leverage,
+            _positionType,
+            _limitOrderType,
+            _referrer,
+            _targetPrice,
+            _price,
+            _meta
+        );
+    }
+
+    function _sendOpenOrderOracleLimitRequest(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _collateral,
+        uint32 _leverage,
+        PositionType _positionType,
+        LimitOrderType _limitOrderType,
+        address _referer,
+        uint128 _targetPrice,
+        IPriceNode.Price _userPrice,
+        Callback.CallMeta _meta
+    ) internal view {
+        address proxy = _deployOracleProxy(_marketIdx, _meta);
+        IOracleProxy(proxy).setRequestLimitCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _user,
+            _positionKey,
+            _collateral,
+            _leverage,
+            _positionType,
+            _limitOrderType,
+            _referer,
+            _targetPrice,
+            _userPrice
+        );
+    }
+    function oracle_requestLimitOrder(
+        uint64 _nonce,
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _targetPrice,
+        LimitOrderType _limitOrderType,
+        IPriceNode.Price _price,
+        address _referrer,
+        Callback.CallMeta _meta,
+        uint128 _assetPrice
+    ) external override onlyOracleProxy(_nonce) reserve {
+        Market _market = markets[_marketIdx];
+        requestNonce += 1;
+        uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
+        PendingLimitOrder newRequest = PendingLimitOrder(
+            _user,
+            _marketIdx,
+            _positionType,
+            _collateral,
+            _targetPrice,
+            _limitOrderType,
+            _leverage,
+            _market.fees.openFeeRate,
+            _market.fees.closeFeeRate,
+            _market.fees.baseSpreadRate,
+            liquidationParams.thresholdRate,
+            _market.fees.borrowBaseRatePerHour,
+            _price,
+            _referrer,
+            _assetPrice,
+            positionSizeAsset,
+            _meta
+        );
+        pendingLimitRequests[requestNonce] = newRequest;
+
+
+        _requestLimitOrder(newRequest, requestNonce);
+    }
+
+    function _requestLimitOrder(
+        IGravixVault.PendingLimitOrder _pendingLimitOrder,
+        uint32 _requestNonce
+    ) internal {
+        // reserve should be
+        address gravixAcc = getGravixAccountAddress(_pendingLimitOrder.user);
+
+        IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _requestNonce,
+            _pendingLimitOrder,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_requestLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest
+    ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        delete pendingLimitRequests[_reqNonce];
+        emit LimitOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
+        if (_pendRequest.collateral > 0) {
+            _transfer(
+                usdt.wallet,
+                _pendRequest.collateral,
+                _pendRequest.user,
+                _makeCell(_pendRequest.meta.nonce),
+                _pendRequest.meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(
+                _pendRequest.user,
+                _pendRequest.meta.nonce,
+                false, _pendRequest.meta.sendGasTo
+            );
+        }
+    }
+
+    function finish_requestLimitOrder(
+        uint32 reqNonce,
+        PendingLimitOrder request,
+        uint32 positionKey
+    ) external override onlyGravixAccount(request.user) reserve {
+        delete pendingLimitRequests[reqNonce];
+        collateralReserve += request.collateral;
+
+        emit LimitOrder(
+            request.meta.callId,
+            request.user,
+            request.marketIdx,
+            request.positionType,
+            request.orderType,
+            request.collateral,
+            request.targetPrice,
+            request.leverage,
+            positionKey
+        );
+
+    }
+
+}

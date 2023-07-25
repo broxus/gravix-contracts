@@ -205,15 +205,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _pendingRequest.borrowBaseRatePerHour
         );
 
-        // check if request exists + double check market idx
-        if (_pendingRequest.collateral == 0) {
-            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                _reqNonce,
-                _pendingRequest
-            );
-            return;
-        }
-
         bool isPriceOk;
         if (_pendingRequest.orderType == IGravixVault.LimitOrderType.Limit) {
             isPriceOk = _pendingRequest.positionType == IGravixVault.PositionType.Long
