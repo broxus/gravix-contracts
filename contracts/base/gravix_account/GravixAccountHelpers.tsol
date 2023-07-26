@@ -7,7 +7,6 @@ import "../../libraries/Gas.tsol";
 import "../../libraries/Callback.tsol";
 import "../../libraries/PlatformTypes.tsol";
 import "../../libraries/Errors.tsol";
-import "locklift/src/console.tsol";
 import "../../libraries/Constants.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
 
@@ -19,7 +18,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, grandReferrer, referralBalance);
     }
 
-    function getReferrer() external view override responsible returns (address _user, address _referrer) {
+    function getReferrerForMarketOrder() external view override responsible returns (address _user, address _referrer) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
+    }
+    function getReferrerForLimitOrder() external view override responsible returns (address _user, address _referrer) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
     }
 

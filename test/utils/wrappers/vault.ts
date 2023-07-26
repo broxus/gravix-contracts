@@ -196,7 +196,7 @@ export class GravixVault {
         leverage,
         referrer,
         marketIdx,
-        targetPrice,
+        triggerPrice,
         amount,
         fromWallet,
     }: {
@@ -205,7 +205,7 @@ export class GravixVault {
         marketIdx: number;
         positionType: 0 | 1; // 0 - short, 1 - long
         leverage: number;
-        targetPrice: number | string;
+        triggerPrice: number | string;
         referrer: Address;
         limitType: 0 | 1; // 0 - limit, 1 - stop
         callId: number;
@@ -216,7 +216,7 @@ export class GravixVault {
                     _marketIdx: marketIdx,
                     _positionType: positionType,
                     _leverage: leverage,
-                    _targetPrice: targetPrice,
+                    _triggerPrice: triggerPrice,
                     _price: empty_price,
                     _callId: callId,
                     _referrer: referrer,
@@ -225,7 +225,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(3.6));
     }
 
     async addCollateral(

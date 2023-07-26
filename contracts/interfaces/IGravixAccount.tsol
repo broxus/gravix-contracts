@@ -93,6 +93,12 @@ interface IGravixAccount {
         uint32 accountVersion
     ) external;
 
+    function process_requestLimitOrder(
+        uint32 reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _accountVersion
+    ) external;
+
     function process_executeLimitOrder(
         uint32 _positionKey,
         uint32 _marketIdx,
@@ -104,9 +110,9 @@ interface IGravixAccount {
         uint32 _accountVersion
     ) external;
 
-    function process_requestLimitOrder(
-        uint32 reqNonce,
-        IGravixVault.PendingLimitOrder _pendingRequest,
+    function process_cancelLimitOrder(
+        uint32 _positionKey,
+        Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external;
     function process_closePosition(
@@ -146,7 +152,11 @@ interface IGravixAccount {
         uint128 amount, Callback.CallMeta meta
     ) external;
     function process_withdrawReferralBalance(Callback.CallMeta meta) external;
-    function getReferrer() external view responsible returns (address user, address _referrer);
-    function process_getReferrer(address _user, address _referrer) external;
+    function getReferrerForMarketOrder() external view responsible returns (address user, address _referrer);
+    function getReferrerForLimitOrder() external view responsible returns (address user, address _referrer);
+
+    function process_getMarketReferrer(address _user, address _referrer) external;
+    function process_getLimitReferrer(address _user, address _referrer) external;
+
     function upgrade(TvmCell newCode, uint32 newVersion, Callback.CallMeta meta) external;
 }

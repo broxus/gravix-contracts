@@ -146,10 +146,11 @@ describe("Testing main orders flow", async function () {
                         userWallet: userUsdtWallet,
                         marketIdx: marketIdx,
                         leverage: LEVERAGE_DECIMALS,
-                        finishPrice: 1000 * USDT_DECIMALS,
+                        initialPrice: 1050 * USDT_DECIMALS,
+                        triggerPrice: 1000 * USDT_DECIMALS,
+                        finishPrice: 1100 * USDT_DECIMALS,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        initialPrice: 1100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
                     });
                 });

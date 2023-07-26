@@ -315,6 +315,198 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
     //endregion
 
+    // region close position
+    // ----------------------------------------------------------------------------------
+    // --------------------------- POSITION CLOSE HANDLERS ---------------------------------
+    // ----------------------------------------------------------------------------------
+    function forceClosePositions(
+        address[] users,
+        uint32[] positionKeys,
+        uint32[] marketIdx,
+        IPriceNode.Price[] prices,
+        Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        require (users.length == positionKeys.length, Errors.BAD_INPUT);
+        require (users.length == marketIdx.length, Errors.BAD_INPUT);
+        require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
+
+        for (uint i = 0; i < users.length; i++) {
+            OracleType priceSource = markets[marketIdx[i]].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx[i]];
+
+            // if market uses offchain oracle and we have valid price, we can close order right now
+            if (priceSource == OracleType.PriceNode && checkPrice(prices[i], oracleConf.priceNode)) {
+                _closePosition(
+                    users[i], positionKeys[i], marketIdx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, meta
+                );
+                continue;
+            }
+
+            address proxy = _deployOracleProxy(marketIdx[i], meta);
+            IOracleProxy(proxy).setCloseCallback{value: Gas.MIN_MSG_VALUE - Gas.ORACLE_PROXY_DEPLOY - 0.01 ever}(
+                users[i], positionKeys[i]
+            );
+        }
+    }
+
+    // @notice Should be used by admin very carefully when oracle is dead by some reason to save users
+    // Bad price here can cause bad contract state!
+    function forceClosePositionsWithPrice(
+        address[] users,
+        uint32[] positionKeys,
+        uint32[] marketIdx,
+        uint128[] assetPrices,
+        Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        require (users.length == positionKeys.length, Errors.BAD_INPUT);
+        require (positionKeys.length == marketIdx.length, Errors.BAD_INPUT);
+        require (marketIdx.length == assetPrices.length, Errors.BAD_INPUT);
+        require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
+
+        for (uint i = 0; i < users.length; i++) {
+            _closePosition(
+                users[i], positionKeys[i], marketIdx[i], assetPrices[i], Gas.MIN_MSG_VALUE - 0.1 ever, meta
+            );
+        }
+    }
+
+    function closePosition(
+        uint32 positionKey,
+        uint32 marketIdx,
+        IPriceNode.Price price,
+        Callback.CallMeta meta
+    ) external onlyActive reserve {
+        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+
+        // soft fail
+        // optimistic check on market, we will check that position matches it in account
+        if (!marketOpen(marketIdx)) {
+            emit ClosePositionRevert(meta.callId, msg.sender, positionKey, marketIdx);
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
+            return;
+        }
+
+        OracleType priceSource = markets[marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+        // if market uses offchain oracle and we have valid price, we can close order right now
+        if (priceSource == OracleType.PriceNode && checkPrice(price, oracleConf.priceNode)) {
+            _closePosition(msg.sender, positionKey, marketIdx, price.price, 0, meta);
+            return;
+        }
+
+        _sendCloseOrderOracleRequest(msg.sender, positionKey, marketIdx, meta);
+    }
+
+    function _sendCloseOrderOracleRequest(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        Callback.CallMeta meta
+    ) internal view {
+        address proxy = _deployOracleProxy(marketIdx, meta);
+        IOracleProxy(proxy).setCloseCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(user, positionKey);
+    }
+
+    // @param nonce - oracle static parameter, required for addr calculation
+    // @param user - order maker
+    // @param positionKey - unique(per user) position key
+    // @param marketIdx - market id
+    // @param assetPrice - current asset price for this market, 8 decimals number
+    // @param meta - txn meta
+    function oracle_closePosition(
+        uint64 nonce,
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
+        Callback.CallMeta meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        _closePosition(user, positionKey, marketIdx, assetPrice, 0, meta);
+    }
+
+    function _closePosition(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
+        uint128 value,
+        Callback.CallMeta meta
+    ) internal {
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_closePosition{value: value, flag: flag}(
+            positionKey,
+            marketIdx,
+            assetPrice,
+            _funding,
+            meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_closePosition(
+        address user, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
+        emit ClosePositionRevert(meta.callId, user, positionKey, marketIdx);
+    }
+
+    function finish_closePosition(
+        address user,
+        uint32 positionKey,
+        uint128 assetPrice,
+        IGravixAccount.PositionView positionView,
+        address referrer,
+        address grandReferrer,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        // we already deducted open fee when position was opened
+        uint128 collateral = positionView.position.initialCollateral - positionView.position.openFee;
+        collateralReserve -= collateral;
+
+        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, positionView.position.leverage, positionView.position.openPrice);
+        _removePositionFromMarket(
+            positionView.position.marketIdx,
+            initialPositionSizeAsset,
+            assetPrice,
+            positionView.position.positionType
+        );
+
+        if (positionView.liquidate) {
+            // increase insurance fund + send referrer payment
+            _collectPnlAndReferral(collateral, referrer, grandReferrer, user, meta);
+
+            emit LiquidatePosition(meta.callId, user, user, positionKey, positionView);
+            _sendCallbackOrGas(user, meta.nonce, true, meta.sendGasTo);
+        } else {
+            int256 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
+            int256 limitedPnl = math.min(positionView.pnl, pnlLimit);
+
+            int256 pnlWithFees = limitedPnl - positionView.borrowFee - positionView.fundingFee;
+            _collectCloseFeeAndReferral(positionView.closeFee, referrer, grandReferrer, user, meta);
+
+            uint128 debt;
+            if (pnlWithFees < 0) {
+                // increase insurance fund + send referrer payment
+                _collectPnlAndReferral(uint128(math.abs(pnlWithFees)), referrer, grandReferrer, user, meta);
+            }
+            if (pnlWithFees > 0) {
+                // positive debt if we dont have enough money to pay pnl
+                debt = _decreaseInsuranceFund(uint128(pnlWithFees));
+            }
+
+            emit ClosePosition(meta.callId, user, positionKey, positionView);
+            // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
+            uint128 userNetUsdt = uint128(collateral + pnlWithFees - debt - positionView.closeFee);
+            _transfer(usdt.wallet, userNetUsdt, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
+            if (debt > 0) {
+                emit Debt(meta.callId, user, debt);
+            }
+        }
+    }
+    //endregion
+
     //region liquidation
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDATION ------------------------------------------
