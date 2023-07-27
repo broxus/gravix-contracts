@@ -57,13 +57,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         // always trying to get grandReferrer on 1st request if referrer is set
         if (requestCounter == 1 && referrer != address(0)) {
-            address referrerAcc = _getGravixAccountAddress(referrer);
-            firstMarketRequest = _pendingRequest;
-            firstReqNonce = _reqNonce;
-            IGravixAccount(referrerAcc).getReferrerForMarketOrder{
-                value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getMarketReferrer
-            }();
-            return;
+            retrieveReferrers();
         }
 
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -71,48 +65,39 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-
-    function process_getMarketReferrer(address _referrer, address _grandReferrer) external override reserve {
+    function retrieveReferrers() internal {
+        address referrerAcc = _getGravixAccountAddress(referrer);
+        IGravixAccount(referrerAcc).getReferrer{
+            value: 0.5 ever,
+            callback: IGravixAccount.process_getReferrer
+        }();
+    }
+    function process_getReferrer(address _referrer, address _grandReferrer) external override reserve {
         require (msg.sender == _getGravixAccountAddress(_referrer), Errors.NOT_GRAVIX_ACCOUNT);
+
+        if (!referrerChecked) {
+            // we got this callback from our referrer account
+            referrerChecked = true;
+        } else {
+            grandReferrerChecked = true;
+        }
 
         // we got this callback from our referrer account
         // + we got correct grand referrer address
-        if (_referrer == referrer && _grandReferrer != address(0)) {
+        if (_referrer == _getReferrer() && _grandReferrer != address(0)) {
             grandReferrer = _grandReferrer;
             // we dont really need data from our grand referrer, we just want to check if he exists
             address grandReferrerAcc = _getGravixAccountAddress(grandReferrer);
-            IGravixAccount(grandReferrerAcc).getReferrerForMarketOrder{
-                value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getMarketReferrer
+            IGravixAccount(grandReferrerAcc).getReferrer{
+                value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getReferrer
             }();
+
             return;
         }
 
-        // if we get here, it means we have no grand referrer/we got correct callback from grand referrer
-        IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            firstReqNonce, firstMarketRequest, 1 // we can get here only of 1st request
-        );
+        user.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false});
     }
 
-    function process_getLimitReferrer(address _referrer, address _grandReferrer) external override reserve {
-        require (msg.sender == _getGravixAccountAddress(_referrer), Errors.NOT_GRAVIX_ACCOUNT);
-
-        // we got this callback from our referrer account
-        // + we got correct grand referrer address
-        if (_referrer == referrer && _grandReferrer != address(0)) {
-            grandReferrer = _grandReferrer;
-            // we dont really need data from our grand referrer, we just want to check if he exists
-            address grandReferrerAcc = _getGravixAccountAddress(grandReferrer);
-            IGravixAccount(grandReferrerAcc).getReferrerForLimitOrder{
-                    value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getLimitReferrer
-                }();
-            return;
-        }
-
-        // if we get here, it means we have no grand referrer/we got correct callback from grand referrer
-        IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            firstReqNonce, firstLimitRequest, 1 // we can get here only of 1st request
-        );
-    }
 
     function process_executeMarketOrder(
         uint32 _positionKey,
@@ -191,8 +176,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
         positions[_positionKey] = openedPosition;
 
+
         IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, _positionKey, openedPosition, referrer, grandReferrer, _meta
+            user,
+            _positionKey,
+            openedPosition,
+            _getReferrer(),
+            _getGrandReferrer(),
+            _meta
         );
     }
 
@@ -241,20 +232,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
             return;
         }
-        requestCounter += 1;
-        limitOrders[requestCounter] = LimitOrder(
-            _pendingRequest.marketIdx,
-            _pendingRequest.positionType,
-            _pendingRequest.orderType,
-            _pendingRequest.collateral,
-            _pendingRequest.triggerPrice,
-            _pendingRequest.leverage,
-            _pendingRequest.openFeeRate,
-            _pendingRequest.closeFeeRate,
-            _pendingRequest.baseSpreadRate,
-            _pendingRequest.liquidationThresholdRate,
-            _pendingRequest.borrowBaseRatePerHour
-        );
+
 
         bool isPriceOk;
         if (_pendingRequest.orderType == IGravixVault.LimitOrderType.Limit) {
@@ -279,15 +257,25 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         // always trying to get grandReferrer on 1st request if referrer is set
+
         if (requestCounter == 1 && referrer != address(0)) {
-            address referrerAcc = _getGravixAccountAddress(referrer);
-            firstLimitRequest = _pendingRequest;
-            firstReqNonce = _reqNonce;
-            IGravixAccount(referrerAcc).getReferrerForLimitOrder{
-                    value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getLimitReferrer
-            }();
-            return;
+            retrieveReferrers();
         }
+
+        requestCounter += 1;
+        limitOrders[requestCounter] = LimitOrder(
+            _pendingRequest.marketIdx,
+            _pendingRequest.positionType,
+            _pendingRequest.orderType,
+            _pendingRequest.collateral,
+            _pendingRequest.triggerPrice,
+            _pendingRequest.leverage,
+            _pendingRequest.openFeeRate,
+            _pendingRequest.closeFeeRate,
+            _pendingRequest.baseSpreadRate,
+            _pendingRequest.liquidationThresholdRate,
+            _pendingRequest.borrowBaseRatePerHour
+        );
 
         IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _reqNonce,
@@ -621,9 +609,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         uint32 functionId = slice.decode(uint32);
         // we can get here because of failed referrer/grand referrer callback
-        bool isMarketReferrerRequest = functionId == tvm.functionId(IGravixAccount.getReferrerForLimitOrder);
-        bool isLimitReferrerRequest = functionId == tvm.functionId(IGravixAccount.getReferrerForLimitOrder);
-        if (isMarketReferrerRequest || isLimitReferrerRequest) {
+
+        if (functionId == tvm.functionId(IGravixAccount.getReferrer)) {
             tvm.rawReserve(_reserve(), 0);
             if (referrer != address(0) && grandReferrer != address(0)) {
                 // If both addresses are set, it means we:
@@ -634,24 +621,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 // We tried to check that referrer exists and got bounce
                 delete referrer;
             }
-            delete firstReqNonce;
-            if (isMarketReferrerRequest) {
-                IGravixVault(vault).finish_requestMarketOrder{
-                        value: 0,
-                        flag: MsgFlag.ALL_NOT_RESERVED
-                }(firstReqNonce, firstMarketRequest, 1);
-                delete firstMarketRequest;
-                return;
-            }
 
-            if (isLimitReferrerRequest) {
-                IGravixVault(vault).finish_requestLimitOrder{
-                        value: 0,
-                        flag: MsgFlag.ALL_NOT_RESERVED
-                }(firstReqNonce, firstLimitRequest, 1);
-                delete firstLimitRequest;
-                return;
-            }
+            user.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
         }
     }
 }

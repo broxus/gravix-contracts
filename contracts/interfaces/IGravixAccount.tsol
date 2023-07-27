@@ -14,7 +14,7 @@ interface IGravixAccount {
         IGravixVault.PositionType positionType;
         uint128 collateral; // 6 decimals number
         uint128 expectedPrice; // 8 decimals number
-        uint32 leverage; // 2 decimals number
+        uint32 leverage; // 6 decimals number
         uint64 maxSlippageRate; // %
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
@@ -28,7 +28,7 @@ interface IGravixAccount {
         IGravixVault.LimitOrderType limitOrderType;
         uint128 collateral; // 6 decimals number
         uint128 triggerPrice; // 8 decimals number
-        uint32 leverage; // 2 decimals number
+        uint32 leverage; // 6 decimals number
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
         uint64 baseSpreadRate; // %
@@ -152,11 +152,9 @@ interface IGravixAccount {
         uint128 amount, Callback.CallMeta meta
     ) external;
     function process_withdrawReferralBalance(Callback.CallMeta meta) external;
-    function getReferrerForMarketOrder() external view responsible returns (address user, address _referrer);
-    function getReferrerForLimitOrder() external view responsible returns (address user, address _referrer);
+    function getReferrer() external view responsible returns (address user, address _referrer);
 
-    function process_getMarketReferrer(address _user, address _referrer) external;
-    function process_getLimitReferrer(address _user, address _referrer) external;
+    function process_getReferrer(address _user, address _referrer) external;
 
     function upgrade(TvmCell newCode, uint32 newVersion, Callback.CallMeta meta) external;
 }

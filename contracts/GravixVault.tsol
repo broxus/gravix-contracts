@@ -113,7 +113,7 @@ contract GravixVault is GravixVaultBase {
             uint32 _gravixVaultVersion,
             uint128 _poolBalance, // liquidity deposits
             uint128 _stgUsdtSupply, // amount of minted stgUsdt
-            uint128 _triggerPrice,
+            uint128 _targetPrice,
             uint128 _insuranceFund, // collected fees, pnl and etc.
             uint128 _insuranceFundLimit,
             uint64[3] _insuranceFundOverflowDistributionSchema,
@@ -229,7 +229,7 @@ contract GravixVault is GravixVaultBase {
         poolAssets = PoolAssets({
             balance: _poolBalance,
             stgUsdtSupply: _stgUsdtSupply,
-            triggerPrice: _triggerPrice
+            targetPrice: _targetPrice
         });
 
         insuranceFund = InsuranceFund({

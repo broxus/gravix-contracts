@@ -140,13 +140,13 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             // out price is current real price
             outPrice = math.muldiv(poolAssets.balance, Constants.PRICE_DECIMALS, poolAssets.stgUsdtSupply);
             // if we are in under collateralized state
-            inPrice = poolAssets.triggerPrice > 0 ? poolAssets.triggerPrice : outPrice;
+            inPrice = poolAssets.targetPrice > 0 ? poolAssets.targetPrice : outPrice;
         }
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(inPrice, outPrice);
     }
 
     function poolDebt() public view returns (uint128) {
-        uint128 targetBalance = math.muldiv(poolAssets.stgUsdtSupply, poolAssets.triggerPrice, Constants.PRICE_DECIMALS);
+        uint128 targetBalance = math.muldiv(poolAssets.stgUsdtSupply, poolAssets.targetPrice, Constants.PRICE_DECIMALS);
         return poolAssets.balance >= targetBalance ? 0 : targetBalance - poolAssets.balance;
     }
     // ----------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             poolAssets.balance += poolFee;
             emit LiquidityPoolFees(poolFee);
             // we are in undercollaterized state and recover is finished
-            if (poolAssets.triggerPrice > 0 && poolDebt() == 0) poolAssets.triggerPrice = 0;
+            if (poolAssets.targetPrice > 0 && poolDebt() == 0) poolAssets.targetPrice = 0;
         }
     }
 
@@ -179,8 +179,8 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         } else {
             uint128 delta = amount - insuranceFund.balance;
             // we just ran out of insurance fund, save target price
-            if (poolAssets.triggerPrice == 0) {
-                (poolAssets.triggerPrice,) = stgUsdtPrice();
+            if (poolAssets.targetPrice == 0) {
+                (poolAssets.targetPrice,) = stgUsdtPrice();
             }
             if (delta > poolAssets.balance) {
                 debt = delta - poolAssets.balance;
@@ -192,11 +192,11 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
     }
 
     function _increaseInsuranceFund(uint128 amount) internal {
-        if (poolAssets.triggerPrice > 0) {
+        if (poolAssets.targetPrice > 0) {
             uint128 debt = poolDebt();
             poolAssets.balance += math.min(debt, amount);
             amount -= math.min(debt, amount);
-            if (amount > 0) poolAssets.triggerPrice = 0;
+            if (amount > 0) poolAssets.targetPrice = 0;
         }
         insuranceFund.balance += amount;
     }

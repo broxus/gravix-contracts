@@ -18,12 +18,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, grandReferrer, referralBalance);
     }
 
-    function getReferrerForMarketOrder() external view override responsible returns (address _user, address _referrer) {
+    function getReferrer() external view override responsible returns (address _user, address _referrer) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
     }
-    function getReferrerForLimitOrder() external view override responsible returns (address _user, address _referrer) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
-    }
+
 
     // @param price - 8 decimals number
     function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 newPrice) {
@@ -50,6 +48,13 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         }
 
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }positionsViews;
+    }
+
+    function _getReferrer() internal view returns (address _referrer) {
+        _referrer = referrerChecked ? referrer : address(0);
+    }
+    function _getGrandReferrer() internal view returns (address _grandReferrer) {
+        _grandReferrer = grandReferrerChecked ? grandReferrer : address(0);
     }
 
     function getPositionView(ViewInput input) public view responsible returns (PositionView positionView) {

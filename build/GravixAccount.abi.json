@@ -59,16 +59,7 @@
 			]
 		},
 		{
-			"name": "process_getMarketReferrer",
-			"inputs": [
-				{"name":"_referrer","type":"address"},
-				{"name":"_grandReferrer","type":"address"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "process_getLimitReferrer",
+			"name": "process_getReferrer",
 			"inputs": [
 				{"name":"_referrer","type":"address"},
 				{"name":"_grandReferrer","type":"address"}
@@ -205,17 +196,7 @@
 			]
 		},
 		{
-			"name": "getReferrerForMarketOrder",
-			"inputs": [
-				{"name":"answerId","type":"uint32"}
-			],
-			"outputs": [
-				{"name":"_user","type":"address"},
-				{"name":"_referrer","type":"address"}
-			]
-		},
-		{
-			"name": "getReferrerForLimitOrder",
+			"name": "getReferrer",
 			"inputs": [
 				{"name":"answerId","type":"uint32"}
 			],
@@ -315,7 +296,9 @@
 		{"name":"vault","type":"address"},
 		{"name":"user","type":"address"},
 		{"name":"referrer","type":"address"},
+		{"name":"referrerChecked","type":"bool"},
 		{"name":"grandReferrer","type":"address"},
+		{"name":"grandReferrerChecked","type":"bool"},
 		{"name":"referralBalance","type":"uint128"},
 		{"name":"platformCode","type":"cell"},
 		{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"}],"name":"marketOrders","type":"map(uint32,tuple)"},
