@@ -417,7 +417,7 @@ export async function openLimitWithTestsOrder({
     {
         const { traceTree } = await locklift.tracing.trace(
             vault.contract.methods
-                .limitBot_executeLimitOrders({
+                .executeLimitOrders({
                     limitOrdersMap: [
                         [
                             marketIdx,

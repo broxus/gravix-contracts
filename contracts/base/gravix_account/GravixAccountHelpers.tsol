@@ -57,6 +57,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         _grandReferrer = grandReferrerChecked ? grandReferrer : address(0);
     }
 
+    function isLatestVersion(uint32 _version) internal view returns(bool) {
+        return _version == currentVersion;
+    }
+
     function getPositionView(ViewInput input) public view responsible returns (PositionView positionView) {
         Position position = positions[input.positionKey];
         require (position.createdAt != 0, Errors.POSITION_NOT_FOUND);

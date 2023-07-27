@@ -260,7 +260,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     //endregion
 
     // region limit bot
-    function limitBot_executeLimitOrders(
+    function executeLimitOrders(
         mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
         Callback.CallMeta meta
     ) external override reserve {
@@ -358,51 +358,47 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     }
 
     function _executeLimitOrder(
-        address user,
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 collateral,
-        uint32 leverage,
-        PositionType positionType,
-        uint128 assetPrice,
-        Callback.CallMeta meta
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _collateral,
+        uint32 _leverage,
+        PositionType _positionType,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
     ) internal {
         // reserve should be
-        uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
+        uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
 
-        Funding _funding = _updateFunding(marketIdx, assetPrice);
-        uint16 _error = _addPositionToMarketOrReturnErr(marketIdx, positionSizeAsset, assetPrice, positionType);
+        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
+        _addPositionToMarket(_marketIdx, positionSizeAsset, _assetPrice, _positionType);
 
-        address gravixAcc = getGravixAccountAddress(user);
+        address gravixAcc = getGravixAccountAddress(_user);
 
-        meta = Callback.CallMeta({
-            nonce: meta.nonce,
-            sendGasTo: user,
+        _meta = Callback.CallMeta({
+            nonce: _meta.nonce,
             // return remaining evers from order creating
-            callId: meta.callId
+            sendGasTo: _user,
+            callId: _meta.callId
         });
 
-        if (_error == 0) {
-            int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
+        int256 funding = _positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
 
-            IGravixAccount(gravixAcc).process_executeLimitOrder{value: Gas.EXECUTE_LIMIT_ORDER_VALUE - 0.06 ever}(
-                positionKey,
-                marketIdx,
-                positionSizeAsset,
-                positionType,
-                assetPrice,
-                funding,
-                meta,
-                gravixAccountCode.version
-            );
-        } else {
-            // order cant be executed now, some limits reached and etc.
-            IGravixAccount(gravixAcc).process_cancelLimitOrder{value: Gas.EXECUTE_LIMIT_ORDER_VALUE - 0.06 ever}(
-                positionKey,
-                meta,
-                gravixAccountCode.version
-            );
-        }
+        IGravixAccount(gravixAcc).process_executeLimitOrder{
+            value: Gas.EXECUTE_LIMIT_ORDER_VALUE - 0.06 ever
+        }(
+            _positionKey,
+            _marketIdx,
+            _collateral,
+            _leverage,
+            positionSizeAsset,
+            _positionType,
+            _assetPrice,
+            funding,
+            _meta,
+            gravixAccountCode.version
+        );
+
     }
 
 
@@ -410,26 +406,14 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         address user,
         uint32 positionKey,
         uint32 marketIdx,
-        uint128 collateral,
+        uint128,
         uint128 positionSizeAsset,
         uint128 assetPrice,
         PositionType positionType,
         Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
+    ) external override onlyGravixAccount(user) reserveAndSendGas(meta) {
         emit LimitOrderExecutionRevert(meta.callId, user, positionKey);
-
         _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
-
-        // too high slippage
-        if (collateral > 0) {
-            collateralReserve -= collateral;
-            _transfer(
-                usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
-            );
-        } else {
-            // tried to execute non-existent order
-            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
-        }
     }
 
     function finish_executeLimitOrder(

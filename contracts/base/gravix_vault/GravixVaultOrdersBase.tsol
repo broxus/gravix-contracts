@@ -791,6 +791,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     // @param assetPrice - asset price, 8 decimals number
     function _updateFunding(uint32 marketIdx, uint128 assetPrice) internal returns (Funding funding) {
         Market _market = markets[marketIdx];
+
+        if (_market.lastFundingUpdateTime == now) {
+            return _market.funding;
+        }
+
         if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
 
         _market.funding = _getUpdatedFunding(_market, assetPrice);
