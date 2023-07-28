@@ -263,7 +263,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     function executeLimitOrders(
         mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
         Callback.CallMeta meta
-    ) external override reserve {
+    ) external override reserve onlyLimitBot {
         for ((uint32 marketIdx, ExecuteLimitOrderData limitOrders) : limitOrdersMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
@@ -411,9 +411,11 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint128 assetPrice,
         PositionType positionType,
         Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserveAndSendGas(meta) {
+    ) external override onlyGravixAccount(user) reserve {
         emit LimitOrderExecutionRevert(meta.callId, user, positionKey);
         _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
+
+        managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
     function finish_executeLimitOrder(

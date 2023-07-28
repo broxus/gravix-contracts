@@ -31,10 +31,20 @@ export default async () => {
                     },
                 },
             },
+
             {
                 deploymentName: "User1", // user-defined custom account name
                 signerId: "2",
                 accountSettings: {
+                    type: WalletTypes.EverWallet,
+                    value: locklift.utils.toNano(50),
+                },
+            },
+            {
+                deploymentName: "LimitBot", // user-defined custom account name
+                signerId: "2",
+                accountSettings: {
+                    nonce: getRandomNonce(),
                     type: WalletTypes.EverWallet,
                     value: locklift.utils.toNano(50),
                 },

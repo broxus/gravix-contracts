@@ -6,7 +6,6 @@ import "../../interfaces/IGravixVault.tsol";
 import "../../libraries/Callback.tsol";
 import "./GravixAccountHelpers.tsol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "locklift/src/console.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
@@ -69,7 +68,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function retrieveReferrers() internal {
         address referrerAcc = _getGravixAccountAddress(referrer);
         IGravixAccount(referrerAcc).getReferrer{
-            value: 0.5 ever,
+            value: Gas.GET_REFERRER_VALUE,
             callback: IGravixAccount.process_getReferrer
         }();
     }

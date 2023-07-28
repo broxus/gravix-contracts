@@ -1,12 +1,13 @@
 import { setupVault } from "../../test/utils/common";
 import { Account } from "locklift/everscale-client";
-import { TokenRootUpgradeableAbi } from "../../build/factorySource";
+import { GravixVaultAbi, TokenRootUpgradeableAbi } from "../../build/factorySource";
 import { Token } from "../../test/utils/wrappers/token";
+import { getRandomNonce, toNano } from "locklift";
 
 export default async () => {
     const signer = await locklift.keystore.getSigner("0");
     const { account: owner } = await locklift.deployments.getAccount("Owner");
-
+    const { account: limitBot } = await locklift.deployments.getAccount("LimitBot");
     const usdt_root = await locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT");
     const stg_root = await locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT");
     const priceNode = await locklift.deployments.getContract("PriceNode");
@@ -29,6 +30,18 @@ export default async () => {
         address: vault.address,
         contractName: "GravixVault",
     });
+
+    const vault_contract = locklift.deployments.getContract<GravixVaultAbi>("Vault");
+    await vault_contract.methods
+        .setLimitBot({
+            _newLimitBot: limitBot.address,
+            _meta: {
+                callId: 0,
+                nonce: getRandomNonce(),
+                sendGasTo: owner.address,
+            },
+        })
+        .send({ from: owner.address, amount: toNano(2) });
 };
 
 export const tag = "vault";

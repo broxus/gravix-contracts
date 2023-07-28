@@ -334,6 +334,7 @@ export async function openLimitWithTestsOrder({
     pair,
     vault,
     triggerPrice,
+    limitBot,
 }: {
     vault: GravixVault;
     pair: Contract<PairMockAbi>;
@@ -346,6 +347,7 @@ export async function openLimitWithTestsOrder({
     leverage: number;
     referrer: Address;
     triggerPrice: number;
+    limitBot: Address;
 }): Promise<number> {
     const { position, market, initialPrice, expectedOpenPrice, totalSpread } = await getOpenLimitPositionInfo(
         vault,
@@ -443,7 +445,7 @@ export async function openLimitWithTestsOrder({
                     },
                 })
                 .send({
-                    from: user.address,
+                    from: limitBot,
                     amount: toNano(10),
                 }),
         );
@@ -797,6 +799,7 @@ export const testLimitPosition = async ({
     vault,
     limitType,
     triggerPrice,
+    limitBot,
 }: {
     vault: GravixVault;
     pair: Contract<PairMockAbi>;
@@ -812,6 +815,7 @@ export const testLimitPosition = async ({
     finishPrice: number;
     ttl?: number;
     referrer?: Address;
+    limitBot: Address;
 }) => {
     const market = (
         await vault.contract.methods
@@ -834,6 +838,7 @@ export const testLimitPosition = async ({
         userWallet,
         limitType,
         triggerPrice,
+        limitBot,
     });
     // CLOSE POSITION
     await setPrice(pair, finishPrice);
