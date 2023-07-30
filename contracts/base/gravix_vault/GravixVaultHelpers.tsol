@@ -123,12 +123,24 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint32 leverage,
         uint128 expectedPrice,
         uint64 maxSlippageRate,
+        uint128 stopLooseTriggerPrice,
+        uint128 takeProfitTriggerPrice,
         IPriceNode.Price price,
         address referrer,
         uint32 nonce,
         uint32 callId
     ) external pure returns (TvmCell payload) {
-        TvmCell cell = abi.encode(marketIdx, positionType, leverage, expectedPrice, maxSlippageRate, price, referrer);
+        TvmCell cell = abi.encode(
+            marketIdx,
+            positionType,
+            leverage,
+            expectedPrice,
+            maxSlippageRate,
+            stopLooseTriggerPrice,
+            takeProfitTriggerPrice,
+            price,
+            referrer
+        );
         return encodeTokenTransfer(Action.MarketOrder, nonce, callId, cell);
     }
 
@@ -140,12 +152,35 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint32 leverage,
         uint128 expectedPrice,
         uint64 maxSlippageRate,
+        uint128 stopLooseTriggerPrice,
+        uint128 takeProfitTriggerPrice,
         IPriceNode.Price price,
         address referrer
     ) {
         (
-        marketIdx, positionType, leverage, expectedPrice, maxSlippageRate, price, referrer
-        ) = abi.decode(actionPayload, (uint32, PositionType, uint32, uint128, uint64, IPriceNode.Price, address));
+            marketIdx,
+            positionType,
+            leverage,
+            expectedPrice,
+            maxSlippageRate,
+            stopLooseTriggerPrice,
+            takeProfitTriggerPrice,
+            price,
+            referrer
+        ) = abi.decode(
+            actionPayload,
+            (
+                uint32,
+                PositionType,
+                uint32,
+                uint128,
+                uint64,
+                uint128,
+                uint128,
+                IPriceNode.Price,
+                address
+            )
+        );
     }
 
     function encodeLimitOrder(
@@ -153,6 +188,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         PositionType _positionType,
         uint32 _leverage,
         uint128 _triggerPrice,
+        uint128 _stopLooseTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
         IPriceNode.Price _price,
         LimitOrderType _limitOrderType,
         address _referrer,
@@ -164,6 +201,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             _positionType,
             _leverage,
             _triggerPrice,
+            _stopLooseTriggerPrice,
+            _takeProfitTriggerPrice,
             _limitOrderType,
             _price,
             _referrer
@@ -178,6 +217,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         PositionType positionType,
         uint32 leverage,
         uint128 triggerPrice,
+        uint128 stopLooseTriggerPrice,
+        uint128 takeProfitTriggerPrice,
         LimitOrderType _limitOrderType,
         IPriceNode.Price price,
         address referrer
@@ -187,6 +228,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             positionType,
             leverage,
             triggerPrice,
+            stopLooseTriggerPrice,
+            takeProfitTriggerPrice,
             _limitOrderType,
             price,
             referrer
@@ -196,6 +239,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
                     uint32,
                     PositionType,
                     uint32,
+                    uint128,
+                    uint128,
                     uint128,
                     LimitOrderType,
                     IPriceNode.Price,

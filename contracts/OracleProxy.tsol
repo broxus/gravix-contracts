@@ -35,6 +35,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     address referer;
     uint128 triggerPrice;
     IPriceNode.Price userPrice;
+    uint128 stopLooseTriggerPrice;
+    uint128 takeProfitTriggerPrice;
 
     // this is set for liquidations
     IGravixVault.PositionIdx[] positions;
@@ -74,7 +76,9 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         uint32 _positionKey,
         uint128 _collateral,
         uint32 _leverage,
-        IGravixVault.PositionType _positionType
+        IGravixVault.PositionType _positionType,
+        uint128 _stopLooseTriggerPrice,
+        uint128 _takeProfitTriggerPrice
     ) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
@@ -83,6 +87,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         collateral = _collateral;
         leverage = _leverage;
         positionType = _positionType;
+        stopLooseTriggerPrice = _stopLooseTriggerPrice;
+        takeProfitTriggerPrice = _takeProfitTriggerPrice;
         callbackType = CallbackType.Execute;
         _collectPrice(user);
     }
@@ -96,6 +102,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         IGravixVault.LimitOrderType _limitOrderType,
         address _referer,
         uint128 _triggerPrice,
+        uint128 _stopLooseTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
         IPriceNode.Price _userPrice
     ) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
@@ -109,6 +117,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         limitOrderType = _limitOrderType;
         referer = _referer;
         triggerPrice = _triggerPrice;
+        stopLooseTriggerPrice = _stopLooseTriggerPrice;
+        takeProfitTriggerPrice = _takeProfitTriggerPrice;
         userPrice = _userPrice;
         _collectPrice(user);
     }
@@ -181,6 +191,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 collateral,
                 leverage,
                 positionType,
+                stopLooseTriggerPrice,
+                takeProfitTriggerPrice,
                 price,
                 meta
             );
@@ -194,6 +206,8 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 leverage,
                 triggerPrice,
                 limitOrderType,
+                stopLooseTriggerPrice,
+                takeProfitTriggerPrice,
                 userPrice,
                 referer,
                 meta,

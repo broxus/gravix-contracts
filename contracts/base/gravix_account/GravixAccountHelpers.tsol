@@ -38,6 +38,14 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
     }
 
+    // @param price - 8 decimals number
+    function applyLimitOpenSpread(uint128 _price, IGravixVault.PositionType _type, uint128 _spread) public pure responsible returns (uint128 newPrice) {
+        _type == IGravixVault.PositionType.Long
+            ?  math.muldiv(_price, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - _spread)
+            :  math.muldiv(_price, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + _spread);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
+    }
+
     function getPosition(uint32 posKey) external view responsible returns (Position position) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } positions[posKey];
     }
@@ -65,46 +73,75 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         Position position = positions[input.positionKey];
         require (position.createdAt != 0, Errors.POSITION_NOT_FOUND);
 
-        bool isLong = position.positionType == IGravixVault.PositionType.Long;
+        return {
+            value: 0,
+            bounce: false,
+            flag: MsgFlag.REMAINING_GAS
+        }_getPositionView(
+            position,
+            ViewInputInternal({
+                funding: input.funding,
+                assetPrice: input.assetPrice
+            })
+        );
+    }
 
-        uint128 collateral = position.initialCollateral - position.openFee;
-        uint128 leveragedPositionUsd = math.muldiv(collateral, position.leverage, Constants.LEVERAGE_BASE);
-        uint128 leveragedPositionAsset = math.muldiv(leveragedPositionUsd, Constants.PRICE_DECIMALS, position.openPrice);
+    function getPositionViewInternal(Position _position,uint128 _assetPrice) internal view returns (PositionView positionView) {
+        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
+
+        ViewInputInternal input = ViewInputInternal({
+            assetPrice: _assetPrice,
+            funding: IGravixVault.Funding({
+                accLongUSDFundingPerShare: isLong ? _position.accUSDFundingPerShare : 0,
+                accShortUSDFundingPerShare: isLong ? 0 : _position.accUSDFundingPerShare
+            })
+        });
+
+        return _getPositionView(_position, input);
+    }
+
+    function _getPositionView(Position _position, ViewInputInternal input) internal view returns (PositionView positionView) {
+
+        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
+
+        uint128 collateral = _position.initialCollateral - _position.openFee;
+        uint128 leveragedPositionUsd = math.muldiv(collateral, _position.leverage, Constants.LEVERAGE_BASE);
+        uint128 leveragedPositionAsset = math.muldiv(leveragedPositionUsd, Constants.PRICE_DECIMALS, _position.openPrice);
 
         // borrow fee
-        uint32 timePassed = now - position.createdAt;
-        uint128 borrowFeeShare = math.muldiv(position.borrowBaseRatePerHour, timePassed, Constants.HOUR);
+        uint32 timePassed = now - _position.createdAt;
+        uint128 borrowFeeShare = math.muldiv(_position.borrowBaseRatePerHour, timePassed, Constants.HOUR);
         uint128 borrowFeeUsd = math.muldiv(borrowFeeShare, leveragedPositionUsd, Constants.HUNDRED_PERCENT);
 
         // funding
         int256 newAccFunding = isLong ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
-        int256 fundingDebt = math.muldiv(leveragedPositionAsset, position.accUSDFundingPerShare, Constants.SCALING_FACTOR);
+        int256 fundingDebt = math.muldiv(leveragedPositionAsset, _position.accUSDFundingPerShare, Constants.SCALING_FACTOR);
         // if fundingFee > 0, trader pays
         int256 fundingFeeUsd = math.muldiv(leveragedPositionAsset, newAccFunding, Constants.SCALING_FACTOR) - fundingDebt;
         // close price
-        uint128 closePrice = applyCloseSpread(input.assetPrice, position.positionType, position.baseSpreadRate);
+        uint128 closePrice = applyCloseSpread(input.assetPrice, _position.positionType, _position.baseSpreadRate);
         // pnl (no funding and borrow fees)
         // (closePrice/openPrice - 1)
-        int256 pnl = int256(math.muldiv(closePrice, Constants.SCALING_FACTOR, position.openPrice)) - Constants.SCALING_FACTOR;
+        int256 pnl = int256(math.muldiv(closePrice, Constants.SCALING_FACTOR, _position.openPrice)) - Constants.SCALING_FACTOR;
         // * (-1) for shorts
         pnl = isLong ? pnl : -pnl;
         // * collateral * leverage
         pnl = math.muldiv(pnl, leveragedPositionUsd, Constants.SCALING_FACTOR);
         // liquidation price
         // collateral * 0.9
-        int256 liqPriceDist = math.muldiv(collateral, (Constants.HUNDRED_PERCENT - position.liquidationThresholdRate),  Constants.HUNDRED_PERCENT);
+        int256 liqPriceDist = math.muldiv(collateral, (Constants.HUNDRED_PERCENT - _position.liquidationThresholdRate),  Constants.HUNDRED_PERCENT);
         // - borrowFee - fundingFeeUsd
         liqPriceDist -= borrowFeeUsd + fundingFeeUsd;
         // * openPrice / collateral / leverage
-        liqPriceDist = math.muldiv(position.openPrice, liqPriceDist, leveragedPositionUsd);
+        liqPriceDist = math.muldiv(_position.openPrice, liqPriceDist, leveragedPositionUsd);
 
-        int256 _liqPrice_raw = isLong ?
-            math.muldiv(position.openPrice - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - position.baseSpreadRate) :
-            math.muldiv(position.openPrice + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + position.baseSpreadRate);
+        int256 _liqPrice_raw = isLong
+            ? math.muldiv(_position.openPrice - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - _position.baseSpreadRate)
+            : math.muldiv(_position.openPrice + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + _position.baseSpreadRate);
         uint128 liqPrice = uint128(math.max(_liqPrice_raw, 0)); // price cant be negative
 
         int256 upPos = leveragedPositionUsd + pnl - fundingFeeUsd - borrowFeeUsd;
-        uint128 closeFee = uint128(math.muldiv(math.max(upPos, 0), position.closeFeeRate, Constants.HUNDRED_PERCENT));
+        uint128 closeFee = uint128(math.muldiv(math.max(upPos, 0), _position.closeFeeRate, Constants.HUNDRED_PERCENT));
 
         // now check if position could be liquidated
         //        int256 currentCollateral = collateral - borrowFee - fundingFee + pnl;
@@ -112,8 +149,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         //        bool liquidate = currentCollateral <= liqThreshold;
         bool liquidate = isLong ? input.assetPrice <= liqPrice : input.assetPrice >= liqPrice;
 
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }PositionView(
-            position,
+        return PositionView(
+            _position,
             leveragedPositionUsd,
             closePrice,
             borrowFeeUsd,
@@ -125,6 +162,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             now
         );
     }
+
 
     function _getGravixAccountAddress(address _user) internal view returns (address) {
         return address(tvm.hash(_buildGravixAccountInitData(_buildGravixAccountParams(_user))));
@@ -156,6 +194,66 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             _currentVersion,
             _meta
         );
+    }
+
+    function open_validateStopPositionParams(
+        Position _position,
+        uint128 _assetPrice
+    ) internal view returns (bool) {
+        PositionView posView = getPositionViewInternal(_position, _assetPrice);
+        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
+
+
+        bool isStopLooseExists = _position.stopLooseTriggerPrice > 0;
+        bool isTakeProfitExists = _position.takeProfitTriggerPrice > 0;
+
+        bool isStopLooseConfigValid;
+
+        // impl stop loss logic
+        if (isStopLooseExists) {
+
+            bool isStopLoosePriceSatisfyLiquidationPrice = isLong
+                ? _position.stopLooseTriggerPrice > posView.liquidationPrice
+                : _position.stopLooseTriggerPrice < posView.liquidationPrice;
+
+            bool isStopLoosePriceSatisfyAssetPrice = isLong
+                ? _position.stopLooseTriggerPrice > _assetPrice
+                : _position.stopLooseTriggerPrice < _assetPrice;
+
+            uint128 collateral = _position.initialCollateral - _position.openFee;
+            uint128 leveragedPositionUsd = math.muldiv(collateral, _position.leverage, Constants.LEVERAGE_BASE);
+            uint128 maxStopLooseDist = math.muldiv(_position.openPrice, collateral, leveragedPositionUsd) * 100 / 75;
+
+            bool isStopLosePriceSatisfyMaxStopLoosePrice = isLong
+                ? _position.stopLooseTriggerPrice >= (_position.openPrice - maxStopLooseDist)
+                : _position.stopLooseTriggerPrice <= (_position.openPrice + maxStopLooseDist);
+
+            isStopLooseConfigValid = isStopLoosePriceSatisfyLiquidationPrice && isStopLoosePriceSatisfyAssetPrice && isStopLosePriceSatisfyMaxStopLoosePrice;
+        } else {
+            isStopLooseConfigValid = true;
+        }
+
+        //early return if stop loose config is not valid
+        if (!isStopLooseConfigValid) {
+            return false;
+        }
+
+
+        if (isTakeProfitExists) {
+            bool isTakeProfitPriceSatisfyOpenPrice = isLong
+                ? _position.takeProfitTriggerPrice > _position.openPrice
+                : _position.takeProfitTriggerPrice < _position.openPrice;
+
+            bool isTakePriceSatisfyAssetPrice = isLong
+                ? _position.takeProfitTriggerPrice > _assetPrice
+                : _position.takeProfitTriggerPrice < _assetPrice;
+
+            //todo max pnl validation
+
+            return isTakeProfitPriceSatisfyOpenPrice && isTakePriceSatisfyAssetPrice;
+        } else {
+            return true;
+        }
     }
 
 

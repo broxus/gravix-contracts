@@ -222,7 +222,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         _handleStgUsdtBurn(amount, payload);
     }
 
-    onBounce(TvmSlice slice) external view {
+    onBounce(TvmSlice slice) external {
         tvm.accept();
 
         uint32 functionId = slice.decode(uint32);
@@ -246,9 +246,16 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             PendingLimitOrder request = pendingLimitRequests[_requestNonce];
 
             address gravixAcc = _deployGravixAccount(request.user, request.referrer);
+
+            Funding _funding = _updateFunding(request.marketIdx, request.assetPrice);
+            int256 funding = request.positionType == PositionType.Long
+                ? _funding.accLongUSDFundingPerShare
+                : _funding.accShortUSDFundingPerShare;
+
             IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _requestNonce,
                 request,
+                funding,
                 gravixAccountCode.version
             );
         }

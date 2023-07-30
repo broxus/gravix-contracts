@@ -21,6 +21,9 @@ interface IGravixAccount {
         uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
+        uint128 stopLooseTriggerPrice;
+        uint128 takeProfitTriggerPrice;
+
     }
     struct LimitOrder {
         uint32 marketIdx;
@@ -34,6 +37,8 @@ interface IGravixAccount {
         uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
+        uint128 stopLooseTriggerPrice;
+        uint128 takeProfitTriggerPrice;
     }
 
     struct Position {
@@ -50,6 +55,8 @@ interface IGravixAccount {
         uint64 closeFeeRate; // %
         uint64 liquidationThresholdRate; // %
         uint32 createdAt; // %
+        uint128 stopLooseTriggerPrice;
+        uint128 takeProfitTriggerPrice;
     }
 
     struct PositionView {
@@ -70,6 +77,10 @@ interface IGravixAccount {
         uint128 assetPrice; // 8 decimals number
         IGravixVault.Funding funding;
     }
+    struct ViewInputInternal {
+        uint128 assetPrice; // 8 decimals number
+        IGravixVault.Funding funding;
+    }
 
     function process_requestMarketOrder(
         uint32 reqNonce,
@@ -81,21 +92,25 @@ interface IGravixAccount {
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;
+
     function process_executeMarketOrder(
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 positionSize,
-        IGravixVault.PositionType positionType,
-        uint128 assetPrice,
-        uint64 dynamicSpread,
-        int256 accUSDFundingPerShare,
-        Callback.CallMeta meta,
-        uint32 accountVersion
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _positionSizeAsset,
+        IGravixVault.PositionType _positionType,
+        uint128 _assetPrice,
+        uint64 _dynamicSpread,
+        int256 _accUSDFundingPerShare,
+        uint128 _stopLooseTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
     ) external;
 
     function process_requestLimitOrder(
         uint32 reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
+        int256 _accUSDFundingPerShare,
         uint32 _accountVersion
     ) external;
 
