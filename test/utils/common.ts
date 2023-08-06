@@ -248,14 +248,14 @@ export const setupVault = async function (
 
     if (log) logger.log(`Gravix Vault address: ${output!.value0.toString()}`);
     const vault = await GravixVault.from_addr(output!.value0, owner);
-    vault.contract.methods.setLimitBot({
-        _meta: {
-            callId: 0,
-            sendGasTo: owner.address,
-            nonce: getRandomNonce(),
-        },
-        _newLimitBot: owner.address,
-    });
+    // vault.contract.methods.setLimitBot({
+    //     _meta: {
+    //         callId: 0,
+    //         sendGasTo: owner.address,
+    //         nonce: getRandomNonce(),
+    //     },
+    //     _newLimitBot: owner.address,
+    // });
     return vault;
 };
 

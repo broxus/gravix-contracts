@@ -8,6 +8,7 @@ import "../../libraries/Callback.tsol";
 import "../../libraries/PlatformTypes.tsol";
 import "../../libraries/Errors.tsol";
 import "../../libraries/Constants.tsol";
+import "locklift/src/console.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
 
 
@@ -148,6 +149,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         //        uint128 liqThreshold = math.muldiv(collateral, position.liquidationThresholdRate, Constants.HUNDRED_PERCENT);
         //        bool liquidate = currentCollateral <= liqThreshold;
         bool liquidate = isLong ? input.assetPrice <= liqPrice : input.assetPrice >= liqPrice;
+        bool positionHasStopConfig = _position.stopLooseTriggerPrice > 0 || _position.takeProfitTriggerPrice > 0;
 
         return PositionView(
             _position,
@@ -159,6 +161,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             liqPrice,
             pnl,
             liquidate,
+            positionHasStopConfig,
             now
         );
     }
@@ -217,17 +220,16 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
                 : _position.stopLooseTriggerPrice < posView.liquidationPrice;
 
             bool isStopLoosePriceSatisfyAssetPrice = isLong
-                ? _position.stopLooseTriggerPrice > _assetPrice
-                : _position.stopLooseTriggerPrice < _assetPrice;
+                ? _position.stopLooseTriggerPrice < _assetPrice
+                : _position.stopLooseTriggerPrice > _assetPrice;
 
             uint128 collateral = _position.initialCollateral - _position.openFee;
             uint128 leveragedPositionUsd = math.muldiv(collateral, _position.leverage, Constants.LEVERAGE_BASE);
-            uint128 maxStopLooseDist = math.muldiv(_position.openPrice, collateral, leveragedPositionUsd) * 100 / 75;
+            uint128 maxStopLooseDist = math.muldiv(_position.openPrice, collateral, leveragedPositionUsd) * 75 / 100;
 
             bool isStopLosePriceSatisfyMaxStopLoosePrice = isLong
                 ? _position.stopLooseTriggerPrice >= (_position.openPrice - maxStopLooseDist)
                 : _position.stopLooseTriggerPrice <= (_position.openPrice + maxStopLooseDist);
-
             isStopLooseConfigValid = isStopLoosePriceSatisfyLiquidationPrice && isStopLoosePriceSatisfyAssetPrice && isStopLosePriceSatisfyMaxStopLoosePrice;
         } else {
             isStopLooseConfigValid = true;
@@ -256,6 +258,29 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         }
     }
 
+    function isStopLoosePosition(
+        Position _position
+    ) internal pure returns (bool) {
+       return _position.stopLooseTriggerPrice > 0;
+    }
+
+    function isStopLooseReady(
+        Position _position,
+        uint128 _assetPrice
+    ) internal returns (bool) {
+        return _position.positionType == IGravixVault.PositionType.Long
+        ? _position.stopLooseTriggerPrice >= _assetPrice
+        : _position.stopLooseTriggerPrice <= _assetPrice;
+    }
+
+    function isTakeProfitReady(
+        Position _position,
+        uint128 _assetPrice
+    ) internal returns (bool) {
+        return _position.positionType == IGravixVault.PositionType.Long
+        ? _position.takeProfitTriggerPrice >= _assetPrice
+        : _position.takeProfitTriggerPrice <= _assetPrice;
+    }
 
     function _reserve() internal pure returns (uint128) {
         return math.max(address(this).balance - msg.value, CONTRACT_MIN_BALANCE);

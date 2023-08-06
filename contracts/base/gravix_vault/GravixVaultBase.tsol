@@ -6,7 +6,6 @@ import "../../libraries/Gas.tsol";
 import "./GravixVaultLimitOrders.tsol";
 import "./GravixVaultMarketOrders.tsol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "locklift/src/console.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
@@ -40,6 +39,11 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
     function setLimitBot(address _newLimitBot, Callback.CallMeta _meta) external onlyOwner reserveAndSendGas(_meta) {
         managers.limitBot = _newLimitBot;
         emit NewLimitBot(_meta.callId, _newLimitBot);
+    }
+
+    function setLimitBotVault(address _newLimitBotVault, Callback.CallMeta _meta) external onlyOwner reserveAndSendGas(_meta) {
+        limitBotVault = _newLimitBotVault;
+        emit NewLimitBotVault(_meta.callId, _newLimitBotVault);
     }
 
     function setPause(bool newState, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {

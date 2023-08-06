@@ -83,7 +83,7 @@ export async function getOpenLimitPositionInfo(
     posType: 0 | 1,
     collateral: number,
     leverage: number,
-    triggerBrice: string | number,
+    triggerPrice: string | number,
 ) {
     const initialPrice = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({ marketIdx: market_idx, answerId: 0 }).call())._market;
@@ -94,7 +94,7 @@ export async function getOpenLimitPositionInfo(
     const priceDivider = posType == 0 ? PERCENT_100.minus(totalSpread) : PERCENT_100.plus(totalSpread);
 
     return {
-        expectedOpenPrice: bn(triggerBrice).times(PERCENT_100).idiv(priceDivider),
+        expectedOpenPrice: bn(triggerPrice).times(PERCENT_100).idiv(priceDivider),
         position,
         market,
         initialPrice,
@@ -145,7 +145,7 @@ export async function openMarketOrder({
         getRandomNonce(),
     );
 }
-export async function openMarketWithTestsOrder(
+export async function openMarketOrderWithTests(
     vault: GravixVault,
     pair: Contract<PairMockAbi>,
     user: Account,
@@ -155,6 +155,8 @@ export async function openMarketWithTestsOrder(
     collateral: number,
     leverage: number,
     referrer = zeroAddress,
+    stopLooseTriggerPrice = 0,
+    takeProfitTriggerPrice = 0,
 ): Promise<number> {
     const { position, expectedPrice, market, initialPrice, totalSpread } = await getOpenPositionInfo(
         vault,
@@ -193,8 +195,10 @@ export async function openMarketWithTestsOrder(
             0,
             referrer,
             callId,
+            stopLooseTriggerPrice * 100,
+            takeProfitTriggerPrice * 100,
         ),
-        { allowedCodes: { compute: [null] }, raise: false },
+        { allowedCodes: { compute: [null] } },
     );
     await traceTree?.beautyPrint();
     debugger;
@@ -224,6 +228,8 @@ export async function openMarketWithTestsOrder(
                 positionType: pos_type.toString(),
                 openPrice: expectedPrice.toFixed(),
                 openFee: open_fee_expected.toFixed(),
+                stopLooseTriggerPrice: (stopLooseTriggerPrice * 100).toString(),
+                takeProfitTriggerPrice: (takeProfitTriggerPrice * 100).toString(),
             },
         });
 
@@ -389,7 +395,7 @@ export async function openLimitWithTestsOrder({
             marketIdx: marketIdx,
             fromWallet: userWallet,
         }),
-        { allowedCodes: { compute: [null] }, raise: false },
+        { allowedCodes: { compute: [null] } },
     );
     await traceTree?.beautyPrint();
 
@@ -553,6 +559,7 @@ export async function closeOrder(
     user_wallet: TokenWallet,
     pos_key: number,
     referrer = zeroAddress,
+    limitBot = zeroAddress,
 ) {
     const finish_price = Number(await getPrice(pair));
     const account = await vault.account(user);
@@ -587,7 +594,29 @@ export async function closeOrder(
     // const details_prev = await vault.details();
     const callId = getRandomNonce();
     const { traceTree: traceTree1 } = await locklift.tracing.trace(
-        vault.closePosition(user, pos_key, pos_view1.position.marketIdx, callId),
+        limitBot.equals(zeroAddress)
+            ? vault.closePosition(user, pos_key, pos_view1.position.marketIdx, callId)
+            : vault.contract.methods
+                  .stopPositions({
+                      _meta: {
+                          sendGasTo: limitBot,
+                          callId: callId,
+                          nonce: getRandomNonce(),
+                      },
+                      _stopPositionsMap: [
+                          [
+                              pos_view1.position.marketIdx,
+                              {
+                                  price: empty_price,
+                                  positions: [{ positionKey: pos_key, stopPositionType: 0, user: user.address }],
+                              },
+                          ],
+                      ],
+                  })
+                  .send({
+                      from: limitBot,
+                      amount: toNano(5),
+                  }),
     );
 
     const event = await vault.getEvent("ClosePosition");
@@ -763,7 +792,7 @@ export async function testMarketPosition(
 ) {
     await setPrice(pair, initial_price);
     // OPEN POSITION
-    const pos_key = await openMarketWithTestsOrder(
+    const pos_key = await openMarketOrderWithTests(
         vault,
         pair,
         user,
@@ -868,7 +897,7 @@ export async function testPositionFunding(
     )._market;
     await setPrice(pair, initial_price);
     // market has 15k$ depth, open pos on 10k$
-    const pos_key = await openMarketWithTestsOrder(
+    const pos_key = await openMarketOrderWithTests(
         vault,
         pair,
         user,

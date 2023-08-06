@@ -11,7 +11,7 @@ import BigNumber from "bignumber.js";
 import {
     closeOrder,
     openMarketOrder,
-    openMarketWithTestsOrder,
+    openMarketOrderWithTests,
     setPrice,
     testMarketPosition,
     testPositionFunding,
@@ -188,7 +188,7 @@ describe("Testing main orders flow", async function () {
             });
 
             it("Open long position", async function () {
-                await openMarketWithTestsOrder(
+                await openMarketOrderWithTests(
                     vault,
                     ethUsdtMock,
                     user,

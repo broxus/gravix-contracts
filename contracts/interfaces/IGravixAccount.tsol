@@ -69,6 +69,7 @@ interface IGravixAccount {
         uint128 liquidationPrice; // 8 decimals number
         int256 pnl; // 6 decimals number
         bool liquidate;
+        bool positionHasStopConfig;
         uint32 viewTime;
     }
 
@@ -139,6 +140,16 @@ interface IGravixAccount {
         IGravixVault.Funding funding,
         Callback.CallMeta meta,
         uint32 accountVersion
+    ) external;
+    function process_stopPositions(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.StopPositionType _stopOrderType,
+        IGravixVault.Funding _funding,
+        address initiator,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
     ) external;
     function process_liquidatePositions(
         address liquidator,

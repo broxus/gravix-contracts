@@ -20,7 +20,20 @@ export default async () => {
         priceNode.address,
         `0x${signer?.publicKey}`,
     );
-
+    const { contract: limitBotVault } = await locklift.deployments.deploy({
+        deploymentName: "LimitBotVault",
+        enableLogs: true,
+        deployConfig: {
+            contract: "LimitBotVault",
+            publicKey: signer?.publicKey!,
+            initParams: {},
+            constructorParams: {
+                _gravixVault: vault.address,
+                _owner: owner.address,
+            },
+            value: toNano(2),
+        },
+    });
     const stg = await Token.from_addr(stg_root.address, owner);
     // now transfer ownership of stgTOKEN to vault
     await stg.transferOwnership({ address: vault.address } as Account);
@@ -42,6 +55,20 @@ export default async () => {
             },
         })
         .send({ from: owner.address, amount: toNano(2) });
+
+    await vault_contract.methods
+        .setLimitBotVault({
+            _meta: {
+                callId: 0,
+                nonce: getRandomNonce(),
+                sendGasTo: owner.address,
+            },
+            _newLimitBotVault: limitBotVault.address,
+        })
+        .send({
+            from: owner.address,
+            amount: toNano(2),
+        });
 };
 
 export const tag = "vault";

@@ -276,7 +276,11 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         );
 
         // reserve evers for feature order execution
-        managers.limitBot.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE});
+        uint128 stopOrderValue = request.stopLooseTriggerPrice > 0 || request.takeProfitTriggerPrice > 0
+            ? Gas.STOP_ORDER_VALUE
+            : 0;
+
+        limitBotVault.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE + stopOrderValue});
 
         _sendCallbackOrGas(
             request.user,
@@ -372,6 +376,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _limitPositions
         );
     }
+
     function oracle_executeLimitOrder(
         uint64 _nonce,
         LimitPositionIdx[] limitPositions,
@@ -444,7 +449,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         emit LimitOrderExecutionRevert(meta.callId, user, positionKey);
         _removePositionFromMarket(marketIdx, positionSizeAsset, assetPrice, positionType);
 
-        managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+        limitBotVault.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
     function finish_executeLimitOrder(
@@ -477,10 +482,17 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
-    function cancelLimitOrder(address user, uint32 positionKey, Callback.CallMeta meta) external view onlyActive reserve {
+    function cancelLimitOrder(
+        address user,
+        uint32 positionKey,
+        bool positionHasStopConfig,
+        Callback.CallMeta meta
+    ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
         address gravixAcc = getGravixAccountAddress(user);
+        uint128 stopPositionValue = positionHasStopConfig ? Gas.STOP_ORDER_VALUE : 0;
+
         IGravixAccount(gravixAcc).process_cancelLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             positionKey,
             meta,
@@ -495,12 +507,30 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     }
 
     function finish_cancelLimitOrder(
-        address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta
+        address user,
+        uint32 positionKey,
+        uint128 collateral,
+        bool positionHasStopConfig,
+        Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         collateralReserve -= collateral;
 
         emit CancelLimitOrder(meta.callId, user, positionKey);
-        _transfer(usdt.wallet, collateral, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
+        if (positionHasStopConfig) {
+            ILimitBotVault(limitBotVault).sendTo{
+                value: 0.01 ever,
+                flag: 0
+            }(user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+        }
+
+        _transfer(
+            usdt.wallet,
+            collateral,
+            user,
+            _makeCell(meta.nonce),
+            meta.sendGasTo,
+            MsgFlag.ALL_NOT_RESERVED
+        );
     }
 
     //endregion

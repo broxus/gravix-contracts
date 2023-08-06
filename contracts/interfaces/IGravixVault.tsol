@@ -21,6 +21,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     }
 
     enum LimitOrderType { Limit, Stop }
+    enum StopPositionType { StopLoose, TakeProfit }
 
     struct Time {
         uint8 hour;
@@ -108,6 +109,12 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 positionKey;
     }
 
+    struct StopPositionIdx {
+        address user;
+        uint32 positionKey;
+        StopPositionType stopPositionType;
+    }
+
     struct LimitPositionIdx {
         uint32 positionKey;
         uint32 marketIdx;
@@ -125,6 +132,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     struct ExecuteLimitOrderData {
         IPriceNode.Price price;
         LimitPositionIdx[] positions;
+    }
+
+    struct StopPositionData {
+        IPriceNode.Price price;
+        StopPositionIdx[] positions;
     }
 
 
@@ -316,6 +328,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event NewPriceNode(uint32 callId, address priceNode);
     event NewPricePubkey(uint32 callId, uint256 newPubkey);
     event NewLimitBot(uint32 callId, address limitBot);
+    event NewLimitBotVault(uint32 callId, address limitBot);
+
     event MarketOracleConfigUpdate(uint32 callId, uint32 marketIdx, OracleConfig oracle);
     event NewTreasury(uint32 callId, address newTreasury);
     event NewProjectFund(uint32 callId, address newProjectFund);
@@ -340,6 +354,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event RemovePositionCollateral(uint32 callId, address user, uint32 positionKey, uint128 amount, IGravixAccount.Position updatedPos);
     event RemovePositionCollateralRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx, uint128 amount);
     event Debt(uint32 callId, address user, uint128 debt);
+    event StopPositionRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
     event LiquidatePosition(uint32 callId, address user, address liquidator, uint32 positionKey, IGravixAccount.PositionView positionView);
     event LiquidatePositionRevert(uint32 callId, address liquidator, address user, uint32 positionKey, uint32 marketIdx);
     event LiquidityPoolDeposit(uint32 callId, address user, uint128 usdtAmountIn, uint128 stgUsdtAmountOut);
@@ -362,9 +377,9 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 collateral,
         uint32 leverage,
         PositionType positionType,
+        uint128 assetPrice,
         uint128 _stopLooseTriggerPrice,
         uint128 _takeProfitTriggerPrice,
-        uint128 assetPrice,
         Callback.CallMeta meta
     ) external;
 
@@ -411,7 +426,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     ) external;
 
     function finish_cancelLimitOrder(
-        address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta
+        address user,
+        uint32 positionKey,
+        uint128 collateral,
+        bool positionHasStopConfig,
+        Callback.CallMeta meta
     ) external;
 
     function revert_cancelLimitOrder(
@@ -431,9 +450,10 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address user,
         uint32 positionKey,
         uint128 assetPrice,
-        IGravixAccount.PositionView orderView,
+        IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,
+        address initiator,
         Callback.CallMeta meta
     ) external;
 
@@ -467,7 +487,23 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external;
-
+    function stopPositions(
+        mapping(uint32 => StopPositionData) _stopPositionsMap,
+        Callback.CallMeta _meta
+    ) external;
+    function oracle_stopPositions(
+        uint64 nonce,
+        uint32 _marketIdx,
+        StopPositionIdx[] _positions,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external;
+    function revert_stopPositions(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        Callback.CallMeta meta
+    ) external;
     function oracle_liquidatePositions(
         uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
     ) external;

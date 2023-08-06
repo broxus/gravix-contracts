@@ -170,6 +170,8 @@ export class GravixVault {
         max_slippage: number,
         referrer: Address,
         callId = 0,
+        stopLooseTriggerPrice = 0,
+        takeProfitTriggerPrice = 0,
     ) {
         const payload = (
             await this.contract.methods
@@ -182,6 +184,8 @@ export class GravixVault {
                     price: empty_price,
                     callId: callId,
                     referrer: referrer,
+                    stopLooseTriggerPrice,
+                    takeProfitTriggerPrice,
                     nonce: 0,
                 })
                 .call()
@@ -222,6 +226,8 @@ export class GravixVault {
                     _referrer: referrer,
                     _nonce: 0,
                     _limitOrderType: limitType,
+                    _stopLooseTriggerPrice: 0,
+                    _takeProfitTriggerPrice: 0,
                 })
                 .call()
         ).payload;

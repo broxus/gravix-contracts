@@ -12,8 +12,7 @@ import "../../interfaces/IGravixAccount.tsol";
 import "../../interfaces/IOracleProxy.tsol";
 import "./GravixVaultMarkets.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
-import "locklift/src/console.tsol";
-
+import "../../interfaces/ILimitBotVault.tsol";
 
 abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     // region validators
@@ -447,66 +446,203 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_closePosition(
-        address user, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
         emit ClosePositionRevert(meta.callId, user, positionKey, marketIdx);
     }
 
     function finish_closePosition(
-        address user,
-        uint32 positionKey,
-        uint128 assetPrice,
-        IGravixAccount.PositionView positionView,
-        address referrer,
-        address grandReferrer,
-        Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
+        address _user,
+        uint32 _positionKey,
+        uint128 _assetPrice,
+        IGravixAccount.PositionView _positionView,
+        address _referrer,
+        address _grandReferrer,
+        address _initiator,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
         // we already deducted open fee when position was opened
-        uint128 collateral = positionView.position.initialCollateral - positionView.position.openFee;
+        uint128 collateral = _positionView.position.initialCollateral - _positionView.position.openFee;
         collateralReserve -= collateral;
 
-        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, positionView.position.leverage, positionView.position.openPrice);
+        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, _positionView.position.leverage, _positionView.position.openPrice);
         _removePositionFromMarket(
-            positionView.position.marketIdx,
+            _positionView.position.marketIdx,
             initialPositionSizeAsset,
-            assetPrice,
-            positionView.position.positionType
+            _assetPrice,
+            _positionView.position.positionType
         );
 
-        if (positionView.liquidate) {
+        if (_positionView.liquidate) {
             // increase insurance fund + send referrer payment
-            _collectPnlAndReferral(collateral, referrer, grandReferrer, user, meta);
+            _collectPnlAndReferral(collateral, _referrer, _grandReferrer, _user, _meta);
 
-            emit LiquidatePosition(meta.callId, user, user, positionKey, positionView);
-            _sendCallbackOrGas(user, meta.nonce, true, meta.sendGasTo);
+            emit LiquidatePosition(_meta.callId, _user, _user, _positionKey, _positionView);
+            _sendCallbackOrGas(_user, _meta.nonce, true, _meta.sendGasTo);
         } else {
             int256 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
-            int256 limitedPnl = math.min(positionView.pnl, pnlLimit);
+            int256 limitedPnl = math.min(_positionView.pnl, pnlLimit);
 
-            int256 pnlWithFees = limitedPnl - positionView.borrowFee - positionView.fundingFee;
-            _collectCloseFeeAndReferral(positionView.closeFee, referrer, grandReferrer, user, meta);
+            int256 pnlWithFees = limitedPnl - _positionView.borrowFee - _positionView.fundingFee;
+            _collectCloseFeeAndReferral(_positionView.closeFee, _referrer, _grandReferrer, _user, _meta);
 
             uint128 debt;
             if (pnlWithFees < 0) {
                 // increase insurance fund + send referrer payment
-                _collectPnlAndReferral(uint128(math.abs(pnlWithFees)), referrer, grandReferrer, user, meta);
+                _collectPnlAndReferral(uint128(math.abs(pnlWithFees)), _referrer, _grandReferrer, _user, _meta);
             }
             if (pnlWithFees > 0) {
                 // positive debt if we dont have enough money to pay pnl
                 debt = _decreaseInsuranceFund(uint128(pnlWithFees));
             }
 
-            emit ClosePosition(meta.callId, user, positionKey, positionView);
+            if (_initiator != managers.limitBot) {
+                // if a user is emitter by closing position we need to send him reserved gas
+                ILimitBotVault(limitBotVault).sendTo{
+                    value: 0.1 ever,
+                    flag: 0
+                }(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+
+            }
+                // if position was closed by limit bot, we already emitted this event
+            emit ClosePosition(_meta.callId, _user, _positionKey, _positionView);
             // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
-            uint128 userNetUsdt = uint128(collateral + pnlWithFees - debt - positionView.closeFee);
-            _transfer(usdt.wallet, userNetUsdt, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
+            uint128 userNetUsdt = uint128(collateral + pnlWithFees - debt - _positionView.closeFee);
+            _transfer(usdt.wallet, userNetUsdt, _user, _makeCell(_meta.nonce), _meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
             if (debt > 0) {
-                emit Debt(meta.callId, user, debt);
+                emit Debt(_meta.callId, _user, debt);
             }
         }
     }
     //endregion
+    function stopPositions(
+        mapping(uint32 => StopPositionData) _stopPositionsMap,
+        Callback.CallMeta _meta
+    ) external override onlyLimitBot reserve {
+        for ((uint32 marketIdx, StopPositionData _stopPositions) : _stopPositionsMap) {
+            OracleType priceSource = markets[marketIdx].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx];
 
+            uint128 value = uint128(_stopPositions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+
+            // if market uses offchain oracle and we have valid price, we can liquidate positions right now
+            if (priceSource == OracleType.PriceNode && checkPrice(_stopPositions.price, oracleConf.priceNode)) {
+
+                this.self_stopPositions{value: value}(
+                    _stopPositions.positions,
+                    marketIdx,
+                    _stopPositions.price.price,
+                    _meta,
+                    0
+                );
+                continue;
+            }
+
+            _sendStopPositionOracleRequest(
+                marketIdx,
+                managers.limitBot,
+                _stopPositions.positions,
+                value,
+                _meta
+            );
+        }
+
+        _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+    }
+
+    function _sendStopPositionOracleRequest(
+        uint32 _marketIdx,
+        address _executor,
+        StopPositionIdx[] _stopPositions,
+        uint128 value,
+        Callback.CallMeta _meta
+    ) internal {
+        address proxy = _deployOracleProxy(_marketIdx, _meta);
+        IOracleProxy(proxy).setStopPositionCallback{
+                value: value
+            }(
+            _executor,
+            _stopPositions
+        );
+    }
+
+    function self_stopPositions(
+        StopPositionIdx[] _positions,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta,
+        uint _startIdx
+    ) external reserve {
+        require (msg.sender == address(this), Errors.BAD_SENDER);
+        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
+
+        for (uint i = _startIdx; i < _positions.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
+            StopPositionIdx position = _positions[i];
+
+            address gravixAcc = getGravixAccountAddress(position.user);
+            //0.06 ever here to cover computation costs of iterating, needed for big arrays
+            IGravixAccount(gravixAcc).process_stopPositions{value: Gas.EXECUTE_STOP_ORDER_VALUE - 0.06 ever}(
+                position.positionKey,
+                _marketIdx,
+                _assetPrice,
+                position.stopPositionType,
+                _funding,
+                managers.limitBot,
+                _meta,
+                gravixAccountCode.version
+            );
+        }
+
+        if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < _positions.length) {
+            this.self_stopPositions{
+                    value: 0,
+                    flag: MsgFlag.ALL_NOT_RESERVED,
+                    bounce: false
+                }(
+                _positions,
+                _marketIdx,
+                _assetPrice,
+                _meta,
+                _startIdx + Constants.LIQUIDATION_BATCH_SIZE
+            );
+        } else {
+            _meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        }
+
+    }
+
+    function oracle_stopPositions(
+        uint64 nonce,
+        uint32 _marketIdx,
+        StopPositionIdx[] _positions,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        this.self_stopPositions{
+                value: 0,
+                flag: MsgFlag.ALL_NOT_RESERVED,
+                bounce: false
+            }(
+            _positions,
+            _marketIdx,
+            _assetPrice,
+            _meta,
+            0
+        );
+    }
+
+    function revert_stopPositions(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        emit StopPositionRevert(meta.callId, user, positionKey, marketIdx);
+        managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+    }
     //region liquidation
     // ----------------------------------------------------------------------------------
     // --------------------------- LIQUIDATION ------------------------------------------
@@ -552,7 +688,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_liquidatePositions(
-        address user, address liquidator, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
+        address user,
+        address liquidator,
+        uint32 positionKey,
+        uint32 marketIdx,
+        Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
         emit LiquidatePositionRevert(meta.callId, liquidator, user, positionKey, marketIdx);
     }

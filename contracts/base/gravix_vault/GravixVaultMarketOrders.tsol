@@ -282,7 +282,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         address gravixAcc = getGravixAccountAddress(user);
         if (_error == 0) {
             int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
-
+// todo send gas to limit bot vault
             IGravixAccount(gravixAcc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 positionKey,
                 marketIdx,

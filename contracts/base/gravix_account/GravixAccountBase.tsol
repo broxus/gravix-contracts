@@ -252,59 +252,59 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isLatestVersion = isLatestVersion(_accountVersion);
 
 
-        uint128 openPrice = applyLimitOpenSpread(
-            _pendingRequest.triggerPrice,
-            _pendingRequest.positionType,
-            _pendingRequest.baseSpreadRate
-        );
-
-        uint128 leveragedPositionUsd = math.muldiv(
-            _pendingRequest.collateral,
-            _pendingRequest.leverage,
-            Constants.LEVERAGE_BASE
-        );
-
-        uint128 openFee = math.muldiv(
-            leveragedPositionUsd,
-            _pendingRequest.openFeeRate,
-            Constants.HUNDRED_PERCENT
-        );
-
-        Position tempPosition = Position(
-            _pendingRequest.marketIdx,
-            _pendingRequest.positionType,
-            _pendingRequest.collateral,
-            openFee,
-            openPrice,
-            _pendingRequest.assetPrice,
-            _pendingRequest.leverage,
-            _accUSDFundingPerShare,
-            _pendingRequest.borrowBaseRatePerHour,
-            _pendingRequest.baseSpreadRate,
-            _pendingRequest.closeFeeRate,
-            _pendingRequest.liquidationThresholdRate,
-            now,
-            _pendingRequest.stopLooseTriggerPrice,
-            _pendingRequest.takeProfitTriggerPrice
-        );
-
-       bool isStopPriceOk = open_validateStopPositionParams(
-            tempPosition,
-            _pendingRequest.assetPrice
-        );
-
-        if (!isPriceOk || !isLatestVersion || !isStopPriceOk) {
-
-            if (!isLatestVersion) {
-                requestUpgrade(user, currentVersion, _pendingRequest.meta);
-            }
-
-            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                _reqNonce,
-                _pendingRequest
-            );
-            return;
-        }
+//        uint128 openPrice = applyLimitOpenSpread(
+//            _pendingRequest.triggerPrice,
+//            _pendingRequest.positionType,
+//            _pendingRequest.baseSpreadRate
+//        );
+//
+//        uint128 leveragedPositionUsd = math.muldiv(
+//            _pendingRequest.collateral,
+//            _pendingRequest.leverage,
+//            Constants.LEVERAGE_BASE
+//        );
+//
+//        uint128 openFee = math.muldiv(
+//            leveragedPositionUsd,
+//            _pendingRequest.openFeeRate,
+//            Constants.HUNDRED_PERCENT
+//        );
+//
+//        Position tempPosition = Position(
+//            _pendingRequest.marketIdx,
+//            _pendingRequest.positionType,
+//            _pendingRequest.collateral,
+//            openFee,
+//            openPrice,
+//            _pendingRequest.assetPrice,
+//            _pendingRequest.leverage,
+//            _accUSDFundingPerShare,
+//            _pendingRequest.borrowBaseRatePerHour,
+//            _pendingRequest.baseSpreadRate,
+//            _pendingRequest.closeFeeRate,
+//            _pendingRequest.liquidationThresholdRate,
+//            now,
+//            _pendingRequest.stopLooseTriggerPrice,
+//            _pendingRequest.takeProfitTriggerPrice
+//        );
+//
+//       bool isStopPriceOk = open_validateStopPositionParams(
+//            tempPosition,
+//            _pendingRequest.assetPrice
+//        );
+//
+//        if (!isPriceOk || !isLatestVersion || !isStopPriceOk) {
+//
+//            if (!isLatestVersion) {
+//                requestUpgrade(user, currentVersion, _pendingRequest.meta);
+//            }
+//
+//            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+//                _reqNonce,
+//                _pendingRequest
+//            );
+//            return;
+//        }
         // always trying to get grandReferrer on 1st request if referrer is set
 
         if (requestCounter == 1 && referrer != address(0)) {
@@ -417,7 +417,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
         uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
 
-        //TODO update this position
         Position openedPosition = Position(
             request.marketIdx,
             request.positionType,
@@ -452,7 +451,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
-        MarketOrder _request = marketOrders[_positionKey];
+        LimitOrder _request = limitOrders[_positionKey];
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
 
@@ -469,12 +468,106 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        delete marketOrders[_positionKey];
+        delete limitOrders[_positionKey];
 
         IGravixVault(vault).finish_cancelLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, _positionKey, _request.collateral, _meta
+            user,
+            _positionKey,
+            _request.collateral,
+            _request.stopLooseTriggerPrice> 0 || _request.takeProfitTriggerPrice> 0,
+            _meta
         );
     }
+
+    function process_stopPositions(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.StopPositionType _stopOrderType,
+        IGravixVault.Funding _funding,
+        address _initiator,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        Position position = positions[_positionKey];
+
+        if (!isLatestVersion || position.marketIdx != _marketIdx) {
+
+            if (!isLatestVersion) {
+                requestUpgrade(user, currentVersion, _meta);
+            }
+            IGravixVault(vault).revert_stopPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                _meta
+            );
+            return;
+        }
+
+        _stopPosition(
+            _positionKey,
+            _marketIdx,
+            _assetPrice,
+            _stopOrderType,
+            _funding,
+            _initiator,
+            _meta
+        );
+
+    }
+
+    function _stopPosition(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.StopPositionType _stopOrderType,
+        IGravixVault.Funding _funding,
+        address _initiator,
+        Callback.CallMeta _meta
+    ) internal {
+        Position position = positions[_positionKey];
+        bool isReadyToClose;
+        uint128 stopPrice;
+        if (_stopOrderType == IGravixVault.StopPositionType.StopLoose && isStopLoosePosition(position)) {
+            isReadyToClose = isStopLooseReady(position, _assetPrice);
+            stopPrice = position.stopLooseTriggerPrice;
+        }
+
+        if (_stopOrderType == IGravixVault.StopPositionType.TakeProfit) {
+            isReadyToClose = isTakeProfitReady(position, _assetPrice);
+            stopPrice = position.takeProfitTriggerPrice;
+        }
+
+        if (!isReadyToClose) {
+            IGravixVault(vault).revert_stopPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                _meta
+            );
+            return;
+        }
+
+
+        PositionView positionView = getPositionView(
+            ViewInput(_positionKey, stopPrice, _funding)
+        );
+        delete positions[_positionKey];
+
+        IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _positionKey,
+            stopPrice,
+            positionView,
+            referrer,
+            grandReferrer,
+            _initiator,
+            _meta
+        );
+    }
+
 
     function process_liquidatePositions(
         address _liquidator,
@@ -506,12 +599,31 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
+        if (isStopLoosePosition(_position)) {
+            _stopPosition(
+                _positionKey,
+                _marketIdx,
+                _assetPrice,
+                IGravixVault.StopPositionType.StopLoose,
+                _funding,
+                _liquidator,
+                _meta
+            );
+            return;
+        }
+
         PositionView positionView = getPositionView(ViewInput(_positionKey, _assetPrice, _funding));
         if (positionView.liquidate) {
             delete positions[_positionKey];
             IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _liquidator, _positionKey, _assetPrice, positionView,
-                referrer, grandReferrer, _meta
+                user,
+                _liquidator,
+                _positionKey,
+                _assetPrice,
+                positionView,
+                referrer,
+                grandReferrer,
+                _meta
             );
         } else {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -552,8 +664,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         delete positions[_positionKey];
 
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, _positionKey, _assetPrice, positionView,
-            referrer, grandReferrer, _meta
+            user,
+            _positionKey,
+            _assetPrice,
+            positionView,
+            referrer,
+            grandReferrer,
+            user,
+            _meta
         );
     }
 

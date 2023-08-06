@@ -7,7 +7,7 @@ import chai, { expect } from "chai";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import BigNumber from "bignumber.js";
-import { closeOrder, openMarketWithTestsOrder, setPrice, testLimitPosition, testMarketPosition } from "./utils/orders";
+import { closeOrder, openMarketOrderWithTests, setPrice, testLimitPosition, testMarketPosition } from "./utils/orders";
 import { LimitType } from "./utils/constants";
 
 chai.use(lockliftChai);
@@ -332,7 +332,7 @@ describe("Testing main orders flow", async function () {
 
                 it("Opening positions at 1000$", async function () {
                     await setPrice(ethUsdtMock, 1000 * USDT_DECIMALS);
-                    long_pos_key = await openMarketWithTestsOrder(
+                    long_pos_key = await openMarketOrderWithTests(
                         vault,
                         ethUsdtMock,
                         user,
@@ -342,7 +342,7 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                     );
-                    short_pos_key = await openMarketWithTestsOrder(
+                    short_pos_key = await openMarketOrderWithTests(
                         vault,
                         ethUsdtMock,
                         user,
@@ -352,7 +352,7 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                     );
-                    long_pos2_key = await openMarketWithTestsOrder(
+                    long_pos2_key = await openMarketOrderWithTests(
                         vault,
                         ethUsdtMock,
                         user,
@@ -362,7 +362,7 @@ describe("Testing main orders flow", async function () {
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
                     );
-                    short_pos2_key = await openMarketWithTestsOrder(
+                    short_pos2_key = await openMarketOrderWithTests(
                         vault,
                         ethUsdtMock,
                         user,
