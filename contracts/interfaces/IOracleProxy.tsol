@@ -37,5 +37,11 @@ interface IOracleProxy {
         IGravixVault.StopPositionIdx[] _stopPositions
     ) external;
     function setCloseCallback(address _user, uint32 _position_key) external;
+    function setUpdateStopPositionCallback(
+        address _user,
+        uint32 _positionKey,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice
+    ) external;
     function setLiquidationCallback(address _liquidator, IGravixVault.PositionIdx[] _positions) external;
 }

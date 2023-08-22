@@ -6,3 +6,7 @@ export enum LimitType {
     Limit = 0,
     Stop = 1,
 }
+export enum StopPositionType {
+    StopLoss = 0,
+    TakeProfit = 1,
+}

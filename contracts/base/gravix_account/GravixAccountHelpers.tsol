@@ -8,7 +8,6 @@ import "../../libraries/Callback.tsol";
 import "../../libraries/PlatformTypes.tsol";
 import "../../libraries/Errors.tsol";
 import "../../libraries/Constants.tsol";
-import "locklift/src/console.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
 
 
@@ -41,7 +40,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
 
     // @param price - 8 decimals number
     function applyLimitOpenSpread(uint128 _price, IGravixVault.PositionType _type, uint128 _spread) public pure responsible returns (uint128 newPrice) {
-        _type == IGravixVault.PositionType.Long
+        newPrice = _type == IGravixVault.PositionType.Long
             ?  math.muldiv(_price, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - _spread)
             :  math.muldiv(_price, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + _spread);
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
@@ -120,7 +119,14 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         // if fundingFee > 0, trader pays
         int256 fundingFeeUsd = math.muldiv(leveragedPositionAsset, newAccFunding, Constants.SCALING_FACTOR) - fundingDebt;
         // close price
-        uint128 closePrice = applyCloseSpread(input.assetPrice, _position.positionType, _position.baseSpreadRate);
+        uint128 stopLossTriggerPrice = _position.stopLoss.hasValue() ? _position.stopLoss.get().triggerPrice : 0;
+        uint128 takeProfitTriggerPrice = _position.takeProfit.hasValue() ? _position.takeProfit.get().triggerPrice : 0;
+
+        bool isClosedByStop = stopLossTriggerPrice == input.assetPrice || takeProfitTriggerPrice == input.assetPrice;
+
+        uint128 closePrice = isClosedByStop
+            ? input.assetPrice
+            : applyCloseSpread(input.assetPrice, _position.positionType, _position.baseSpreadRate);
         // pnl (no funding and borrow fees)
         // (closePrice/openPrice - 1)
         int256 pnl = int256(math.muldiv(closePrice, Constants.SCALING_FACTOR, _position.openPrice)) - Constants.SCALING_FACTOR;
@@ -149,7 +155,6 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         //        uint128 liqThreshold = math.muldiv(collateral, position.liquidationThresholdRate, Constants.HUNDRED_PERCENT);
         //        bool liquidate = currentCollateral <= liqThreshold;
         bool liquidate = isLong ? input.assetPrice <= liqPrice : input.assetPrice >= liqPrice;
-        bool positionHasStopConfig = _position.stopLooseTriggerPrice > 0 || _position.takeProfitTriggerPrice > 0;
 
         return PositionView(
             _position,
@@ -161,7 +166,6 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             liqPrice,
             pnl,
             liquidate,
-            positionHasStopConfig,
             now
         );
     }
@@ -201,35 +205,39 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
 
     function open_validateStopPositionParams(
         Position _position,
-        uint128 _assetPrice
+        uint128 _assetPrice,
+        uint64 _maxPnlRate
     ) internal view returns (bool) {
         PositionView posView = getPositionViewInternal(_position, _assetPrice);
         bool isLong = _position.positionType == IGravixVault.PositionType.Long;
 
 
-        bool isStopLooseExists = _position.stopLooseTriggerPrice > 0;
-        bool isTakeProfitExists = _position.takeProfitTriggerPrice > 0;
+        bool isStopLooseExists = _position.stopLoss.hasValue();
+        bool isTakeProfitExists = _position.takeProfit.hasValue();
+
 
         bool isStopLooseConfigValid;
 
         // impl stop loss logic
         if (isStopLooseExists) {
-
+            IGravixVault.StopOrderConfig stopLossConfig = _position.stopLoss.get();
+            uint128 stopLooseTriggerPrice = stopLossConfig.triggerPrice;
             bool isStopLoosePriceSatisfyLiquidationPrice = isLong
-                ? _position.stopLooseTriggerPrice > posView.liquidationPrice
-                : _position.stopLooseTriggerPrice < posView.liquidationPrice;
+                ? stopLooseTriggerPrice > posView.liquidationPrice
+                : stopLooseTriggerPrice < posView.liquidationPrice;
 
             bool isStopLoosePriceSatisfyAssetPrice = isLong
-                ? _position.stopLooseTriggerPrice < _assetPrice
-                : _position.stopLooseTriggerPrice > _assetPrice;
+                ? stopLooseTriggerPrice < _assetPrice
+                : stopLooseTriggerPrice > _assetPrice;
 
             uint128 collateral = _position.initialCollateral - _position.openFee;
             uint128 leveragedPositionUsd = math.muldiv(collateral, _position.leverage, Constants.LEVERAGE_BASE);
             uint128 maxStopLooseDist = math.muldiv(_position.openPrice, collateral, leveragedPositionUsd) * 75 / 100;
 
             bool isStopLosePriceSatisfyMaxStopLoosePrice = isLong
-                ? _position.stopLooseTriggerPrice >= (_position.openPrice - maxStopLooseDist)
-                : _position.stopLooseTriggerPrice <= (_position.openPrice + maxStopLooseDist);
+                ? stopLooseTriggerPrice >= (_position.openPrice - maxStopLooseDist)
+                : stopLooseTriggerPrice <= (_position.openPrice + maxStopLooseDist);
+
             isStopLooseConfigValid = isStopLoosePriceSatisfyLiquidationPrice && isStopLoosePriceSatisfyAssetPrice && isStopLosePriceSatisfyMaxStopLoosePrice;
         } else {
             isStopLooseConfigValid = true;
@@ -240,19 +248,24 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             return false;
         }
 
-
         if (isTakeProfitExists) {
+            IGravixVault.StopOrderConfig takeProfitConfig = _position.takeProfit.get();
+            uint128 takeProfitTriggerPrice = takeProfitConfig.triggerPrice;
             bool isTakeProfitPriceSatisfyOpenPrice = isLong
-                ? _position.takeProfitTriggerPrice > _position.openPrice
-                : _position.takeProfitTriggerPrice < _position.openPrice;
+                ? takeProfitTriggerPrice > _position.openPrice
+                : takeProfitTriggerPrice < _position.openPrice;
+
 
             bool isTakePriceSatisfyAssetPrice = isLong
-                ? _position.takeProfitTriggerPrice > _assetPrice
-                : _position.takeProfitTriggerPrice < _assetPrice;
+                ? takeProfitTriggerPrice > _assetPrice
+                : takeProfitTriggerPrice < _assetPrice;
 
-            //todo max pnl validation
+            PositionView posView = getPositionViewInternal(_position, takeProfitTriggerPrice);
+            int256 pnlLimit = math.muldiv(posView.position.initialCollateral, _maxPnlRate, Constants.HUNDRED_PERCENT);
 
-            return isTakeProfitPriceSatisfyOpenPrice && isTakePriceSatisfyAssetPrice;
+            bool isTakeProfitPriceSatisfyMaxPnl = posView.pnl <= pnlLimit;
+
+            return isTakeProfitPriceSatisfyOpenPrice && isTakePriceSatisfyAssetPrice && isTakeProfitPriceSatisfyMaxPnl;
         } else {
             return true;
         }
@@ -261,25 +274,44 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     function isStopLoosePosition(
         Position _position
     ) internal pure returns (bool) {
-       return _position.stopLooseTriggerPrice > 0;
+       return _position.stopLoss.hasValue();
+    }
+    function isTakeProfitPosition(
+        Position _position
+    ) internal pure returns (bool) {
+        return _position.takeProfit.hasValue();
     }
 
     function isStopLooseReady(
         Position _position,
         uint128 _assetPrice
     ) internal returns (bool) {
+        optional(IGravixVault.StopOrderConfig) stopLoss = _position.stopLoss;
+        if (!stopLoss.hasValue()) {
+            return false;
+        }
+
+        uint128 stopLooseTriggerPrice = stopLoss.get().triggerPrice;
+
         return _position.positionType == IGravixVault.PositionType.Long
-        ? _position.stopLooseTriggerPrice >= _assetPrice
-        : _position.stopLooseTriggerPrice <= _assetPrice;
+            ?  stopLooseTriggerPrice >= _assetPrice
+            : stopLooseTriggerPrice < _assetPrice;
     }
 
     function isTakeProfitReady(
         Position _position,
         uint128 _assetPrice
     ) internal returns (bool) {
+        optional(IGravixVault.StopOrderConfig) takeProfit = _position.takeProfit;
+        if (!takeProfit.hasValue()) {
+            return false;
+        }
+
+        uint128 takeProfitTriggerPrice = takeProfit.get().triggerPrice;
+
         return _position.positionType == IGravixVault.PositionType.Long
-        ? _position.takeProfitTriggerPrice >= _assetPrice
-        : _position.takeProfitTriggerPrice <= _assetPrice;
+            ? takeProfitTriggerPrice <= _assetPrice
+            : takeProfitTriggerPrice > _assetPrice;
     }
 
     function _reserve() internal pure returns (uint128) {

@@ -156,6 +156,8 @@ describe("Testing main orders flow", async function () {
                             price: empty_price,
                             callId: getRandomNonce(),
                             referrer: zeroAddress,
+                            stopLooseTriggerPrice: 0,
+                            takeProfitTriggerPrice: 0,
                             nonce: 0,
                         })
                         .call()

@@ -46,7 +46,7 @@ export default async () => {
                 accountSettings: {
                     nonce: getRandomNonce(),
                     type: WalletTypes.EverWallet,
-                    value: locklift.utils.toNano(50),
+                    value: locklift.utils.toNano(500),
                 },
             },
         ],

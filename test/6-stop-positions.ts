@@ -1,20 +1,20 @@
-import { bn, deployUser } from "./utils/common";
+import { bn } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
-import { Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress } from "locklift";
+import { Address, Contract, fromNano, lockliftChai, toNano, zeroAddress } from "locklift";
 import chai, { expect } from "chai";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
-import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
     closeOrder,
+    closeOrderWithTraceTree,
+    openLimitWithTestsOrder,
     openMarketOrderWithTests,
     setPrice,
-    testMarketPosition,
-    testPositionFunding,
 } from "./utils/orders";
+import { LimitType, PosType, StopPositionType } from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -142,10 +142,11 @@ describe("Testing main orders flow", async function () {
             expect(user_stg_bal.toString()).to.be.eq(deposit_amount.toString());
         });
 
-        describe("Basic scenarios: open fee, pnl, close fee, spreads, liq price checked", async function () {
+        // Market
+        describe("Basic scenarios: Market", async function () {
             const market_idx = 0;
-
-            describe("Test solo long positions", async function () {
+            // LONG loss
+            describe("Test LONG stop loose", async function () {
                 it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
                     const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                     const STOP_LOOSE_PRICE = 999 * USDT_DECIMALS;
@@ -165,7 +166,535 @@ describe("Testing main orders flow", async function () {
                     );
 
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, limitBot.address);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        stopPositionType: 0,
+                        limitBot: limitBot.address,
+                    });
+                });
+            });
+            //LONG take profit
+            describe("Test LONG take profit", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+                    const TAKE_PROFIT_PRICE = 2000 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openMarketOrderWithTests(
+                        vault,
+                        ethUsdtMock,
+                        user,
+                        userUsdtWallet,
+                        market_idx,
+                        LONG_POS,
+                        100 * USDT_DECIMALS,
+                        LEVERAGE_DECIMALS,
+                        zeroAddress,
+                        undefined,
+                        TAKE_PROFIT_PRICE,
+                    );
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: 1,
+                    });
+                    debugger;
+                });
+            });
+            //SHORT loss
+            describe("Test SHORT stop loose", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+                    const STOP_LOOSE_PRICE = 1001 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openMarketOrderWithTests(
+                        vault,
+                        ethUsdtMock,
+                        user,
+                        userUsdtWallet,
+                        market_idx,
+                        SHORT_POS,
+                        100 * USDT_DECIMALS,
+                        LEVERAGE_DECIMALS,
+                        zeroAddress,
+                        STOP_LOOSE_PRICE,
+                    );
+
+                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE + 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        stopPositionType: 0,
+                        limitBot: limitBot.address,
+                    });
+                });
+            });
+            //SHORT take profit
+            describe("Test SHORT take profit", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+                    const TAKE_PROFIT_PRICE = 998 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openMarketOrderWithTests(
+                        vault,
+                        ethUsdtMock,
+                        user,
+                        userUsdtWallet,
+                        market_idx,
+                        SHORT_POS,
+                        100 * USDT_DECIMALS,
+                        LEVERAGE_DECIMALS,
+                        zeroAddress,
+                        undefined,
+                        TAKE_PROFIT_PRICE,
+                    );
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
+                    const { traceTree } = await closeOrderWithTraceTree({
+                        vault,
+                        pair: ethUsdtMock,
+                        user,
+                        userWallet: userUsdtWallet,
+                        pos_key,
+                        referrer: zeroAddress,
+                        stopOrderConfig: {
+                            limitBot: limitBot.address,
+                            stopPositionType: StopPositionType.TakeProfit,
+                        },
+                    });
+                    expect(Number(fromNano(traceTree!.getBalanceDiff(limitBot.address))) * -1).lt(0.4);
+                });
+            });
+        });
+
+        //Limit
+        describe("Basic scenarios: Limit", async function () {
+            const marketIdx = 0;
+
+            // LONG/LIMIT loss
+            describe("Test LONG/LIMIT/stop loose", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1050 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+                    const STOP_LOOSE_PRICE = 999 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        stopLossTriggerPrice: STOP_LOOSE_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        stopPositionType: StopPositionType.StopLoss,
+                        limitBot: limitBot.address,
+                    });
+                });
+            });
+
+            // LONG/STOP loss
+            describe("Test LONG/STOP/stop loose", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 950 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+                    const STOP_LOOSE_PRICE = 999 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        stopLossTriggerPrice: STOP_LOOSE_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        stopPositionType: StopPositionType.StopLoss,
+                        limitBot: limitBot.address,
+                    });
+                });
+            });
+
+            // LONG/LIMIT take
+            describe("Test LONG/LIMIT/take profit", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1050 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 1002 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.TakeProfit,
+                    });
+                });
+            });
+
+            // LONG/STOP take
+            describe("Test LONG/STOP/take profit", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 950 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 1002 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.TakeProfit,
+                    });
+                });
+            });
+
+            //
+            //
+            // SHORT/LIMIT loss
+            describe("Test SHORT/STOP/loss", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 950 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const STOP_LOSS_PRICE = 1002 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Short,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        stopLossTriggerPrice: STOP_LOSS_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.StopLoss,
+                    });
+                });
+            });
+
+            // SHORT/STOP loss
+            describe("Test SHORT/STOP/loss", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1050 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const STOP_LOSS_PRICE = 1002 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Short,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        stopLossTriggerPrice: STOP_LOSS_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.StopLoss,
+                    });
+                });
+            });
+            // SHORT/LIMIT take
+            describe("Test SHORT/LIMIT/Take", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 950 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 990 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Short,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.TakeProfit,
+                    });
+                });
+            });
+            // SHORT/STOP take
+            describe("Test SHORT/STOP/Take", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1050 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 990 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Short,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.TakeProfit,
+                    });
+                });
+            });
+            // LONG/STOP loss
+            describe("Test LONG/STOP/Take", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 950 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 1010 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.TakeProfit,
+                    });
+                });
+            });
+            // LONG/LIMIT take profit
+        });
+
+        describe("Basic scenarios: Update stop order config after position creation", () => {
+            const marketIdx = 0;
+
+            describe("Open LONG/LIMIT and add takeProfit", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1100 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 1010 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        // takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    const { traceTree } = await locklift.tracing.trace(
+                        vault.contract.methods
+                            .setOrUpdateStopPositionConfig({
+                                _meta: {
+                                    nonce: 0,
+                                    callId: 0,
+                                    sendGasTo: user.address,
+                                },
+                                _takeProfitTriggerPrice: TAKE_PROFIT_PRICE * 100,
+                                _marketIdx: marketIdx,
+                                _price: empty_price,
+                                _positionKey: pos_key,
+                                _stopLossTriggerPrice: 0,
+                            })
+                            .send({
+                                from: user.address,
+                                amount: toNano(2),
+                            }),
+                    );
+                    await traceTree?.beautyPrint();
+                    const account = await vault.account(user);
+                    const positions = await account.positions();
+                    expect(positions[0][1].takeProfit!.triggerPrice).to.be.eq((TAKE_PROFIT_PRICE * 100).toString());
+                    //add test for updating stop position config
+                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
+                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        limitBot: limitBot.address,
+                        stopPositionType: StopPositionType.TakeProfit,
+                    });
+                });
+            });
+            describe("Open LONG/LIMIT and add takeProfit then remove it", async function () {
+                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1100 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+
+                    const TAKE_PROFIT_PRICE = 1010 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Long,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        limitBot: limitBot.address,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        // takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
+                    });
+
+                    const { traceTree } = await locklift.tracing.trace(
+                        vault.contract.methods
+                            .setOrUpdateStopPositionConfig({
+                                _meta: {
+                                    nonce: 0,
+                                    callId: 0,
+                                    sendGasTo: user.address,
+                                },
+                                _takeProfitTriggerPrice: TAKE_PROFIT_PRICE * 100,
+                                _marketIdx: marketIdx,
+                                _price: empty_price,
+                                _positionKey: pos_key,
+                                _stopLossTriggerPrice: 0,
+                            })
+                            .send({
+                                from: user.address,
+                                amount: toNano(2),
+                            }),
+                    );
+                    await traceTree?.beautyPrint();
+                    const account = await vault.account(user);
+                    const positions = await account.positions();
+                    expect(positions[0][1].takeProfit!.triggerPrice).to.be.eq((TAKE_PROFIT_PRICE * 100).toString());
+                    {
+                        const { traceTree } = await locklift.tracing.trace(
+                            vault.contract.methods
+                                .removeStopPositionConfig({
+                                    _meta: {
+                                        nonce: 0,
+                                        callId: 0,
+                                        sendGasTo: user.address,
+                                    },
+                                    _positionKey: pos_key,
+                                    _marketIdx: marketIdx,
+                                    _removeTakeProfit: true,
+                                    _removeStopLoss: false,
+                                })
+                                .send({
+                                    from: user.address,
+                                    amount: toNano(2),
+                                }),
+                        );
+                        await traceTree?.beautyPrint();
+                        const positions = await account.positions();
+                        expect(positions[0][1].takeProfit).to.be.eq(null);
+                    }
                 });
             });
         });

@@ -241,6 +241,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _requestNonce,
                 request,
+                maxPnlRate,
                 gravixAccountCode.version
             );
         }
@@ -260,6 +261,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
                 _requestNonce,
                 request,
                 funding,
+                maxPnlRate,
                 gravixAccountCode.version
             );
         }

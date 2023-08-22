@@ -203,6 +203,8 @@ export class GravixVault {
         triggerPrice,
         amount,
         fromWallet,
+        stopLooseTriggerPrice = 0,
+        takeProfitTriggerPrice = 0,
     }: {
         fromWallet: TokenWallet;
         amount: number;
@@ -213,6 +215,8 @@ export class GravixVault {
         referrer: Address;
         limitType: 0 | 1; // 0 - limit, 1 - stop
         callId: number;
+        stopLooseTriggerPrice?: number;
+        takeProfitTriggerPrice?: number;
     }) {
         const payload = (
             await this.contract.methods
@@ -226,8 +230,8 @@ export class GravixVault {
                     _referrer: referrer,
                     _nonce: 0,
                     _limitOrderType: limitType,
-                    _stopLooseTriggerPrice: 0,
-                    _takeProfitTriggerPrice: 0,
+                    _stopLooseTriggerPrice: stopLooseTriggerPrice,
+                    _takeProfitTriggerPrice: takeProfitTriggerPrice,
                 })
                 .call()
         ).payload;

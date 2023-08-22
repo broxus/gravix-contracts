@@ -112,6 +112,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             requestNonce,
             newRequest,
+            maxPnlRate,
             gravixAccountCode.version
         );
     }
@@ -282,7 +283,6 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         address gravixAcc = getGravixAccountAddress(user);
         if (_error == 0) {
             int256 funding = positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
-// todo send gas to limit bot vault
             IGravixAccount(gravixAcc).process_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 positionKey,
                 marketIdx,
@@ -293,6 +293,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
                 funding,
                 _stopLooseTriggerPrice,
                 _takeProfitTriggerPrice,
+                maxPnlRate,
                 meta,
                 gravixAccountCode.version
             );
@@ -348,6 +349,10 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
 
         uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
         _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
+
+        if (newPos.takeProfit.hasValue() || newPos.stopLoss.hasValue()) {
+            limitBotVault.transfer({value: Gas.STOP_ORDER_VALUE});
+        }
 
         emit MarketOrderExecution(
             meta.callId,

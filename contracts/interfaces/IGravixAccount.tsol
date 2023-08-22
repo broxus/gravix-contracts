@@ -21,8 +21,8 @@ interface IGravixAccount {
         uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
-        uint128 stopLooseTriggerPrice;
-        uint128 takeProfitTriggerPrice;
+        optional(IGravixVault.StopOrderConfig) stopLoss;
+        optional(IGravixVault.StopOrderConfig) takeProfit;
 
     }
     struct LimitOrder {
@@ -55,8 +55,8 @@ interface IGravixAccount {
         uint64 closeFeeRate; // %
         uint64 liquidationThresholdRate; // %
         uint32 createdAt; // %
-        uint128 stopLooseTriggerPrice;
-        uint128 takeProfitTriggerPrice;
+        optional(IGravixVault.StopOrderConfig) stopLoss;
+        optional(IGravixVault.StopOrderConfig) takeProfit;
     }
 
     struct PositionView {
@@ -69,7 +69,6 @@ interface IGravixAccount {
         uint128 liquidationPrice; // 8 decimals number
         int256 pnl; // 6 decimals number
         bool liquidate;
-        bool positionHasStopConfig;
         uint32 viewTime;
     }
 
@@ -86,6 +85,7 @@ interface IGravixAccount {
     function process_requestMarketOrder(
         uint32 reqNonce,
         IGravixVault.PendingMarketOrder pendingRequest,
+        uint64 maxPnlRate,
         uint32 accountVersion
     ) external;
     function process_cancelMarketOrder(
@@ -104,6 +104,7 @@ interface IGravixAccount {
         int256 _accUSDFundingPerShare,
         uint128 _stopLooseTriggerPrice,
         uint128 _takeProfitTriggerPrice,
+        uint64 _maxPnlRate,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external;
@@ -112,6 +113,7 @@ interface IGravixAccount {
         uint32 reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
         int256 _accUSDFundingPerShare,
+        uint64 maxPnlRate,
         uint32 _accountVersion
     ) external;
 
@@ -139,6 +141,24 @@ interface IGravixAccount {
         uint128 assetPrice,
         IGravixVault.Funding funding,
         Callback.CallMeta meta,
+        uint32 accountVersion
+    ) external;
+    function process_updatePosition(
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        uint64 _maxPnlRate,
+        Callback.CallMeta meta,
+        uint32 accountVersion
+    ) external;
+    function process_removeStopPositionConfig(
+        uint32 positionKey,
+        uint32 marketIdx,
+        bool removeStopLoss,
+        bool removeTakeProfit,
+        Callback.CallMeta,
         uint32 accountVersion
     ) external;
     function process_stopPositions(

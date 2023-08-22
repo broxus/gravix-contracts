@@ -227,6 +227,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             requestNonce,
             newRequest,
             funding,
+            maxPnlRate,
             gravixAccountCode.version
         );
     }
@@ -485,13 +486,11 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     function cancelLimitOrder(
         address user,
         uint32 positionKey,
-        bool positionHasStopConfig,
         Callback.CallMeta meta
     ) external view onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
 
         address gravixAcc = getGravixAccountAddress(user);
-        uint128 stopPositionValue = positionHasStopConfig ? Gas.STOP_ORDER_VALUE : 0;
 
         IGravixAccount(gravixAcc).process_cancelLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             positionKey,

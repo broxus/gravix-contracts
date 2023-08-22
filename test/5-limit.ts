@@ -140,7 +140,7 @@ describe("Testing main orders flow", async function () {
             const marketIdx = 0;
 
             describe("Test solo long positions", async function () {
-                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                it("Pnl+, 1x leverage, LIMIT/LONG open/close 1050$/1000$/1100$", async function () {
                     await testLimitPosition({
                         vault,
                         pair: ethUsdtMock,
@@ -157,231 +157,62 @@ describe("Testing main orders flow", async function () {
                         limitBot: limitBot.address,
                     });
                 });
-
-                it("Pnl+, 10x leverage, open/close 1000$/1500$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        10 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        1500 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl+, 100x leverage, open/close 1000$/2000$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        100 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        2000 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl-, 1x leverage, open/close 1000$/500$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        500 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl-, 10x leverage, open/close 1000$/950$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        10 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        950 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl-, 100x leverage, open/close 1000$/995$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        100 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        995 * USDT_DECIMALS,
-                    );
-                });
             });
-
             describe("Test solo short positions", async function () {
-                it("Pnl+, 1x leverage, open/close 1000$/900$", async function () {
-                    await testMarketPosition(
+                it("Pnl+, 1x leverage, LIMIT/SHORT 950$/1000$/900$", async function () {
+                    await testLimitPosition({
                         vault,
-                        ethUsdtMock,
+                        pair: ethUsdtMock,
                         user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        900 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl+, 10x leverage, open/close 1000$/650$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        10 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        650 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl+, 100x leverage, open/close 1000$/300$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        100 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        300 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl-, 1x leverage, open/close 1000$/1850$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        1850 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl-, 10x leverage, open/close 1000$/1050$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        10 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        1050 * USDT_DECIMALS,
-                    );
-                });
-
-                it("Pnl-, 100x leverage, open/close 1000$/1005$", async function () {
-                    await testMarketPosition(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        100 * LEVERAGE_DECIMALS,
-                        1000 * USDT_DECIMALS,
-                        1005 * USDT_DECIMALS,
-                    );
+                        userWallet: userUsdtWallet,
+                        marketIdx: marketIdx,
+                        leverage: LEVERAGE_DECIMALS,
+                        initialPrice: 950 * USDT_DECIMALS,
+                        triggerPrice: 1000 * USDT_DECIMALS,
+                        finishPrice: 900 * USDT_DECIMALS,
+                        posType: SHORT_POS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Limit,
+                        limitBot: limitBot.address,
+                    });
                 });
             });
-
-            describe("Mixed case", async function () {
-                let long_pos_key: number, long_pos2_key: number;
-                let short_pos_key: number, short_pos2_key: number;
-
-                it("Opening positions at 1000$", async function () {
-                    await setPrice(ethUsdtMock, 1000 * USDT_DECIMALS);
-                    long_pos_key = await openMarketOrderWithTests(
+            describe("Test solo short positions", async function () {
+                it("Pnl+, 1x leverage, STOP/LONG 950$/1000$/1100$", async function () {
+                    await testLimitPosition({
                         vault,
-                        ethUsdtMock,
+                        pair: ethUsdtMock,
                         user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                    );
-                    short_pos_key = await openMarketOrderWithTests(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                    );
-                    long_pos2_key = await openMarketOrderWithTests(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        LONG_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                    );
-                    short_pos2_key = await openMarketOrderWithTests(
-                        vault,
-                        ethUsdtMock,
-                        user,
-                        userUsdtWallet,
-                        marketIdx,
-                        SHORT_POS,
-                        100 * USDT_DECIMALS,
-                        LEVERAGE_DECIMALS,
-                    );
+                        userWallet: userUsdtWallet,
+                        marketIdx: marketIdx,
+                        leverage: LEVERAGE_DECIMALS,
+                        initialPrice: 950 * USDT_DECIMALS,
+                        triggerPrice: 1000 * USDT_DECIMALS,
+                        finishPrice: 1100 * USDT_DECIMALS,
+                        posType: LONG_POS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        limitBot: limitBot.address,
+                    });
                 });
-
-                it("Closing positions at 1100$/900$", async function () {
-                    await setPrice(ethUsdtMock, 1100 * USDT_DECIMALS);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, long_pos_key);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, short_pos_key);
-
-                    await setPrice(ethUsdtMock, 900 * USDT_DECIMALS);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, long_pos2_key);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, short_pos2_key);
+            });
+            describe("Test solo short positions", async function () {
+                it("Pnl+, 1x leverage, STOP/SHORT 950$/1000$/1100$", async function () {
+                    await testLimitPosition({
+                        vault,
+                        pair: ethUsdtMock,
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx: marketIdx,
+                        leverage: LEVERAGE_DECIMALS,
+                        initialPrice: 1000 * USDT_DECIMALS,
+                        triggerPrice: 950 * USDT_DECIMALS,
+                        finishPrice: 900 * USDT_DECIMALS,
+                        posType: SHORT_POS,
+                        collateral: 100 * USDT_DECIMALS,
+                        limitType: LimitType.Stop,
+                        limitBot: limitBot.address,
+                    });
                 });
             });
         });

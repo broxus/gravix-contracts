@@ -26,7 +26,9 @@ export default async () => {
         deployConfig: {
             contract: "LimitBotVault",
             publicKey: signer?.publicKey!,
-            initParams: {},
+            initParams: {
+                nonce: getRandomNonce(),
+            },
             constructorParams: {
                 _gravixVault: vault.address,
                 _owner: owner.address,
