@@ -23,7 +23,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     enum LimitOrderType { Limit, Stop }
     enum StopPositionType {StopLoss, TakeProfit }
 
-    struct StopOrderConfig {
+    struct StopOrder {
         uint128 triggerPrice;
         uint32 createdAt;
     }
@@ -163,7 +163,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 borrowBaseRatePerHour; // %
         IPriceNode.Price price;
         address referrer;
-        uint128 stopLooseTriggerPrice;
+        uint128 stopLossTriggerPrice;
         uint128 takeProfitTriggerPrice;
         Callback.CallMeta meta;
     }
@@ -185,7 +185,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address referrer;
         uint128 assetPrice;
         uint128 positionSizeAsset;
-        uint128 stopLooseTriggerPrice;
+        uint128 stopLossTriggerPrice;
         uint128 takeProfitTriggerPrice;
         Callback.CallMeta meta;
     }
@@ -398,7 +398,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 leverage,
         PositionType positionType,
         uint128 assetPrice,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         Callback.CallMeta meta
     ) external;
@@ -427,7 +427,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 _leverage,
         uint128 _triggerPrice,
         LimitOrderType _limitOrderType,
-        uint128 stopLooseTriggerPrice,
+        uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
         IPriceNode.Price _price,
         address _referrer,
@@ -512,7 +512,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address _user,
         uint32 _marketIdx,
         uint32 _positionKey,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         uint128 _assetPrice,
         Callback.CallMeta _meta

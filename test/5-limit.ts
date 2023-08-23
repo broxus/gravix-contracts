@@ -16,7 +16,6 @@ describe("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
-    let limitBot: Account;
 
     let usdt_root: Token;
     let stg_root: Token;
@@ -87,8 +86,8 @@ describe("Testing main orders flow", async function () {
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
             user1 = locklift.deployments.getAccount("User1").account;
-            limitBot = locklift.deployments.getAccount("LimitBot").account;
-            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner);
+            const { account: limitBot } = locklift.deployments.getAccount("LimitBot");
+            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
             stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
@@ -154,7 +153,6 @@ describe("Testing main orders flow", async function () {
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -173,7 +171,6 @@ describe("Testing main orders flow", async function () {
                         posType: SHORT_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -192,7 +189,6 @@ describe("Testing main orders flow", async function () {
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Stop,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -211,7 +207,6 @@ describe("Testing main orders flow", async function () {
                         posType: SHORT_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Stop,
-                        limitBot: limitBot.address,
                     });
                 });
             });

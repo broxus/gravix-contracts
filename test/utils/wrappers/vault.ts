@@ -54,19 +54,15 @@ const empty_price = {
 };
 
 export class GravixVault {
-    public contract: Contract<GravixVaultAbi>;
-    public owner: Account;
     public address: Address;
 
-    constructor(contract: Contract<GravixVaultAbi>, owner: Account) {
-        this.contract = contract;
-        this.owner = owner;
+    constructor(readonly contract: Contract<GravixVaultAbi>, readonly owner: Account, readonly limitBot: Address) {
         this.address = this.contract.address;
     }
 
-    static async from_addr(addr: Address, owner: Account) {
+    static async from_addr(addr: Address, owner: Account, limitBot: Address) {
         const contract = await locklift.factory.getDeployedContract("GravixVault", addr);
-        return new GravixVault(contract, owner);
+        return new GravixVault(contract, owner, limitBot);
     }
 
     async getEvents(event_name: string) {
@@ -170,7 +166,7 @@ export class GravixVault {
         max_slippage: number,
         referrer: Address,
         callId = 0,
-        stopLooseTriggerPrice = 0,
+        stopLossTriggerPrice = 0,
         takeProfitTriggerPrice = 0,
     ) {
         const payload = (
@@ -184,7 +180,7 @@ export class GravixVault {
                     price: empty_price,
                     callId: callId,
                     referrer: referrer,
-                    stopLooseTriggerPrice,
+                    stopLossTriggerPrice,
                     takeProfitTriggerPrice,
                     nonce: 0,
                 })
@@ -203,7 +199,7 @@ export class GravixVault {
         triggerPrice,
         amount,
         fromWallet,
-        stopLooseTriggerPrice = 0,
+        stopLossTriggerPrice = 0,
         takeProfitTriggerPrice = 0,
     }: {
         fromWallet: TokenWallet;
@@ -215,7 +211,7 @@ export class GravixVault {
         referrer: Address;
         limitType: 0 | 1; // 0 - limit, 1 - stop
         callId: number;
-        stopLooseTriggerPrice?: number;
+        stopLossTriggerPrice?: number;
         takeProfitTriggerPrice?: number;
     }) {
         const payload = (
@@ -230,7 +226,7 @@ export class GravixVault {
                     _referrer: referrer,
                     _nonce: 0,
                     _limitOrderType: limitType,
-                    _stopLooseTriggerPrice: stopLooseTriggerPrice,
+                    _stopLossTriggerPrice: stopLossTriggerPrice,
                     _takeProfitTriggerPrice: takeProfitTriggerPrice,
                 })
                 .call()
@@ -280,6 +276,28 @@ export class GravixVault {
                 meta: { callId: callId, nonce: 0, sendGasTo: user.address },
             })
             .send({ from: user.address, amount: toNano(2.1) });
+    }
+
+    async stopPositions({
+        callId = 0,
+        stopPositionsConfig,
+    }: {
+        callId?: number;
+        stopPositionsConfig: Parameters<Contract<GravixVaultAbi>["methods"]["stopPositions"]>[0]["_stopPositionsMap"];
+    }) {
+        return this.contract.methods
+            .stopPositions({
+                _meta: {
+                    sendGasTo: this.limitBot,
+                    callId: callId,
+                    nonce: getRandomNonce(),
+                },
+                _stopPositionsMap: stopPositionsConfig,
+            })
+            .send({
+                from: this.limitBot,
+                amount: toNano(5),
+            });
     }
 
     async liquidatePositions(

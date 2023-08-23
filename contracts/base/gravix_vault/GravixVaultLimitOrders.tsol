@@ -25,7 +25,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             PositionType positionType,
             uint32 leverage,
             uint128 triggerPrice,
-            uint128 stopLooseTriggerPrice,
+            uint128 stopLossTriggerPrice,
             uint128 takeProfitTriggerPrice,
             LimitOrderType limitOrderType,
             IPriceNode.Price price,
@@ -50,7 +50,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             leverage,
             triggerPrice,
             limitOrderType,
-            stopLooseTriggerPrice,
+            stopLossTriggerPrice,
             takeProfitTriggerPrice,
             price,
             referrer,
@@ -67,7 +67,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _leverage,
         uint128 _triggerPrice,
         LimitOrderType _limitOrderType,
-        uint128 stopLooseTriggerPrice,
+        uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
         IPriceNode.Price _price,
         address _referrer,
@@ -85,7 +85,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 _leverage,
                 _triggerPrice,
                 _limitOrderType,
-                stopLooseTriggerPrice,
+                stopLossTriggerPrice,
                 takeProfitTriggerPrice,
                 _price,
                 _referrer,
@@ -104,7 +104,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _limitOrderType,
             _referrer,
             _triggerPrice,
-            stopLooseTriggerPrice,
+            stopLossTriggerPrice,
             takeProfitTriggerPrice,
             _price,
             _meta
@@ -121,7 +121,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         LimitOrderType _limitOrderType,
         address _referer,
         uint128 _triggerPrice,
-        uint128 stopLooseTriggerPrice,
+        uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
         IPriceNode.Price _userPrice,
         Callback.CallMeta _meta
@@ -136,7 +136,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _limitOrderType,
             _referer,
             _triggerPrice,
-            stopLooseTriggerPrice,
+            stopLossTriggerPrice,
             takeProfitTriggerPrice,
             _userPrice
         );
@@ -150,7 +150,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _leverage,
         uint128 _triggerPrice,
         LimitOrderType _limitOrderType,
-        uint128 stopLooseTriggerPrice,
+        uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
         IPriceNode.Price _price,
         address _referrer,
@@ -165,7 +165,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _leverage,
             _triggerPrice,
             _limitOrderType,
-            stopLooseTriggerPrice,
+            stopLossTriggerPrice,
             takeProfitTriggerPrice,
             _price,
             _referrer,
@@ -182,7 +182,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _leverage,
         uint128 _triggerPrice,
         LimitOrderType _limitOrderType,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         IPriceNode.Price _price,
         address _referrer,
@@ -215,7 +215,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _referrer,
             _assetPrice,
             positionSizeAsset,
-            _stopLooseTriggerPrice,
+            _stopLossTriggerPrice,
             _takeProfitTriggerPrice,
             _meta
         );
@@ -277,7 +277,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         );
 
         // reserve evers for feature order execution
-        uint128 stopOrderValue = request.stopLooseTriggerPrice > 0 || request.takeProfitTriggerPrice > 0
+        uint128 stopOrderValue = request.stopLossTriggerPrice > 0 || request.takeProfitTriggerPrice > 0
             ? Gas.STOP_ORDER_VALUE
             : 0;
 

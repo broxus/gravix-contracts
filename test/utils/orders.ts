@@ -2,10 +2,12 @@ import { Address, Contract, getRandomNonce, toNano, zeroAddress } from "locklift
 import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import BigNumber from "bignumber.js";
-import { PairMockAbi } from "../../build/factorySource";
+import { GravixVaultAbi, PairMockAbi } from "../../build/factorySource";
 import { bn, getPriceForLimitOrder, toUSD, tryIncreaseTime } from "./common";
 import { TokenWallet } from "./wrappers/token_wallet";
 import { LimitType, PosType } from "./constants";
+import { GravixAccount } from "./wrappers/vault_acc";
+import { ViewTracingTree } from "locklift/internal/tracing/viewTraceTree/viewTracingTree";
 
 const logger = require("mocha-logger");
 const { expect } = require("chai");
@@ -91,10 +93,10 @@ export async function getOpenLimitPositionInfo(
     const position = collateral * (leverage / 1000000);
 
     const totalSpread = bn(market.fees.baseSpreadRate);
-    const priceDivider = posType == 0 ? PERCENT_100.minus(totalSpread) : PERCENT_100.plus(totalSpread);
+    const price_multiplier = posType == 0 ? PERCENT_100.plus(totalSpread) : PERCENT_100.minus(totalSpread);
 
     return {
-        expectedOpenPrice: bn(triggerPrice).times(PERCENT_100).idiv(priceDivider),
+        expectedOpenPrice: price_multiplier.times(triggerPrice).idiv(PERCENT_100),
         position,
         market,
         initialPrice,
@@ -235,95 +237,31 @@ export async function openMarketOrderWithTests(
             },
         });
 
-    const event = await vault.getEvent("MarketOrderExecution");
-    const details = await vault.details();
-    const acc_details = await account.contract.methods.getDetails({ answerId: 0 }).call();
-    const col_up = bn(collateral).minus(open_fee_expected);
-
-    let pool_increase = open_fee_expected;
-    if (!acc_details._referrer.equals(zeroAddress)) {
-        pool_increase = pool_increase.minus(open_fee_expected.idiv(10));
-
-        expect(traceTree)
-            .to.emit("ReferralPayment")
-            .withNamedArgs({
-                callId: callId.toFixed(),
-                referral: user.address,
-                referrer: acc_details._referrer.toString(),
-                amount: open_fee_expected.idiv(10).toFixed(),
-            });
-    }
-    if (!acc_details._grandReferrer.equals(zeroAddress)) {
-        pool_increase = pool_increase.minus(open_fee_expected.idiv(100));
-
-        expect(traceTree)
-            .to.emit("ReferralPayment")
-            .withNamedArgs({
-                callId: callId.toFixed(),
-                referral: user.address,
-                referrer: acc_details._grandReferrer.toString(),
-                amount: open_fee_expected.idiv(100).toFixed(),
-            });
-    }
-
-    expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(col_up).toFixed());
-    expect(details._poolAssets.balance).to.be.eq(bn(details_prev._poolAssets.balance).plus(pool_increase).toFixed());
-
-    const pos_view = (
-        await account.contract.methods
-            .getPositionView({
-                answerId: 0,
-                input: {
-                    positionKey: pos_key,
-                    assetPrice: initialPrice,
-                    funding: {
-                        accLongUSDFundingPerShare: 0,
-                        accShortUSDFundingPerShare: 0,
-                    },
-                },
-            })
-            .call()
-    ).positionView;
-
-    const leveraged_usd = bn(pos_view.position.initialCollateral)
-        .minus(pos_view.position.openFee)
-        .times(pos_view.position.leverage)
-        .idiv(1000000);
-
-    const time_passed = bn(pos_view.viewTime).minus(pos_view.position.createdAt);
-    const borrow_fee = time_passed
-        .times(pos_view.position.borrowBaseRatePerHour)
-        .idiv(3600)
-        .times(leveraged_usd)
-        .idiv(PERCENT_100);
-
-    const position_up = col_up.times(leverage).idiv(1000000);
-    const liq_price_dist = expectedPrice
-        .times(col_up.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view.fundingFee))
-        .div(col_up)
-        .times(1000000)
-        .div(leverage)
-        .integerValue(BigNumber.ROUND_FLOOR);
-
-    let liq_price = pos_type == 0 ? expectedPrice.minus(liq_price_dist) : expectedPrice.plus(liq_price_dist);
-    liq_price =
-        pos_type == 0
-            ? liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate))
-            : liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
-    liq_price = liq_price.isNegative() ? bn(0) : liq_price;
-
-    expect(pos_view.liquidationPrice.toString()).to.be.eq(liq_price.toString());
-
+    const { colUp, posUp, liqPrice } = await checkOpenedPositionMath({
+        market,
+        posType: pos_type,
+        collateral,
+        leverage,
+        expectedOpenPrice: expectedPrice,
+        assetPrice: initialPrice,
+        openFeeExpected: open_fee_expected,
+        openPositionTraceTree: traceTree,
+        positionKey: pos_key,
+        callId,
+        user,
+        vaultPrevDetails: details_prev,
+        vault,
+    });
     logger.log(
         `Open ${ptype[pos_type]} position,`,
         `market price - ${toUSD(initialPrice / 100)}$,`,
         // @ts-ignore
         `open price - ${toUSD(expectedPrice / 100)}\$,`,
         // @ts-ignore
-        `liquidation price - ${toUSD(liq_price / 100)}\$,`,
+        `liquidation price - ${toUSD(liqPrice / 100)}\$,`,
         `spread - ${totalSpread.div(10 ** 10).toFixed(3)}\%,`,
-        `collateral - ${toUSD(col_up)}\$,`,
-        `position size - ${toUSD(position_up)}\$,`,
+        `collateral - ${toUSD(colUp)}\$,`,
+        `position size - ${toUSD(posUp)}\$,`,
         `open fee - ${toUSD(open_fee_expected)}\$`,
     );
 
@@ -342,7 +280,6 @@ export async function openLimitWithTestsOrder({
     pair,
     vault,
     triggerPrice,
-    limitBot,
     takeProfitTriggerPrice = 0,
     stopLossTriggerPrice = 0,
 }: {
@@ -357,21 +294,17 @@ export async function openLimitWithTestsOrder({
     leverage: number;
     referrer: Address;
     triggerPrice: number;
-    limitBot: Address;
     stopLossTriggerPrice?: number;
     takeProfitTriggerPrice?: number;
 }): Promise<number> {
-    const { position, market, initialPrice, expectedOpenPrice, totalSpread } = await getOpenLimitPositionInfo(
-        vault,
-        pair,
-        user,
-        userWallet,
-        marketIdx,
-        posType,
-        collateral,
-        leverage,
-        triggerPrice * 100,
-    );
+    const initialPrice = Number(await getPrice(pair));
+    const market = (await vault.contract.methods.getMarket({ marketIdx, answerId: 0 }).call())._market;
+
+    const position = collateral * (leverage / 1000000);
+
+    const totalSpread = bn(market.fees.baseSpreadRate);
+    const price_multiplier = posType == 0 ? PERCENT_100.plus(totalSpread) : PERCENT_100.minus(totalSpread);
+    const expectedOpenPrice = price_multiplier.times(triggerPrice * 100).idiv(PERCENT_100);
 
     const res = (
         await vault.contract.methods
@@ -400,7 +333,7 @@ export async function openLimitWithTestsOrder({
             positionType: posType,
             marketIdx: marketIdx,
             fromWallet: userWallet,
-            stopLooseTriggerPrice: stopLossTriggerPrice * 100,
+            stopLossTriggerPrice: stopLossTriggerPrice * 100,
             takeProfitTriggerPrice: takeProfitTriggerPrice * 100,
         }),
         { allowedCodes: { compute: [null] } },
@@ -459,13 +392,75 @@ export async function openLimitWithTestsOrder({
                     },
                 })
                 .send({
-                    from: limitBot,
+                    from: vault.limitBot,
                     amount: toNano(10),
                 }),
         );
         await traceTree?.beautyPrint();
     }
+    const { colUp, posUp, liqPrice } = await checkOpenedPositionMath({
+        market,
+        posType,
+        collateral,
+        leverage,
+        expectedOpenPrice,
+        assetPrice: triggerPrice * 100,
+        openFeeExpected,
+        openPositionTraceTree: traceTree,
+        positionKey,
+        callId,
+        user,
+        vaultPrevDetails: details_prev,
+        vault,
+    });
 
+    logger.log(
+        `Open ${ptype[posType]} position,`,
+        `market price - ${toUSD(initialPrice / 100)}$,`,
+        // @ts-ignore
+        `open price - ${toUSD(expectedOpenPrice / 100)}\$,`,
+        // @ts-ignore
+        `liquidation price - ${toUSD(liqPrice / 100)}\$,`,
+        `spread - ${totalSpread.div(10 ** 10).toFixed(3)}\%,`,
+        `collateral - ${toUSD(colUp)}\$,`,
+        `position size - ${toUSD(posUp)}\$,`,
+        `open fee - ${toUSD(openFeeExpected)}\$`,
+    );
+
+    return Number(positionKey);
+}
+const checkOpenedPositionMath = async ({
+    vault,
+    collateral,
+    openFeeExpected,
+    openPositionTraceTree: traceTree,
+    callId,
+    user,
+    vaultPrevDetails,
+    positionKey,
+    assetPrice,
+    leverage,
+    expectedOpenPrice,
+    posType,
+    market,
+}: {
+    vault: GravixVault;
+    user: Account;
+    collateral: number;
+    openFeeExpected: BigNumber;
+    openPositionTraceTree: ViewTracingTree | undefined;
+    callId: number;
+    vaultPrevDetails: ReturnType<GravixVault["details"]> extends Promise<infer T> ? T : never;
+    positionKey: string;
+    assetPrice: number;
+    leverage: number;
+    expectedOpenPrice: BigNumber;
+    posType: 0 | 1;
+    market: (ReturnType<ReturnType<Contract<GravixVaultAbi>["methods"]["getMarket"]>["call"]> extends Promise<infer T>
+        ? T
+        : never)["_market"];
+}): Promise<{ colUp: BigNumber; posUp: BigNumber; liqPrice: number }> => {
+    const account = await vault.account(user);
     const details = await vault.details();
     const accDetails = await account.contract.methods.getDetails({ answerId: 0 }).call();
     const colUp = bn(collateral).minus(openFeeExpected);
@@ -496,8 +491,8 @@ export async function openLimitWithTestsOrder({
             });
     }
 
-    expect(details._collateralReserve).to.be.eq(bn(details_prev._collateralReserve).plus(colUp).toFixed());
-    expect(details._poolAssets.balance).to.be.eq(bn(details_prev._poolAssets.balance).plus(poolIncrease).toFixed());
+    expect(details._collateralReserve).to.be.eq(bn(vaultPrevDetails._collateralReserve).plus(colUp).toFixed());
+    expect(details._poolAssets.balance).to.be.eq(bn(vaultPrevDetails._poolAssets.balance).plus(poolIncrease).toFixed());
 
     const pos_view = (
         await account.contract.methods
@@ -505,7 +500,7 @@ export async function openLimitWithTestsOrder({
                 answerId: 0,
                 input: {
                     positionKey: positionKey,
-                    assetPrice: triggerPrice * 100,
+                    assetPrice: assetPrice,
                     funding: {
                         accLongUSDFundingPerShare: 0,
                         accShortUSDFundingPerShare: 0,
@@ -527,7 +522,7 @@ export async function openLimitWithTestsOrder({
         .times(leveraged_usd)
         .idiv(PERCENT_100);
 
-    const position_up = colUp.times(leverage).idiv(1000000);
+    const posUp = colUp.times(leverage).idiv(1000000);
     const liq_price_dist = expectedOpenPrice
         .times(colUp.times(0.9).integerValue(BigNumber.ROUND_FLOOR).minus(borrow_fee).minus(pos_view.fundingFee))
         .div(colUp)
@@ -535,30 +530,20 @@ export async function openLimitWithTestsOrder({
         .div(leverage)
         .integerValue(BigNumber.ROUND_FLOOR);
 
-    let liq_price = posType == 0 ? expectedOpenPrice.minus(liq_price_dist) : expectedOpenPrice.plus(liq_price_dist);
-    liq_price =
+    let liqPrice = posType == 0 ? expectedOpenPrice.minus(liq_price_dist) : expectedOpenPrice.plus(liq_price_dist);
+    liqPrice =
         posType == 0
-            ? liq_price.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate))
-            : liq_price.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
-    liq_price = liq_price.isNegative() ? bn(0) : liq_price;
+            ? liqPrice.times(PERCENT_100).idiv(PERCENT_100.minus(market.fees.baseSpreadRate))
+            : liqPrice.times(PERCENT_100).idiv(PERCENT_100.plus(market.fees.baseSpreadRate));
+    liqPrice = liqPrice.isNegative() ? bn(0) : liqPrice;
 
-    expect(pos_view.liquidationPrice.toString()).to.be.eq(liq_price.toString());
-
-    logger.log(
-        `Open ${ptype[posType]} position,`,
-        `market price - ${toUSD(initialPrice / 100)}$,`,
-        // @ts-ignore
-        `open price - ${toUSD(expectedOpenPrice / 100)}\$,`,
-        // @ts-ignore
-        `liquidation price - ${toUSD(liq_price / 100)}\$,`,
-        `spread - ${totalSpread.div(10 ** 10).toFixed(3)}\%,`,
-        `collateral - ${toUSD(colUp)}\$,`,
-        `position size - ${toUSD(position_up)}\$,`,
-        `open fee - ${toUSD(openFeeExpected)}\$`,
-    );
-
-    return Number(positionKey);
-}
+    expect(pos_view.liquidationPrice.toString()).to.be.eq(liqPrice.toString());
+    return {
+        colUp,
+        posUp,
+        liqPrice: liqPrice.toNumber(),
+    };
+};
 
 export const closeOrderWithTraceTree = async ({
     user,
@@ -576,7 +561,6 @@ export const closeOrderWithTraceTree = async ({
     pos_key: number;
     referrer: Address;
     stopOrderConfig?: {
-        limitBot: Address;
         stopPositionType: 0 | 1;
     };
 }) => {
@@ -615,33 +599,24 @@ export const closeOrderWithTraceTree = async ({
     const { traceTree: traceTree1 } = await locklift.tracing.trace(
         !stopOrderConfig
             ? vault.closePosition(user, pos_key, posView1.position.marketIdx, callId)
-            : vault.contract.methods
-                  .stopPositions({
-                      _meta: {
-                          sendGasTo: stopOrderConfig.limitBot,
-                          callId: callId,
-                          nonce: getRandomNonce(),
-                      },
-                      _stopPositionsMap: [
-                          [
-                              posView1.position.marketIdx,
-                              {
-                                  price: empty_price,
-                                  positions: [
-                                      {
-                                          positionKey: pos_key,
-                                          stopPositionType: stopOrderConfig.stopPositionType,
-                                          user: user.address,
-                                      },
-                                  ],
-                              },
-                          ],
+            : vault.stopPositions({
+                  callId,
+                  stopPositionsConfig: [
+                      [
+                          posView1.position.marketIdx,
+                          {
+                              price: empty_price,
+                              positions: [
+                                  {
+                                      positionKey: pos_key,
+                                      stopPositionType: stopOrderConfig.stopPositionType,
+                                      user: user.address,
+                                  },
+                              ],
+                          },
                       ],
-                  })
-                  .send({
-                      from: stopOrderConfig.limitBot,
-                      amount: toNano(5),
-                  }),
+                  ],
+              }),
     );
     await traceTree1?.beautyPrint();
     const event = await vault.getEvent("ClosePosition");
@@ -657,7 +632,7 @@ export const closeOrderWithTraceTree = async ({
             ? posView2.position.takeProfit.triggerPrice
             : posView2.position.stopLoss.triggerPrice
         : currentPrice;
-    const expected_close_price = isStop ? bn(finishPrice) : price_multiplier1.times(finishPrice).idiv(PERCENT_100);
+    const expected_close_price = price_multiplier1.times(finishPrice).idiv(PERCENT_100);
     const leveraged_usd = bn(posView2.position.initialCollateral)
         .minus(posView2.position.openFee)
         .times(posView2.position.leverage)
@@ -815,7 +790,6 @@ export async function closeOrder(
     pos_key: number,
     referrer = zeroAddress,
     stopOrderConfig?: {
-        limitBot: Address;
         stopPositionType: 0 | 1;
     },
 ) {
@@ -883,7 +857,6 @@ export const testLimitPosition = async ({
     vault,
     limitType,
     triggerPrice,
-    limitBot,
 }: {
     vault: GravixVault;
     pair: Contract<PairMockAbi>;
@@ -899,7 +872,6 @@ export const testLimitPosition = async ({
     finishPrice: number;
     ttl?: number;
     referrer?: Address;
-    limitBot: Address;
 }) => {
     const market = (
         await vault.contract.methods
@@ -922,7 +894,6 @@ export const testLimitPosition = async ({
         userWallet,
         limitType,
         triggerPrice,
-        limitBot,
     });
     // CLOSE POSITION
     await setPrice(pair, finishPrice);

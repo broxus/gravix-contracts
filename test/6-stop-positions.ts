@@ -23,7 +23,6 @@ describe("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
-    let limitBot: Account;
     let usdt_root: Token;
     let stg_root: Token;
     const USDT_DECIMALS = 10 ** 6;
@@ -93,8 +92,9 @@ describe("Testing main orders flow", async function () {
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
             user1 = locklift.deployments.getAccount("User1").account;
-            limitBot = locklift.deployments.getAccount("LimitBot").account;
-            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner);
+            const { account: limitBot } = locklift.deployments.getAccount("LimitBot");
+
+            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
             stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
@@ -168,7 +168,6 @@ describe("Testing main orders flow", async function () {
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 0,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -195,7 +194,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: 1,
                     });
                     debugger;
@@ -224,7 +222,6 @@ describe("Testing main orders flow", async function () {
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE + 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 0,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -258,11 +255,10 @@ describe("Testing main orders flow", async function () {
                         pos_key,
                         referrer: zeroAddress,
                         stopOrderConfig: {
-                            limitBot: limitBot.address,
                             stopPositionType: StopPositionType.TakeProfit,
                         },
                     });
-                    expect(Number(fromNano(traceTree!.getBalanceDiff(limitBot.address))) * -1).lt(0.4);
+                    expect(Number(fromNano(traceTree!.getBalanceDiff(vault.limitBot))) * -1).lt(0.4);
                 });
             });
         });
@@ -287,7 +283,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -298,7 +293,6 @@ describe("Testing main orders flow", async function () {
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -319,7 +313,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -330,7 +323,6 @@ describe("Testing main orders flow", async function () {
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
-                        limitBot: limitBot.address,
                     });
                 });
             });
@@ -352,7 +344,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -362,7 +353,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -385,7 +375,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -395,7 +384,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -420,7 +408,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -430,7 +417,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -453,7 +439,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -463,7 +448,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -485,7 +469,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -495,7 +478,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -517,7 +499,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -527,7 +508,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -549,7 +529,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -559,7 +538,6 @@ describe("Testing main orders flow", async function () {
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -586,7 +564,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
@@ -620,7 +597,6 @@ describe("Testing main orders flow", async function () {
                     //add test for updating stop position config
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        limitBot: limitBot.address,
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -641,7 +617,6 @@ describe("Testing main orders flow", async function () {
                         pair: ethUsdtMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
-                        limitBot: limitBot.address,
                         referrer: zeroAddress,
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,

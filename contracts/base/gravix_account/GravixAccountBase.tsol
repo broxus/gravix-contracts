@@ -27,7 +27,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_requestMarketOrder(
         uint32 _reqNonce,
         IGravixVault.PendingMarketOrder _pendingRequest,
-        uint64 maxPnlRate,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
@@ -40,14 +39,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
             return;
         }
-        optional(IGravixVault.StopOrderConfig) stopLoss;
-        if (_pendingRequest.stopLooseTriggerPrice > 0) {
-            stopLoss = IGravixVault.StopOrderConfig(_pendingRequest.stopLooseTriggerPrice, now);
+        optional(IGravixVault.StopOrder) stopLoss;
+        if (_pendingRequest.stopLossTriggerPrice > 0) {
+            stopLoss = IGravixVault.StopOrder(_pendingRequest.stopLossTriggerPrice, now);
         }
 
-        optional(IGravixVault.StopOrderConfig) takeProfit;
+        optional(IGravixVault.StopOrder) takeProfit;
         if  (_pendingRequest.takeProfitTriggerPrice > 0) {
-            takeProfit = IGravixVault.StopOrderConfig(_pendingRequest.takeProfitTriggerPrice, now);
+            takeProfit = IGravixVault.StopOrder(_pendingRequest.takeProfitTriggerPrice, now);
         }
         requestCounter += 1;
         marketOrders[requestCounter] = MarketOrder(
@@ -117,7 +116,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 _assetPrice,
         uint64 _dynamicSpread,
         int256 _accUSDFundingPerShare,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         uint64 _maxPnlRate,
         Callback.CallMeta _meta,
@@ -174,14 +173,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
         uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
 
-        optional(IGravixVault.StopOrderConfig) stopLoss;
-        if (_stopLooseTriggerPrice > 0) {
-            stopLoss = IGravixVault.StopOrderConfig(_stopLooseTriggerPrice, now);
+        optional(IGravixVault.StopOrder) stopLoss;
+        if (_stopLossTriggerPrice > 0) {
+            stopLoss = IGravixVault.StopOrder(_stopLossTriggerPrice, now);
         }
 
-        optional(IGravixVault.StopOrderConfig) takeProfit;
+        optional(IGravixVault.StopOrder) takeProfit;
         if  (_takeProfitTriggerPrice > 0) {
-            takeProfit = IGravixVault.StopOrderConfig(_takeProfitTriggerPrice, now);
+            takeProfit = IGravixVault.StopOrder(_takeProfitTriggerPrice, now);
         }
         Position openedPosition = Position(
             request.marketIdx,
@@ -279,7 +278,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isLatestVersion = isLatestVersion(_accountVersion);
 
 
-        uint128 openPrice = applyLimitOpenSpread(
+        uint128 openPrice = applyOpenSpread(
             _pendingRequest.triggerPrice,
             _pendingRequest.positionType,
             _pendingRequest.baseSpreadRate
@@ -311,12 +310,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _pendingRequest.closeFeeRate,
             _pendingRequest.liquidationThresholdRate,
             now,
-            _pendingRequest.stopLooseTriggerPrice > 0
-                ? optional(IGravixVault.StopOrderConfig)(IGravixVault.StopOrderConfig(_pendingRequest.stopLooseTriggerPrice, now))
-                : null,
-            _pendingRequest.takeProfitTriggerPrice > 0
-                ? optional(IGravixVault.StopOrderConfig)(IGravixVault.StopOrderConfig(_pendingRequest.takeProfitTriggerPrice, now))
-                : null
+            convertStopPriceToStopOrder(_pendingRequest.stopLossTriggerPrice),
+            convertStopPriceToStopOrder(_pendingRequest.takeProfitTriggerPrice)
         );
 
        bool isStopPriceOk = open_validateStopPositionParams(
@@ -356,7 +351,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _pendingRequest.baseSpreadRate,
             _pendingRequest.liquidationThresholdRate,
             _pendingRequest.borrowBaseRatePerHour,
-            _pendingRequest.stopLooseTriggerPrice,
+            _pendingRequest.stopLossTriggerPrice,
             _pendingRequest.takeProfitTriggerPrice
         );
 
@@ -440,7 +435,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         delete limitOrders[_positionKey];
 
         // add base spread
-        uint128 openPrice = applyLimitOpenSpread(
+        uint128 openPrice = applyOpenSpread(
             request.triggerPrice,
             request.positionType,
             request.baseSpreadRate
@@ -449,15 +444,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
         uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
 
-        optional(IGravixVault.StopOrderConfig) stopLoss;
-        if (request.stopLooseTriggerPrice > 0) {
-            stopLoss = IGravixVault.StopOrderConfig(request.stopLooseTriggerPrice, now);
-        }
 
-        optional(IGravixVault.StopOrderConfig) takeProfit;
-        if  (request.takeProfitTriggerPrice > 0) {
-            takeProfit = IGravixVault.StopOrderConfig(request.takeProfitTriggerPrice, now);
-        }
 
         Position openedPosition = Position(
             request.marketIdx,
@@ -473,8 +460,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.closeFeeRate,
             request.liquidationThresholdRate,
             now,
-            stopLoss,
-            takeProfit
+            convertStopPriceToStopOrder(request.stopLossTriggerPrice),
+            convertStopPriceToStopOrder(request.takeProfitTriggerPrice)
         );
         positions[_positionKey] = openedPosition;
 
@@ -516,7 +503,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             user,
             _positionKey,
             _request.collateral,
-            _request.stopLooseTriggerPrice> 0 || _request.takeProfitTriggerPrice> 0,
+            _request.stopLossTriggerPrice> 0 || _request.takeProfitTriggerPrice> 0,
             _meta
         );
     }
@@ -550,11 +537,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         if (_stopLossTriggerPrice > 0) {
-            position.stopLoss = IGravixVault.StopOrderConfig(_stopLossTriggerPrice, now);
+            position.stopLoss = IGravixVault.StopOrder(_stopLossTriggerPrice, now);
         }
 
         if  (_takeProfitTriggerPrice > 0) {
-            position.takeProfit = IGravixVault.StopOrderConfig(_takeProfitTriggerPrice, now);
+            position.takeProfit = IGravixVault.StopOrder(_takeProfitTriggerPrice, now);
         }
 
         bool isStopPriceOk = open_validateStopPositionParams(

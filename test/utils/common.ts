@@ -215,6 +215,8 @@ export const setupVault = async function (
     const OracleProxy = await locklift.factory.getContractArtifacts("OracleProxy");
     const Platform = await locklift.factory.getContractArtifacts("Platform");
     const GravixAccount = await locklift.factory.getContractArtifacts("GravixAccount");
+    const { account: limitBot } = await locklift.deployments.getAccount("LimitBot");
+
     const GravixVaultArtifacts = await locklift.factory.getContractArtifacts("GravixVault");
 
     const { contract: _deployer, tx } = await locklift.tracing.trace(
@@ -247,7 +249,17 @@ export const setupVault = async function (
     );
 
     if (log) logger.log(`Gravix Vault address: ${output!.value0.toString()}`);
-    const vault = await GravixVault.from_addr(output!.value0, owner);
+    const vault = await GravixVault.from_addr(output!.value0, owner, limitBot.address);
+    await vault.contract.methods
+        .setLimitBot({
+            _newLimitBot: limitBot.address,
+            _meta: {
+                callId: 0,
+                nonce: getRandomNonce(),
+                sendGasTo: owner.address,
+            },
+        })
+        .send({ from: owner.address, amount: toNano(2) });
     // vault.contract.methods.setLimitBot({
     //     _meta: {
     //         callId: 0,

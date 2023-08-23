@@ -25,7 +25,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             uint32 leverage,
             uint128 expectedPrice,
             uint64 maxSlippageRate,
-            uint128 stopLooseTriggerPrice,
+            uint128 stopLossTriggerPrice,
             uint128 takeProfitTriggerPrice,
             IPriceNode.Price price,
             address referrer
@@ -50,7 +50,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             leverage,
             expectedPrice,
             maxSlippageRate,
-            stopLooseTriggerPrice,
+            stopLossTriggerPrice,
             takeProfitTriggerPrice,
             price,
             referrer,
@@ -78,7 +78,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint32 leverage,
         uint128 expectedPrice,
         uint64 maxSlippageRate, // %
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         IPriceNode.Price price,
         address referrer,
@@ -102,7 +102,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             _market.fees.borrowBaseRatePerHour,
             price,
             referrer,
-            _stopLooseTriggerPrice,
+            _stopLossTriggerPrice,
             _takeProfitTriggerPrice,
             meta
         );
@@ -112,7 +112,6 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             requestNonce,
             newRequest,
-            maxPnlRate,
             gravixAccountCode.version
         );
     }
@@ -173,7 +172,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
                 request.collateral,
                 request.leverage,
                 request.positionType,
-                request.stopLooseTriggerPrice,
+                request.stopLossTriggerPrice,
                 request.takeProfitTriggerPrice,
                 request.price.price,
                 request.meta
@@ -188,7 +187,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             request.collateral,
             request.leverage,
             request.positionType,
-            request.stopLooseTriggerPrice,
+            request.stopLossTriggerPrice,
             request.takeProfitTriggerPrice,
             request.meta
         );
@@ -206,7 +205,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint128 collateral,
         uint32 leverage,
         PositionType positionType,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         Callback.CallMeta meta
     ) internal view {
@@ -217,7 +216,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             collateral,
             leverage,
             positionType,
-            _stopLooseTriggerPrice,
+            _stopLossTriggerPrice,
             _takeProfitTriggerPrice
         );
     }
@@ -243,7 +242,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint32 leverage,
         PositionType positionType,
         uint128 assetPrice,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         Callback.CallMeta meta
     ) external override onlyOracleProxy(nonce) reserve {
@@ -254,7 +253,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             collateral,
             leverage,
             positionType,
-            _stopLooseTriggerPrice,
+            _stopLossTriggerPrice,
             _takeProfitTriggerPrice,
             assetPrice,
             meta
@@ -268,7 +267,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint128 collateral,
         uint32 leverage,
         PositionType positionType,
-        uint128 _stopLooseTriggerPrice,
+        uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         uint128 assetPrice,
         Callback.CallMeta meta
@@ -291,7 +290,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
                 assetPrice,
                 dynamicSpread,
                 funding,
-                _stopLooseTriggerPrice,
+                _stopLossTriggerPrice,
                 _takeProfitTriggerPrice,
                 maxPnlRate,
                 meta,
