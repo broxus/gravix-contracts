@@ -23,8 +23,8 @@ interface IGravixAccount {
         uint64 borrowBaseRatePerHour; // %
         optional(IGravixVault.StopOrder) stopLoss;
         optional(IGravixVault.StopOrder) takeProfit;
-
     }
+
     struct LimitOrder {
         uint32 marketIdx;
         IGravixVault.PositionType positionType;
@@ -101,9 +101,8 @@ interface IGravixAccount {
         uint128 _assetPrice,
         uint64 _dynamicSpread,
         int256 _accUSDFundingPerShare,
-        uint128 _stopLossTriggerPrice,
-        uint128 _takeProfitTriggerPrice,
         uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external;
@@ -112,7 +111,8 @@ interface IGravixAccount {
         uint32 reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
         int256 _accUSDFundingPerShare,
-        uint64 maxPnlRate,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         uint32 _accountVersion
     ) external;
 
@@ -149,6 +149,7 @@ interface IGravixAccount {
         uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;

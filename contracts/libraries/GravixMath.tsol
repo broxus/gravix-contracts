@@ -71,8 +71,8 @@ library GravixMath {
             liquidationThresholdRate
         );
         int256 _liqPrice_raw = posType == IGravixVault.PositionType.Long
-            ? math.muldiv(openPrice - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - baseSpreadRate)
-            : math.muldiv(openPrice + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + baseSpreadRate);
+            ? math.muldiv(int256(openPrice) - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - baseSpreadRate)
+            : math.muldiv(int256(openPrice) + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + baseSpreadRate);
         liqPrice = uint128(math.max(_liqPrice_raw, 0)); // price cant be negative
     }
 

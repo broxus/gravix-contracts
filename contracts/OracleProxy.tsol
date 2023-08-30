@@ -85,9 +85,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         uint32 _positionKey,
         uint128 _collateral,
         uint32 _leverage,
-        IGravixVault.PositionType _positionType,
-        uint128 _stopLossTriggerPrice,
-        uint128 _takeProfitTriggerPrice
+        IGravixVault.PositionType _positionType
     ) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
@@ -96,8 +94,6 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         collateral = _collateral;
         leverage = _leverage;
         positionType = _positionType;
-        stopLossTriggerPrice = _stopLossTriggerPrice;
-        takeProfitTriggerPrice = _takeProfitTriggerPrice;
         callbackType = CallbackType.Execute;
         _collectPrice(user);
     }
@@ -224,8 +220,6 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 leverage,
                 positionType,
                 price,
-                stopLossTriggerPrice,
-                takeProfitTriggerPrice,
                 meta
             );
         } else if (callbackType == CallbackType.RequestLimit) {

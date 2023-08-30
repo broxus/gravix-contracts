@@ -55,7 +55,6 @@ abstract contract GravixVaultStorage is IGravixVault {
     bool totalNOILimitEnabled;
     uint64 maxPoolUtilRatio = 1_000_000_000_000; // 100%, multiplied by 1_000_000_000_000
     uint64 maxPnlRate = 3_000_000_000_000; // 300%, multiplied by 1_000_000_000_000
-//199_500_300
     uint128 minPositionCollateral = 5 * Constants.USDT_DECIMALS; // 5$
 
     bool paused;
@@ -63,6 +62,7 @@ abstract contract GravixVaultStorage is IGravixVault {
         thresholdRate: 100_000_000_000, // 10%,
         rewardShare: 20_000_000_000 // 2%. Share of liquidated collateral that liquidator collect,
     });
+    uint64 minStopLossRate = 250_000_000_000; // 25%, multiplied by 1_000_000_000_000
 
     uint64[2] openFeeDistributionSchema = [Constants.HUNDRED_PERCENT, 0];
     uint64[2] closeFeeDistributionSchema = [0, Constants.HUNDRED_PERCENT];
@@ -84,7 +84,7 @@ abstract contract GravixVaultStorage is IGravixVault {
 
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
     address limitBotVault;
-    // region dummy fields
+    // region dummy fields, for backward compatibility on upgrade
     bool dummy1;
     bool dummy2;
     bool dummy3;
@@ -95,7 +95,7 @@ abstract contract GravixVaultStorage is IGravixVault {
     bool dummy8;
     bool dummy9;
     bool dummy10;
-    bool dummy11;
+//    bool dummy11;
 //    bool dummy12;
 //    bool dummy13;
     //endregion

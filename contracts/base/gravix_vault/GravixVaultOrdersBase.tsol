@@ -21,13 +21,22 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     // @param collateral - order collateral, 6 decimals number
     // @param leverage - order leverage, 2 decimals number
     // @param maxSlippage - max order price slippage, percent number, 10**12 - 100%
-    function validateOrderParams(uint32 marketIdx, uint128 collateral, uint32 leverage, uint64 maxSlippage) public view returns (bool correct) {
+    function validateOrderParams(uint32 marketIdx, uint128 collateral, uint32 leverage, uint64 maxSlippage) internal view returns (bool correct) {
         if (collateral < minPositionCollateral) return false;
         if (!markets.exists(marketIdx)) return false;
         if (leverage > markets[marketIdx].maxLeverage) return false;
         if (maxSlippage > Constants.HUNDRED_PERCENT) return false;
         return true;
     }
+
+    function validateOrderParams(
+        uint32 marketIdx,
+        uint128 collateral,
+        uint32 leverage
+    ) internal view returns (bool) {
+        return validateOrderParams(marketIdx, collateral, leverage, 0);
+    }
+
     //endregion
 
     //region proxy deploy
@@ -207,29 +216,6 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
     }
 
-
-    function _setOrUpdateStopPositionConfig(
-        address _user,
-        uint32 _positionKey,
-        uint32 _marketIdx,
-        uint128 _stopLossTriggerPrice,
-        uint128 _takeProfitTriggerPrice,
-        uint128 _assetPrice,
-        Callback.CallMeta _meta
-    ) internal {
-        address gravixAcc = getGravixAccountAddress(_user);
-
-        IGravixAccount(gravixAcc).process_updatePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            _positionKey,
-            _marketIdx,
-            _assetPrice,
-            _stopLossTriggerPrice,
-            _takeProfitTriggerPrice,
-            maxPnlRate,
-            _meta,
-            gravixAccountCode.version
-        );
-    }
     function _sendSetOrUpdateOracleRequest(
         address _user,
         uint32 _positionKey,
@@ -265,6 +251,29 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             _takeProfitTriggerPrice,
             _assetPrice,
             _meta
+        );
+    }
+
+    function _setOrUpdateStopPositionConfig(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) internal {
+        address gravixAcc = getGravixAccountAddress(_user);
+        IGravixAccount(gravixAcc).process_updatePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _positionKey,
+            _marketIdx,
+            _assetPrice,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            maxPnlRate,
+            minStopLossRate,
+            _meta,
+            gravixAccountCode.version
         );
     }
 

@@ -184,72 +184,86 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         );
     }
 
-    function open_validateStopPositionParams(
-        Position _position,
-        uint128 _assetPrice,
-        uint64 _maxPnlRate
-    ) internal view returns (bool) {
-        PositionView posView = getPositionViewInternal(_position, _assetPrice);
-        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
+    // basic check for adequate trigger prices
+    function validateTriggerPrices(
+        uint128 collateral, // collateral - open fee
+        uint32 leverage,
+        uint128 borrowFee,
+        uint128 fundingFee,
+        IGravixVault.PositionType positionType,
+        uint64 baseSpreadRate,
+        uint64 maxPnlRate, // usually 300%
+        uint64 minStopLossRate, // usually 25%
+        uint128 marketPrice, // position open price when executing order / market price when updating SL/TP
+        uint128 takeProfitTriggerPrice,
+        uint128 stopLossTriggerPrice
+    ) internal pure returns (bool correct) {
+        uint128 leveragedPosition = math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE);
 
+        correct = true;
+        bool isLong = positionType == IGravixVault.PositionType.Long;
+        if (stopLossTriggerPrice > 0) {
+            // we can calculate price by just providing stop loss threshold instead of liq threshold
+            uint128 minStopLossPrice = GravixMath.calculateLiquidationPrice(
+                marketPrice,
+                collateral,
+                positionType,
+                borrowFee,
+                fundingFee,
+                leveragedPosition,
+                minStopLossRate,
+                baseSpreadRate
+            );
 
-        bool isStopLooseExists = _position.stopLoss.hasValue();
-        bool isTakeProfitExists = _position.takeProfit.hasValue();
-
-
-        bool isStopLooseConfigValid;
-
-        // impl stop loss logic
-        if (isStopLooseExists) {
-            IGravixVault.StopOrder stopLossConfig = _position.stopLoss.get();
-            uint128 stopLossTriggerPrice = stopLossConfig.triggerPrice;
-            bool isStopLoosePriceSatisfyLiquidationPrice = isLong
-                ? stopLossTriggerPrice > posView.liquidationPrice
-                : stopLossTriggerPrice < posView.liquidationPrice;
-
-            bool isStopLoosePriceSatisfyAssetPrice = isLong
-                ? stopLossTriggerPrice < _assetPrice
-                : stopLossTriggerPrice > _assetPrice;
-
-            uint128 collateral = _position.initialCollateral - _position.openFee;
-            uint128 leveragedPositionUsd = math.muldiv(collateral, _position.leverage, Constants.LEVERAGE_BASE);
-            uint128 maxStopLooseDist = math.muldiv(_position.openPrice, collateral, leveragedPositionUsd) * 75 / 100;
-
-            bool isStopLossPriceSatisfyMaxStopLossPrice = isLong
-                ? stopLossTriggerPrice >= (_position.openPrice - maxStopLooseDist)
-                : stopLossTriggerPrice <= (_position.openPrice + maxStopLooseDist);
-
-            isStopLooseConfigValid = isStopLoosePriceSatisfyLiquidationPrice && isStopLoosePriceSatisfyAssetPrice && isStopLossPriceSatisfyMaxStopLossPrice;
-        } else {
-            isStopLooseConfigValid = true;
+            correct = correct && isLong
+                ? stopLossTriggerPrice < marketPrice
+                : stopLossTriggerPrice > marketPrice;
+            correct = correct && isLong
+                ? stopLossTriggerPrice > minStopLossPrice
+                : stopLossTriggerPrice < minStopLossPrice;
         }
 
-        //early return if stop loose config is not valid
-        if (!isStopLooseConfigValid) {
-            return false;
+        if (takeProfitTriggerPrice > 0) {
+            uint128 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
+            uint128 takeProfitClosePrice = applyCloseSpread(takeProfitTriggerPrice, positionType, baseSpreadRate);
+            int256 takeProfitPnl = GravixMath.calculatePnl(
+                marketPrice,
+                takeProfitClosePrice,
+                positionType,
+                leveragedPosition
+            );
+
+            correct = correct && isLong
+                ? takeProfitTriggerPrice > marketPrice
+                : takeProfitTriggerPrice < marketPrice;
+            correct = correct && takeProfitPnl <= pnlLimit;
         }
+    }
 
-        if (isTakeProfitExists) {
-            IGravixVault.StopOrder takeProfitConfig = _position.takeProfit.get();
-            uint128 takeProfitTriggerPrice = takeProfitConfig.triggerPrice;
-            bool isTakeProfitPriceSatisfyOpenPrice = isLong
-                ? takeProfitTriggerPrice > _position.openPrice
-                : takeProfitTriggerPrice < _position.openPrice;
-
-
-            bool isTakePriceSatisfyAssetPrice = isLong
-                ? takeProfitTriggerPrice > _assetPrice
-                : takeProfitTriggerPrice < _assetPrice;
-
-            PositionView posView = getPositionViewInternal(_position, takeProfitTriggerPrice);
-            int256 pnlLimit = math.muldiv(posView.position.initialCollateral, _maxPnlRate, Constants.HUNDRED_PERCENT);
-
-            bool isTakeProfitPriceSatisfyMaxPnl = posView.pnl <= pnlLimit;
-
-            return isTakeProfitPriceSatisfyOpenPrice && isTakePriceSatisfyAssetPrice && isTakeProfitPriceSatisfyMaxPnl;
-        } else {
-            return true;
-        }
+    function validateTriggerPrices(
+        uint128 collateral, // collateral - open fee
+        uint32 leverage,
+        IGravixVault.PositionType positionType,
+        uint64 baseSpreadRate,
+        uint64 maxPnlRate, // usually 300%
+        uint64 minStopLossRate, // usually 25%
+        uint128 marketPrice, // position open price when executing order / market price when updating SL/TP
+        uint128 takeProfitTriggerPrice,
+        uint128 stopLossTriggerPrice
+    ) internal pure returns (bool correct) {
+        return validateTriggerPrices(
+            collateral,
+            leverage,
+            0,
+            0,
+            positionType,
+            baseSpreadRate,
+            maxPnlRate,
+            minStopLossRate,
+            marketPrice,
+            takeProfitTriggerPrice,
+            stopLossTriggerPrice
+        );
     }
 
     function isStopLoosePosition(
