@@ -117,9 +117,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 _assetPrice,
         uint64 _dynamicSpread,
         int256 _accUSDFundingPerShare,
-        uint128 _stopLossTriggerPrice,
-        uint128 _takeProfitTriggerPrice,
         uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
@@ -132,7 +131,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.marketIdx != _marketIdx ||
             !isLatestVersion
         ) {
-
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
@@ -150,8 +148,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-
-
         uint128 allowedDelta = math.muldiv(request.expectedPrice, request.maxSlippageRate, Constants.HUNDRED_PERCENT);
         uint128 minPrice = request.expectedPrice - allowedDelta;
         uint128 maxPrice = request.expectedPrice + allowedDelta;
@@ -163,16 +159,34 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.baseSpreadRate + _dynamicSpread
         );
 
-        if (openPrice < minPrice || openPrice > maxPrice) {
+        uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
+        uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
+
+        uint128 _stopLossTriggerPrice = request.stopLoss.hasValue() ? request.stopLoss.get().triggerPrice : 0;
+        uint128 _takeProfitTriggerPrice = request.takeProfit.hasValue() ? request.takeProfit.get().triggerPrice : 0;
+
+        bool triggersValid = validateTriggerPrices(
+            request.collateral - openFee,
+            request.leverage,
+            request.positionType,
+            request.baseSpreadRate,
+            _maxPnlRate,
+            _minStopLossRate,
+            openPrice,
+            _takeProfitTriggerPrice,
+            _stopLossTriggerPrice
+        );
+
+        // TODO: add reason to revert
+        // checking slippage
+        if (openPrice < minPrice || openPrice > maxPrice || !triggersValid) {
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, _positionKey, _marketIdx, request.collateral,
                 _positionSizeAsset, _assetPrice, _positionType, _meta
             );
+            delete marketOrders[_positionKey];
             return;
         }
-
-        uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
-        uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
 
         optional(IGravixVault.StopOrder) stopLoss;
         if (_stopLossTriggerPrice > 0) {
@@ -201,21 +215,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             takeProfit
         );
 
-        bool isStopPriceOk = open_validateStopPositionParams(
-            openedPosition,
-            _assetPrice,
-            _maxPnlRate
-        );
-
-        if (!isStopPriceOk) {
-            IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _marketIdx, 0, _positionSizeAsset, _assetPrice, _positionType, _meta
-            );
-            return;
-        }
-        delete marketOrders[_positionKey];
         positions[_positionKey] = openedPosition;
-
 
         IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
@@ -260,6 +260,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault.PendingLimitOrder _pendingRequest,
         int256 _accUSDFundingPerShare,
         uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
@@ -297,32 +298,19 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             Constants.HUNDRED_PERCENT
         );
 
-        Position tempPosition = Position(
-            _pendingRequest.marketIdx,
-            _pendingRequest.positionType,
-            _pendingRequest.collateral,
-            openFee,
-            openPrice,
-            _pendingRequest.assetPrice,
+        bool triggersValid = validateTriggerPrices(
+            _pendingRequest.collateral - openFee,
             _pendingRequest.leverage,
-            _accUSDFundingPerShare,
-            _pendingRequest.borrowBaseRatePerHour,
+            _pendingRequest.positionType,
             _pendingRequest.baseSpreadRate,
-            _pendingRequest.closeFeeRate,
-            _pendingRequest.liquidationThresholdRate,
-            now,
-            convertStopPriceToStopOrder(_pendingRequest.stopLossTriggerPrice),
-            convertStopPriceToStopOrder(_pendingRequest.takeProfitTriggerPrice)
+            _maxPnlRate,
+            _minStopLossRate,
+            openPrice,
+            _pendingRequest.takeProfitTriggerPrice,
+            _pendingRequest.stopLossTriggerPrice
         );
 
-       bool isStopPriceOk = open_validateStopPositionParams(
-            tempPosition,
-            _pendingRequest.triggerPrice,
-            _maxPnlRate
-        );
-
-        if (!isPriceOk || !isLatestVersion || !isStopPriceOk) {
-
+        if (!isPriceOk || !isLatestVersion || !triggersValid) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _pendingRequest.meta);
             }
@@ -516,6 +504,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
@@ -523,8 +512,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
         bool isFirstStopPositionConfig = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
 
+        // TODO: check position exists ?
         if (!isLatestVersion || position.marketIdx != _marketIdx) {
-
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
@@ -545,13 +534,19 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             position.takeProfit = IGravixVault.StopOrder(_takeProfitTriggerPrice, now);
         }
 
-        bool isStopPriceOk = open_validateStopPositionParams(
-            position,
-            _assetPrice,
-            _maxPnlRate
+        bool triggersValid = validateTriggerPrices(
+            position.initialCollateral - position.openFee,
+            position.leverage,
+            position.positionType,
+            position.baseSpreadRate,
+            _maxPnlRate,
+            _minStopLossRate,
+            position.openPrice,
+            _takeProfitTriggerPrice,
+            _stopLossTriggerPrice
         );
 
-        if (!isStopPriceOk) {
+        if (!triggersValid) {
             IGravixVault(vault).revert_setOrUpdateStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,

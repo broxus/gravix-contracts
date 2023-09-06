@@ -10,9 +10,7 @@ interface IOracleProxy {
         uint32 _position_key,
         uint128 _collateral,
         uint32 _leverage,
-        IGravixVault.PositionType _position_type,
-        uint128 _stopLossTriggerPrice,
-        uint128 _takeProfitTriggerPrice
+        IGravixVault.PositionType _position_type
     ) external;
 
     function setRequestLimitCallback(
@@ -25,8 +23,7 @@ interface IOracleProxy {
         address _referer,
         uint128 _triggerPrice,
         uint128 stopLossTriggerPrice,
-        uint128 takeProfitTriggerPrice,
-        IPriceNode.Price _userPrice
+        uint128 takeProfitTriggerPrice
     ) external;
     function setExecuteLimitCallback(
         address _limitOrdersExecutor,

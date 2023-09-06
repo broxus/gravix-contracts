@@ -87,7 +87,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 _limitOrderType,
                 stopLossTriggerPrice,
                 takeProfitTriggerPrice,
-                _price,
                 _referrer,
                 _meta,
                 _price.price
@@ -106,7 +105,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _triggerPrice,
             stopLossTriggerPrice,
             takeProfitTriggerPrice,
-            _price,
             _meta
         );
     }
@@ -123,7 +121,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint128 _triggerPrice,
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
-        IPriceNode.Price _userPrice,
         Callback.CallMeta _meta
     ) internal view {
         address proxy = _deployOracleProxy(_marketIdx, _meta);
@@ -137,8 +134,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _referer,
             _triggerPrice,
             stopLossTriggerPrice,
-            takeProfitTriggerPrice,
-            _userPrice
+            takeProfitTriggerPrice
         );
     }
     function oracle_requestLimitOrder(
@@ -152,7 +148,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         LimitOrderType _limitOrderType,
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
-        IPriceNode.Price _price,
         address _referrer,
         Callback.CallMeta _meta,
         uint128 _assetPrice
@@ -167,7 +162,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _limitOrderType,
             stopLossTriggerPrice,
             takeProfitTriggerPrice,
-            _price,
             _referrer,
             _meta,
             _assetPrice
@@ -184,7 +178,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         LimitOrderType _limitOrderType,
         uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
-        IPriceNode.Price _price,
         address _referrer,
         Callback.CallMeta _meta,
         uint128 _assetPrice
@@ -211,7 +204,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _market.fees.baseSpreadRate,
             liquidationParams.thresholdRate,
             _market.fees.borrowBaseRatePerHour,
-            _price,
             _referrer,
             _assetPrice,
             positionSizeAsset,
@@ -228,6 +220,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             newRequest,
             funding,
             maxPnlRate,
+            minStopLossRate,
             gravixAccountCode.version
         );
     }
@@ -272,6 +265,8 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             request.orderType,
             request.collateral,
             request.triggerPrice,
+            request.stopLossTriggerPrice,
+            request.takeProfitTriggerPrice,
             request.leverage,
             positionKey
         );

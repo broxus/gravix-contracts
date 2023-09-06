@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma ever-solidity >= 0.62.0;
+
+import "./Constants.tsol";
+import "../interfaces/IGravixVault.tsol";
+
+
+
+library GravixMath {
+    // @param price - 8 decimals number
+    function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) internal returns (uint128 newPrice) {
+        newPrice = _type == IGravixVault.PositionType.Long ?
+            math.muldiv(price, (Constants.HUNDRED_PERCENT + spread), Constants.HUNDRED_PERCENT) :
+            math.muldiv(price, (Constants.HUNDRED_PERCENT - spread), Constants.HUNDRED_PERCENT);
+        return newPrice;
+    }
+
+    function applyCloseSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) internal returns (uint128 newPrice) {
+        newPrice = _type == IGravixVault.PositionType.Long ?
+            math.muldiv(price, (Constants.HUNDRED_PERCENT - spread), Constants.HUNDRED_PERCENT) :
+            math.muldiv(price, (Constants.HUNDRED_PERCENT + spread), Constants.HUNDRED_PERCENT);
+        return newPrice;
+    }
+
+    function calculatePnl(
+        uint128 openPrice, // including spread
+        uint128 closePrice, // including spread
+        IGravixVault.PositionType posType,
+        uint128 leveragedPos // (collateral - open fee) * leverage
+    ) internal returns (int256 pnl) {
+        // (closePrice/openPrice - 1)
+        pnl = int256(math.muldiv(closePrice, Constants.SCALING_FACTOR, openPrice)) - Constants.SCALING_FACTOR;
+        // * (-1) for shorts
+        pnl = (posType == IGravixVault.PositionType.Long) ? pnl : -pnl;
+        // * collateral * leverage
+        pnl = math.muldiv(pnl, leveragedPos, Constants.SCALING_FACTOR);
+    }
+
+    function calculateLiquidationPriceDistance(
+        uint128 openPrice, // including spread
+        uint128 collateral, // minus open fee
+        uint128 borrowFee,
+        int256 fundingFee,
+        uint128 leveragedPos, // (collateral - open fee) * leverage
+        uint64 liquidationThresholdRate // %
+    ) internal returns (int256 liqPriceDist) {
+        // collateral * 0.9
+        liqPriceDist = math.muldiv(collateral, (Constants.HUNDRED_PERCENT - liquidationThresholdRate),  Constants.HUNDRED_PERCENT);
+        // - borrowFee - fundingFeeUsd
+        liqPriceDist -= borrowFee + fundingFee;
+        // * openPrice / collateral / leverage
+        liqPriceDist = math.muldiv(openPrice, liqPriceDist, leveragedPos);
+    }
+
+    function calculateLiquidationPrice(
+        uint128 openPrice, // including spread
+        uint128 collateral, // minus open fee
+        IGravixVault.PositionType posType,
+        uint128 borrowFee,
+        int256 fundingFee,
+        uint128 leveragedPos, // (collateral - open fee) * leverage
+        uint64 liquidationThresholdRate, // %
+        uint64 baseSpreadRate // %
+    ) internal returns (uint128 liqPrice) {
+        int256 liqPriceDist = calculateLiquidationPriceDistance(
+            openPrice,
+            collateral,
+            borrowFee,
+            fundingFee,
+            leveragedPos,
+            liquidationThresholdRate
+        );
+        int256 _liqPrice_raw = posType == IGravixVault.PositionType.Long
+            ? math.muldiv(int256(openPrice) - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - baseSpreadRate)
+            : math.muldiv(int256(openPrice) + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + baseSpreadRate);
+        liqPrice = uint128(math.max(_liqPrice_raw, 0)); // price cant be negative
+    }
+
+    function calculateLiquidationPrice(
+        uint128 openPrice, // including spread
+        uint128 collateral, // minus open fee
+        IGravixVault.PositionType posType,
+        uint128 leveragedPos, // (collateral - open fee) * leverage
+        uint64 liquidationThresholdRate, // %
+        uint64 baseSpreadRate // %
+    ) internal returns (uint128) {
+        return calculateLiquidationPrice(
+            openPrice, collateral, posType, 0, 0, leveragedPos, liquidationThresholdRate, baseSpreadRate
+        );
+    }
+}

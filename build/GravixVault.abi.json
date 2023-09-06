@@ -271,7 +271,6 @@
 				{"name":"_limitOrderType","type":"uint8"},
 				{"name":"stopLossTriggerPrice","type":"uint128"},
 				{"name":"takeProfitTriggerPrice","type":"uint128"},
-				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"_price","type":"tuple"},
 				{"name":"_referrer","type":"address"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"},
 				{"name":"_assetPrice","type":"uint128"}
@@ -283,7 +282,7 @@
 			"name": "revert_requestLimitOrder",
 			"inputs": [
 				{"name":"_reqNonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"positionSizeAsset","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"}
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"positionSizeAsset","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -292,7 +291,7 @@
 			"name": "finish_requestLimitOrder",
 			"inputs": [
 				{"name":"reqNonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"positionSizeAsset","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"request","type":"tuple"},
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"positionSizeAsset","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"request","type":"tuple"},
 				{"name":"positionKey","type":"uint32"}
 			],
 			"outputs": [
@@ -419,8 +418,6 @@
 				{"name":"leverage","type":"uint32"},
 				{"name":"positionType","type":"uint8"},
 				{"name":"assetPrice","type":"uint128"},
-				{"name":"_stopLossTriggerPrice","type":"uint128"},
-				{"name":"_takeProfitTriggerPrice","type":"uint128"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -483,18 +480,6 @@
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
-			]
-		},
-		{
-			"name": "validateOrderParams",
-			"inputs": [
-				{"name":"marketIdx","type":"uint32"},
-				{"name":"collateral","type":"uint128"},
-				{"name":"leverage","type":"uint32"},
-				{"name":"maxSlippage","type":"uint64"}
-			],
-			"outputs": [
-				{"name":"correct","type":"bool"}
 			]
 		},
 		{
@@ -1551,6 +1536,8 @@
 				{"name":"positionType","type":"uint8"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"expectedPrice","type":"uint128"},
+				{"name":"stopLossTriggerPrice","type":"uint128"},
+				{"name":"takeProfitTriggerPrice","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
 				{"name":"maxSlippageRate","type":"uint64"},
 				{"name":"positionKey","type":"uint32"}
@@ -1618,6 +1605,8 @@
 				{"name":"limitType","type":"uint8"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"triggerPrice","type":"uint128"},
+				{"name":"stopLossTriggerPrice","type":"uint128"},
+				{"name":"takeProfitTriggerPrice","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
 				{"name":"positionKey","type":"uint32"}
 			],
@@ -2166,6 +2155,7 @@
 		{"name":"minPositionCollateral","type":"uint128"},
 		{"name":"paused","type":"bool"},
 		{"components":[{"name":"thresholdRate","type":"uint64"},{"name":"rewardShare","type":"uint64"}],"name":"liquidationParams","type":"tuple"},
+		{"name":"minStopLossRate","type":"uint64"},
 		{"name":"openFeeDistributionSchema","type":"uint64[]"},
 		{"name":"closeFeeDistributionSchema","type":"uint64[]"},
 		{"name":"marketCount","type":"uint32"},
@@ -2175,7 +2165,7 @@
 		{"components":[{"components":[{"name":"targetToken","type":"address"},{"components":[{"name":"addr","type":"address"},{"name":"leftRoot","type":"address"},{"name":"rightRoot","type":"address"}],"name":"path","type":"tuple[]"}],"name":"dex","type":"tuple"},{"components":[{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"priceNode","type":"tuple"}],"name":"oracleConfigs","type":"map(uint32,tuple)"},
 		{"name":"requestNonce","type":"uint32"},
 		{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"pendingMarketRequests","type":"map(uint32,tuple)"},
-		{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"positionSizeAsset","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"pendingLimitRequests","type":"map(uint32,tuple)"},
+		{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"positionSizeAsset","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"pendingLimitRequests","type":"map(uint32,tuple)"},
 		{"name":"limitBotVault","type":"address"},
 		{"name":"dummy1","type":"bool"},
 		{"name":"dummy2","type":"bool"},
@@ -2186,7 +2176,6 @@
 		{"name":"dummy7","type":"bool"},
 		{"name":"dummy8","type":"bool"},
 		{"name":"dummy9","type":"bool"},
-		{"name":"dummy10","type":"bool"},
-		{"name":"dummy11","type":"bool"}
+		{"name":"dummy10","type":"bool"}
 	]
 }
