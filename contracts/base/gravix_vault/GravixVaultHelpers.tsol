@@ -117,30 +117,30 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function encodeMarketOrder(
-        uint32 marketIdx,
-        PositionType positionType,
-        uint32 leverage,
-        uint128 expectedPrice,
-        uint64 maxSlippageRate,
-        uint128 stopLossTriggerPrice,
-        uint128 takeProfitTriggerPrice,
-        IPriceNode.Price price,
-        address referrer,
-        uint32 nonce,
-        uint32 callId
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint32 _leverage,
+        uint128 _expectedPrice,
+        uint64 _maxSlippageRate,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        IPriceNode.Price _price,
+        address _referrer,
+        uint32 _nonce,
+        uint32 _callId
     ) external pure returns (TvmCell payload) {
         TvmCell cell = abi.encode(
-            marketIdx,
-            positionType,
-            leverage,
-            expectedPrice,
-            maxSlippageRate,
-            stopLossTriggerPrice,
-            takeProfitTriggerPrice,
-            price,
-            referrer
+            _marketIdx,
+            _positionType,
+            _leverage,
+            _expectedPrice,
+            _maxSlippageRate,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _price,
+            _referrer
         );
-        return encodeTokenTransfer(Action.MarketOrder, nonce, callId, cell);
+        return encodeTokenTransfer(Action.MarketOrder, _nonce, _callId, cell);
     }
 
     function decodeMarketOrder(
