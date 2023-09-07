@@ -500,6 +500,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
+        IGravixVault.Funding funding,
         uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice,
         uint64 _maxPnlRate,
@@ -533,14 +534,32 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             position.takeProfit = IGravixVault.StopOrder(_takeProfitTriggerPrice, now);
         }
 
-        bool triggersValid = validateTriggerPrices(
-            position.initialCollateral - position.openFee,
+        bool isLong = position.positionType == IGravixVault.PositionType.Long;
+        int256 newAccFunding = isLong ? funding.accLongUSDFundingPerShare : funding.accShortUSDFundingPerShare;
+        uint128 collateral = position.initialCollateral - position.openFee;
+
+        (uint128 leveragedPosUsd, uint128 leveragedPosAsset) = GravixMath.calculateLeveragedPosition(
+            collateral,
             position.leverage,
+            position.openPrice
+        );
+        uint128 borrowFee = GravixMath.calculateBorrowFee(leveragedPosUsd, position.createdAt, position.borrowBaseRatePerHour);
+        int256 fundingFee = GravixMath.calculateFundingFee(
+            newAccFunding,
+            position.accUSDFundingPerShare,
+            leveragedPosAsset
+        );
+
+        bool triggersValid = validateTriggerPrices(
+            collateral,
+            position.leverage,
+            borrowFee,
+            fundingFee,
             position.positionType,
             position.baseSpreadRate,
             _maxPnlRate,
             _minStopLossRate,
-            position.openPrice,
+            _assetPrice,
             _takeProfitTriggerPrice,
             _stopLossTriggerPrice
         );

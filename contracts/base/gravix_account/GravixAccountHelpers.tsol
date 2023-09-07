@@ -92,24 +92,16 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         bool isLong = _position.positionType == IGravixVault.PositionType.Long;
 
         uint128 collateral = _position.initialCollateral - _position.openFee;
-        uint128 leveragedPositionUsd = math.muldiv(collateral, _position.leverage, Constants.LEVERAGE_BASE);
-        uint128 leveragedPositionAsset = math.muldiv(leveragedPositionUsd, Constants.PRICE_DECIMALS, _position.openPrice);
+        (uint128 leveragedPositionUsd, uint128 leveragedPositionAsset) = GravixMath.calculateLeveragedPosition(
+            collateral, _position.leverage, _position.openPrice
+        );
 
-        // borrow fee
-        uint32 timePassed = now - _position.createdAt;
-        uint128 borrowFeeShare = math.muldiv(_position.borrowBaseRatePerHour, timePassed, Constants.HOUR);
-        uint128 borrowFeeUsd = math.muldiv(borrowFeeShare, leveragedPositionUsd, Constants.HUNDRED_PERCENT);
+        uint128 borrowFeeUsd = GravixMath.calculateBorrowFee(
+            leveragedPositionUsd, _position.createdAt, _position.borrowBaseRatePerHour
+        );
 
-        // funding
         int256 newAccFunding = isLong ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
-        int256 fundingDebt = math.muldiv(leveragedPositionAsset, _position.accUSDFundingPerShare, Constants.SCALING_FACTOR);
-        // if fundingFee > 0, trader pays
-        int256 fundingFeeUsd = math.muldiv(leveragedPositionAsset, newAccFunding, Constants.SCALING_FACTOR) - fundingDebt;
-        // close price
-//        uint128 stopLossTriggerPrice = _position.stopLoss.hasValue() ? _position.stopLoss.get().triggerPrice : 0;
-//        uint128 takeProfitTriggerPrice = _position.takeProfit.hasValue() ? _position.takeProfit.get().triggerPrice : 0;
-
-//        bool isClosedByStop = stopLossTriggerPrice == input.assetPrice || takeProfitTriggerPrice == input.assetPrice;
+        int256 fundingFeeUsd = GravixMath.calculateFundingFee(newAccFunding, _position.accUSDFundingPerShare, leveragedPositionAsset);
 
         uint128 closePrice = applyCloseSpread(input.assetPrice, _position.positionType, _position.baseSpreadRate);
         // pnl (no funding and borrow fees)
@@ -189,7 +181,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         uint128 collateral, // collateral - open fee
         uint32 leverage,
         uint128 borrowFee,
-        uint128 fundingFee,
+        int256 fundingFee,
         IGravixVault.PositionType positionType,
         uint64 baseSpreadRate,
         uint64 maxPnlRate, // usually 300%

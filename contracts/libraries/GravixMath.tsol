@@ -22,6 +22,35 @@ library GravixMath {
         return newPrice;
     }
 
+    function calculateLeveragedPosition(
+        uint128 collateral, // collateral - openFee
+        uint32 leverage,
+        uint128 openPrice
+    ) internal returns (uint128 leveragedPositionUsd, uint128 leveragedPositionAsset) {
+        leveragedPositionUsd = math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE);
+        leveragedPositionAsset = math.muldiv(leveragedPositionUsd, Constants.PRICE_DECIMALS, openPrice);
+    }
+
+    function calculateBorrowFee(
+        uint128 leveragedPositionUsd,
+        uint32 createdAt,
+        uint64 borrowBaseRatePerHour
+    ) internal returns (uint128 borrowFee) {
+        uint32 timePassed = now - createdAt;
+        uint128 borrowFeeShare = math.muldiv(borrowBaseRatePerHour, timePassed, Constants.HOUR);
+        borrowFee = math.muldiv(borrowFeeShare, leveragedPositionUsd, Constants.HUNDRED_PERCENT);
+    }
+
+    function calculateFundingFee(
+        int256 newAccFunding,
+        int256 posAccFunding,
+        uint128 leveragedPositionAsset
+    ) internal returns (int256 fundingFeeUsd) {
+        int256 fundingDebt = math.muldiv(leveragedPositionAsset, posAccFunding, Constants.SCALING_FACTOR);
+        // if fundingFee > 0, trader pays
+        fundingFeeUsd = math.muldiv(leveragedPositionAsset, newAccFunding, Constants.SCALING_FACTOR) - fundingDebt;
+    }
+
     function calculatePnl(
         uint128 openPrice, // including spread
         uint128 closePrice, // including spread
