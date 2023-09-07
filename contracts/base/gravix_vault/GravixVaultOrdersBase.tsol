@@ -263,11 +263,14 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) internal {
+        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
+
         address gravixAcc = getGravixAccountAddress(_user);
         IGravixAccount(gravixAcc).process_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _positionKey,
             _marketIdx,
             _assetPrice,
+            _funding,
             _stopLossTriggerPrice,
             _takeProfitTriggerPrice,
             maxPnlRate,
