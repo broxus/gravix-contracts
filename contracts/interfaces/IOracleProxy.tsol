@@ -29,12 +29,12 @@ interface IOracleProxy {
         address _limitOrdersExecutor,
         IGravixVault.LimitPositionIdx[] _limitPositions
     ) external;
-    function setStopPositionCallback(
+    function setPositionTriggerPriceCallback(
         address _limitOrdersExecutor,
-        IGravixVault.StopPositionIdx[] _stopPositions
+        IGravixVault.TriggerPositionIdx[] _positions
     ) external;
     function setCloseCallback(address _user, uint32 _position_key) external;
-    function setUpdateStopPositionCallback(
+    function setUpdatePositionTriggersCallback(
         address _user,
         uint32 _positionKey,
         uint128 _stopLossTriggerPrice,

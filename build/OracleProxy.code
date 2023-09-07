@@ -298,7 +298,7 @@ CALLREF {
 }
 .loc ../contracts/OracleProxy.tsol, 0
 
-.macro setUpdateStopPositionCallback
+.macro setUpdatePositionTriggersCallback
 DROP
 GETGLOB 6
 THROWIFNOT 76
@@ -322,7 +322,7 @@ LDU 128
 ENDS
 .loc ../contracts/OracleProxy.tsol, 0
 CALLREF {
-	CALL $setUpdateStopPositionCallback_39ef20c2_internal_macro$
+	CALL $setUpdatePositionTriggersCallback_3aa332a6_internal_macro$
 }
 DROP
 CALLREF {
@@ -330,7 +330,7 @@ CALLREF {
 }
 THROW 0
 
-.macro setUpdateStopPositionCallback_39ef20c2_internal_macro
+.macro setUpdatePositionTriggersCallback_3aa332a6_internal_macro
 .loc ../contracts/OracleProxy.tsol, 146
 GETGLOB 9
 GETGLOB 10
@@ -358,7 +358,7 @@ CALLREF {
 }
 .loc ../contracts/OracleProxy.tsol, 0
 
-.macro setStopPositionCallback
+.macro setPositionTriggerPriceCallback
 DROP
 GETGLOB 6
 THROWIFNOT 76
@@ -384,7 +384,7 @@ SWAP
 ENDS
 .loc ../contracts/OracleProxy.tsol, 0
 CALLREF {
-	CALL $setStopPositionCallback_8221c359_internal_macro$
+	CALL $setPositionTriggerPriceCallback_dcfd3819_internal_macro$
 }
 DROP
 CALLREF {
@@ -392,7 +392,7 @@ CALLREF {
 }
 THROW 0
 
-.macro setStopPositionCallback_8221c359_internal_macro
+.macro setPositionTriggerPriceCallback_dcfd3819_internal_macro
 .loc ../contracts/OracleProxy.tsol, 158
 GETGLOB 9
 GETGLOB 10
@@ -759,7 +759,7 @@ PUSHCONT {
 				STUR 111
 				ROLLREV 8
 				NEWC
-				STSLICECONST x1378033e
+				STSLICECONST x2d6429cd
 				STU 64
 				STSLICE
 				STU 32
@@ -796,7 +796,7 @@ PUSHCONT {
 					STUR 111
 					ROLLREV 5
 					NEWC
-					STSLICECONST x1526ac4b
+					STSLICECONST x3647d61a
 					STU 64
 					STU 32
 					SWAP
@@ -1775,15 +1775,9 @@ IFJMPREF {
 	}
 }
 DUP
-PUSHINT 920939623
+PUSHINT 1850322626
 LEQ
 IFJMPREF {
-	DUP
-	PUSHINT 436876841
-	EQUAL
-	IFJMPREF {
-		CALL $setStopPositionCallback$
-	}
 	DUP
 	PUSHINT 809655502
 	EQUAL
@@ -1797,17 +1791,6 @@ IFJMPREF {
 		CALL $onPriceCallback$
 	}
 	DUP
-	PUSHINT 920939623
-	EQUAL
-	IFJMPREF {
-		CALL $setUpdateStopPositionCallback$
-	}
-}
-DUP
-PUSHINT 1850322626
-LEQ
-IFJMPREF {
-	DUP
 	PUSHINT 1083019651
 	EQUAL
 	IFJMPREF {
@@ -1818,6 +1801,23 @@ IFJMPREF {
 	EQUAL
 	IFJMPREF {
 		CALL $setCloseCallback$
+	}
+}
+DUP
+PUSHINT 2111818672
+LEQ
+IFJMPREF {
+	DUP
+	PUSHINT 1989110235
+	EQUAL
+	IFJMPREF {
+		CALL $setPositionTriggerPriceCallback$
+	}
+	DUP
+	PUSHINT 2111818672
+	EQUAL
+	IFJMPREF {
+		CALL $setUpdatePositionTriggersCallback$
 	}
 }
 

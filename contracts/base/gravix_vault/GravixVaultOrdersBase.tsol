@@ -172,7 +172,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     //endregion
 
     //region update stop position
-    function setOrUpdateStopPositionConfig(
+    function setOrUpdatePositionTriggers(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _stopLossTriggerPrice,
@@ -193,7 +193,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         OracleType priceSource = markets[_marketIdx].priceSource;
         OracleConfig oracleConf = oracleConfigs[_marketIdx];
         if (priceSource == OracleType.PriceNode && checkPrice(_price, oracleConf.priceNode)) {
-            _setOrUpdateStopPositionConfig(
+            _setOrUpdatePositionTriggers(
                 msg.sender,
                 _positionKey,
                 _marketIdx,
@@ -205,7 +205,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             return;
         }
 
-        _sendSetOrUpdateOracleRequest(
+        _sendSetOrUpdatePositionTriggersOracleRequest(
             msg.sender,
             _positionKey,
             _marketIdx,
@@ -216,7 +216,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
     }
 
-    function _sendSetOrUpdateOracleRequest(
+    function _sendSetOrUpdatePositionTriggersOracleRequest(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
@@ -225,7 +225,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         Callback.CallMeta meta
     ) internal view {
         address proxy = _deployOracleProxy(_marketIdx, meta);
-        IOracleProxy(proxy).setUpdateStopPositionCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IOracleProxy(proxy).setUpdatePositionTriggersCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _user,
             _positionKey,
             _stopLossTriggerPrice,
@@ -233,7 +233,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function oracle_setOrUpdateStopPosition(
+    function oracle_setOrUpdatePositionTriggers(
         uint64 _nonce,
         address _user,
         uint32 _marketIdx,
@@ -243,7 +243,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external override onlyOracleProxy(_nonce) reserve {
-        _setOrUpdateStopPositionConfig(
+        _setOrUpdatePositionTriggers(
             _user,
             _positionKey,
             _marketIdx,
@@ -254,7 +254,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function _setOrUpdateStopPositionConfig(
+    function _setOrUpdatePositionTriggers(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
@@ -277,34 +277,34 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function finish_setOrUpdateStopPositionConfig(
+    function finish_setOrUpdatePositionTriggerPrices(
         address _user,
         IGravixAccount.Position _position,
         uint32 _positionKey,
         uint32 _marketIdx,
-        bool _isFirstStopPositionConfig,
+        bool _isFirstPositionTriggerPrice,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
-        emit SetOrUpdateStopPositionConfig(
+        emit SetOrUpdatePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
             _marketIdx,
             _position
         );
-        if (_isFirstStopPositionConfig) {
+        if (_isFirstPositionTriggerPrice) {
             limitBotVault.transfer({value: Gas.STOP_ORDER_VALUE});
 
         }
     }
 
-    function revert_setOrUpdateStopPositionConfig(
+    function revert_setOrUpdatePositionTriggerPrices(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
-        emit RevertSetOrUpdateStopPositionConfig(
+        emit RevertSetOrUpdatePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
@@ -312,7 +312,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function removeStopPositionConfig(
+    function removePositionTriggerPrices(
         uint32 _positionKey,
         uint32 _marketIdx,
         bool _removeStopLoss,
@@ -329,7 +329,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
 
         address gravixAcc = getGravixAccountAddress(msg.sender);
-        IGravixAccount(gravixAcc).process_removeStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixAccount(gravixAcc).process_removePositionTriggerPrice{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _positionKey,
             _marketIdx,
             _removeStopLoss,
@@ -339,33 +339,33 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function finish_removeStopPositionConfig(
+    function finish_removePositionTriggerPrice(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
-        uint32 _prevStopPositionConfigCount,
-        uint32 _currentStopPositionConfigCount,
+        uint32 _prevPositionTriggerPricesCount,
+        uint32 _currentPositionTriggerPricesCount,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
-        emit RemoveStopPositionConfig(
+        emit RemovePositionTriggerPrice(
             _meta.callId,
             _user,
             _positionKey,
             _marketIdx
         );
 
-        if (_prevStopPositionConfigCount >= 1 && _currentStopPositionConfigCount == 0) {
+        if (_prevPositionTriggerPricesCount >= 1 && _currentPositionTriggerPricesCount == 0) {
             ILimitBotVault(limitBotVault).sendTo{value: 0.01 ever}(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
         }
     }
 
-    function revert_removeStopPositionConfig(
+    function revert_removePositionTriggerPrice(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
-        emit RevertRemoveStopPositionConfig(
+        emit RevertRemovePositionTriggerPrice(
             _meta.callId,
             _user,
             _positionKey,
@@ -735,33 +735,33 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
     }
     //endregion
-    function stopPositions(
-        mapping(uint32 => StopPositionData) _stopPositionsMap,
+    function triggerPositions(
+        mapping(uint32 => TriggerPositionData) _triggerPositionsMap,
         Callback.CallMeta _meta
     ) external override onlyLimitBot reserve {
-        for ((uint32 marketIdx, StopPositionData _stopPositions) : _stopPositionsMap) {
+        for ((uint32 marketIdx, TriggerPositionData _triggerPositions) : _triggerPositionsMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
-            uint128 value = uint128(_stopPositions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+            uint128 value = uint128(_triggerPositions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
-            if (priceSource == OracleType.PriceNode && checkPrice(_stopPositions.price, oracleConf.priceNode)) {
+            if (priceSource == OracleType.PriceNode && checkPrice(_triggerPositions.price, oracleConf.priceNode)) {
 
-                this.self_stopPositions{value: value}(
-                    _stopPositions.positions,
+                this.self_triggerPositions{value: value}(
+                    _triggerPositions.positions,
                     marketIdx,
-                    _stopPositions.price.price,
+                    _triggerPositions.price.price,
                     _meta,
                     0
                 );
                 continue;
             }
 
-            _sendStopPositionOracleRequest(
+            _sendTriggerPositionOracleRequest(
                 marketIdx,
                 managers.limitBot,
-                _stopPositions.positions,
+                _triggerPositions.positions,
                 value,
                 _meta
             );
@@ -770,24 +770,24 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
-    function _sendStopPositionOracleRequest(
+    function _sendTriggerPositionOracleRequest(
         uint32 _marketIdx,
         address _executor,
-        StopPositionIdx[] _stopPositions,
+        TriggerPositionIdx[] _triggerPositions,
         uint128 value,
         Callback.CallMeta _meta
     ) internal {
         address proxy = _deployOracleProxy(_marketIdx, _meta);
-        IOracleProxy(proxy).setStopPositionCallback{
+        IOracleProxy(proxy).setPositionTriggerPriceCallback{
                 value: value
             }(
             _executor,
-            _stopPositions
+            _triggerPositions
         );
     }
 
-    function self_stopPositions(
-        StopPositionIdx[] _positions,
+    function self_triggerPositions(
+        TriggerPositionIdx[] _positions,
         uint32 _marketIdx,
         uint128 _assetPrice,
         Callback.CallMeta _meta,
@@ -797,15 +797,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         Funding _funding = _updateFunding(_marketIdx, _assetPrice);
 
         for (uint i = _startIdx; i < _positions.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
-            StopPositionIdx position = _positions[i];
+            TriggerPositionIdx position = _positions[i];
 
             address gravixAcc = getGravixAccountAddress(position.user);
             //0.06 ever here to cover computation costs of iterating, needed for big arrays
-            IGravixAccount(gravixAcc).process_stopPositions{value: Gas.EXECUTE_STOP_ORDER_VALUE - 0.06 ever}(
+            IGravixAccount(gravixAcc).process_triggerPositions{value: Gas.EXECUTE_STOP_ORDER_VALUE - 0.06 ever}(
                 position.positionKey,
                 _marketIdx,
                 _assetPrice,
-                position.stopPositionType,
+                position.triggerPositionType,
                 _funding,
                 managers.limitBot,
                 _meta,
@@ -814,7 +814,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
 
         if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < _positions.length) {
-            this.self_stopPositions{
+            this.self_triggerPositions{
                     value: 0,
                     flag: MsgFlag.ALL_NOT_RESERVED,
                     bounce: false
@@ -831,14 +831,14 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
     }
 
-    function oracle_stopPositions(
+    function oracle_triggerPositions(
         uint64 nonce,
         uint32 _marketIdx,
-        StopPositionIdx[] _positions,
+        TriggerPositionIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external override onlyOracleProxy(nonce) reserve {
-        this.self_stopPositions{
+        this.self_triggerPositions{
                 value: 0,
                 flag: MsgFlag.ALL_NOT_RESERVED,
                 bounce: false
@@ -851,13 +851,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function revert_stopPositions(
+    function revert_triggerPositions(
         address user,
         uint32 positionKey,
         uint32 marketIdx,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
-        emit StopPositionRevert(meta.callId, user, positionKey, marketIdx);
+        emit TriggerPositionRevert(meta.callId, user, positionKey, marketIdx);
         managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
     //region liquidation

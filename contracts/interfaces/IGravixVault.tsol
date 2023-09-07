@@ -21,7 +21,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     }
 
     enum LimitOrderType { Limit, Stop }
-    enum StopPositionType {StopLoss, TakeProfit }
+    enum TriggerPositionType {StopLoss, TakeProfit }
 
     struct StopOrder {
         uint128 triggerPrice;
@@ -114,10 +114,10 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 positionKey;
     }
 
-    struct StopPositionIdx {
+    struct TriggerPositionIdx {
         address user;
         uint32 positionKey;
-        StopPositionType stopPositionType;
+        TriggerPositionType triggerPositionType;
     }
 
     struct LimitPositionIdx {
@@ -139,9 +139,9 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         LimitPositionIdx[] positions;
     }
 
-    struct StopPositionData {
+    struct TriggerPositionData {
         IPriceNode.Price price;
-        StopPositionIdx[] positions;
+        TriggerPositionIdx[] positions;
     }
 
 
@@ -318,14 +318,14 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 callId,
         MarketConfig market
     );
-    event SetOrUpdateStopPositionConfig(
+    event SetOrUpdatePositionTriggers(
         uint32 callId,
         address user,
         uint32 positionKey,
         uint32 marketIdx,
         IGravixAccount.Position position
     );
-    event RevertSetOrUpdateStopPositionConfig(
+    event RevertSetOrUpdatePositionTriggers(
         uint32 callId,
         address user,
         uint32 positionKey,
@@ -375,9 +375,9 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event RemovePositionCollateral(uint32 callId, address user, uint32 positionKey, uint128 amount, IGravixAccount.Position updatedPos);
     event RemovePositionCollateralRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx, uint128 amount);
     event Debt(uint32 callId, address user, uint128 debt);
-    event StopPositionRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
-    event RemoveStopPositionConfig(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
-    event RevertRemoveStopPositionConfig(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
+    event TriggerPositionRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
+    event RemovePositionTriggerPrice(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
+    event RevertRemovePositionTriggerPrice(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
     event LiquidatePosition(uint32 callId, address user, address liquidator, uint32 positionKey, IGravixAccount.PositionView positionView);
     event LiquidatePositionRevert(uint32 callId, address liquidator, address user, uint32 positionKey, uint32 marketIdx);
     event LiquidityPoolDeposit(uint32 callId, address user, uint128 usdtAmountIn, uint128 stgUsdtAmountOut);
@@ -507,7 +507,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external;
-    function oracle_setOrUpdateStopPosition(
+    function oracle_setOrUpdatePositionTriggers(
         uint64 _nonce,
         address _user,
         uint32 _marketIdx,
@@ -517,53 +517,53 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external;
-    function finish_setOrUpdateStopPositionConfig(
+    function finish_setOrUpdatePositionTriggerPrices(
         address _user,
         IGravixAccount.Position _position,
         uint32 _positionKey,
         uint32 _marketIdx,
-        bool _isFirstStopPositionConfig,
+        bool _isFirstPositionTriggerPrice,
         Callback.CallMeta _meta
     ) external;
-    function revert_setOrUpdateStopPositionConfig(
+    function revert_setOrUpdatePositionTriggerPrices(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
         Callback.CallMeta _meta
     ) external;
-    function removeStopPositionConfig(
+    function removePositionTriggerPrices(
         uint32 _positionKey,
         uint32 _marketIdx,
         bool _removeStopLoss,
         bool _removeTakeProfit,
         Callback.CallMeta _meta
     ) external;
-    function finish_removeStopPositionConfig(
+    function finish_removePositionTriggerPrice(
         address user,
         uint32 positionKey,
         uint32 marketIdx,
-        uint32 prevStopPositionConfigCount,
-        uint32 currentStopPositionConfigCount,
+        uint32 prevPositionTriggerPricesCount,
+        uint32 currentPositionTriggerPricesCount,
         Callback.CallMeta _meta
     ) external;
-    function revert_removeStopPositionConfig(
+    function revert_removePositionTriggerPrice(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
         Callback.CallMeta _meta
     ) external;
-    function stopPositions(
-        mapping(uint32 => StopPositionData) _stopPositionsMap,
+    function triggerPositions(
+        mapping(uint32 => TriggerPositionData) _triggerPositionsMap,
         Callback.CallMeta _meta
     ) external;
-    function oracle_stopPositions(
+    function oracle_triggerPositions(
         uint64 nonce,
         uint32 _marketIdx,
-        StopPositionIdx[] _positions,
+        TriggerPositionIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external;
-    function revert_stopPositions(
+    function revert_triggerPositions(
         address user,
         uint32 positionKey,
         uint32 marketIdx,

@@ -172,17 +172,17 @@ export class GravixVault {
         const payload = (
             await this.contract.methods
                 .encodeMarketOrder({
-                    marketIdx: marketIdx,
-                    positionType: positionType,
-                    leverage: leverage,
-                    expectedPrice: expectedPrice,
-                    maxSlippageRate: max_slippage,
-                    price: empty_price,
-                    callId: callId,
-                    referrer: referrer,
-                    stopLossTriggerPrice,
-                    takeProfitTriggerPrice,
-                    nonce: 0,
+                    _marketIdx: marketIdx,
+                    _positionType: positionType,
+                    _leverage: leverage,
+                    _expectedPrice: expectedPrice,
+                    _maxSlippageRate: max_slippage,
+                    _price: empty_price,
+                    _callId: callId,
+                    _referrer: referrer,
+                    _stopLossTriggerPrice: stopLossTriggerPrice,
+                    _takeProfitTriggerPrice: takeProfitTriggerPrice,
+                    _nonce: 0,
                 })
                 .call()
         ).payload;
@@ -283,16 +283,18 @@ export class GravixVault {
         stopPositionsConfig,
     }: {
         callId?: number;
-        stopPositionsConfig: Parameters<Contract<GravixVaultAbi>["methods"]["stopPositions"]>[0]["_stopPositionsMap"];
+        stopPositionsConfig: Parameters<
+            Contract<GravixVaultAbi>["methods"]["triggerPositions"]
+        >[0]["_triggerPositionsMap"];
     }) {
         return this.contract.methods
-            .stopPositions({
+            .triggerPositions({
                 _meta: {
                     sendGasTo: this.limitBot,
                     callId: callId,
                     nonce: getRandomNonce(),
                 },
-                _stopPositionsMap: stopPositionsConfig,
+                _triggerPositionsMap: stopPositionsConfig,
             })
             .send({
                 from: this.limitBot,

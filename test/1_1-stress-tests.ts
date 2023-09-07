@@ -150,17 +150,17 @@ describe("Testing main orders flow", async function () {
                 const payload = (
                     await vault.contract.methods
                         .encodeMarketOrder({
-                            marketIdx: market_idx,
-                            positionType: pos_type,
-                            leverage,
-                            expectedPrice: expected_price.toString(),
-                            maxSlippageRate: 1_000_000_000_000,
-                            price: empty_price,
-                            callId: getRandomNonce(),
-                            referrer: zeroAddress,
-                            stopLossTriggerPrice: 0,
-                            takeProfitTriggerPrice: 0,
-                            nonce: 0,
+                            _marketIdx: market_idx,
+                            _positionType: pos_type,
+                            _leverage: leverage,
+                            _expectedPrice: expected_price.toString(),
+                            _maxSlippageRate: 1_000_000_000_000,
+                            _price: empty_price,
+                            _callId: getRandomNonce(),
+                            _referrer: zeroAddress,
+                            _stopLossTriggerPrice: 0,
+                            _takeProfitTriggerPrice: 0,
+                            _nonce: 0,
                         })
                         .call()
                 ).payload;

@@ -153,7 +153,7 @@ interface IGravixAccount {
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;
-    function process_removeStopPositionConfig(
+    function process_removePositionTriggerPrice(
         uint32 positionKey,
         uint32 marketIdx,
         bool removeStopLoss,
@@ -161,11 +161,11 @@ interface IGravixAccount {
         Callback.CallMeta,
         uint32 accountVersion
     ) external;
-    function process_stopPositions(
+    function process_triggerPositions(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
-        IGravixVault.StopPositionType _stopOrderType,
+        IGravixVault.TriggerPositionType _stopOrderType,
         IGravixVault.Funding _funding,
         address initiator,
         Callback.CallMeta _meta,

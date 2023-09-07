@@ -573,7 +573,7 @@ describe("Testing main orders flow", async function () {
 
                     const { traceTree } = await locklift.tracing.trace(
                         vault.contract.methods
-                            .setOrUpdateStopPositionConfig({
+                            .setOrUpdatePositionTriggers({
                                 _meta: {
                                     nonce: 0,
                                     callId: 0,
@@ -626,7 +626,7 @@ describe("Testing main orders flow", async function () {
 
                     const { traceTree } = await locklift.tracing.trace(
                         vault.contract.methods
-                            .setOrUpdateStopPositionConfig({
+                            .setOrUpdatePositionTriggers({
                                 _meta: {
                                     nonce: 0,
                                     callId: 0,
@@ -650,7 +650,7 @@ describe("Testing main orders flow", async function () {
                     {
                         const { traceTree } = await locklift.tracing.trace(
                             vault.contract.methods
-                                .removeStopPositionConfig({
+                                .removePositionTriggerPrices({
                                     _meta: {
                                         nonce: 0,
                                         callId: 0,

@@ -609,7 +609,7 @@ export const closeOrderWithTraceTree = async ({
                               positions: [
                                   {
                                       positionKey: pos_key,
-                                      stopPositionType: stopOrderConfig.stopPositionType,
+                                      triggerPositionType: stopOrderConfig.stopPositionType,
                                       user: user.address,
                                   },
                               ],

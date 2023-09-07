@@ -510,14 +510,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     ) external override onlyGravixVault reserve {
         bool isLatestVersion = isLatestVersion(_accountVersion);
         Position position = positions[_positionKey];
-        bool isFirstStopPositionConfig = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
+        bool isFirstPositionTriggerPrice = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
 
         // TODO: check position exists ?
         if (!isLatestVersion || position.marketIdx != _marketIdx) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
-            IGravixVault(vault).revert_setOrUpdateStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_setOrUpdatePositionTriggerPrices{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -547,7 +547,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
 
         if (!triggersValid) {
-            IGravixVault(vault).revert_setOrUpdateStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_setOrUpdatePositionTriggerPrices{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -557,17 +557,17 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         positions[_positionKey] = position;
-        IGravixVault(vault).finish_setOrUpdateStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_setOrUpdatePositionTriggerPrices{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             position,
             _positionKey,
             _marketIdx,
-            isFirstStopPositionConfig,
+            isFirstPositionTriggerPrice,
             _meta
         );
     }
 
-    function process_removeStopPositionConfig(
+    function process_removePositionTriggerPrice(
         uint32 _positionKey,
         uint32 _marketIdx,
         bool _removeStopLoss,
@@ -583,7 +583,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 requestUpgrade(user, currentVersion, _meta);
             }
 
-            IGravixVault(vault).revert_removeStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_removePositionTriggerPrice{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -611,7 +611,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         positions[_positionKey] = position;
 
-        IGravixVault(vault).finish_removeStopPositionConfig{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_removePositionTriggerPrice{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             _positionKey,
             _marketIdx,
@@ -621,11 +621,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_stopPositions(
+    function process_triggerPositions(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
-        IGravixVault.StopPositionType _stopOrderType,
+        IGravixVault.TriggerPositionType _stopOrderType,
         IGravixVault.Funding _funding,
         address _initiator,
         Callback.CallMeta _meta,
@@ -639,7 +639,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
-            IGravixVault(vault).revert_stopPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_triggerPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -648,7 +648,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        _stopPosition(
+        _triggerPosition(
             _positionKey,
             _marketIdx,
             _assetPrice,
@@ -660,11 +660,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
     }
 
-    function _stopPosition(
+    function _triggerPosition(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
-        IGravixVault.StopPositionType _stopOrderType,
+        IGravixVault.TriggerPositionType _stopOrderType,
         IGravixVault.Funding _funding,
         address _initiator,
         Callback.CallMeta _meta
@@ -672,18 +672,18 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
         bool isReadyToClose;
         uint128 stopPrice;
-        if (_stopOrderType == IGravixVault.StopPositionType.StopLoss && isStopLoosePosition(position)) {
+        if (_stopOrderType == IGravixVault.TriggerPositionType.StopLoss && isStopLoosePosition(position)) {
             isReadyToClose = isStopLooseReady(position, _assetPrice);
             stopPrice = position.stopLoss.get().triggerPrice;
         }
 
-        if (_stopOrderType == IGravixVault.StopPositionType.TakeProfit && isTakeProfitPosition(position)) {
+        if (_stopOrderType == IGravixVault.TriggerPositionType.TakeProfit && isTakeProfitPosition(position)) {
             isReadyToClose = isTakeProfitReady(position, _assetPrice);
             stopPrice = position.takeProfit.get().triggerPrice;
         }
 
         if (!isReadyToClose) {
-            IGravixVault(vault).revert_stopPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_triggerPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -742,11 +742,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         if (isStopLoosePosition(_position)) {
-            _stopPosition(
+            _triggerPosition(
                 _positionKey,
                 _marketIdx,
                 _assetPrice,
-                IGravixVault.StopPositionType.StopLoss,
+                IGravixVault.TriggerPositionType.StopLoss,
                 _funding,
                 _liquidator,
                 _meta
