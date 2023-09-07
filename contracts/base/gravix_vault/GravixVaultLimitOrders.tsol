@@ -93,7 +93,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             );
             return;
         }
-        _sendOpenOrderOracleLimitRequest(
+        _sendOpenLimitOrderOracleRequest(
             _user,
             requestNonce,
             _marketIdx,
@@ -109,7 +109,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         );
     }
 
-    function _sendOpenOrderOracleLimitRequest(
+    function _sendOpenLimitOrderOracleRequest(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
@@ -291,10 +291,11 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
-            uint128 value = uint128(limitOrders.positions.length * Gas.EXECUTE_LIMIT_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
+                uint128 value = uint128(limitOrders.positions.length * Gas.EXECUTE_LIMIT_ORDER_VALUE);
+
                 this.self_executeLimitOrders{value: value}(
                     limitOrders.positions,
                     limitOrders.price.price,
@@ -308,7 +309,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 marketIdx,
                 managers.limitBot,
                 limitOrders.positions,
-                value,
                 meta
             );
         }
@@ -353,9 +353,9 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _marketIdx,
         address _executor,
         LimitPositionIdx[] _limitPositions,
-        uint128 value,
         Callback.CallMeta _meta
     ) internal {
+        uint128 value = uint128(_limitPositions.length * Gas.EXECUTE_LIMIT_ORDER_VALUE);
         address proxy = _deployOracleProxy(_marketIdx, _meta);
         IOracleProxy(proxy).setExecuteLimitCallback{
             value: value
@@ -506,7 +506,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             ILimitBotVault(limitBotVault).sendTo{
                 value: 0.01 ever,
                 flag: 0
-            }(user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+            }(
+                user,
+                Gas.STOP_ORDER_VALUE - 0.06 ever + Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever
+            );
         }
 
         _transfer(
