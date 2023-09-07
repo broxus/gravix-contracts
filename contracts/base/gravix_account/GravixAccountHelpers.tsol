@@ -16,11 +16,18 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getDetails() external view responsible returns (
         uint32 _currentVersion, address _vault, address _user, address _referrer, address _grandReferrer, uint128 _referralBalance
     ) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, grandReferrer, referralBalance);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (
+            currentVersion,
+            vault,
+            user,
+            _getReferrer(),
+            _getGrandReferrer(),
+            referralBalance
+        );
     }
 
     function getReferrer() external view override responsible returns (address _user, address _referrer) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, _getReferrer());
     }
 
 
@@ -262,7 +269,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         Position _position,
         uint128 _assetPrice
     ) internal returns (bool) {
-        optional(IGravixVault.StopOrder) stopLoss = _position.stopLoss;
+        optional(PositionTrigger) stopLoss = _position.stopLoss;
         if (!stopLoss.hasValue()) {
             return false;
         }
@@ -278,7 +285,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         Position _position,
         uint128 _assetPrice
     ) internal returns (bool) {
-        optional(IGravixVault.StopOrder) takeProfit = _position.takeProfit;
+        optional(PositionTrigger) takeProfit = _position.takeProfit;
         if (!takeProfit.hasValue()) {
             return false;
         }
@@ -290,11 +297,11 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             : takeProfitTriggerPrice > _assetPrice;
     }
 
-    function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(IGravixVault.StopOrder)) {
+    function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(PositionTrigger)) {
         if (_stopPrice == 0) {
             return null;
         }
-        return IGravixVault.StopOrder({
+        return PositionTrigger({
             triggerPrice: _stopPrice,
             createdAt: now
         });

@@ -186,9 +186,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         Callback.CallMeta _meta
     ) external onlyActive reserve {
         require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
-
+        require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
+            emit RevertSetOrUpdatePositionTriggers(
+                _meta.callId,
+                msg.sender,
+                _positionKey,
+                _marketIdx
+            );
             _sendCallbackOrGas(
                 msg.sender,
                 _meta.nonce,
@@ -329,6 +335,12 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     ) external override reserve {
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
+            emit RevertRemovePositionTriggerPrice(
+                _meta.callId,
+                msg.sender,
+                _positionKey,
+                _marketIdx
+            );
             _sendCallbackOrGas(
                 msg.sender,
                 _meta.nonce,
@@ -683,7 +695,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         // we already deducted open fee when position was opened
         uint128 collateral = _positionView.position.initialCollateral - _positionView.position.openFee;
         collateralReserve -= collateral;
-
+        bool isPositionHasTriggerPrice = _positionView.position.stopLoss.hasValue() || _positionView.position.takeProfit.hasValue();
         uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, _positionView.position.leverage, _positionView.position.openPrice);
         _removePositionFromMarket(
             _positionView.position.marketIdx,
@@ -697,6 +709,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             _collectPnlAndReferral(collateral, _referrer, _grandReferrer, _user, _meta);
 
             emit LiquidatePosition(_meta.callId, _user, _user, _positionKey, _positionView);
+
+            if (isPositionHasTriggerPrice) {
+                ILimitBotVault(limitBotVault).sendTo{
+                    value: 0.1 ever,
+                    flag: 0
+                }(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+            }
             _sendCallbackOrGas(_user, _meta.nonce, true, _meta.sendGasTo);
         } else {
             int256 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
@@ -715,15 +734,17 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 debt = _decreaseInsuranceFund(uint128(pnlWithFees));
             }
 
-            if (
-                _initiator != managers.limitBot &&
-                (_positionView.position.stopLoss.hasValue() || _positionView.position.takeProfit.hasValue())
-            ) {
+            // if transaction trigger not a limit bot and position has trigger price, we need to repay the reserved gas
+            if (_initiator != managers.limitBot && isPositionHasTriggerPrice) {
                 // if a user is emitter by closing position we need to send him reserved gas
                 ILimitBotVault(limitBotVault).sendTo{
                     value: 0.1 ever,
                     flag: 0
                 }(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+            } else if (isPositionHasTriggerPrice) {
+                // if position was closed by limit bot, we need to mark reserved value as free
+                // value 1 and flag 0 means that we are not sending any money
+                ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: 1, bounce: false}(Gas.STOP_ORDER_VALUE);
             }
                 // if position was closed by limit bot, we already emitted this event
             emit ClosePosition(_meta.callId, _user, _positionKey, _positionView);
@@ -751,11 +772,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
-            uint128 value = uint128(_positions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(_positions.price, oracleConf.priceNode)) {
-
+                uint128 value = uint128(_positions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE);
                 this.self_triggerPositions{value: value}(
                     _positions.positions,
                     marketIdx,
@@ -770,7 +790,6 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 marketIdx,
                 managers.limitBot,
                 _positions.positions,
-                value,
                 _meta
             );
         }
@@ -782,10 +801,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint32 _marketIdx,
         address _executor,
         TriggerPositionIdx[] _triggerPositions,
-        uint128 value,
         Callback.CallMeta _meta
     ) internal {
         address proxy = _deployOracleProxy(_marketIdx, _meta);
+
+        uint128 value = uint128(_triggerPositions.length * Gas.EXECUTE_STOP_ORDER_VALUE);
         IOracleProxy(proxy).setExecutePositionsTriggersCallback{
                 value: value
             }(

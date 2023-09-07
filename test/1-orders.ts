@@ -868,7 +868,7 @@ describe("Testing main orders flow", async function () {
 
                 const account = await vault.account(user3);
                 const details = await account.contract.methods.getDetails({ answerId: 0 }).call();
-                expect(details._referrer.toString()).to.be.eq(user2.address.toString());
+                expect(details._referrer.toString()).to.be.eq(zeroAddress.toString());
             });
 
             it("User set referrer on position open", async function () {

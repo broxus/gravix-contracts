@@ -3,12 +3,14 @@ pragma ever-solidity ^0.62.0;
 
 import "../libraries/Callback.tsol";
 import "./IGravixVault.tsol";
-import "./IPriceNode.tsol";
 
 
 
 interface IGravixAccount {
-
+    struct PositionTrigger {
+        uint128 triggerPrice;
+        uint32 createdAt;
+    }
     struct MarketOrder {
         uint32 marketIdx;
         IGravixVault.PositionType positionType;
@@ -21,8 +23,8 @@ interface IGravixAccount {
         uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
-        optional(IGravixVault.StopOrder) stopLoss;
-        optional(IGravixVault.StopOrder) takeProfit;
+        uint128 stopLossTriggerPrice;
+        uint128 takeProfitTriggerPrice;
     }
 
     struct LimitOrder {
@@ -55,8 +57,8 @@ interface IGravixAccount {
         uint64 closeFeeRate; // %
         uint64 liquidationThresholdRate; // %
         uint32 createdAt; // %
-        optional(IGravixVault.StopOrder) stopLoss;
-        optional(IGravixVault.StopOrder) takeProfit;
+        optional(PositionTrigger) stopLoss;
+        optional(PositionTrigger) takeProfit;
     }
 
     struct PositionView {

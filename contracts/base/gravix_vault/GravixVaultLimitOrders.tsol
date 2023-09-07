@@ -456,6 +456,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
         uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
         _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
+        ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: 1, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
 
         emit LimitOrderExecution(
             meta.callId,

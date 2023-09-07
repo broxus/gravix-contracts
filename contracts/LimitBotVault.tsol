@@ -10,10 +10,23 @@ contract LimitBotVault is ILimitBotVault {
     address owner;
     address gravixVault;
     uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
+    uint128 constant HANDLE_CB_FEE = 0.006 ever;
+    uint128 currentFreeBalance;
+    uint128 freeBalanceThreshold = 1 ever;
 
     modifier onlyOwnerOrGravixVault() {
         require(msg.sender == owner || msg.sender == gravixVault, Errors.NOT_OWNER_OR_GRAVIX_VAULT);
         _;
+    }
+    modifier onlyGravixVault() {
+        require(msg.sender == gravixVault, Errors.NOT_OWNER_OR_GRAVIX_VAULT);
+        _;
+    }
+    modifier onlyGravixOwnerReserveAndSendRemainingGas() {
+        require(msg.sender == owner, Errors.NOT_OWNER_OR_GRAVIX_VAULT);
+        tvm.rawReserve(_reserveWithValue(0), 0);
+        _;
+        owner.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
     }
 
     constructor(
@@ -25,6 +38,10 @@ contract LimitBotVault is ILimitBotVault {
         gravixVault = _gravixVault;
     }
 
+    function setFreeBalanceThreshold(uint128 _threshold) external override onlyGravixOwnerReserveAndSendRemainingGas {
+        freeBalanceThreshold = _threshold;
+    }
+
     function _reserveWithValue(uint128 _value) internal returns (uint128) {
         return math.max(address(this).balance - (msg.value + _value), CONTRACT_MIN_BALANCE);
     }
@@ -32,5 +49,17 @@ contract LimitBotVault is ILimitBotVault {
     function sendTo(address _to, uint128 _amount) external override onlyOwnerOrGravixVault {
         tvm.rawReserve(_reserveWithValue(_amount), 0);
         _to.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
+    }
+
+    function onMoneyFree(uint128 _amount) external override onlyGravixVault {
+        if (_amount < HANDLE_CB_FEE) {
+            return;
+        }
+        currentFreeBalance += _amount - HANDLE_CB_FEE;
+        if (currentFreeBalance >= freeBalanceThreshold) {
+            tvm.rawReserve(_reserveWithValue(currentFreeBalance), 0);
+            currentFreeBalance = 0;
+            owner.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
+        }
     }
 }
