@@ -264,7 +264,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         Callback.CallMeta _meta
     ) internal {
         address gravixAcc = getGravixAccountAddress(_user);
-        IGravixAccount(gravixAcc).process_updatePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixAccount(gravixAcc).process_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _positionKey,
             _marketIdx,
             _assetPrice,
@@ -735,33 +735,33 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
     }
     //endregion
-    function triggerPositions(
-        mapping(uint32 => TriggerPositionData) _triggerPositionsMap,
+    function executePositionsTriggers(
+        mapping(uint32 => TriggerPositionData) _positionsMap,
         Callback.CallMeta _meta
     ) external override onlyLimitBot reserve {
-        for ((uint32 marketIdx, TriggerPositionData _triggerPositions) : _triggerPositionsMap) {
+        for ((uint32 marketIdx, TriggerPositionData _positions) : _positionsMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
-            uint128 value = uint128(_triggerPositions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+            uint128 value = uint128(_positions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
-            if (priceSource == OracleType.PriceNode && checkPrice(_triggerPositions.price, oracleConf.priceNode)) {
+            if (priceSource == OracleType.PriceNode && checkPrice(_positions.price, oracleConf.priceNode)) {
 
                 this.self_triggerPositions{value: value}(
-                    _triggerPositions.positions,
+                    _positions.positions,
                     marketIdx,
-                    _triggerPositions.price.price,
+                    _positions.price.price,
                     _meta,
                     0
                 );
                 continue;
             }
 
-            _sendTriggerPositionOracleRequest(
+            _sendExecutePositionsTriggersOracleRequest(
                 marketIdx,
                 managers.limitBot,
-                _triggerPositions.positions,
+                _positions.positions,
                 value,
                 _meta
             );
@@ -770,7 +770,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
-    function _sendTriggerPositionOracleRequest(
+    function _sendExecutePositionsTriggersOracleRequest(
         uint32 _marketIdx,
         address _executor,
         TriggerPositionIdx[] _triggerPositions,
@@ -778,7 +778,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         Callback.CallMeta _meta
     ) internal {
         address proxy = _deployOracleProxy(_marketIdx, _meta);
-        IOracleProxy(proxy).setPositionTriggerPriceCallback{
+        IOracleProxy(proxy).setExecutePositionsTriggersCallback{
                 value: value
             }(
             _executor,

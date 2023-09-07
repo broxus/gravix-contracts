@@ -110,7 +110,6 @@ interface IGravixAccount {
     function process_requestLimitOrder(
         uint32 reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
-        int256 _accUSDFundingPerShare,
         uint64 _maxPnlRate,
         uint64 _minStopLossRate,
         uint32 _accountVersion
@@ -142,7 +141,7 @@ interface IGravixAccount {
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;
-    function process_updatePosition(
+    function process_setOrUpdatePositionTriggers(
         uint32 positionKey,
         uint32 marketIdx,
         uint128 assetPrice,

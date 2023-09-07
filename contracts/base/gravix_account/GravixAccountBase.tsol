@@ -258,7 +258,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_requestLimitOrder(
         uint32 _reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
-        int256 _accUSDFundingPerShare,
         uint64 _maxPnlRate,
         uint64 _minStopLossRate,
         uint32 _accountVersion
@@ -497,7 +496,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_updatePosition(
+    function process_setOrUpdatePositionTriggers(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
@@ -672,12 +671,12 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
         bool isReadyToClose;
         uint128 stopPrice;
-        if (_stopOrderType == IGravixVault.TriggerPositionType.StopLoss && isStopLoosePosition(position)) {
-            isReadyToClose = isStopLooseReady(position, _assetPrice);
+        if (_stopOrderType == IGravixVault.TriggerPositionType.StopLoss && position.stopLoss.hasValue()) {
+            isReadyToClose = isStopLossReady(position, _assetPrice);
             stopPrice = position.stopLoss.get().triggerPrice;
         }
 
-        if (_stopOrderType == IGravixVault.TriggerPositionType.TakeProfit && isTakeProfitPosition(position)) {
+        if (_stopOrderType == IGravixVault.TriggerPositionType.TakeProfit && position.takeProfit.hasValue()) {
             isReadyToClose = isTakeProfitReady(position, _assetPrice);
             stopPrice = position.takeProfit.get().triggerPrice;
         }
@@ -741,7 +740,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        if (isStopLoosePosition(_position)) {
+        if (_position.stopLoss.hasValue()) {
             _triggerPosition(
                 _positionKey,
                 _marketIdx,

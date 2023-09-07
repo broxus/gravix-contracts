@@ -358,7 +358,7 @@ CALLREF {
 }
 .loc ../contracts/OracleProxy.tsol, 0
 
-.macro setPositionTriggerPriceCallback
+.macro setExecutePositionsTriggersCallback
 DROP
 GETGLOB 6
 THROWIFNOT 76
@@ -384,7 +384,7 @@ SWAP
 ENDS
 .loc ../contracts/OracleProxy.tsol, 0
 CALLREF {
-	CALL $setPositionTriggerPriceCallback_dcfd3819_internal_macro$
+	CALL $setExecutePositionsTriggersCallback_df6d0751_internal_macro$
 }
 DROP
 CALLREF {
@@ -392,7 +392,7 @@ CALLREF {
 }
 THROW 0
 
-.macro setPositionTriggerPriceCallback_dcfd3819_internal_macro
+.macro setExecutePositionsTriggersCallback_df6d0751_internal_macro
 .loc ../contracts/OracleProxy.tsol, 158
 GETGLOB 9
 GETGLOB 10
@@ -1775,7 +1775,7 @@ IFJMPREF {
 	}
 }
 DUP
-PUSHINT 1850322626
+PUSHINT 1119870065
 LEQ
 IFJMPREF {
 	DUP
@@ -1797,10 +1797,10 @@ IFJMPREF {
 		CALL $setLiquidationCallback$
 	}
 	DUP
-	PUSHINT 1850322626
+	PUSHINT 1119870065
 	EQUAL
 	IFJMPREF {
-		CALL $setCloseCallback$
+		CALL $setExecutePositionsTriggersCallback$
 	}
 }
 DUP
@@ -1808,10 +1808,10 @@ PUSHINT 2111818672
 LEQ
 IFJMPREF {
 	DUP
-	PUSHINT 1989110235
+	PUSHINT 1850322626
 	EQUAL
 	IFJMPREF {
-		CALL $setPositionTriggerPriceCallback$
+		CALL $setCloseCallback$
 	}
 	DUP
 	PUSHINT 2111818672

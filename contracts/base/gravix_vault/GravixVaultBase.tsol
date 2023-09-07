@@ -251,17 +251,11 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
 
             address gravixAcc = _deployGravixAccount(request.user, request.referrer);
 
-            Funding _funding = _updateFunding(request.marketIdx, request.assetPrice);
-            int256 funding = request.positionType == PositionType.Long
-                ? _funding.accLongUSDFundingPerShare
-                : _funding.accShortUSDFundingPerShare;
-
             IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _requestNonce,
                 request,
-                funding,
                 maxPnlRate,
-            minStopLossRate,
+                minStopLossRate,
                 gravixAccountCode.version
             );
         }

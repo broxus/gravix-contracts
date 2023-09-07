@@ -39,7 +39,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         LiquidationParams _liquidation,
         uint64[2] _openFeeDistributionSchema,
         uint64[2] _closeFeeDistributionSchema,
-        uint32 _marketCount
+        uint32 _marketCount,
+        address _limitBotVault
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             managers,
@@ -63,7 +64,8 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             liquidationParams,
             openFeeDistributionSchema,
             closeFeeDistributionSchema,
-            marketCount
+            marketCount,
+            limitBotVault
         );
     }
 

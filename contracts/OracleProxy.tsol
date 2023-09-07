@@ -49,7 +49,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         RequestLimit,
         ExecuteLimit,
         UpdatePositionTriggerPrice,
-        SetPositionTriggerPrice,
+        SetExecutePositionsTriggers,
         Close,
         Liquidation
     }
@@ -151,14 +151,14 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         takeProfitTriggerPrice = _takeProfitTriggerPrice;
         _collectPrice(user);
     }
-    function setPositionTriggerPriceCallback(
+    function setExecutePositionsTriggersCallback(
         address _limitOrdersExecutor,
         IGravixVault.TriggerPositionIdx[] _triggerPositions
     ) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
         user = _limitOrdersExecutor;
-        callbackType = CallbackType.SetPositionTriggerPrice;
+        callbackType = CallbackType.SetExecutePositionsTriggers;
         triggerPositions = _triggerPositions;
         _collectPrice(_limitOrdersExecutor);
     }
@@ -257,7 +257,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 price,
                 meta
             );
-        } else if (callbackType == CallbackType.SetPositionTriggerPrice) {
+        } else if (callbackType == CallbackType.SetExecutePositionsTriggers) {
             IGravixVault(vault).oracle_triggerPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,
                 marketIdx,

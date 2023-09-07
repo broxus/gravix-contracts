@@ -185,11 +185,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         Market _market = markets[_marketIdx];
         requestNonce += 1;
         uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
-        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
-
-        int256 funding = _positionType == PositionType.Long
-            ? _funding.accLongUSDFundingPerShare
-            : _funding.accShortUSDFundingPerShare;
 
         PendingLimitOrder newRequest = PendingLimitOrder(
             _user,
@@ -218,7 +213,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             requestNonce,
             newRequest,
-            funding,
             maxPnlRate,
             minStopLossRate,
             gravixAccountCode.version
@@ -292,7 +286,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     function executeLimitOrders(
         mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
         Callback.CallMeta meta
-    ) external override reserve onlyLimitBot {
+    ) external override reserveAndSendGas(meta) onlyLimitBot {
         for ((uint32 marketIdx, ExecuteLimitOrderData limitOrders) : limitOrdersMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
@@ -318,8 +312,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 meta
             );
         }
-
-        meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
     //endregion
 

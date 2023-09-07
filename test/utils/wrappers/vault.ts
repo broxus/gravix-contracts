@@ -284,17 +284,17 @@ export class GravixVault {
     }: {
         callId?: number;
         stopPositionsConfig: Parameters<
-            Contract<GravixVaultAbi>["methods"]["triggerPositions"]
-        >[0]["_triggerPositionsMap"];
+            Contract<GravixVaultAbi>["methods"]["executePositionsTriggers"]
+        >[0]["_positionsMap"];
     }) {
         return this.contract.methods
-            .triggerPositions({
+            .executePositionsTriggers({
                 _meta: {
                     sendGasTo: this.limitBot,
                     callId: callId,
                     nonce: getRandomNonce(),
                 },
-                _triggerPositionsMap: stopPositionsConfig,
+                _positionsMap: stopPositionsConfig,
             })
             .send({
                 from: this.limitBot,
