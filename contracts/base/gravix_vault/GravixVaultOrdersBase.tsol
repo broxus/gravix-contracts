@@ -307,7 +307,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             _position
         );
         if (_isFirstPositionTriggerPrice) {
-            limitBotVault.transfer({value: Gas.STOP_ORDER_VALUE});
+            limitBotVault.transfer({value: Gas.TRIGGER_ORDER_VALUE});
 
         }
     }
@@ -375,7 +375,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
 
         if (_prevPositionTriggerPricesCount >= 1 && _currentPositionTriggerPricesCount == 0) {
-            ILimitBotVault(limitBotVault).sendTo{value: 0.01 ever}(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+            ILimitBotVault(limitBotVault).sendTo{value: 0.01 ever}(_user, Gas.TRIGGER_ORDER_VALUE - 0.06 ever);
         }
     }
 
@@ -714,7 +714,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 ILimitBotVault(limitBotVault).sendTo{
                     value: 0.1 ever,
                     flag: 0
-                }(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+                }(_user, Gas.TRIGGER_ORDER_VALUE - 0.06 ever);
             }
             _sendCallbackOrGas(_user, _meta.nonce, true, _meta.sendGasTo);
         } else {
@@ -740,11 +740,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 ILimitBotVault(limitBotVault).sendTo{
                     value: 0.1 ever,
                     flag: 0
-                }(_user, Gas.STOP_ORDER_VALUE - 0.06 ever);
+                }(_user, Gas.TRIGGER_ORDER_VALUE - 0.06 ever);
             } else if (isPositionHasTriggerPrice) {
                 // if position was closed by limit bot, we need to mark reserved value as free
                 // value 1 and flag 0 means that we are not sending any money
-                ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: 1, bounce: false}(Gas.STOP_ORDER_VALUE);
+                ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: 1, bounce: false}(Gas.TRIGGER_ORDER_VALUE);
             }
                 // if position was closed by limit bot, we already emitted this event
             emit ClosePosition(_meta.callId, _user, _positionKey, _positionView);

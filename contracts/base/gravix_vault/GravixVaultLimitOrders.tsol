@@ -32,6 +32,15 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             address referrer
         ) = decodeLimitOrder(orderParamsPayload);
 
+        uint128 valueForTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0
+            ? Gas.TRIGGER_ORDER_VALUE
+            : 0;
+
+        require(
+            msg.value >= Gas.MIN_MSG_VALUE + Gas.OPEN_LIMIT_ORDER_RESERVE + valueForTriggers,
+            Errors.LOW_MSG_VALUE
+        );
+
         if (!validateOrderParams(marketIdx, collateral, leverage, 0)) return false;
         if (checkPositionAllowed(
             marketIdx,
@@ -267,7 +276,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
         // reserve evers for feature order execution
         uint128 stopOrderValue = request.stopLossTriggerPrice > 0 || request.takeProfitTriggerPrice > 0
-            ? Gas.STOP_ORDER_VALUE
+            ? Gas.TRIGGER_ORDER_VALUE
             : 0;
 
         limitBotVault.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE + stopOrderValue});
@@ -509,7 +518,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 flag: 0
             }(
                 user,
-                Gas.STOP_ORDER_VALUE - 0.06 ever + Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever
+                Gas.TRIGGER_ORDER_VALUE - 0.06 ever + Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever
             );
         }
 

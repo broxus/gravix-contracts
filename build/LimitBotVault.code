@@ -22,11 +22,11 @@ ENDS
 CTOS
 LDMSGADDR
 ENDS
-.loc ../contracts/LimitBotVault.tsol, 30
+.loc ../contracts/LimitBotVault.tsol, 36
 ACCEPT
-.loc ../contracts/LimitBotVault.tsol, 31
+.loc ../contracts/LimitBotVault.tsol, 37
 SETGLOB 11
-.loc ../contracts/LimitBotVault.tsol, 32
+.loc ../contracts/LimitBotVault.tsol, 38
 SETGLOB 12
 .loc ../contracts/LimitBotVault.tsol, 0
 CALLREF {
@@ -34,12 +34,62 @@ CALLREF {
 }
 THROW 0
 
+.macro setFreeBalanceThreshold
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/LimitBotVault.tsol, 41
+LDU 128
+ENDS
+.loc ../contracts/LimitBotVault.tsol, 0
+CALLREF {
+	CALL $setFreeBalanceThreshold_7651a558_internal_macro$
+}
+DROP
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro setFreeBalanceThreshold_7651a558_internal_macro
+.loc ../contracts/LimitBotVault.tsol, 26
+PUSHINT 6000
+GETGLOB 9
+GETGLOB 11
+SDEQ
+THROWANYIFNOT
+.loc ../contracts/LimitBotVault.tsol, 27
+PUSHINT 0
+CALLREF {
+	CALL $_reserveWithValue_3f1d138f_internal_macro$
+}
+PUSHINT 0
+RAWRESERVE
+.loc ../contracts/LimitBotVault.tsol, 42
+SETGLOB 14
+.loc ../contracts/LimitBotVault.tsol, 29
+GETGLOB 11
+NEWC
+STSLICECONST x42_
+STSLICE
+PUSHINT 111
+STZEROES
+ENDC
+PUSHPOW2 7
+SENDRAWMSG
+.loc ../contracts/LimitBotVault.tsol, 0
+
 .globl	_reserveWithValue_3f1d138f_internal
 .type	_reserveWithValue_3f1d138f_internal, @function
 CALL $_reserveWithValue_3f1d138f_internal_macro$
 
 .macro _reserveWithValue_3f1d138f_internal_macro
-.loc ../contracts/LimitBotVault.tsol, 36
+.loc ../contracts/LimitBotVault.tsol, 46
 GETPARAM 7
 FIRST
 DEPTH
@@ -63,7 +113,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/LimitBotVault.tsol, 39
+.loc ../contracts/LimitBotVault.tsol, 49
 OVER
 PUSHCONT {
 	LDREF
@@ -95,13 +145,13 @@ GETGLOB 12
 SDEQ
 OR
 THROWANYIFNOT
-.loc ../contracts/LimitBotVault.tsol, 40
+.loc ../contracts/LimitBotVault.tsol, 50
 CALLREF {
 	CALL $_reserveWithValue_3f1d138f_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/LimitBotVault.tsol, 41
+.loc ../contracts/LimitBotVault.tsol, 51
 NEWC
 STSLICECONST x42_
 STSLICE
@@ -121,7 +171,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/LimitBotVault.tsol, 44
+.loc ../contracts/LimitBotVault.tsol, 54
 LDU 128
 ENDS
 .loc ../contracts/LimitBotVault.tsol, 0
@@ -143,17 +193,17 @@ SDEQ
 THROWANYIFNOT
 .loc ../contracts/LimitBotVault.tsol, 23
 PUSHCONT {
-	.loc ../contracts/LimitBotVault.tsol, 45
+	.loc ../contracts/LimitBotVault.tsol, 55
 	DUP
 	PUSHINT 6000000
 	LESS
 	PUSHCONT {
-		.loc ../contracts/LimitBotVault.tsol, 46
+		.loc ../contracts/LimitBotVault.tsol, 56
 		DROP
 		.loc ../contracts/LimitBotVault.tsol, 0
 	}
 	IFJMP
-	.loc ../contracts/LimitBotVault.tsol, 48
+	.loc ../contracts/LimitBotVault.tsol, 58
 	PUSHINT 6000000
 	SUB
 	UFITS 128
@@ -162,21 +212,21 @@ PUSHCONT {
 	UFITS 128
 	DUP
 	SETGLOB 13
-	.loc ../contracts/LimitBotVault.tsol, 49
+	.loc ../contracts/LimitBotVault.tsol, 59
 	GETGLOB 14
 	GEQ
 	PUSHCONT {
-		.loc ../contracts/LimitBotVault.tsol, 50
+		.loc ../contracts/LimitBotVault.tsol, 60
 		GETGLOB 13
 		CALLREF {
 			CALL $_reserveWithValue_3f1d138f_internal_macro$
 		}
 		PUSHINT 0
 		RAWRESERVE
-		.loc ../contracts/LimitBotVault.tsol, 51
+		.loc ../contracts/LimitBotVault.tsol, 61
 		PUSHINT 0
 		SETGLOB 13
-		.loc ../contracts/LimitBotVault.tsol, 52
+		.loc ../contracts/LimitBotVault.tsol, 62
 		GETGLOB 11
 		NEWC
 		STSLICECONST x42_
@@ -189,7 +239,7 @@ PUSHCONT {
 		.loc ../contracts/LimitBotVault.tsol, 0
 	}
 	IF
-	.loc ../contracts/LimitBotVault.tsol, 44
+	.loc ../contracts/LimitBotVault.tsol, 54
 }
 CALLX
 .loc ../contracts/LimitBotVault.tsol, 0
@@ -385,6 +435,12 @@ PUSHINT 269797918
 EQUAL
 IFJMPREF {
 	CALL $sendTo$
+}
+DUP
+PUSHINT 693609938
+EQUAL
+IFJMPREF {
+	CALL $setFreeBalanceThreshold$
 }
 DUP
 PUSHINT 1241152735

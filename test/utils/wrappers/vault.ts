@@ -231,7 +231,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(3.6));
+        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(5));
     }
 
     async addCollateral(
