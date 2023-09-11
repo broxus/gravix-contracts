@@ -514,7 +514,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
-            IGravixVault(vault).revert_setOrUpdatePositionTriggerPrices{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -562,7 +562,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
 
         if (!triggersValid) {
-            IGravixVault(vault).revert_setOrUpdatePositionTriggerPrices{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -572,7 +572,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         positions[_positionKey] = position;
-        IGravixVault(vault).finish_setOrUpdatePositionTriggerPrices{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             position,
             _positionKey,
@@ -582,7 +582,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_removePositionTriggerPrice(
+    function process_removePositionTriggers(
         uint32 _positionKey,
         uint32 _marketIdx,
         bool _removeStopLoss,
@@ -598,7 +598,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 requestUpgrade(user, currentVersion, _meta);
             }
 
-            IGravixVault(vault).revert_removePositionTriggerPrice{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -626,7 +626,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         positions[_positionKey] = position;
 
-        IGravixVault(vault).finish_removePositionTriggerPrice{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixVault(vault).finish_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             _positionKey,
             _marketIdx,
@@ -636,7 +636,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function process_triggerPositions(
+    function process_executePositionsTriggers(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
@@ -654,7 +654,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
-            IGravixVault(vault).revert_triggerPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_executePositionsTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -663,7 +663,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             return;
         }
 
-        _triggerPosition(
+        _executePositionTriggers(
             _positionKey,
             _marketIdx,
             _assetPrice,
@@ -675,7 +675,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
     }
 
-    function _triggerPosition(
+    function _executePositionTriggers(
         uint32 _positionKey,
         uint32 _marketIdx,
         uint128 _assetPrice,
@@ -698,7 +698,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         if (!isReadyToClose) {
-            IGravixVault(vault).revert_triggerPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).revert_executePositionsTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _positionKey,
                 _marketIdx,
@@ -757,7 +757,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         if (_position.stopLoss.hasValue()) {
-            _triggerPosition(
+            _executePositionTriggers(
                 _positionKey,
                 _marketIdx,
                 _assetPrice,

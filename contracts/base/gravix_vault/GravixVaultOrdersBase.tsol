@@ -291,7 +291,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function finish_setOrUpdatePositionTriggerPrices(
+    function finish_setOrUpdatePositionTriggers(
         address _user,
         IGravixAccount.Position _position,
         uint32 _positionKey,
@@ -312,7 +312,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
     }
 
-    function revert_setOrUpdatePositionTriggerPrices(
+    function revert_setOrUpdatePositionTriggers(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
@@ -326,7 +326,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function removePositionTriggerPrices(
+    function removePositionTriggers(
         uint32 _positionKey,
         uint32 _marketIdx,
         bool _removeStopLoss,
@@ -335,7 +335,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     ) external override reserve {
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
-            emit RevertRemovePositionTriggerPrice(
+            emit RevertRemovePositionTriggers(
                 _meta.callId,
                 msg.sender,
                 _positionKey,
@@ -349,7 +349,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
 
         address gravixAcc = getGravixAccountAddress(msg.sender);
-        IGravixAccount(gravixAcc).process_removePositionTriggerPrice{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+        IGravixAccount(gravixAcc).process_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _positionKey,
             _marketIdx,
             _removeStopLoss,
@@ -359,7 +359,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function finish_removePositionTriggerPrice(
+    function finish_removePositionTriggers(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
@@ -367,7 +367,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint32 _currentPositionTriggerPricesCount,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
-        emit RemovePositionTriggerPrice(
+        emit RemovePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
@@ -379,13 +379,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
     }
 
-    function revert_removePositionTriggerPrice(
+    function revert_removePositionTriggers(
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
-        emit RevertRemovePositionTriggerPrice(
+        emit RevertRemovePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
@@ -776,7 +776,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(_positions.price, oracleConf.priceNode)) {
                 uint128 value = uint128(_positions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE);
-                this.self_triggerPositions{value: value}(
+                this.self_executePositionsTriggers{value: value}(
                     _positions.positions,
                     marketIdx,
                     _positions.price.price,
@@ -814,7 +814,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function self_triggerPositions(
+    function self_executePositionsTriggers(
         TriggerPositionIdx[] _positions,
         uint32 _marketIdx,
         uint128 _assetPrice,
@@ -829,7 +829,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
             address gravixAcc = getGravixAccountAddress(position.user);
             //0.06 ever here to cover computation costs of iterating, needed for big arrays
-            IGravixAccount(gravixAcc).process_triggerPositions{value: Gas.EXECUTE_STOP_ORDER_VALUE - 0.06 ever}(
+            IGravixAccount(gravixAcc).process_executePositionsTriggers{value: Gas.EXECUTE_STOP_ORDER_VALUE - 0.06 ever}(
                 position.positionKey,
                 _marketIdx,
                 _assetPrice,
@@ -842,7 +842,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         }
 
         if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < _positions.length) {
-            this.self_triggerPositions{
+            this.self_executePositionsTriggers{
                     value: 0,
                     flag: MsgFlag.ALL_NOT_RESERVED,
                     bounce: false
@@ -859,14 +859,14 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
     }
 
-    function oracle_triggerPositions(
+    function oracle_executePositionsTriggers(
         uint64 nonce,
         uint32 _marketIdx,
         TriggerPositionIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external override onlyOracleProxy(nonce) reserve {
-        this.self_triggerPositions{
+        this.self_executePositionsTriggers{
                 value: 0,
                 flag: MsgFlag.ALL_NOT_RESERVED,
                 bounce: false
@@ -879,13 +879,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         );
     }
 
-    function revert_triggerPositions(
+    function revert_executePositionsTriggers(
         address user,
         uint32 positionKey,
         uint32 marketIdx,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
-        emit TriggerPositionRevert(meta.callId, user, positionKey, marketIdx);
+        emit ExecutePositionTriggerRevert(meta.callId, user, positionKey, marketIdx);
         managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
     //region liquidation

@@ -258,7 +258,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 meta
             );
         } else if (callbackType == CallbackType.SetExecutePositionsTriggers) {
-            IGravixVault(vault).oracle_triggerPositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixVault(vault).oracle_executePositionsTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 nonce,
                 marketIdx,
                 triggerPositions,
