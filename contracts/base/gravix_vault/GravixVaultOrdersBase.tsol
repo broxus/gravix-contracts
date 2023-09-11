@@ -765,10 +765,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
     //endregion
     function executePositionsTriggers(
-        mapping(uint32 => TriggerPositionData) _positionsMap,
+        mapping(uint32 => PositionTriggerData) _positionsMap,
         Callback.CallMeta _meta
     ) external override onlyLimitBot reserve {
-        for ((uint32 marketIdx, TriggerPositionData _positions) : _positionsMap) {
+        for ((uint32 marketIdx, PositionTriggerData _positions) : _positionsMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
@@ -800,7 +800,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function _sendExecutePositionsTriggersOracleRequest(
         uint32 _marketIdx,
         address _executor,
-        TriggerPositionIdx[] _triggerPositions,
+        PositionTriggerIdx[] _triggerPositions,
         Callback.CallMeta _meta
     ) internal {
         address proxy = _deployOracleProxy(_marketIdx, _meta);
@@ -815,7 +815,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function self_executePositionsTriggers(
-        TriggerPositionIdx[] _positions,
+        PositionTriggerIdx[] _positions,
         uint32 _marketIdx,
         uint128 _assetPrice,
         Callback.CallMeta _meta,
@@ -825,7 +825,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         Funding _funding = _updateFunding(_marketIdx, _assetPrice);
 
         for (uint i = _startIdx; i < _positions.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
-            TriggerPositionIdx position = _positions[i];
+            PositionTriggerIdx position = _positions[i];
 
             address gravixAcc = getGravixAccountAddress(position.user);
             //0.06 ever here to cover computation costs of iterating, needed for big arrays
@@ -862,7 +862,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function oracle_executePositionsTriggers(
         uint64 nonce,
         uint32 _marketIdx,
-        TriggerPositionIdx[] _positions,
+        PositionTriggerIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external override onlyOracleProxy(nonce) reserve {

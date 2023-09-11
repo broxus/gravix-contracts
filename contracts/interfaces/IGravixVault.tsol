@@ -111,7 +111,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 positionKey;
     }
 
-    struct TriggerPositionIdx {
+    struct PositionTriggerIdx {
         address user;
         uint32 positionKey;
         TriggerPositionType triggerPositionType;
@@ -136,9 +136,9 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         LimitPositionIdx[] positions;
     }
 
-    struct TriggerPositionData {
+    struct PositionTriggerData {
         IPriceNode.Price price;
-        TriggerPositionIdx[] positions;
+        PositionTriggerIdx[] positions;
     }
 
 
@@ -550,13 +550,13 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta _meta
     ) external;
     function executePositionsTriggers(
-        mapping(uint32 => TriggerPositionData) _positionsMap,
+        mapping(uint32 => PositionTriggerData) _positionsMap,
         Callback.CallMeta _meta
     ) external;
     function oracle_executePositionsTriggers(
         uint64 nonce,
         uint32 _marketIdx,
-        TriggerPositionIdx[] _positions,
+        PositionTriggerIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external;

@@ -40,7 +40,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     // this is set for liquidations
     IGravixVault.PositionIdx[] positions;
     IGravixVault.LimitPositionIdx[] limitPositions;
-    IGravixVault.TriggerPositionIdx[] triggerPositions;
+    IGravixVault.PositionTriggerIdx[] triggerPositions;
 
     address liquidator;
 
@@ -153,7 +153,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     }
     function setExecutePositionsTriggersCallback(
         address _limitOrdersExecutor,
-        IGravixVault.TriggerPositionIdx[] _triggerPositions
+        IGravixVault.PositionTriggerIdx[] _triggerPositions
     ) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 

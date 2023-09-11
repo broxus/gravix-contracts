@@ -506,13 +506,13 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         address user,
         uint32 positionKey,
         uint128 collateral,
-        bool positionHasStopConfig,
+        bool positionHasTriggers,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserve {
         collateralReserve -= collateral;
 
         emit CancelLimitOrder(meta.callId, user, positionKey);
-        if (positionHasStopConfig) {
+        if (positionHasTriggers) {
             ILimitBotVault(limitBotVault).sendTo{
                 value: 0.01 ever,
                 flag: 0
