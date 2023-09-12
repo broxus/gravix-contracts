@@ -123,8 +123,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
-
-                await traceTree?.beautyPrint();
             });
 
             it("Resolve request", async function () {
@@ -200,8 +198,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         .sendExternal({ publicKey: signer?.publicKey as string }),
                     { allowedCodes: { compute: [60] } },
                 );
-
-                await traceTree?.beautyPrint();
             });
         });
 
@@ -327,8 +323,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         })
                         .sendExternal({ publicKey: signer?.publicKey as string }),
                 );
-
-                await traceTree?.beautyPrint();
             });
         });
     });

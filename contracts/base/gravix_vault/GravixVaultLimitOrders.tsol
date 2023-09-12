@@ -193,7 +193,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     ) internal {
         Market _market = markets[_marketIdx];
         requestNonce += 1;
-        uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
 
         PendingLimitOrder newRequest = PendingLimitOrder(
             _user,
@@ -210,7 +209,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _market.fees.borrowBaseRatePerHour,
             _referrer,
             _assetPrice,
-            positionSizeAsset,
             _stopLossTriggerPrice,
             _takeProfitTriggerPrice,
             _meta
@@ -363,7 +361,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         address _executor,
         LimitPositionIdx[] _limitPositions,
         Callback.CallMeta _meta
-    ) internal {
+    ) internal view {
         uint128 value = uint128(_limitPositions.length * Gas.EXECUTE_LIMIT_ORDER_VALUE);
         address proxy = _deployOracleProxy(_marketIdx, _meta);
         IOracleProxy(proxy).setExecuteLimitCallback{
@@ -512,15 +510,16 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         collateralReserve -= collateral;
 
         emit CancelLimitOrder(meta.callId, user, positionKey);
-        if (positionHasTriggers) {
-            ILimitBotVault(limitBotVault).sendTo{
-                value: 0.01 ever,
-                flag: 0
-            }(
-                user,
-                Gas.TRIGGER_ORDER_VALUE - 0.06 ever + Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever
-            );
-        }
+        uint128 unusedTriggerValue = positionHasTriggers ? Gas.TRIGGER_ORDER_VALUE - 0.06 ever : 0;
+        uint128 totalUnusedValue = Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever + unusedTriggerValue;
+
+        ILimitBotVault(limitBotVault).sendTo{
+            value: 0.01 ever,
+            flag: 0
+        }(
+            user,
+            totalUnusedValue
+        );
 
         _transfer(
             usdt.wallet,

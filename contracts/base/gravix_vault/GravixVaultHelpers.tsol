@@ -292,10 +292,10 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         TvmSlice slice = payload.toSlice();
         // 1 uint8 + 2 uint32 and 1 cell
         (uint16 bits, uint8 refs) = slice.size();
-//        if ((bits == 8 + 32 + 32) && (refs == 1) && payload.toSlice().decode(uint8) <= uint8(Action.RemoveCollateral)) {
+        if ((bits == 8 + 32 + 32) && (refs == 1) && payload.toSlice().decode(uint8) <= uint8(Action.RemoveCollateral)) {
             (action, nonce, callId, actionPayload) = abi.decode(payload, (Action, uint32, uint32, TvmCell));
             correct = true;
-//        }
+        }
     }
 
     function checkSign(

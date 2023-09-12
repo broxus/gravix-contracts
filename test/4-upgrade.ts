@@ -127,7 +127,6 @@ describe("Testing main orders flow", async function () {
 
             const deposit_amount = 10000000 * USDT_DECIMALS;
             const { traceTree } = await locklift.tracing.trace(vault.addLiquidity(userUsdtWallet, deposit_amount));
-            await traceTree?.beautyPrint();
             expect(traceTree).to.emit("LiquidityPoolDeposit").withNamedArgs({
                 usdtAmountIn: deposit_amount.toString(),
                 stgUsdtAmountOut: deposit_amount.toString(),
@@ -150,7 +149,6 @@ describe("Testing main orders flow", async function () {
                 await vault.deployGravixAccount(user);
                 {
                     const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
                 }
                 const oldAccountVersion = await vault
                     .account(user)
@@ -204,7 +202,6 @@ describe("Testing main orders flow", async function () {
             it("Try to close position with outdated account version", async function () {
                 {
                     const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
                 }
                 const oldAccountVersion = await vault
                     .account(user)
@@ -234,7 +231,6 @@ describe("Testing main orders flow", async function () {
             it("Try to add collateral position with outdated account version", async function () {
                 {
                     const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
                 }
                 const oldAccountVersion = await vault
                     .account(user)
@@ -266,7 +262,6 @@ describe("Testing main orders flow", async function () {
             it("Try to remove collateral position with outdated account version", async function () {
                 {
                     const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
                 }
                 const oldAccountVersion = await vault
                     .account(user)
@@ -298,7 +293,6 @@ describe("Testing main orders flow", async function () {
             it("Try to liquidate position with outdated account version", async function () {
                 {
                     const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
                 }
                 const oldAccountVersion = await vault
                     .account(user)
@@ -318,7 +312,6 @@ describe("Testing main orders flow", async function () {
                         ],
                     ]),
                 );
-                await traceTree?.beautyPrint();
                 const newVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
