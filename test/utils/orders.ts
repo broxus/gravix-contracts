@@ -201,7 +201,6 @@ export async function openMarketOrderWithTests(
         ),
         { allowedCodes: { compute: [null] } },
     );
-    await traceTree?.beautyPrint();
     const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
@@ -338,7 +337,6 @@ export async function openLimitWithTestsOrder({
         }),
         { allowedCodes: { compute: [null] } },
     );
-    await traceTree?.beautyPrint();
 
     const account = await vault.account(user);
 
@@ -396,7 +394,6 @@ export async function openLimitWithTestsOrder({
                     amount: toNano(10),
                 }),
         );
-        await traceTree?.beautyPrint();
     }
     const { colUp, posUp, liqPrice } = await checkOpenedPositionMath({
         market,
@@ -618,7 +615,6 @@ export const closeOrderWithTraceTree = async ({
                   ],
               }),
     );
-    await traceTree1?.beautyPrint();
     const event = await vault.getEvent("ClosePosition");
     // @ts-ignore
     const posView2 = event.positionView;

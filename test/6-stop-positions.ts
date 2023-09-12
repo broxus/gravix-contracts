@@ -126,7 +126,6 @@ describe("Testing main orders flow", async function () {
 
             const deposit_amount = 10000000 * USDT_DECIMALS;
             const { traceTree } = await locklift.tracing.trace(vault.addLiquidity(userUsdtWallet, deposit_amount));
-            await traceTree?.beautyPrint();
             expect(traceTree).to.emit("LiquidityPoolDeposit").withNamedArgs({
                 usdtAmountIn: deposit_amount.toString(),
                 stgUsdtAmountOut: deposit_amount.toString(),
@@ -590,7 +589,6 @@ describe("Testing main orders flow", async function () {
                                 amount: toNano(2),
                             }),
                     );
-                    await traceTree?.beautyPrint();
                     const account = await vault.account(user);
                     const positions = await account.positions();
                     expect(positions[0][1].takeProfit!.triggerPrice).to.be.eq((TAKE_PROFIT_PRICE * 100).toString());
@@ -643,14 +641,13 @@ describe("Testing main orders flow", async function () {
                                 amount: toNano(2),
                             }),
                     );
-                    await traceTree?.beautyPrint();
                     const account = await vault.account(user);
                     const positions = await account.positions();
                     expect(positions[0][1].takeProfit!.triggerPrice).to.be.eq((TAKE_PROFIT_PRICE * 100).toString());
                     {
                         const { traceTree } = await locklift.tracing.trace(
                             vault.contract.methods
-                                .removePositionTriggerPrices({
+                                .removePositionTriggers({
                                     _meta: {
                                         nonce: 0,
                                         callId: 0,
@@ -666,7 +663,6 @@ describe("Testing main orders flow", async function () {
                                     amount: toNano(2),
                                 }),
                         );
-                        await traceTree?.beautyPrint();
                         const positions = await account.positions();
                         expect(positions[0][1].takeProfit).to.be.eq(null);
                     }

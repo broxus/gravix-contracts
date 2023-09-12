@@ -81,7 +81,10 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         );
     }
 
-    function getPositionViewInternal(Position _position,uint128 _assetPrice) internal view returns (PositionView positionView) {
+    function getPositionViewInternal(
+        Position _position,
+        uint128 _assetPrice
+    ) internal pure returns (PositionView positionView) {
         bool isLong = _position.positionType == IGravixVault.PositionType.Long;
 
         ViewInputInternal input = ViewInputInternal({
@@ -95,7 +98,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return _getPositionView(_position, input);
     }
 
-    function _getPositionView(Position _position, ViewInputInternal input) internal view returns (PositionView positionView) {
+    function _getPositionView(Position _position, ViewInputInternal input) internal pure returns (PositionView positionView) {
         bool isLong = _position.positionType == IGravixVault.PositionType.Long;
 
         uint128 collateral = _position.initialCollateral - _position.openFee;
@@ -268,7 +271,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     function isStopLossReady(
         Position _position,
         uint128 _assetPrice
-    ) internal returns (bool) {
+    ) internal pure returns (bool) {
         optional(PositionTrigger) stopLoss = _position.stopLoss;
         if (!stopLoss.hasValue()) {
             return false;
@@ -284,7 +287,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     function isTakeProfitReady(
         Position _position,
         uint128 _assetPrice
-    ) internal returns (bool) {
+    ) internal pure returns (bool) {
         optional(PositionTrigger) takeProfit = _position.takeProfit;
         if (!takeProfit.hasValue()) {
             return false;

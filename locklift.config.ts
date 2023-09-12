@@ -50,7 +50,7 @@ const config: LockliftConfig = {
         version: "0.15.48",
     },
     networks: {
-        proxy: {
+        locklift: {
             deploy: ["local/"],
             giver: {
                 // Check if you need provide custom giver

@@ -226,7 +226,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         _handleStgUsdtBurn(amount, payload);
     }
 
-    onBounce(TvmSlice slice) external {
+    onBounce(TvmSlice slice) external view {
         tvm.accept();
 
         uint32 functionId = slice.decode(uint32);

@@ -16,8 +16,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         LiquidityWithdraw,
         InsuranceDeposit,
         AddCollateral,
-        RemoveCollateral,
-        LimitOrder
+        LimitOrder,
+        RemoveCollateral
     }
 
     enum LimitOrderType { Limit, Stop }
@@ -180,7 +180,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64 borrowBaseRatePerHour; // %
         address referrer;
         uint128 assetPrice;
-        uint128 positionSizeAsset;
         uint128 stopLossTriggerPrice;
         uint128 takeProfitTriggerPrice;
         Callback.CallMeta meta;
@@ -373,7 +372,14 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event RemovePositionCollateralRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx, uint128 amount);
     event Debt(uint32 callId, address user, uint128 debt);
     event ExecutePositionTriggerRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
-    event RemovePositionTriggers(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
+    event RemovePositionTriggers(
+        uint32 callId,
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        bool stopLossRemoved,
+        bool takeProfitRemoved
+    );
     event RevertRemovePositionTriggers(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
     event LiquidatePosition(uint32 callId, address user, address liquidator, uint32 positionKey, IGravixAccount.PositionView positionView);
     event LiquidatePositionRevert(uint32 callId, address liquidator, address user, uint32 positionKey, uint32 marketIdx);
@@ -541,6 +547,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 marketIdx,
         uint32 prevPositionTriggerPricesCount,
         uint32 currentPositionTriggerPricesCount,
+        bool stopLossRemoved,
+        bool takeProfitRemoved,
         Callback.CallMeta _meta
     ) external;
     function revert_removePositionTriggers(

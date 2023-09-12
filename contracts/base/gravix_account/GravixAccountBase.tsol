@@ -67,7 +67,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
-    function retrieveReferrers() internal {
+    function retrieveReferrers() internal view {
         address referrerAcc = _getGravixAccountAddress(referrer);
         IGravixAccount(referrerAcc).getReferrer{
             value: Gas.GET_REFERRER_VALUE,
@@ -608,10 +608,13 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
         uint32 prevCountOfStops;
         uint32 updatedCountOfStops;
+        bool stopLossRemoved;
+        bool takeProfitRemoved;
 
         if (position.stopLoss.hasValue()) {
             prevCountOfStops += 1;
             if (_removeStopLoss) {
+                stopLossRemoved = true;
                 updatedCountOfStops += 1;
                 position.stopLoss = null;
             }
@@ -619,6 +622,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (position.takeProfit.hasValue()) {
             prevCountOfStops += 1;
             if (_removeTakeProfit) {
+                takeProfitRemoved = true;
                 updatedCountOfStops += 1;
                 position.takeProfit = null;
             }
@@ -632,6 +636,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _marketIdx,
             prevCountOfStops,
             updatedCountOfStops,
+            stopLossRemoved,
+            takeProfitRemoved,
             _meta
         );
     }

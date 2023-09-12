@@ -365,13 +365,17 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint32 _marketIdx,
         uint32 _prevPositionTriggerPricesCount,
         uint32 _currentPositionTriggerPricesCount,
+        bool _stopLossRemoved,
+        bool _takeProfitRemoved,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
         emit RemovePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
-            _marketIdx
+            _marketIdx,
+            _stopLossRemoved,
+            _takeProfitRemoved
         );
 
         if (_prevPositionTriggerPricesCount >= 1 && _currentPositionTriggerPricesCount == 0) {
@@ -802,7 +806,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _executor,
         PositionTriggerIdx[] _triggerPositions,
         Callback.CallMeta _meta
-    ) internal {
+    ) internal view {
         address proxy = _deployOracleProxy(_marketIdx, _meta);
 
         uint128 value = uint128(_triggerPositions.length * Gas.EXECUTE_STOP_ORDER_VALUE);

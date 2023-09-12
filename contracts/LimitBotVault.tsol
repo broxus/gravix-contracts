@@ -42,7 +42,7 @@ contract LimitBotVault is ILimitBotVault {
         freeBalanceThreshold = _threshold;
     }
 
-    function _reserveWithValue(uint128 _value) internal returns (uint128) {
+    function _reserveWithValue(uint128 _value) internal pure returns (uint128) {
         return math.max(address(this).balance - (msg.value + _value), CONTRACT_MIN_BALANCE);
     }
 
