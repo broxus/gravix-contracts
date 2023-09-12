@@ -1,15 +1,13 @@
 pragma ever-solidity ^0.62.0;
 
 
-
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "../../libraries/Gas.tsol";
-import "../../libraries/Callback.tsol";
 import "../../interfaces/IGravixAccount.tsol";
-import "../../interfaces/IOracleProxy.tsol";
-import "./GravixVaultMarkets.tsol";
-import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 import "../../interfaces/ILimitBotVault.tsol";
+import "../../interfaces/IOracleProxy.tsol";
+import "../../libraries/Callback.tsol";
+import "../../libraries/Gas.tsol";
+import "./GravixVaultMarkets.tsol";
+import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
 abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     // region validators
@@ -363,8 +361,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
-        uint32 _prevPositionTriggerPricesCount,
-        uint32 _currentPositionTriggerPricesCount,
+        uint32 _prevPositionTriggerCount,
+        uint32 _currentPositionTriggerCount,
         bool _stopLossRemoved,
         bool _takeProfitRemoved,
         Callback.CallMeta _meta
@@ -378,7 +376,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             _takeProfitRemoved
         );
 
-        if (_prevPositionTriggerPricesCount >= 1 && _currentPositionTriggerPricesCount == 0) {
+        if (_prevPositionTriggerCount >= 1 && _currentPositionTriggerCount == 0) {
             ILimitBotVault(limitBotVault).sendTo{value: 0.01 ever}(_user, Gas.TRIGGER_ORDER_VALUE - 0.06 ever);
         }
     }
