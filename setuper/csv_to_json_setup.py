@@ -36,11 +36,12 @@ price_node_setup = []
 BASE_DECIMALS = 10**6
 with open('gravix_setup.csv', 'r') as f:
     reader = csv.reader(f, delimiter=',')
-    next(reader)
+    tmp = next(reader)
+    print ('Skipping', tmp)
     for row in reader:
         _type, idx, chain_id, ticker, open_fee, close_fee, borrow_fee, funding_fee, depth, spread, dyn_spread, max_lev, ttl = row
         conf = {
-            "priceSource": 2,
+            "priceSource": 1,
             "maxLongsUSD": 100_000_000_000, # 100k
             "maxShortsUSD": 100_000_000_000, # 100k
             "noiWeight": 100,
@@ -59,7 +60,6 @@ with open('gravix_setup.csv', 'r') as f:
         }
         ttl2 = int(float(ttl.replace(',', '')))
         oracle_conf = {
-            "chainlink": {"ticker": ticker, "chainID": int(chain_id), "ttl": ttl2},  # 24h for testing
             "dex": {"targetToken": "0:0000000000000000000000000000000000000000000000000000000000000000", "path": []},
             "priceNode": {
                 "ticker": ticker,
@@ -89,6 +89,6 @@ with open('oracle_setup.json', 'w') as f:
 with open('price_node_configs.json', 'w') as f:
     json.dump(price_node_setup, f)
 
-print (json.dumps(setup, sort_keys=True, indent=4))
-print (json.dumps(oracle_setup, sort_keys=True, indent=4))
-print (json.dumps(price_node_setup, sort_keys=True, indent=4))
+# print (json.dumps(setup, sort_keys=True, indent=4))
+# print (json.dumps(oracle_setup, sort_keys=True, indent=4))
+# print (json.dumps(price_node_setup, sort_keys=True, indent=4))

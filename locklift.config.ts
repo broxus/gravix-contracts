@@ -33,7 +33,7 @@ const config: LockliftConfig = {
 
         // Specify config for external contracts as in example
         externalContracts: {
-            "node_modules/@broxus/tip3/build": [
+            "node_modules/@broxus/tip3/contracts": [
                 "TokenRootUpgradeable",
                 "TokenWalletUpgradeable",
                 "TokenWalletPlatform",
@@ -50,13 +50,8 @@ const config: LockliftConfig = {
         version: "0.15.48",
     },
     networks: {
-        proxy: {
+        locklift: {
             deploy: ["local/"],
-            giver: {
-                // Check if you need provide custom giver
-                address: "0:ece57bcc6c530283becbbd8a3b24d3c5987cdddc3c8b7b33be6e4a6312490415",
-                key: "172af540e43a524763dd53b26a066d472a97c4de37d5498170564510608250c3",
-            },
             connection: {
                 id: 1001,
                 // @ts-ignore
@@ -117,7 +112,7 @@ const config: LockliftConfig = {
                 key: process.env.TESTNET_GIVER_KEY ?? "",
             },
             tracing: {
-                endpoint: process.env.TEST_GQL_ENDPOINT ?? "",
+                endpoint: process.env.TEST_GQL_ENDPOINT
             },
 
             keys: {
@@ -133,9 +128,6 @@ const config: LockliftConfig = {
             giver: {
                 address: "0:3bcef54ea5fe3e68ac31b17799cdea8b7cffd4da75b0b1a70b93a18b5c87f723",
                 key: process.env.MAIN_GIVER_KEY ?? "",
-            },
-            tracing: {
-                endpoint: process.env.MAIN_GQL_ENDPOINT ?? "",
             },
             keys: {
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
@@ -155,9 +147,6 @@ const config: LockliftConfig = {
                 address: "0:73a868302a14a05ee6de24eed367bd42e7cd345406bb12e5fc6749de91a579ff",
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
                 accountId: 0,
-            },
-            tracing: {
-                endpoint: process.env.MAIN_GQL_ENDPOINT ?? "",
             },
             keys: {
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
