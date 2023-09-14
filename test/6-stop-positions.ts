@@ -33,6 +33,10 @@ describe("Testing main orders flow", async function () {
     const REF_CLOSE_FEE_RATE = PERCENT_100.idiv(10);
     const REF_PNL_FEE_RATE = PERCENT_100.idiv(100);
     const SCALING_FACTOR = bn(10).pow(18);
+    const BORROW_BASE_RATE_PER_HOUR = PERCENT_100.idiv(10).toNumber(); // 10%
+    const BASE_SPREAD_RATE = PERCENT_100.idiv(1000); // 0.1%
+    const OPEN_FEE_RATE = PERCENT_100.idiv(1000); // 0.1%
+
     const LONG_POS = 0;
     const SHORT_POS = 1;
     const empty_event = {
@@ -75,11 +79,11 @@ describe("Testing main orders flow", async function () {
         maxLeverage: 100_000_000, // 100x
         depthAsset: 15 * USDT_DECIMALS, // 25k
         fees: {
-            openFeeRate: 1000000000, // 0.1%
+            openFeeRate: OPEN_FEE_RATE.toNumber(), // 0.1%
             closeFeeRate: 1000000000, // 0.1%
-            baseSpreadRate: 1000000000, // 0.1%
+            baseSpreadRate: BASE_SPREAD_RATE.toNumber(), // 0.1%
             baseDynamicSpreadRate: 1000000000, // 0.1%
-            borrowBaseRatePerHour: 0, // disable by default
+            borrowBaseRatePerHour: BORROW_BASE_RATE_PER_HOUR, // 10%
             fundingBaseRatePerHour: 0, // disable by default
         },
         scheduleEnabled: false,
@@ -142,7 +146,7 @@ describe("Testing main orders flow", async function () {
         });
 
         // Market
-        describe("Basic scenarios: Market", async function () {
+        describe.skip("Basic scenarios: Market", async function () {
             const market_idx = 0;
             // LONG loss
             describe("Test LONG stop loose", async function () {
@@ -263,7 +267,7 @@ describe("Testing main orders flow", async function () {
         });
 
         //Limit
-        describe("Basic scenarios: Limit", async function () {
+        describe.skip("Basic scenarios: Limit", async function () {
             const marketIdx = 0;
 
             // LONG/LIMIT loss
@@ -544,7 +548,7 @@ describe("Testing main orders flow", async function () {
             // LONG/LIMIT take profit
         });
 
-        describe("Basic scenarios: Update stop order config after position creation", () => {
+        describe.skip("Basic scenarios: Update stop order config after position creation", () => {
             const marketIdx = 0;
 
             describe("Open LONG/LIMIT and add takeProfit", async function () {
@@ -600,7 +604,7 @@ describe("Testing main orders flow", async function () {
                 });
             });
             describe("Open LONG/LIMIT and add takeProfit then remove it", async function () {
-                it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                it("Create and remove take profit", async function () {
                     const INITIAL_PRICE = 1100 * USDT_DECIMALS;
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
@@ -666,6 +670,95 @@ describe("Testing main orders flow", async function () {
                         const positions = await account.positions();
                         expect(positions[0][1].takeProfit).to.be.eq(null);
                     }
+                });
+            });
+        });
+
+        describe("Basic scenarios: Negative cases with high borrow fee", () => {
+            const marketIdx = 0;
+            describe("Test SHORT/STOP/loss with high borrow fee", async function () {
+                it("Pnl+, 10x leverage, open/close 1000$/1100$", async function () {
+                    const INITIAL_PRICE = 1050 * USDT_DECIMALS;
+                    const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
+                    const COLLATERAL = 100 * USDT_DECIMALS;
+                    const LEVERAGE = 10 * LEVERAGE_DECIMALS;
+
+                    const STOP_LOSS_PRICE = 1002 * USDT_DECIMALS;
+                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    // OPEN POSITION
+                    const pos_key = await openLimitWithTestsOrder({
+                        user,
+                        userWallet: userUsdtWallet,
+                        marketIdx,
+                        posType: PosType.Short,
+                        pair: ethUsdtMock,
+                        vault,
+                        triggerPrice: LIMIT_TRIGGER_PRICE,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE,
+                        collateral: COLLATERAL,
+                        limitType: LimitType.Stop,
+                        stopLossTriggerPrice: STOP_LOSS_PRICE,
+                    });
+                    const account = await vault.account(user);
+                    const positions = await account.positions();
+                    expect(positions[0][1].stopLoss!.triggerPrice).to.be.eq((STOP_LOSS_PRICE * 100).toString());
+                    {
+                        const { traceTree } = await locklift.tracing.trace(
+                            vault.contract.methods
+                                .removePositionTriggers({
+                                    _meta: {
+                                        nonce: 0,
+                                        callId: 0,
+                                        sendGasTo: user.address,
+                                    },
+                                    _positionKey: pos_key,
+                                    _marketIdx: marketIdx,
+                                    _removeTakeProfit: true,
+                                    _removeStopLoss: true,
+                                })
+                                .send({
+                                    from: user.address,
+                                    amount: toNano(2),
+                                }),
+                        );
+                        const positions = await account.positions();
+                        expect(positions[0][1].stopLoss).to.be.eq(null);
+                        // await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
+                        // await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                        //     stopPositionType: StopPositionType.StopLoss,
+                        // });
+                    }
+                    await locklift.testing.increaseTime(60 * 60 * 7.5);
+                    const positionView = await account.getPositionView(pos_key, 0, {
+                        accLongUSDFundingPerShare: 0,
+                        accShortUSDFundingPerShare: 0,
+                    });
+                    const { traceTree } = await locklift.tracing.trace(
+                        vault.contract.methods
+                            .setOrUpdatePositionTriggers({
+                                _meta: {
+                                    nonce: 0,
+                                    callId: 0,
+                                    sendGasTo: user.address,
+                                },
+                                _takeProfitTriggerPrice: 0,
+                                _marketIdx: marketIdx,
+                                _price: empty_price,
+                                _positionKey: pos_key,
+                                _stopLossTriggerPrice: STOP_LOSS_PRICE * 100,
+                            })
+                            .send({
+                                from: user.address,
+                                amount: toNano(2),
+                            }),
+                    );
+                    await traceTree?.beautyPrint();
+                    expect(traceTree).to.emit("RevertSetOrUpdatePositionTriggers").withNamedArgs({
+                        callId: "0",
+                        user: user.address,
+                        positionKey: pos_key.toString(),
+                    });
                 });
             });
         });

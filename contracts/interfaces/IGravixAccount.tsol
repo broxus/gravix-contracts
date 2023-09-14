@@ -7,6 +7,10 @@ import "./IGravixVault.tsol";
 
 
 interface IGravixAccount {
+    enum LimitOrderSate {
+        Pending,
+        Opened
+    }
     struct PositionTrigger {
         uint128 triggerPrice;
         uint32 createdAt;
@@ -41,6 +45,7 @@ interface IGravixAccount {
         uint64 borrowBaseRatePerHour; // %
         uint128 stopLossTriggerPrice;
         uint128 takeProfitTriggerPrice;
+        LimitOrderSate state;
     }
 
     struct Position {
@@ -114,6 +119,13 @@ interface IGravixAccount {
         IGravixVault.PendingLimitOrder _pendingRequest,
         uint64 _maxPnlRate,
         uint64 _minStopLossRate,
+        optional(uint32) _positionKey,
+        uint32 _accountVersion
+    ) external;
+
+    function process_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
         uint32 _accountVersion
     ) external;
 

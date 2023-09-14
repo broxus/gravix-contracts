@@ -251,12 +251,50 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             user, _positionKey, _request.collateral, _meta
         );
     }
+    function process_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        if (!isLatestVersion(_accountVersion)) {
+            requestUpgrade(user, currentVersion, _pendingRequest.meta);
+            IGravixVault(vault).revert_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _reqNonce,
+                _pendingRequest
+            );
+            return;
+        }
 
+        requestCounter += 1;
+        limitOrders[requestCounter] = LimitOrder(
+            _pendingRequest.marketIdx,
+            _pendingRequest.positionType,
+            _pendingRequest.orderType,
+            _pendingRequest.collateral,
+            _pendingRequest.triggerPrice,
+            _pendingRequest.leverage,
+            _pendingRequest.openFeeRate,
+            _pendingRequest.closeFeeRate,
+            _pendingRequest.baseSpreadRate,
+            _pendingRequest.liquidationThresholdRate,
+            _pendingRequest.borrowBaseRatePerHour,
+            _pendingRequest.stopLossTriggerPrice,
+            _pendingRequest.takeProfitTriggerPrice,
+            LimitOrderSate.Pending
+        );
+
+        IGravixVault(vault).finish_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _reqNonce,
+            _pendingRequest,
+            requestCounter
+        );
+    }
     function process_requestLimitOrder(
         uint32 _reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
         uint64 _maxPnlRate,
         uint64 _minStopLossRate,
+        optional(uint32) _positionKey,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
@@ -323,22 +361,29 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             retrieveReferrers();
         }
 
-        requestCounter += 1;
-        limitOrders[requestCounter] = LimitOrder(
-            _pendingRequest.marketIdx,
-            _pendingRequest.positionType,
-            _pendingRequest.orderType,
-            _pendingRequest.collateral,
-            _pendingRequest.triggerPrice,
-            _pendingRequest.leverage,
-            _pendingRequest.openFeeRate,
-            _pendingRequest.closeFeeRate,
-            _pendingRequest.baseSpreadRate,
-            _pendingRequest.liquidationThresholdRate,
-            _pendingRequest.borrowBaseRatePerHour,
-            _pendingRequest.stopLossTriggerPrice,
-            _pendingRequest.takeProfitTriggerPrice
-        );
+
+        if (_positionKey.hasValue()) {
+            limitOrders[_positionKey.get()].state = LimitOrderSate.Opened;
+        } else {
+            requestCounter += 1;
+            limitOrders[requestCounter] = LimitOrder(
+                _pendingRequest.marketIdx,
+                _pendingRequest.positionType,
+                _pendingRequest.orderType,
+                _pendingRequest.collateral,
+                _pendingRequest.triggerPrice,
+                _pendingRequest.leverage,
+                _pendingRequest.openFeeRate,
+                _pendingRequest.closeFeeRate,
+                _pendingRequest.baseSpreadRate,
+                _pendingRequest.liquidationThresholdRate,
+                _pendingRequest.borrowBaseRatePerHour,
+                _pendingRequest.stopLossTriggerPrice,
+                _pendingRequest.takeProfitTriggerPrice,
+                LimitOrderSate.Opened
+            );
+        }
+
 
         IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _reqNonce,

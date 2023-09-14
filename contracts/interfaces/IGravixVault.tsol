@@ -241,6 +241,44 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address devFund;
     }
 
+    struct UpgradeStorage {
+        Managers managers;
+        address priceNode;
+        uint256 pricePubkey;
+        TokenData usdt;
+        TokenData stgUsdt;
+        Treasuries treasuries;
+        TvmCell platformCode;
+        uint32 gravixVaultVersion;
+        CodeWithVersion oracleProxyCode;
+        CodeWithVersion gravixAccountCode;
+        PoolAssets poolAssets;
+        InsuranceFund insuranceFund; // collected fees, pnl and etc.
+        uint64[3] insuranceFundOverflowDistributionSchema;
+        uint64[3] referralFeeSchema;
+        uint64[3] grandReferralFeeSchema;
+        uint128 collateralReserve; // sum of all usdt provided as a collateral for open order
+        uint128 totalNOI;
+        bool totalNOILimitEnabled;
+        uint64 maxPoolUtilRatio;
+        uint64 maxPnlRate;
+        uint128 minPositionCollateral;
+        bool paused;
+        LiquidationParams liquidationParams;
+        uint64 minStopLossRate;
+        uint64[2] openFeeDistributionSchema;
+        uint64[2] closeFeeDistributionSchema;
+        uint32 marketCount;
+        mapping (uint32 => Market) markets;
+        mapping (uint32 => mapping (uint8 => TimeInterval[])) workingHours;
+        mapping (uint32 => mapping (uint32 => DateTimeInterval)) weekends;
+        mapping (uint32 => OracleConfig) oracleConfigs;
+        uint32 requestNonce;
+        mapping (uint32 => PendingMarketOrder) pendingMarketRequests;
+        mapping (uint32 => PendingLimitOrder) pendingLimitRequests;
+        address limitBotVault;
+    }
+
     event NewOwner(uint32 callId, address newOwner);
     event GravixAccountCodeUpdate(uint32 callId, uint32 oldVersion, uint32 newVersion);
     event OracleProxyCodeUpdate(uint32 callId, uint32 oldVersion, uint32 newVersion);
@@ -280,6 +318,22 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     );
 
     event LimitOrderRequestRevert(uint32 callId, address user);
+    event LimitOrderPendingRequestRevert(uint32 callId, address user);
+
+
+    event PendingLimitOrderCreated(
+        uint32 callId,
+        address user,
+        uint32 marketIdx,
+        PositionType positionType,
+        uint128 collateral,
+        uint128 triggerPrice,
+        LimitOrderType limitType,
+        uint128 stopLossTriggerPrice,
+        uint128 takeProfitTriggerPrice,
+        uint32 leverage,
+        uint32 positionKey
+    );
 
     event LimitOrder(
         uint32 callId,
@@ -424,6 +478,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function finish_cancelMarketOrder(address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta) external;
     function oracle_requestLimitOrder(
         uint64 _nonce,
+        uint32 _positionKey,
         address _user,
         uint32 _marketIdx,
         PositionType _positionType,
@@ -441,7 +496,15 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 _reqNonce,
         PendingLimitOrder _pendRequest
     ) external;
-
+    function finish_requestPendingLimitOrder(
+        uint32 reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _positionKey
+    ) external;
+    function revert_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest
+    ) external;
     function finish_requestLimitOrder(
         uint32 reqNonce,
         PendingLimitOrder request,

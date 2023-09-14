@@ -748,7 +748,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             } else if (isPositionHasTriggerPrice) {
                 // if position was closed by limit bot, we need to mark reserved value as free
                 // value 1 and flag 0 means that we are not sending any money
-                ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: 1, bounce: false}(Gas.TRIGGER_ORDER_VALUE);
+                ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.TRIGGER_ORDER_VALUE);
             }
                 // if position was closed by limit bot, we already emitted this event
             emit ClosePosition(_meta.callId, _user, _positionKey, _positionView);

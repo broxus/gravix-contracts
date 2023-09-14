@@ -98,23 +98,129 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 takeProfitTriggerPrice,
                 _referrer,
                 _meta,
-                _price.price
+                _price.price,
+                null
             );
             return;
         }
-        _sendOpenLimitOrderOracleRequest(
+        _requestPendingLimitOrder(
             _user,
-            requestNonce,
             _marketIdx,
+            _positionType,
             _collateral,
             _leverage,
-            _positionType,
-            _limitOrderType,
-            _referrer,
             _triggerPrice,
+            _limitOrderType,
             stopLossTriggerPrice,
             takeProfitTriggerPrice,
+            _referrer,
             _meta
+        );
+    }
+
+
+    function _requestPendingLimitOrder(
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _triggerPrice,
+        LimitOrderType _limitOrderType,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        address _referrer,
+        Callback.CallMeta _meta
+    ) internal {
+        Market _market = markets[_marketIdx];
+        requestNonce += 1;
+
+        PendingLimitOrder newRequest = PendingLimitOrder(
+            _user,
+            _marketIdx,
+            _positionType,
+            _collateral,
+            _triggerPrice,
+            _limitOrderType,
+            _leverage,
+            _market.fees.openFeeRate,
+            _market.fees.closeFeeRate,
+            _market.fees.baseSpreadRate,
+            liquidationParams.thresholdRate,
+            _market.fees.borrowBaseRatePerHour,
+            _referrer,
+            0,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _meta
+        );
+        pendingLimitRequests[requestNonce] = newRequest;
+
+        address gravixAcc = getGravixAccountAddress(_user);
+
+        IGravixAccount(gravixAcc).process_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            requestNonce,
+            newRequest,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest
+    ) external override onlyGravixAccount(_pendingRequest.user) reserve {
+        delete pendingLimitRequests[_reqNonce];
+        emit LimitOrderPendingRequestRevert(_pendingRequest.meta.callId, _pendingRequest.user);
+        if (_pendingRequest.collateral > 0) {
+            _transfer(
+                usdt.wallet,
+                _pendingRequest.collateral,
+                _pendingRequest.user,
+                _makeCell(_pendingRequest.meta.nonce),
+                _pendingRequest.meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(
+                _pendingRequest.user,
+                _pendingRequest.meta.nonce,
+                false, _pendingRequest.meta.sendGasTo
+            );
+        }
+    }
+    function finish_requestPendingLimitOrder(
+        uint32 reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _positionKey
+    ) external override onlyGravixAccount(_pendingRequest.user) reserve {
+        delete pendingLimitRequests[reqNonce];
+
+        emit PendingLimitOrderCreated(
+            _pendingRequest.meta.callId,
+            _pendingRequest.user,
+            _pendingRequest.marketIdx,
+            _pendingRequest.positionType,
+            _pendingRequest.collateral,
+            _pendingRequest.triggerPrice,
+            _pendingRequest.orderType,
+            _pendingRequest.stopLossTriggerPrice,
+            _pendingRequest.takeProfitTriggerPrice,
+            _pendingRequest.leverage,
+            _positionKey
+        );
+        _sendOpenLimitOrderOracleRequest(
+            _pendingRequest.user,
+            _positionKey,
+            _pendingRequest.marketIdx,
+            _pendingRequest.collateral,
+            _pendingRequest.leverage,
+            _pendingRequest.positionType,
+            _pendingRequest.orderType,
+            _pendingRequest.referrer,
+            _pendingRequest.triggerPrice,
+            _pendingRequest.stopLossTriggerPrice,
+            _pendingRequest.takeProfitTriggerPrice,
+            _pendingRequest.meta
         );
     }
 
@@ -148,6 +254,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     }
     function oracle_requestLimitOrder(
         uint64 _nonce,
+        uint32 _positionKey,
         address _user,
         uint32 _marketIdx,
         PositionType _positionType,
@@ -173,7 +280,8 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             takeProfitTriggerPrice,
             _referrer,
             _meta,
-            _assetPrice
+            _assetPrice,
+            _positionKey
         );
     }
 
@@ -189,7 +297,8 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint128 _takeProfitTriggerPrice,
         address _referrer,
         Callback.CallMeta _meta,
-        uint128 _assetPrice
+        uint128 _assetPrice,
+        optional(uint32) _positionKey
     ) internal {
         Market _market = markets[_marketIdx];
         requestNonce += 1;
@@ -213,7 +322,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _takeProfitTriggerPrice,
             _meta
         );
-        pendingLimitRequests[requestNonce] = newRequest;
+
+        if (!_positionKey.hasValue()) {
+            pendingLimitRequests[requestNonce] = newRequest;
+        }
 
         address gravixAcc = getGravixAccountAddress(_user);
 
@@ -222,6 +334,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             newRequest,
             maxPnlRate,
             minStopLossRate,
+            _positionKey,
             gravixAccountCode.version
         );
     }
@@ -463,7 +576,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
         uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
         _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
-        ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: 1, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
+        ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
 
         emit LimitOrderExecution(
             meta.callId,
@@ -515,7 +628,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
         ILimitBotVault(limitBotVault).sendTo{
             value: 0.01 ever,
-            flag: 0
+            flag: MsgFlag.SENDER_PAYS_FEES
         }(
             user,
             totalUnusedValue

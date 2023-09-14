@@ -10,3 +10,7 @@ export enum StopPositionType {
     StopLoss = 0,
     TakeProfit = 1,
 }
+export enum LimitOrderSate {
+    Pending = "0",
+    Executed = "1",
+}

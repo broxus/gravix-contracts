@@ -5,7 +5,7 @@ import BigNumber from "bignumber.js";
 import { GravixVaultAbi, PairMockAbi } from "../../build/factorySource";
 import { bn, getPriceForLimitOrder, toUSD, tryIncreaseTime } from "./common";
 import { TokenWallet } from "./wrappers/token_wallet";
-import { LimitType, PosType } from "./constants";
+import { LimitOrderSate, LimitType, PosType } from "./constants";
 import { GravixAccount } from "./wrappers/vault_acc";
 import { ViewTracingTree } from "locklift/internal/tracing/viewTraceTree/viewTracingTree";
 
@@ -337,12 +337,28 @@ export async function openLimitWithTestsOrder({
         }),
         { allowedCodes: { compute: [null] } },
     );
-
-    const account = await vault.account(user);
-
+    await traceTree?.beautyPrint();
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
-
+    const [{ positionKey: pendingLimitOrderPosKey }] = traceTree?.findEventsForContract({
+        contract: vault.contract,
+        name: "PendingLimitOrderCreated" as const,
+    })!;
+    const [{ positionKey }] = traceTree?.findEventsForContract({
+        contract: vault.contract,
+        name: "LimitOrder" as const,
+    })!;
     expect(traceTree)
+        .to.emit("PendingLimitOrderCreated")
+        .withNamedArgs({
+            callId: callId.toFixed(),
+            user: user.address,
+            marketIdx: marketIdx.toString(),
+            positionType: posType.toString(),
+            collateral: collateral.toString(),
+            triggerPrice: (triggerPrice * 100).toString(),
+            limitType: limitType.toString(),
+            positionKey: pendingLimitOrderPosKey,
+        })
         .to.emit("LimitOrder")
         .withNamedArgs({
             callId: callId.toFixed(),
@@ -353,13 +369,12 @@ export async function openLimitWithTestsOrder({
             positionType: posType.toString(),
             limitType: limitType.toString(),
             marketIdx: marketIdx.toString(),
+            positionKey: pendingLimitOrderPosKey,
         });
+    const { limitOrders } = await vault.account(user).then(acc => acc.orders());
+    const pendingLimitOrder = limitOrders.find(([posKey]) => posKey === pendingLimitOrderPosKey)!;
 
-    const { positionKey } = traceTree?.findEventsForContract({
-        contract: vault.contract,
-        name: "LimitOrder" as const,
-    })[0]!;
-
+    expect(pendingLimitOrder[1].state).to.be.eq(LimitOrderSate.Executed);
     await setPrice(pair, triggerPrice.toString());
     {
         const { traceTree } = await locklift.tracing.trace(

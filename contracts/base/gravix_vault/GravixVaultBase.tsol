@@ -256,6 +256,22 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
                 request,
                 maxPnlRate,
                 minStopLossRate,
+                // we will be here only if contract was not deployed yet, and user tried to open limit order with provided price
+                // so we should provide null as a _positionKey
+                null,
+                gravixAccountCode.version
+            );
+        }
+        if (functionId == tvm.functionId(IGravixAccount.process_requestPendingLimitOrder)) {
+            tvm.rawReserve(_reserve(), 0);
+            uint32 _requestNonce = slice.decode(uint32);
+            PendingLimitOrder request = pendingLimitRequests[_requestNonce];
+
+            address gravixAcc = _deployGravixAccount(request.user, request.referrer);
+
+            IGravixAccount(gravixAcc).process_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _requestNonce,
+                request,
                 gravixAccountCode.version
             );
         }

@@ -1,7 +1,7 @@
 import { LockliftConfig } from "locklift";
 import { FactorySource } from "./build/factorySource";
 import * as dotenv from "dotenv";
-import "locklift-verifier";
+import "@broxus/locklift-verifier";
 import "locklift-deploy";
 import { Deployments } from "locklift-deploy";
 dotenv.config();
