@@ -29,6 +29,7 @@ interface IGravixAccount {
         uint64 borrowBaseRatePerHour; // %
         uint128 stopLossTriggerPrice;
         uint128 takeProfitTriggerPrice;
+        uint32 createdAt;
     }
 
     struct LimitOrder {
@@ -46,6 +47,7 @@ interface IGravixAccount {
         uint128 stopLossTriggerPrice;
         uint128 takeProfitTriggerPrice;
         LimitOrderSate state;
+        uint32 createdAt;
     }
 
     struct Position {
@@ -95,13 +97,13 @@ interface IGravixAccount {
         uint32 accountVersion
     ) external;
     function process_cancelMarketOrder(
-        uint32 positionKey,
+        uint32 orderKey,
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;
 
     function process_executeMarketOrder(
-        uint32 _positionKey,
+        uint32 _orderKey,
         uint32 _marketIdx,
         uint128 _positionSizeAsset,
         IGravixVault.PositionType _positionType,
@@ -119,7 +121,7 @@ interface IGravixAccount {
         IGravixVault.PendingLimitOrder _pendingRequest,
         uint64 _maxPnlRate,
         uint64 _minStopLossRate,
-        optional(uint32) _positionKey,
+        optional(uint32) _orderKey,
         uint32 _accountVersion
     ) external;
 
@@ -130,7 +132,7 @@ interface IGravixAccount {
     ) external;
 
     function process_executeLimitOrder(
-        uint32 _positionKey,
+        uint32 _orderKey,
         uint32 _marketIdx,
         uint128 collateral,
         uint32 leverage,
@@ -143,7 +145,7 @@ interface IGravixAccount {
     ) external;
 
     function process_cancelLimitOrder(
-        uint32 _positionKey,
+        uint32 _orderKey,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external;

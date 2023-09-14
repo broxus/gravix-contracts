@@ -339,11 +339,11 @@ export async function openLimitWithTestsOrder({
     );
     await traceTree?.beautyPrint();
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
-    const [{ positionKey: pendingLimitOrderPosKey }] = traceTree?.findEventsForContract({
+    const [{ orderKey: pendingLimitOrderPosKey }] = traceTree?.findEventsForContract({
         contract: vault.contract,
         name: "PendingLimitOrderCreated" as const,
     })!;
-    const [{ positionKey }] = traceTree?.findEventsForContract({
+    const [{ orderKey }] = traceTree?.findEventsForContract({
         contract: vault.contract,
         name: "LimitOrder" as const,
     })!;
@@ -357,7 +357,7 @@ export async function openLimitWithTestsOrder({
             collateral: collateral.toString(),
             triggerPrice: (triggerPrice * 100).toString(),
             limitType: limitType.toString(),
-            positionKey: pendingLimitOrderPosKey,
+            orderKey: pendingLimitOrderPosKey,
         })
         .to.emit("LimitOrder")
         .withNamedArgs({
@@ -369,7 +369,7 @@ export async function openLimitWithTestsOrder({
             positionType: posType.toString(),
             limitType: limitType.toString(),
             marketIdx: marketIdx.toString(),
-            positionKey: pendingLimitOrderPosKey,
+            orderKey: pendingLimitOrderPosKey,
         });
     const { limitOrders } = await vault.account(user).then(acc => acc.orders());
     const pendingLimitOrder = limitOrders.find(([posKey]) => posKey === pendingLimitOrderPosKey)!;
@@ -385,9 +385,9 @@ export async function openLimitWithTestsOrder({
                             marketIdx,
                             {
                                 price: empty_price,
-                                positions: [
+                                orders: [
                                     {
-                                        positionKey,
+                                        orderKey: pendingLimitOrderPosKey,
                                         collateral: collateral,
                                         positionType: posType,
                                         marketIdx: marketIdx,
@@ -419,7 +419,7 @@ export async function openLimitWithTestsOrder({
         assetPrice: triggerPrice * 100,
         openFeeExpected,
         openPositionTraceTree: traceTree,
-        positionKey,
+        positionKey: orderKey,
         callId,
         user,
         vaultPrevDetails: details_prev,
@@ -439,7 +439,7 @@ export async function openLimitWithTestsOrder({
         `open fee - ${toUSD(openFeeExpected)}\$`,
     );
 
-    return Number(positionKey);
+    return Number(orderKey);
 }
 const checkOpenedPositionMath = async ({
     vault,

@@ -117,8 +117,8 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         TriggerPositionType triggerPositionType;
     }
 
-    struct LimitPositionIdx {
-        uint32 positionKey;
+    struct LimitOrderIdx {
+        uint32 orderKey;
         uint32 marketIdx;
         uint128 collateral;
         uint32 leverage;
@@ -133,7 +133,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     struct ExecuteLimitOrderData {
         IPriceNode.Price price;
-        LimitPositionIdx[] positions;
+        LimitOrderIdx[] orders;
     }
 
     struct PositionTriggerData {
@@ -300,7 +300,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 takeProfitTriggerPrice,
         uint32 leverage,
         uint64 maxSlippageRate,
-        uint32 positionKey
+        uint32 orderKey
     );
     event MarketOrderRequestRevert(uint32 callId, address user);
     event MarketOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
@@ -332,7 +332,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
         uint32 leverage,
-        uint32 positionKey
+        uint32 orderKey
     );
 
     event LimitOrder(
@@ -346,7 +346,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
         uint32 leverage,
-        uint32 positionKey
+        uint32 orderKey
     );
     event LimitOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
     event ReferralPayment(
@@ -461,10 +461,17 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
 
-    function finish_requestMarketOrder(uint32 reqNonce, PendingMarketOrder request, uint32 positionKey) external;
+    function finish_requestMarketOrder(uint32 reqNonce, PendingMarketOrder request, uint32 orderKey) external;
     function revert_requestMarketOrder(uint32 _reqNonce, PendingMarketOrder _pendRequest) external;
     function revert_executeMarketOrder(
-        address user, uint32 positionKey, uint32 marketIdx, uint128 collateral, uint128 positionSizeAsset, uint128 assetPrice, PositionType positionType, Callback.CallMeta meta
+        address user,
+        uint32 orderKey,
+        uint32 marketIdx,
+        uint128 collateral,
+        uint128 positionSizeAsset,
+        uint128 assetPrice,
+        PositionType positionType,
+        Callback.CallMeta meta
     ) external;
     function finish_executeMarketOrder(
         address user,
@@ -474,11 +481,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address grandReferrer,
         Callback.CallMeta meta
     ) external;
-    function revert_cancelMarketOrder(address user, uint32 positionKey, Callback.CallMeta meta) external view;
-    function finish_cancelMarketOrder(address user, uint32 positionKey, uint128 collateral, Callback.CallMeta meta) external;
+    function revert_cancelMarketOrder(address user, uint32 orderKey, Callback.CallMeta meta) external view;
+    function finish_cancelMarketOrder(address user, uint32 orderKey, uint128 collateral, Callback.CallMeta meta) external;
     function oracle_requestLimitOrder(
         uint64 _nonce,
-        uint32 _positionKey,
+        uint32 _orderKey,
         address _user,
         uint32 _marketIdx,
         PositionType _positionType,
@@ -499,7 +506,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function finish_requestPendingLimitOrder(
         uint32 reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest,
-        uint32 _positionKey
+        uint32 _orderKey
     ) external;
     function revert_requestPendingLimitOrder(
         uint32 _reqNonce,
@@ -508,19 +515,19 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function finish_requestLimitOrder(
         uint32 reqNonce,
         PendingLimitOrder request,
-        uint32 positionKey
+        uint32 orderKey
     ) external;
 
     function finish_cancelLimitOrder(
         address user,
-        uint32 positionKey,
+        uint32 orderKey,
         uint128 collateral,
         bool positionHasStopConfig,
         Callback.CallMeta meta
     ) external;
 
     function revert_cancelLimitOrder(
-        address user, uint32 positionKey, Callback.CallMeta meta
+        address user, uint32 orderKey, Callback.CallMeta meta
     ) external;
 
     function revert_closePosition(address user, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta) external view;
@@ -559,7 +566,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
 
     function revert_executeLimitOrder(
         address user,
-        uint32 positionKey,
+        uint32 orderKey,
         uint32 marketIdx,
         uint128 collateral,
         uint128 positionSizeAsset,
@@ -569,7 +576,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     ) external;
     function oracle_executeLimitOrder(
         uint64 _nonce,
-        LimitPositionIdx[] limitPositions,
+        LimitOrderIdx[] limitOrders,
         uint128 _assetPrice,
         Callback.CallMeta _meta
     ) external;
