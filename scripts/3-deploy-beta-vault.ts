@@ -19,7 +19,15 @@ const main = async () => {
     const stgUSDT = await setupTokenRoot("stgUSDT_test", "stgUSDT_test", user, 6);
     console.log("Deployed stgUSDT");
 
-    const vault = await setupVault(user, usdt, stgUSDT.address, user.address, oracle_contract, price_node, oracle_pubkey);
+    const vault = await setupVault(
+      user,
+      usdt,
+      stgUSDT.address,
+      user.address,
+      price_node,
+      owner,
+      oracle_pubkey
+    );
     console.log("Deployed vault");
 
     await stgUSDT.transferOwnership({ address: vault.address } as Account);

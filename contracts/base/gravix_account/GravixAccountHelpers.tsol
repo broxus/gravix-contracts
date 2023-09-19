@@ -196,7 +196,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         uint64 baseSpreadRate,
         uint64 maxPnlRate, // usually 300%
         uint64 minStopLossRate, // usually 25%
-        uint128 marketPrice, // position open price when executing order / market price when updating SL/TP
+        uint128 openPrice,
+        uint128 marketPrice,
         uint128 takeProfitTriggerPrice,
         uint128 stopLossTriggerPrice
     ) internal pure returns (bool correct) {
@@ -207,7 +208,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         if (stopLossTriggerPrice > 0) {
             // we can calculate price by just providing stop loss threshold instead of liq threshold
             uint128 minStopLossPrice = GravixMath.calculateLiquidationPrice(
-                marketPrice,
+                openPrice,
                 collateral,
                 positionType,
                 borrowFee,
@@ -229,7 +230,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             uint128 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
             uint128 takeProfitClosePrice = applyCloseSpread(takeProfitTriggerPrice, positionType, baseSpreadRate);
             int256 takeProfitPnl = GravixMath.calculatePnl(
-                marketPrice,
+                openPrice,
                 takeProfitClosePrice,
                 positionType,
                 leveragedPosition
@@ -249,7 +250,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         uint64 baseSpreadRate,
         uint64 maxPnlRate, // usually 300%
         uint64 minStopLossRate, // usually 25%
-        uint128 marketPrice, // position open price when executing order / market price when updating SL/TP
+        uint128 openPrice,
+        uint128 marketPrice,
         uint128 takeProfitTriggerPrice,
         uint128 stopLossTriggerPrice
     ) internal pure returns (bool correct) {
@@ -262,6 +264,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             baseSpreadRate,
             maxPnlRate,
             minStopLossRate,
+            openPrice,
             marketPrice,
             takeProfitTriggerPrice,
             stopLossTriggerPrice

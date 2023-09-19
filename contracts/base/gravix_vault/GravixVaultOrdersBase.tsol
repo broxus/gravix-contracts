@@ -187,16 +187,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
-            emit RevertSetOrUpdatePositionTriggers(
-                _meta.callId,
-                msg.sender,
-                _positionKey,
-                _marketIdx
-            );
-            _sendCallbackOrGas(
-                msg.sender,
-                _meta.nonce,
-                false, _meta.sendGasTo);
+            emit RevertSetOrUpdatePositionTriggers(_meta.callId, msg.sender, _positionKey, _marketIdx);
+            _sendCallbackOrGas(msg.sender, _meta.nonce, false, _meta.sendGasTo);
             return;
         }
         OracleType priceSource = markets[_marketIdx].priceSource;
