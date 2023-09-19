@@ -31,10 +31,12 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         ) = decodeMarketOrder(orderParamsPayload);
 
         uint128 valueForTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0
-            ? Gas.TRIGGER_ORDER_VALUE
+            ? Gas.OPEN_LIMIT_ORDER_RESERVE
             : 0;
 
-        require(msg.value >= Gas.MIN_MSG_VALUE + valueForTriggers, Errors.LOW_MSG_VALUE);
+        if (msg.value < Gas.MIN_MSG_VALUE + valueForTriggers) {
+            return false;
+        }
         // collateral has USDT decimals -> 6
         // price has PRICE decimals -> 8
         if (!validateOrderParams(marketIdx, collateral, leverage, maxSlippageRate)) return false;
@@ -340,7 +342,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         _addPositionToMarket(_newPos.marketIdx, positionSizeAsset, _newPos.markPrice, _newPos.positionType);
 
         if (_newPos.takeProfit.hasValue() || _newPos.stopLoss.hasValue()) {
-            limitBotVault.transfer({value: Gas.TRIGGER_ORDER_VALUE});
+            limitBotVault.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE});
         }
 
         emit MarketOrderExecution(

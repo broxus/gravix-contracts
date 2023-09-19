@@ -31,13 +31,12 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         ) = decodeLimitOrder(orderParamsPayload);
 
         uint128 valueForTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0
-            ? Gas.TRIGGER_ORDER_VALUE
+            ? Gas.OPEN_LIMIT_ORDER_RESERVE
             : 0;
 
-        require(
-            msg.value >= Gas.MIN_MSG_VALUE + Gas.OPEN_LIMIT_ORDER_RESERVE + valueForTriggers,
-            Errors.LOW_MSG_VALUE
-        );
+        if (msg.value < Gas.MIN_MSG_VALUE + Gas.OPEN_LIMIT_ORDER_RESERVE + valueForTriggers) {
+            return false;
+        }
 
         if (!validateOrderParams(marketIdx, collateral, leverage, 0)) return false;
         if (checkPositionAllowed(
@@ -385,10 +384,13 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
         // reserve evers for feature order execution
         uint128 stopOrderValue = request.stopLossTriggerPrice > 0 || request.takeProfitTriggerPrice > 0
-            ? Gas.TRIGGER_ORDER_VALUE
+            ? Gas.OPEN_LIMIT_ORDER_RESERVE
             : 0;
 
-        limitBotVault.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE + stopOrderValue});
+        limitBotVault.transfer({
+            value: Gas.OPEN_LIMIT_ORDER_RESERVE + stopOrderValue,
+            flag: MsgFlag.SENDER_PAYS_FEES
+        });
 
         _sendCallbackOrGas(
             request.user,
@@ -412,7 +414,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
-                uint128 value = uint128(limitOrders.orders.length * Gas.EXECUTE_LIMIT_ORDER_VALUE);
+                uint128 value = uint128(limitOrders.orders.length * Gas.OPEN_LIMIT_ORDER_RESERVE);
 
                 this.self_executeLimitOrders{value: value}(
                     limitOrders.orders,
@@ -473,7 +475,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         LimitOrderIdx[] _limitOrders,
         Callback.CallMeta _meta
     ) internal view {
-        uint128 value = uint128(_limitOrders.length * Gas.EXECUTE_LIMIT_ORDER_VALUE);
+        uint128 value = uint128(_limitOrders.length * Gas.OPEN_LIMIT_ORDER_RESERVE);
         address proxy = _deployOracleProxy(_marketIdx, _meta);
         IOracleProxy(proxy).setExecuteLimitCallback{
             value: value
@@ -525,7 +527,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         int256 funding = _positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
 
         IGravixAccount(gravixAcc).process_executeLimitOrder{
-            value: Gas.EXECUTE_LIMIT_ORDER_VALUE - 0.06 ever
+            value: Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever
         }(
             _orderKey,
             _marketIdx,
@@ -623,7 +625,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         collateralReserve -= _collateral;
 
         emit CancelLimitOrder(_meta.callId, _user, _orderKey);
-        uint128 unusedTriggerValue = _positionHasTriggers ? Gas.TRIGGER_ORDER_VALUE - 0.06 ever : 0;
+        uint128 unusedTriggerValue = _positionHasTriggers ? Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever : 0;
         uint128 totalUnusedValue = Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever + unusedTriggerValue;
 
         ILimitBotVault(limitBotVault).sendTo{

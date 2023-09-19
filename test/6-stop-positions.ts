@@ -146,7 +146,7 @@ describe("Testing main orders flow", async function () {
         });
 
         // Market
-        describe.skip("Basic scenarios: Market", async function () {
+        describe("Basic scenarios: Market", async function () {
             const market_idx = 0;
             // LONG loss
             describe("Test LONG stop loose", async function () {
@@ -199,7 +199,6 @@ describe("Testing main orders flow", async function () {
                     await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 1,
                     });
-                    debugger;
                 });
             });
             //SHORT loss
@@ -267,7 +266,7 @@ describe("Testing main orders flow", async function () {
         });
 
         //Limit
-        describe.skip("Basic scenarios: Limit", async function () {
+        describe("Basic scenarios: Limit", async function () {
             const marketIdx = 0;
 
             // LONG/LIMIT loss
@@ -548,7 +547,7 @@ describe("Testing main orders flow", async function () {
             // LONG/LIMIT take profit
         });
 
-        describe.skip("Basic scenarios: Update stop order config after position creation", () => {
+        describe("Basic scenarios: Update stop order config after position creation", () => {
             const marketIdx = 0;
 
             describe("Open LONG/LIMIT and add takeProfit", async function () {
@@ -670,6 +669,7 @@ describe("Testing main orders flow", async function () {
                         const positions = await account.positions();
                         expect(positions[0][1].takeProfit).to.be.eq(null);
                     }
+                    await vault.closePosition(user, pos_key, marketIdx);
                 });
             });
         });
@@ -702,6 +702,7 @@ describe("Testing main orders flow", async function () {
                     });
                     const account = await vault.account(user);
                     const positions = await account.positions();
+                    debugger;
                     expect(positions[0][1].stopLoss!.triggerPrice).to.be.eq((STOP_LOSS_PRICE * 100).toString());
                     {
                         const { traceTree } = await locklift.tracing.trace(
@@ -724,10 +725,6 @@ describe("Testing main orders flow", async function () {
                         );
                         const positions = await account.positions();
                         expect(positions[0][1].stopLoss).to.be.eq(null);
-                        // await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
-                        // await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
-                        //     stopPositionType: StopPositionType.StopLoss,
-                        // });
                     }
                     await locklift.testing.increaseTime(60 * 60 * 7.5);
                     const positionView = await account.getPositionView(pos_key, 0, {
@@ -753,7 +750,6 @@ describe("Testing main orders flow", async function () {
                                 amount: toNano(2),
                             }),
                     );
-                    await traceTree?.beautyPrint();
                     expect(traceTree).to.emit("RevertSetOrUpdatePositionTriggers").withNamedArgs({
                         callId: "0",
                         user: user.address,

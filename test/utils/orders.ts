@@ -1,4 +1,4 @@
-import { Address, Contract, getRandomNonce, toNano, zeroAddress } from "locklift";
+import { Address, Contract, fromNano, getRandomNonce, toNano, zeroAddress } from "locklift";
 import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import BigNumber from "bignumber.js";
@@ -337,7 +337,7 @@ export async function openLimitWithTestsOrder({
         }),
         { allowedCodes: { compute: [null] } },
     );
-    await traceTree?.beautyPrint();
+    console.log(fromNano(traceTree?.totalGasUsed()!));
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
     const [{ orderKey: pendingLimitOrderPosKey }] = traceTree?.findEventsForContract({
         contract: vault.contract,
@@ -906,6 +906,7 @@ export const testLimitPosition = async ({
         limitType,
         triggerPrice,
     });
+
     // CLOSE POSITION
     await setPrice(pair, finishPrice);
     await closeOrder(vault, pair, user, userWallet, key, referrer);

@@ -147,6 +147,13 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         emit MinPositionCollateralUpdate(meta.callId, newVal);
     }
 
+    function setMinStopLossRate(
+        uint64 newVal, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        minStopLossRate = newVal;
+        emit MinStopLossRateUpdate(meta.callId, newVal);
+    }
+
     function receiveTokenWalletAddress(address wallet) external override {
         if (msg.sender == usdt.root) usdt.wallet = wallet;
         if (msg.sender == stgUsdt.root) stgUsdt.wallet = wallet;
