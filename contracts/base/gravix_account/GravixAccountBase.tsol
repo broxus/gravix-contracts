@@ -169,6 +169,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.stopLossTriggerPrice
         );
 
+        delete marketOrders[_orderKey];
+
         // TODO: add reason to revert
         // checking slippage
         if (openPrice < minPrice || openPrice > maxPrice || !triggersValid) {
@@ -182,7 +184,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 _positionType,
                 _meta
             );
-            delete marketOrders[_orderKey];
             return;
         }
 
