@@ -7,7 +7,13 @@ import chai, { expect } from "chai";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import BigNumber from "bignumber.js";
-import { closeOrder, openMarketOrderWithTests, setPrice, testLimitPosition, testMarketPosition } from "./utils/orders";
+import {
+    closePosition,
+    openMarketOrderWithTests,
+    setPrice,
+    testLimitPosition,
+    testMarketPosition,
+} from "./utils/orders";
 import { LimitType } from "./utils/constants";
 
 chai.use(lockliftChai);

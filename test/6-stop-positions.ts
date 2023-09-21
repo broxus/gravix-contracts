@@ -8,7 +8,7 @@ import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import BigNumber from "bignumber.js";
 import {
-    closeOrder,
+    closePosition,
     closeOrderWithTraceTree,
     openLimitWithTestsOrder,
     openMarketOrderWithTests,
@@ -169,7 +169,7 @@ describe("Testing main orders flow", async function () {
                     );
 
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 0,
                     });
                 });
@@ -196,7 +196,7 @@ describe("Testing main orders flow", async function () {
                     );
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 1,
                     });
                 });
@@ -222,7 +222,7 @@ describe("Testing main orders flow", async function () {
                     );
 
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE + 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 0,
                     });
                 });
@@ -293,7 +293,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -323,7 +323,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -354,7 +354,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -385,7 +385,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -418,7 +418,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -449,7 +449,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -479,7 +479,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -509,7 +509,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -539,7 +539,7 @@ describe("Testing main orders flow", async function () {
                     });
 
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -597,7 +597,7 @@ describe("Testing main orders flow", async function () {
                     expect(positions[0][1].takeProfit!.triggerPrice).to.be.eq((TAKE_PROFIT_PRICE * 100).toString());
                     //add test for updating stop position config
                     await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
-                    await closeOrder(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });

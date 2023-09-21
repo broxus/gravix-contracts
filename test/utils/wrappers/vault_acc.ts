@@ -30,6 +30,9 @@ export class GravixAccount {
     async getDetails() {
         return this.contract.methods.getDetails({ answerId: 0 }).call();
     }
+    async getFields() {
+        return this.contract.getFields().then(res => res.fields);
+    }
     async getVersion() {
         return this.getDetails().then(res => res._currentVersion);
     }

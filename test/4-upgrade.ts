@@ -1,4 +1,4 @@
-import { bn, deployUser } from "./utils/common";
+import { bn, deployUser, unwrapAddresses } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
@@ -9,13 +9,15 @@ import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } fr
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
-    closeOrder,
+    closePosition,
+    openLimitWithTestsOrder,
     openMarketOrder,
     openMarketOrderWithTests,
     setPrice,
     testMarketPosition,
     testPositionFunding,
 } from "./utils/orders";
+import { LimitType, PosType } from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -146,7 +148,9 @@ describe("Testing main orders flow", async function () {
             it("Try to open position with outdated account version", async function () {
                 const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                 await setPrice(ethUsdtMock, INITIAL_PRICE);
-                await vault.deployGravixAccount(user);
+                await vault.deployGravixAccount(user1);
+
+                await vault.deployGravixAccount(user, user1.address);
                 {
                     const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
                 }
@@ -196,6 +200,7 @@ describe("Testing main orders flow", async function () {
                     LONG_POS,
                     100 * USDT_DECIMALS,
                     LEVERAGE_DECIMALS,
+                    user1.address,
                 );
             });
 
@@ -328,6 +333,84 @@ describe("Testing main orders flow", async function () {
                     })
                     .and.call("revert_liquidatePositions")
                     .and.emit("LiquidatePositionRevert");
+            });
+            it("Try to open limit with outdated account version", async function () {
+                const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+                await setPrice(ethUsdtMock, INITIAL_PRICE);
+                await vault.deployGravixAccount(user);
+                await vault.deployGravixAccount(user1);
+
+                {
+                    const { traceTree } = await locklift.tracing.trace(
+                        vault.openLimitPosition({
+                            limitType: LimitType.Limit,
+                            callId: 0,
+                            amount: 100 * USDT_DECIMALS,
+                            triggerPrice: 1001 * 100,
+                            leverage: LEVERAGE_DECIMALS,
+                            positionType: PosType.Long,
+                            marketIdx: 0,
+                            fromWallet: userUsdtWallet,
+                        }),
+                        { allowedCodes: { compute: [null] } },
+                    );
+                    await traceTree.beautyPrint();
+                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+                const accountDetailsBeforeUpgrade = await vault.account(user).then(res => res.getDetails());
+
+                expect(unwrapAddresses(accountDetailsBeforeUpgrade)).to.be.deep.eq({
+                    _currentVersion: "5",
+                    _vault: vault.address.toString(),
+                    _user: user.address.toString(),
+                    _referrer: user1.address.toString(),
+                    _grandReferrer: zeroAddress.toString(),
+                    _referralBalance: "0",
+                });
+                const firstLimitOrderBeforeUpgrade = await vault
+                    .account(user)
+                    .then(res => res.contract.getFields().then(res => res.fields!.limitOrders))
+                    .then(res => res[0]);
+                const { traceTree } = await locklift.tracing.trace(
+                    vault.openLimitPosition({
+                        limitType: LimitType.Limit,
+                        callId: 0,
+                        amount: 100 * USDT_DECIMALS,
+                        triggerPrice: 1001 * 100,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        positionType: PosType.Long,
+                        marketIdx: 0,
+                        fromWallet: userUsdtWallet,
+                    }),
+                    { allowedCodes: { compute: [null] } },
+                );
+                const accountDetailsAfterUpgrade = await vault.account(user).then(res => res.getDetails());
+                const firstLimitOrderAfterUpgrade = await vault
+                    .account(user)
+                    .then(res => res.contract.getFields().then(res => res.fields!.limitOrders))
+                    .then(res => res[0]);
+                expect(firstLimitOrderBeforeUpgrade[0]).to.be.eq(firstLimitOrderAfterUpgrade[0]);
+                expect(unwrapAddresses(accountDetailsAfterUpgrade)).to.be.deep.eq({
+                    _currentVersion: "6",
+                    _vault: vault.address.toString(),
+                    _user: user.address.toString(),
+                    _referrer: user1.address.toString(),
+                    _grandReferrer: zeroAddress.toString(),
+                    _referralBalance: "0",
+                });
+
+                expect(traceTree)
+                    .to.call("onGravixAccountRequestUpgrade")
+                    .withNamedArgs({
+                        _accountVersion: "5",
+                    })
+                    .and.call("upgrade")
+                    .withNamedArgs({
+                        newVersion: "6",
+                    })
+                    .and.call("revert_requestPendingLimitOrder")
+                    .and.emit("LimitOrderPendingRequestRevert");
             });
         });
     });

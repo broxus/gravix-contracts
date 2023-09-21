@@ -9,7 +9,7 @@ import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } fr
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
-    closeOrder,
+    closePosition,
     openMarketOrderWithTests,
     setPrice,
     testMarketPosition,
@@ -378,12 +378,12 @@ describe("Testing main orders flow", async function () {
 
                 it("Closing positions at 1100$/900$", async function () {
                     await setPrice(eth_usdt_mock, 1100 * USDT_DECIMALS);
-                    await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, long_pos_key);
-                    await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, short_pos_key);
+                    await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, long_pos_key);
+                    await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, short_pos_key);
 
                     await setPrice(eth_usdt_mock, 900 * USDT_DECIMALS);
-                    await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, long_pos2_key);
-                    await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, short_pos2_key);
+                    await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, long_pos2_key);
+                    await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, short_pos2_key);
                 });
             });
         });
@@ -515,7 +515,7 @@ describe("Testing main orders flow", async function () {
                         7200,
                     );
 
-                    await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, pos_key);
+                    await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, pos_key);
                 });
 
                 it("Shorts > longs", async function () {
@@ -544,7 +544,7 @@ describe("Testing main orders flow", async function () {
                         7200,
                     );
 
-                    await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, pos_key);
+                    await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, pos_key);
                 });
             });
         });
@@ -829,7 +829,7 @@ describe("Testing main orders flow", async function () {
 
             it("Closing positions at 5000$", async function () {
                 await setPrice(eth_usdt_mock, 5000 * USDT_DECIMALS);
-                await closeOrder(vault, eth_usdt_mock, user, user_usdt_wallet, long_pos_key);
+                await closePosition(vault, eth_usdt_mock, user, user_usdt_wallet, long_pos_key);
             });
         });
 
@@ -917,7 +917,7 @@ describe("Testing main orders flow", async function () {
 
             it("Closing position with referrer", async function () {
                 await setPrice(eth_usdt_mock, 1100 * USDT_DECIMALS);
-                await closeOrder(vault, eth_usdt_mock, user1, user1_usdt_wallet, user1_long_pos_key);
+                await closePosition(vault, eth_usdt_mock, user1, user1_usdt_wallet, user1_long_pos_key);
             });
 
             it("User set referer + grand referer on position open", async function () {

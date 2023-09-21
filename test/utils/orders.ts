@@ -347,6 +347,7 @@ export async function openLimitWithTestsOrder({
         contract: vault.contract,
         name: "LimitOrder" as const,
     })!;
+    await traceTree.beautyPrint();
     expect(traceTree)
         .to.emit("PendingLimitOrderCreated")
         .withNamedArgs({
@@ -793,7 +794,7 @@ export const closeOrderWithTraceTree = async ({
 
     return { posView: posView2, traceTree: traceTree1 };
 };
-export async function closeOrder(
+export async function closePosition(
     vault: GravixVault,
     pair: Contract<PairMockAbi>,
     user: Account,
@@ -847,10 +848,11 @@ export async function testMarketPosition(
     if (ttl > 0) {
         await tryIncreaseTime(ttl);
     }
-
+    const { marketOrders } = await vault.account(user).then(acc => acc.orders());
+    expect(marketOrders.length).to.be.eq(0);
     // CLOSE POSITION
     await setPrice(pair, finish_price);
-    await closeOrder(vault, pair, user, user_wallet, pos_key, referrer);
+    await closePosition(vault, pair, user, user_wallet, pos_key, referrer);
 }
 
 export const testLimitPosition = async ({
@@ -884,14 +886,6 @@ export const testLimitPosition = async ({
     ttl?: number;
     referrer?: Address;
 }) => {
-    const market = (
-        await vault.contract.methods
-            .getMarket({
-                marketIdx,
-                answerId: 0,
-            })
-            .call()
-    )._market;
     await setPrice(pair, initialPrice);
     const key = await openLimitWithTestsOrder({
         user,
@@ -906,10 +900,11 @@ export const testLimitPosition = async ({
         limitType,
         triggerPrice,
     });
-
+    const { limitOrders } = await vault.account(user).then(acc => acc.orders());
+    expect(limitOrders.length).to.be.eq(0);
     // CLOSE POSITION
     await setPrice(pair, finishPrice);
-    await closeOrder(vault, pair, user, userWallet, key, referrer);
+    await closePosition(vault, pair, user, userWallet, key, referrer);
 };
 
 export async function testPositionFunding(
@@ -952,7 +947,7 @@ export async function testPositionFunding(
     // 12 hours
     await tryIncreaseTime(ttl);
     const rates = await vault.contract.methods.getFundingRates({ marketIdx: 2 }).call();
-    const pos_view = await closeOrder(vault, pair, user, user_wallet, pos_key, referrer);
+    const pos_view = await closePosition(vault, pair, user, user_wallet, pos_key, referrer);
     // calculate based on time + noi and check if correct
     const market_1 = (await vault.contract.methods.getMarket({ marketIdx: 2, answerId: 0 }).call())._market;
 

@@ -9,7 +9,7 @@ import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } fr
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
-    closeOrder,
+    closePosition,
     openMarketOrderWithTests,
     setPrice,
     testMarketPosition,
