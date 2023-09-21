@@ -32,7 +32,6 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     uint32 leverage;
     IGravixVault.PositionType positionType;
     IGravixVault.LimitOrderType limitOrderType;
-    address referer;
     uint128 triggerPrice;
     uint128 stopLossTriggerPrice;
     uint128 takeProfitTriggerPrice;
@@ -105,7 +104,6 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         uint32 _leverage,
         IGravixVault.PositionType _positionType,
         IGravixVault.LimitOrderType _limitOrderType,
-        address _referer,
         uint128 _triggerPrice,
         uint128 _stopLossTriggerPrice,
         uint128 _takeProfitTriggerPrice
@@ -119,7 +117,6 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         positionType = _positionType;
         callbackType = CallbackType.RequestLimit;
         limitOrderType = _limitOrderType;
-        referer = _referer;
         triggerPrice = _triggerPrice;
         stopLossTriggerPrice = _stopLossTriggerPrice;
         takeProfitTriggerPrice = _takeProfitTriggerPrice;
@@ -235,7 +232,6 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 limitOrderType,
                 stopLossTriggerPrice,
                 takeProfitTriggerPrice,
-                referer,
                 meta,
                 price
 

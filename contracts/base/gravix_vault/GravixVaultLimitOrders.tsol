@@ -1,17 +1,19 @@
 pragma ever-solidity ^0.62.0;
 
 
-import {GravixVaultOrdersBase} from "./GravixVaultOrdersBase.tsol";
 import {Callback} from "../../libraries/Callback.tsol";
-import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
-import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
-import {Gas} from "../../libraries/Gas.tsol";
-import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
-import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
-import {Errors} from "../../libraries/Errors.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
 import {Constants} from "../../libraries/Constants.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {GravixVaultOrdersBase} from "./GravixVaultOrdersBase.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
 import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
+import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
+import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
 
 abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
@@ -190,39 +192,34 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             );
         }
     }
+
     function finish_requestPendingLimitOrder(
+        address _user,
         uint32 reqNonce,
-        IGravixVault.PendingLimitOrder _pendingRequest,
-        uint32 _positionKey
-    ) external override onlyGravixAccount(_pendingRequest.user) reserve {
+        IGravixAccount.LimitOrder _order,
+        uint32 _orderKey,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
         delete pendingLimitRequests[reqNonce];
 
         emit PendingLimitOrderCreated(
-            _pendingRequest.meta.callId,
-            _pendingRequest.user,
-            _pendingRequest.marketIdx,
-            _pendingRequest.positionType,
-            _pendingRequest.collateral,
-            _pendingRequest.triggerPrice,
-            _pendingRequest.orderType,
-            _pendingRequest.stopLossTriggerPrice,
-            _pendingRequest.takeProfitTriggerPrice,
-            _pendingRequest.leverage,
-            _positionKey
+            _meta.callId,
+            _user,
+            _order,
+            _orderKey
         );
         _sendOpenLimitOrderOracleRequest(
-            _pendingRequest.user,
-            _positionKey,
-            _pendingRequest.marketIdx,
-            _pendingRequest.collateral,
-            _pendingRequest.leverage,
-            _pendingRequest.positionType,
-            _pendingRequest.orderType,
-            _pendingRequest.referrer,
-            _pendingRequest.triggerPrice,
-            _pendingRequest.stopLossTriggerPrice,
-            _pendingRequest.takeProfitTriggerPrice,
-            _pendingRequest.meta
+            _user,
+            _orderKey,
+            _order.marketIdx,
+            _order.collateral,
+            _order.leverage,
+            _order.positionType,
+            _order.orderType,
+            _order.triggerPrice,
+            _order.stopLossTriggerPrice,
+            _order.takeProfitTriggerPrice,
+            _meta
         );
     }
 
@@ -234,7 +231,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _leverage,
         PositionType _positionType,
         LimitOrderType _limitOrderType,
-        address _referer,
         uint128 _triggerPrice,
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
@@ -248,7 +244,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _leverage,
             _positionType,
             _limitOrderType,
-            _referer,
             _triggerPrice,
             stopLossTriggerPrice,
             takeProfitTriggerPrice
@@ -266,7 +261,6 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         LimitOrderType _limitOrderType,
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
-        address _referrer,
         Callback.CallMeta _meta,
         uint128 _assetPrice
     ) external override onlyOracleProxy(_nonce) reserve {
@@ -280,7 +274,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             _limitOrderType,
             stopLossTriggerPrice,
             takeProfitTriggerPrice,
-            _referrer,
+            address(0),
             _meta,
             _assetPrice,
             _orderKey
@@ -366,29 +360,24 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     }
 
     function finish_requestLimitOrder(
+        address user,
         uint32 reqNonce,
-        PendingLimitOrder request,
-        uint32 orderKey
-    ) external override onlyGravixAccount(request.user) reserve {
+        IGravixAccount.LimitOrder order,
+        uint32 orderKey,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
         delete pendingLimitRequests[reqNonce];
-        collateralReserve += request.collateral;
+        collateralReserve += order.collateral;
 
         emit LimitOrder(
-            request.meta.callId,
-            request.user,
-            request.marketIdx,
-            request.positionType,
-            request.orderType,
-            request.collateral,
-            request.triggerPrice,
-            request.stopLossTriggerPrice,
-            request.takeProfitTriggerPrice,
-            request.leverage,
+            meta.callId,
+            user,
+            order,
             orderKey
         );
 
         // reserve evers for feature order execution
-        uint128 stopOrderValue = request.stopLossTriggerPrice > 0 || request.takeProfitTriggerPrice > 0
+        uint128 stopOrderValue = order.stopLossTriggerPrice > 0 || order.takeProfitTriggerPrice > 0
             ? Gas.OPEN_LIMIT_ORDER_RESERVE
             : 0;
 
@@ -398,10 +387,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         });
 
         _sendCallbackOrGas(
-            request.user,
-            request.meta.nonce,
+            user,
+            meta.nonce,
             true,
-            request.meta.sendGasTo
+            meta.sendGasTo
         );
     }
 

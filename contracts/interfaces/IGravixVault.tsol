@@ -1,12 +1,15 @@
 pragma ever-solidity ^0.62.0;
 
 
-import {IAcceptTokensTransferCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
+import {Callback} from "../libraries/Callback.tsol";
 import {IAcceptTokensBurnCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensBurnCallback.tsol";
+import {IAcceptTokensTransferCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
+import {IGravixAccount} from "./IGravixAccount.tsol";
+import {IGravixAccount} from "./IGravixAccount.tsol";
+import {IGravixAccount} from "./IGravixAccount.tsol";
+import {IGravixAccount} from "./IGravixAccount.tsol";
 import {IOldGravixVault} from "./IOldGravixVault.tsol";
 import {IPriceNode} from "./IPriceNode.tsol";
-import {Callback} from "../libraries/Callback.tsol";
-import {IGravixAccount} from "./IGravixAccount.tsol";
 
 
 interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback, IOldGravixVault {
@@ -324,28 +327,14 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event PendingLimitOrderCreated(
         uint32 callId,
         address user,
-        uint32 marketIdx,
-        PositionType positionType,
-        uint128 collateral,
-        uint128 triggerPrice,
-        LimitOrderType limitType,
-        uint128 stopLossTriggerPrice,
-        uint128 takeProfitTriggerPrice,
-        uint32 leverage,
+        IGravixAccount.LimitOrder order,
         uint32 orderKey
     );
 
     event LimitOrder(
         uint32 callId,
         address user,
-        uint32 marketIdx,
-        PositionType positionType,
-        LimitOrderType limitType,
-        uint128 collateral,
-        uint128 triggerPrice,
-        uint128 stopLossTriggerPrice,
-        uint128 takeProfitTriggerPrice,
-        uint32 leverage,
+        IGravixAccount.LimitOrder order,
         uint32 orderKey
     );
     event LimitOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
@@ -496,7 +485,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         LimitOrderType _limitOrderType,
         uint128 stopLossTriggerPrice,
         uint128 takeProfitTriggerPrice,
-        address _referrer,
         Callback.CallMeta _meta,
         uint128 _assetPrice
     ) external;
@@ -505,18 +493,22 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         PendingLimitOrder _pendRequest
     ) external;
     function finish_requestPendingLimitOrder(
+        address _user,
         uint32 reqNonce,
-        IGravixVault.PendingLimitOrder _pendingRequest,
-        uint32 _orderKey
+        IGravixAccount.LimitOrder _order,
+        uint32 _orderKey,
+        Callback.CallMeta _meta
     ) external;
     function revert_requestPendingLimitOrder(
         uint32 _reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest
     ) external;
     function finish_requestLimitOrder(
+        address _user,
         uint32 reqNonce,
-        PendingLimitOrder request,
-        uint32 orderKey
+        IGravixAccount.LimitOrder _order,
+        uint32 _orderKey,
+        Callback.CallMeta _meta
     ) external;
 
     function finish_cancelLimitOrder(
