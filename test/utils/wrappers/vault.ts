@@ -194,7 +194,7 @@ export class GravixVault {
         limitType,
         positionType,
         leverage,
-        referrer,
+        referrer = zeroAddress,
         marketIdx,
         triggerPrice,
         amount,
@@ -208,7 +208,7 @@ export class GravixVault {
         positionType: 0 | 1; // 0 - short, 1 - long
         leverage: number;
         triggerPrice: number | string;
-        referrer: Address;
+        referrer?: Address;
         limitType: 0 | 1; // 0 - limit, 1 - stop
         callId: number;
         stopLossTriggerPrice?: number;

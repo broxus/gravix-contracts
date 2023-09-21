@@ -315,3 +315,11 @@ export const getPriceForLimitOrder = ({
         }
     }
 };
+export const unwrapAddresses = <T extends Record<string, any>>(
+    obj: T,
+): { [key in keyof T]: T[key] extends Address ? string : T[key] } => {
+    return Object.entries(obj).reduce(
+        (acc, [key, value]) => ({ ...acc, [key]: value instanceof Address ? value.toString() : value }),
+        {},
+    ) as { [key in keyof T]: T[key] extends Address ? string : T[key] };
+};

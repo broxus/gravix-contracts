@@ -7,7 +7,6 @@ import "../../libraries/Callback.tsol";
 import "./GravixAccountHelpers.tsol";
 import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
-
 abstract contract GravixAccountBase is GravixAccountHelpers {
     function process_withdrawReferralBalance(Callback.CallMeta meta) external override onlyGravixVault reserve {
         IGravixVault(vault).finish_withdrawReferralBalance{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -41,6 +40,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         }
 
         requestCounter += 1;
+
         marketOrders[requestCounter] = MarketOrder(
             _pendingRequest.marketIdx,
             _pendingRequest.positionType,
@@ -359,12 +359,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
             return;
         }
-        // always trying to get grandReferrer on 1st request if referrer is set
-
-        if (requestCounter == 1 && referrer != address(0)) {
-            retrieveReferrers();
-        }
-
 
         if (_orderKey.hasValue()) {
             limitOrders[_orderKey.get()].state = LimitOrderSate.Opened;
@@ -389,6 +383,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
         }
 
+        // always trying to get grandReferrer on 1st request if referrer is set
+
+        if (requestCounter == 1 && referrer != address(0)) {
+            retrieveReferrers();
+        }
 
         IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             _reqNonce,
@@ -559,8 +558,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
         bool isFirstPositionTriggerPrice = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
 
-        // TODO: check position exists ?
-        if (!isLatestVersion || position.marketIdx != _marketIdx) {
+        if (!isLatestVersion || position.marketIdx != _marketIdx || position.initialCollateral == 0) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
