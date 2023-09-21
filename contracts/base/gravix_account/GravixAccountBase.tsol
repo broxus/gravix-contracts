@@ -585,8 +585,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
         bool isFirstPositionTriggerPrice = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
 
-        // TODO: check position exists ?
-        if (!isLatestVersion || position.marketIdx != _marketIdx) {
+        if (!isLatestVersion || position.marketIdx != _marketIdx || position.initialCollateral == 0) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }
