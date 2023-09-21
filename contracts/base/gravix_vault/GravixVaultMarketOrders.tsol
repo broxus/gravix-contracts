@@ -1,13 +1,15 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "../../interfaces/IGravixAccount.tsol";
-import "../../interfaces/IOracleProxy.tsol";
-import "../../libraries/Callback.tsol";
-import "../../libraries/Gas.tsol";
-import "./GravixVaultMarkets.tsol";
-import "./GravixVaultOrdersBase.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {GravixVaultOrdersBase} from "./GravixVaultOrdersBase.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
 
 
 abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
