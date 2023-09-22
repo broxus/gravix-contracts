@@ -321,7 +321,7 @@ export async function openLimitWithTestsOrder({
     const callId = getRandomNonce();
     const details_prev = await vault.details();
 
-    const { traceTree } = await locklift.tracing.trace(
+    const { traceTree: openLimitOrderTraceTree } = await locklift.tracing.trace(
         vault.openLimitPosition({
             limitType,
             callId,
@@ -337,80 +337,86 @@ export async function openLimitWithTestsOrder({
         }),
         { allowedCodes: { compute: [null] } },
     );
-    console.log(fromNano(traceTree?.totalGasUsed()!));
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
-    const [{ orderKey: pendingLimitOrderPosKey }] = traceTree?.findEventsForContract({
+    const [{ orderKey: pendingLimitOrderPosKey }] = openLimitOrderTraceTree?.findEventsForContract({
         contract: vault.contract,
         name: "PendingLimitOrderCreated" as const,
     })!;
-    const [{ orderKey }] = traceTree?.findEventsForContract({
+    const [{ orderKey }] = openLimitOrderTraceTree?.findEventsForContract({
         contract: vault.contract,
         name: "LimitOrder" as const,
     })!;
-    await traceTree.beautyPrint();
-    expect(traceTree)
+    if (!referrer.equals(zeroAddress)) {
+        expect(openLimitOrderTraceTree)
+            .to.call("getReferrer", await vault.getAccountAddress(referrer))
+            .and.call("process_getReferrer", await vault.getAccountAddress(user));
+    }
+    expect(openLimitOrderTraceTree)
         .to.emit("PendingLimitOrderCreated")
         .withNamedArgs({
             callId: callId.toFixed(),
             user: user.address,
-            marketIdx: marketIdx.toString(),
-            positionType: posType.toString(),
-            collateral: collateral.toString(),
-            triggerPrice: (triggerPrice * 100).toString(),
-            limitType: limitType.toString(),
+            order: {
+                marketIdx: marketIdx.toString(),
+                positionType: posType.toString(),
+                collateral: collateral.toString(),
+                triggerPrice: (triggerPrice * 100).toString(),
+                orderType: limitType.toString(),
+            },
             orderKey: pendingLimitOrderPosKey,
         })
         .to.emit("LimitOrder")
         .withNamedArgs({
             callId: callId.toFixed(),
             user: user.address,
-            collateral: collateral.toString(),
-            triggerPrice: (triggerPrice * 100).toString(),
-            leverage: leverage.toString(),
-            positionType: posType.toString(),
-            limitType: limitType.toString(),
-            marketIdx: marketIdx.toString(),
             orderKey: pendingLimitOrderPosKey,
+            order: {
+                collateral: collateral.toString(),
+                triggerPrice: (triggerPrice * 100).toString(),
+                leverage: leverage.toString(),
+                positionType: posType.toString(),
+                orderType: limitType.toString(),
+                marketIdx: marketIdx.toString(),
+            },
         });
     const { limitOrders } = await vault.account(user).then(acc => acc.orders());
     const pendingLimitOrder = limitOrders.find(([posKey]) => posKey === pendingLimitOrderPosKey)!;
 
     expect(pendingLimitOrder[1].state).to.be.eq(LimitOrderSate.Executed);
     await setPrice(pair, triggerPrice.toString());
-    {
-        const { traceTree } = await locklift.tracing.trace(
-            vault.contract.methods
-                .executeLimitOrders({
-                    limitOrdersMap: [
-                        [
-                            marketIdx,
-                            {
-                                price: empty_price,
-                                orders: [
-                                    {
-                                        orderKey: pendingLimitOrderPosKey,
-                                        collateral: collateral,
-                                        positionType: posType,
-                                        marketIdx: marketIdx,
-                                        leverage: leverage,
-                                        user: user.address,
-                                    },
-                                ],
-                            },
-                        ],
+    const { traceTree: executeLimitOrderTraceTree } = await locklift.tracing.trace(
+        vault.contract.methods
+            .executeLimitOrders({
+                limitOrdersMap: [
+                    [
+                        marketIdx,
+                        {
+                            price: empty_price,
+                            orders: [
+                                {
+                                    orderKey: pendingLimitOrderPosKey,
+                                    collateral: collateral,
+                                    positionType: posType,
+                                    marketIdx: marketIdx,
+                                    leverage: leverage,
+                                    user: user.address,
+                                },
+                            ],
+                        },
                     ],
-                    meta: {
-                        callId: callId,
-                        nonce: 0,
-                        sendGasTo: user.address,
-                    },
-                })
-                .send({
-                    from: vault.limitBot,
-                    amount: toNano(10),
-                }),
-        );
-    }
+                ],
+                meta: {
+                    callId: callId,
+                    nonce: 0,
+                    sendGasTo: user.address,
+                },
+            })
+            .send({
+                from: vault.limitBot,
+                amount: toNano(10),
+            }),
+    );
+
     const { colUp, posUp, liqPrice } = await checkOpenedPositionMath({
         market,
         posType,
@@ -419,7 +425,7 @@ export async function openLimitWithTestsOrder({
         expectedOpenPrice,
         assetPrice: triggerPrice * 100,
         openFeeExpected,
-        openPositionTraceTree: traceTree,
+        openPositionTraceTree: executeLimitOrderTraceTree,
         positionKey: orderKey,
         callId,
         user,

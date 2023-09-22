@@ -78,9 +78,14 @@ export class GravixVault {
         return null;
     }
 
-    async account(user: Account) {
-        const address = await this.contract.methods.getGravixAccountAddress({ user: user.address, answerId: 0 }).call();
-        return GravixAccount.from_addr(address.value0);
+    async account(user: Account | Address) {
+        return GravixAccount.from_addr(await this.getAccountAddress(user));
+    }
+    async getAccountAddress(user: Account | Address) {
+        return this.contract.methods
+            .getGravixAccountAddress({ user: (user as Account).address || user, answerId: 0 })
+            .call()
+            .then(res => res.value0);
     }
 
     async addMarkets(markets: MarketConfig[], callId = 0) {

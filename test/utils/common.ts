@@ -4,6 +4,7 @@ import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import Bignumber from "bignumber.js";
 import { LimitType, PosType } from "./constants";
+import BigNumber from "bignumber.js";
 
 const logger = require("mocha-logger");
 const { expect } = require("chai");
@@ -322,4 +323,41 @@ export const unwrapAddresses = <T extends Record<string, any>>(
         (acc, [key, value]) => ({ ...acc, [key]: value instanceof Address ? value.toString() : value }),
         {},
     ) as { [key in keyof T]: T[key] extends Address ? string : T[key] };
+};
+export const checkReferrerPayment = async ({
+    user,
+    vault,
+    openFeeExpected,
+}: {
+    user: Address;
+    vault: GravixVault;
+    openFeeExpected: BigNumber;
+}) => {
+    const account = await vault.account(user);
+    const details = await vault.details();
+    const accDetails = await account.contract.methods.getDetails({ answerId: 0 }).call();
+    if (!accDetails._referrer.equals(zeroAddress)) {
+        poolIncrease = poolIncrease.minus(openFeeExpected.idiv(10));
+
+        expect(traceTree)
+            .to.emit("ReferralPayment")
+            .withNamedArgs({
+                callId: callId.toFixed(),
+                referral: user.address,
+                referrer: accDetails._referrer.toString(),
+                amount: openFeeExpected.idiv(10).toFixed(),
+            });
+    }
+    if (!accDetails._grandReferrer.equals(zeroAddress)) {
+        poolIncrease = poolIncrease.minus(openFeeExpected.idiv(100));
+
+        expect(traceTree)
+            .to.emit("ReferralPayment")
+            .withNamedArgs({
+                callId: callId.toFixed(),
+                referral: user.address,
+                referrer: accDetails._grandReferrer.toString(),
+                amount: openFeeExpected.idiv(100).toFixed(),
+            });
+    }
 };

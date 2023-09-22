@@ -145,6 +145,7 @@ describe("Testing main orders flow", async function () {
 
             describe("Test solo long positions", async function () {
                 it("Pnl+, 1x leverage, LIMIT/LONG open/close 1050$/1000$/1100$", async function () {
+                    await vault.deployGravixAccount(user1);
                     await testLimitPosition({
                         vault,
                         pair: ethUsdtMock,
@@ -158,6 +159,7 @@ describe("Testing main orders flow", async function () {
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
+                        referrer: user1.address,
                     });
                 });
             });
