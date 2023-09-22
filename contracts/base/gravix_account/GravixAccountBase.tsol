@@ -314,76 +314,11 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
-        bool isPriceOk;
-        if (_pendingRequest.orderType == IGravixVault.LimitOrderType.Limit) {
-            isPriceOk = _pendingRequest.positionType == IGravixVault.PositionType.Long
-                ? _pendingRequest.triggerPrice < _pendingRequest.assetPrice
-                : _pendingRequest.triggerPrice > _pendingRequest.assetPrice;
-        }
-
-        if (_pendingRequest.orderType == IGravixVault.LimitOrderType.Stop) {
-            isPriceOk = _pendingRequest.positionType == IGravixVault.PositionType.Long
-                ? _pendingRequest.triggerPrice > _pendingRequest.assetPrice
-                : _pendingRequest.triggerPrice < _pendingRequest.assetPrice;
-        }
-
-        bool isLatestVersion = isLatestVersion(_accountVersion);
-
-
-        uint128 openPrice = applyOpenSpread(
-            _pendingRequest.triggerPrice,
-            _pendingRequest.positionType,
-            _pendingRequest.baseSpreadRate
-        );
-
-        uint128 leveragedPositionUsd = math.muldiv(
-            _pendingRequest.collateral,
-            _pendingRequest.leverage,
-            Constants.LEVERAGE_BASE
-        );
-
-        uint128 openFee = math.muldiv(
-            leveragedPositionUsd,
-            _pendingRequest.openFeeRate,
-            Constants.HUNDRED_PERCENT
-        );
-
-        bool triggersValid = validateTriggerPrices(
-            _pendingRequest.collateral - openFee,
-            _pendingRequest.leverage,
-            _pendingRequest.positionType,
-            _pendingRequest.baseSpreadRate,
-            _maxPnlRate,
-            _minStopLossRate,
-            openPrice,
-            _pendingRequest.triggerPrice,
-            _pendingRequest.takeProfitTriggerPrice,
-            _pendingRequest.stopLossTriggerPrice
-        );
-
-        if (!isPriceOk || !isLatestVersion || !triggersValid) {
-            if (!isLatestVersion) {
-                requestUpgrade(user, currentVersion, _pendingRequest.meta);
-            }
-
-            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                _reqNonce,
-                _pendingRequest
-            );
-            return;
-        }
-
-
-        uint32 orderKey;
-
+        LimitOrder _order;
         if (_orderKey.hasValue()) {
-            orderKey = _orderKey.get();
-            limitOrders[orderKey].state = LimitOrderSate.Opened;
+            _order = limitOrders[_orderKey.get()];
         } else {
-            requestCounter += 1;
-            orderKey = requestCounter;
-
-            limitOrders[orderKey] = LimitOrder(
+            _order = LimitOrder(
                 _pendingRequest.marketIdx,
                 _pendingRequest.positionType,
                 _pendingRequest.orderType,
@@ -402,6 +337,80 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
         }
 
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+
+        // bad version or order does not exists
+        if (!isLatestVersion || _order.collateral == 0) {
+            if (!isLatestVersion) {
+                requestUpgrade(user, currentVersion, _pendingRequest.meta);
+            }
+
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _reqNonce,
+                _pendingRequest
+            );
+            return;
+        }
+
+
+        bool isPriceOk;
+        if (_order.orderType == IGravixVault.LimitOrderType.Limit) {
+            isPriceOk = _order.positionType == IGravixVault.PositionType.Long
+                ? _order.triggerPrice < _pendingRequest.assetPrice
+                : _order.triggerPrice > _pendingRequest.assetPrice;
+        }
+
+        if (_order.orderType == IGravixVault.LimitOrderType.Stop) {
+            isPriceOk = _order.positionType == IGravixVault.PositionType.Long
+                ? _order.triggerPrice > _pendingRequest.assetPrice
+                : _order.triggerPrice < _pendingRequest.assetPrice;
+        }
+
+
+        uint128 openPrice = applyOpenSpread(
+            _order.triggerPrice,
+            _order.positionType,
+            _order.baseSpreadRate
+        );
+
+        uint128 leveragedPositionUsd = math.muldiv(
+            _order.collateral,
+            _order.leverage,
+            Constants.LEVERAGE_BASE
+        );
+
+        uint128 openFee = math.muldiv(
+            leveragedPositionUsd,
+            _order.openFeeRate,
+            Constants.HUNDRED_PERCENT
+        );
+
+        bool triggersValid = validateTriggerPrices(
+            _order.collateral - openFee,
+            _order.leverage,
+            _order.positionType,
+            _order.baseSpreadRate,
+            _maxPnlRate,
+            _minStopLossRate,
+            openPrice,
+            _order.triggerPrice,
+            _order.takeProfitTriggerPrice,
+            _order.stopLossTriggerPrice
+        );
+
+        if (!isPriceOk  || !triggersValid) {
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _reqNonce,
+                _pendingRequest
+            );
+            return;
+        }
+
+        // TODO: check this works correctly
+        uint32 orderKey = _orderKey.hasValue() ? _orderKey.get() : (requestCounter += 1);
+        _order.state = LimitOrderSate.Opened;
+        limitOrders[orderKey] = _order;
+
         // always trying to get grandReferrer on 1st request if referrer is set
         if (requestCounter == 1 && referrer != address(0)) {
             retrieveReferrers();
@@ -410,7 +419,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             _reqNonce,
-            limitOrders[orderKey],
+            _order,
             orderKey,
             _pendingRequest.meta
         );
