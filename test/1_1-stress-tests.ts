@@ -3,7 +3,7 @@ import { Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress } 
 import chai, { expect } from "chai";
 import BigNumber from "bignumber.js";
 import { Token } from "./utils/wrappers/token";
-import { bn } from "./utils/common";
+import { bn, DEFAULT_TICKER, PriceNodeMockAdapter } from "./utils/common";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
@@ -54,15 +54,16 @@ describe("Testing main orders flow", async function () {
     let user_stg_wallet: TokenWallet;
 
     // left - eth, right - usdt
-    let eth_usdt_mock: Contract<PairMockAbi>;
+    let ethUsdtMock: Contract<PairMockAbi>;
     // left - btc, right - eth
     let btc_eth_mock: Contract<PairMockAbi>;
+    let priceNodeMock: PriceNodeMockAdapter;
 
     const eth_addr = new Address("0:1111111111111111111111111111111111111111111111111111111111111111");
     const btc_addr = new Address("0:2222222222222222222222222222222222222222222222222222222222222222");
 
     const basic_config: MarketConfig = {
-        priceSource: 0,
+        priceSource: 1,
         maxLongsUSD: 10000_000 * USDT_DECIMALS, // 100k
         maxShortsUSD: 10000_000 * USDT_DECIMALS, // 100k
         noiWeight: 100,
@@ -83,6 +84,8 @@ describe("Testing main orders flow", async function () {
     describe("Setup contracts", async function () {
         it("Run fixtures", async function () {
             await locklift.deployments.fixture();
+            const signer = (await locklift.keystore.getSigner("0"))!;
+
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
             user1 = locklift.deployments.getAccount("User1").account;
@@ -91,7 +94,13 @@ describe("Testing main orders flow", async function () {
             vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
             stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
-            eth_usdt_mock = locklift.deployments.getContract("ETH_USDT");
+            ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
+            priceNodeMock = new PriceNodeMockAdapter(
+                locklift.deployments.getContract("PriceNodeMock"),
+                DEFAULT_TICKER,
+                signer,
+            );
+            await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             user_usdt_wallet = await usdt_root.wallet(user);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
@@ -108,9 +117,9 @@ describe("Testing main orders flow", async function () {
                 const oracle: Oracle = {
                     dex: {
                         targetToken: eth_addr,
-                        path: [{ addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
+                        path: [{ addr: ethUsdtMock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
                     },
-                    priceNode: { ticker: "", maxOracleDelay: 0, maxServerDelay: 0 },
+                    priceNode: { ticker: DEFAULT_TICKER, maxOracleDelay: 0, maxServerDelay: 0 },
                 };
 
                 await locklift.tracing.trace(vault.addMarkets([new_config]));
@@ -120,12 +129,12 @@ describe("Testing main orders flow", async function () {
 
             it("Test liquidation occurs correctly", async function () {
                 const price = 1000 * USDT_DECIMALS;
-                await setPrice(eth_usdt_mock, price);
+                await setPrice(priceNodeMock, price);
 
                 const collateral = 100 * USDT_DECIMALS;
                 const leverage = 100000000;
                 const pos_type = LONG_POS;
-                const initial_price = Number(await getPrice(eth_usdt_mock));
+                const initial_price = Number(await getPrice(priceNodeMock));
                 const market = (await vault.contract.methods.getMarket({ marketIdx: market_idx, answerId: 0 }).call())
                     ._market;
 
@@ -181,7 +190,7 @@ describe("Testing main orders flow", async function () {
                     accShortUSDFundingPerShare: 0,
                 });
                 const new_price = bn(view1.positionView.liquidationPrice).minus(PRICE_DECIMALS);
-                await setPrice(eth_usdt_mock, new_price.idiv(100).toFixed());
+                await setPrice(priceNodeMock, new_price.idiv(100).toFixed());
                 // now try liquidate
                 const { traceTree } = await locklift.tracing.trace(
                     vault.liquidatePositions([
@@ -198,7 +207,6 @@ describe("Testing main orders flow", async function () {
                     ]),
                     { raise: false },
                 );
-                console.log(`Gas used: ${traceTree?.totalGasUsed()}`);
 
                 expect(traceTree).to.emit("LiquidatePosition").count(300);
             });

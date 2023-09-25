@@ -1,4 +1,4 @@
-import { bn } from "./utils/common";
+import { bn, DEFAULT_TICKER, PriceNodeMockAdapter } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
@@ -67,12 +67,13 @@ describe("Testing main orders flow", async function () {
     let ethUsdtMock: Contract<PairMockAbi>;
     // left - btc, right - eth
     let btc_eth_mock: Contract<PairMockAbi>;
+    let priceNodeMock: PriceNodeMockAdapter;
 
     const eth_addr = new Address("0:1111111111111111111111111111111111111111111111111111111111111111");
     const btc_addr = new Address("0:2222222222222222222222222222222222222222222222222222222222222222");
 
     const basic_config: MarketConfig = {
-        priceSource: 0,
+        priceSource: 1,
         maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
         maxShortsUSD: 100_000 * USDT_DECIMALS, // 100k
         noiWeight: 100,
@@ -93,6 +94,8 @@ describe("Testing main orders flow", async function () {
     describe("Setup contracts", async function () {
         it("Run fixtures", async function () {
             await locklift.deployments.fixture();
+            const signer = (await locklift.keystore.getSigner("0"))!;
+
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
             user1 = locklift.deployments.getAccount("User1").account;
@@ -103,6 +106,12 @@ describe("Testing main orders flow", async function () {
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
             userUsdtWallet = await usdt_root.wallet(user);
+            priceNodeMock = new PriceNodeMockAdapter(
+                locklift.deployments.getContract("PriceNodeMock"),
+                DEFAULT_TICKER,
+                signer,
+            );
+            await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
         });
@@ -118,7 +127,7 @@ describe("Testing main orders flow", async function () {
                     targetToken: eth_addr,
                     path: [{ addr: ethUsdtMock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
                 },
-                priceNode: { ticker: "", maxOracleDelay: 0, maxServerDelay: 0 },
+                priceNode: { ticker: DEFAULT_TICKER, maxOracleDelay: 0, maxServerDelay: 0 },
             };
 
             await locklift.tracing.trace(vault.addMarkets([basic_config]));
@@ -153,11 +162,11 @@ describe("Testing main orders flow", async function () {
                 it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
                     const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                     const STOP_LOOSE_PRICE = 999 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openMarketOrderWithTests(
                         vault,
-                        ethUsdtMock,
+                        priceNodeMock,
                         user,
                         userUsdtWallet,
                         market_idx,
@@ -168,8 +177,8 @@ describe("Testing main orders flow", async function () {
                         STOP_LOOSE_PRICE,
                     );
 
-                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, STOP_LOOSE_PRICE);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 0,
                     });
                 });
@@ -179,11 +188,11 @@ describe("Testing main orders flow", async function () {
                 it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
                     const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                     const TAKE_PROFIT_PRICE = 2000 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openMarketOrderWithTests(
                         vault,
-                        ethUsdtMock,
+                        priceNodeMock,
                         user,
                         userUsdtWallet,
                         market_idx,
@@ -195,8 +204,8 @@ describe("Testing main orders flow", async function () {
                         TAKE_PROFIT_PRICE,
                     );
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 1,
                     });
                 });
@@ -206,11 +215,11 @@ describe("Testing main orders flow", async function () {
                 it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
                     const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                     const STOP_LOOSE_PRICE = 1001 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openMarketOrderWithTests(
                         vault,
-                        ethUsdtMock,
+                        priceNodeMock,
                         user,
                         userUsdtWallet,
                         market_idx,
@@ -221,8 +230,8 @@ describe("Testing main orders flow", async function () {
                         STOP_LOOSE_PRICE,
                     );
 
-                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE + 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, STOP_LOOSE_PRICE + 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: 0,
                     });
                 });
@@ -232,11 +241,11 @@ describe("Testing main orders flow", async function () {
                 it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
                     const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                     const TAKE_PROFIT_PRICE = 998 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openMarketOrderWithTests(
                         vault,
-                        ethUsdtMock,
+                        priceNodeMock,
                         user,
                         userUsdtWallet,
                         market_idx,
@@ -248,10 +257,10 @@ describe("Testing main orders flow", async function () {
                         TAKE_PROFIT_PRICE,
                     );
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE - 1);
                     const { traceTree } = await closeOrderWithTraceTree({
                         vault,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         user,
                         userWallet: userUsdtWallet,
                         pos_key,
@@ -260,7 +269,10 @@ describe("Testing main orders flow", async function () {
                             stopPositionType: StopPositionType.TakeProfit,
                         },
                     });
-                    expect(Number(fromNano(traceTree!.getBalanceDiff(vault.limitBot))) * -1).lt(0.4);
+
+                    expect(Number(fromNano(traceTree!.getBalanceDiff(vault.limitBot))) * -1)
+                        .lt(0.5)
+                        .gt(0.45);
                 });
             });
         });
@@ -275,14 +287,14 @@ describe("Testing main orders flow", async function () {
                     const INITIAL_PRICE = 1050 * USDT_DECIMALS;
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
                     const STOP_LOOSE_PRICE = 999 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -292,8 +304,8 @@ describe("Testing main orders flow", async function () {
                         stopLossTriggerPrice: STOP_LOOSE_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, STOP_LOOSE_PRICE);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -305,14 +317,14 @@ describe("Testing main orders flow", async function () {
                     const INITIAL_PRICE = 950 * USDT_DECIMALS;
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
                     const STOP_LOOSE_PRICE = 999 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -322,8 +334,8 @@ describe("Testing main orders flow", async function () {
                         stopLossTriggerPrice: STOP_LOOSE_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, STOP_LOOSE_PRICE);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, STOP_LOOSE_PRICE);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -336,14 +348,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 1002 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -353,8 +365,8 @@ describe("Testing main orders flow", async function () {
                         takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -367,14 +379,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 1002 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -384,8 +396,8 @@ describe("Testing main orders flow", async function () {
                         takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -400,14 +412,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const STOP_LOSS_PRICE = 1002 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Short,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -417,8 +429,8 @@ describe("Testing main orders flow", async function () {
                         stopLossTriggerPrice: STOP_LOSS_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, STOP_LOSS_PRICE + 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -431,14 +443,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const STOP_LOSS_PRICE = 1002 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Short,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -448,8 +460,8 @@ describe("Testing main orders flow", async function () {
                         stopLossTriggerPrice: STOP_LOSS_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, STOP_LOSS_PRICE + 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, STOP_LOSS_PRICE + 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.StopLoss,
                     });
                 });
@@ -461,14 +473,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 990 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Short,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -478,8 +490,8 @@ describe("Testing main orders flow", async function () {
                         takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE - 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -491,14 +503,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 990 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Short,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -508,8 +520,8 @@ describe("Testing main orders flow", async function () {
                         takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE - 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE - 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -521,14 +533,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 1010 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -538,8 +550,8 @@ describe("Testing main orders flow", async function () {
                         takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
                     });
 
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE + 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -556,14 +568,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 1010 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -596,8 +608,8 @@ describe("Testing main orders flow", async function () {
                     const positions = await account.positions();
                     expect(positions[0][1].takeProfit!.triggerPrice).to.be.eq((TAKE_PROFIT_PRICE * 100).toString());
                     //add test for updating stop position config
-                    await setPrice(ethUsdtMock, TAKE_PROFIT_PRICE + 1);
-                    await closePosition(vault, ethUsdtMock, user, userUsdtWallet, pos_key, zeroAddress, {
+                    await setPrice(priceNodeMock, TAKE_PROFIT_PRICE + 1);
+                    await closePosition(vault, priceNodeMock, user, userUsdtWallet, pos_key, zeroAddress, {
                         stopPositionType: StopPositionType.TakeProfit,
                     });
                 });
@@ -608,14 +620,14 @@ describe("Testing main orders flow", async function () {
                     const LIMIT_TRIGGER_PRICE = 1000 * USDT_DECIMALS;
 
                     const TAKE_PROFIT_PRICE = 1010 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Long,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,
@@ -684,14 +696,14 @@ describe("Testing main orders flow", async function () {
                     const LEVERAGE = 10 * LEVERAGE_DECIMALS;
 
                     const STOP_LOSS_PRICE = 1002 * USDT_DECIMALS;
-                    await setPrice(ethUsdtMock, INITIAL_PRICE);
+                    await setPrice(priceNodeMock, INITIAL_PRICE);
                     // OPEN POSITION
                     const pos_key = await openLimitWithTestsOrder({
                         user,
                         userWallet: userUsdtWallet,
                         marketIdx,
                         posType: PosType.Short,
-                        pair: ethUsdtMock,
+                        pair: priceNodeMock,
                         vault,
                         triggerPrice: LIMIT_TRIGGER_PRICE,
                         referrer: zeroAddress,

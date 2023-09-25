@@ -6,6 +6,7 @@ import {IPriceNode} from "../interfaces/IPriceNode.tsol";
 import {Errors} from "../libraries/Errors.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 import {IOnPriceCallback} from "../interfaces/IOnPriceCallback.tsol";
+import {Gas} from "../libraries/Gas.tsol";
 
 
 contract PriceNodeMock is IPriceNode {
@@ -48,7 +49,7 @@ contract PriceNodeMock is IPriceNode {
         require (requests[ticker].keys().length < maxRequests, Errors.MAX_REQUESTS);
 
         // just take 0.05 ever to cover this call fees
-        requests[ticker][requestNonce] = Request(msg.sender, msg.value - 0.05 ever);
+        requests[ticker][requestNonce] = Request(msg.sender, msg.value - Gas.PRICE_NODE_MAKE_REQUEST_FEE);
         requestsNum += 1;
         requestNonce += 1;
 
@@ -89,7 +90,9 @@ contract PriceNodeMock is IPriceNode {
                 requestsResolved += 1;
                 requestsNum -= 1;
                 delete reqsMap[nonce];
-                IOnPriceCallback(req.sender).onPriceCallback{value: req.callbackValue - 0.05 ever}(price.price, price.ticker);
+                IOnPriceCallback(req.sender).onPriceCallback{
+                    value: req.callbackValue - Gas.PRICE_NODE_CALLBACK_FEE
+                }(price.price, price.ticker);
                 emit RequestResolved(req.sender, nonce, price.ticker);
 
                 if (requestsResolved >= maxActionsPerTx) {

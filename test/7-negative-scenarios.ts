@@ -120,7 +120,7 @@ describe("Testing main orders flow", async function () {
                 DEFAULT_TICKER,
                 signer,
             );
-
+            await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             userUsdtWallet = await usdRoot.wallet(user);
             user1UsdtWallet = await usdRoot.wallet(user1);
             ownerUsdtWallet = await usdRoot.wallet(owner);
@@ -234,6 +234,8 @@ describe("Testing main orders flow", async function () {
                 const INITIAL_PRICE = 1000 * USDT_DECIMALS;
 
                 await setPrice(priceNodeMock, INITIAL_PRICE);
+                const callId = getRandomNonce();
+
                 const value = bn(MIN_MSG_VALUE_FOR_OPEN_ORDER).plus(FEE_FOR_TOKEN_TRANSFER).toString();
                 const { traceTree } = await locklift.tracing.trace(
                     openMarketOrder({
@@ -246,6 +248,7 @@ describe("Testing main orders flow", async function () {
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
                         value,
+                        callId,
                     }),
                     {
                         raise: true,
@@ -254,12 +257,10 @@ describe("Testing main orders flow", async function () {
                         },
                     },
                 );
-                await traceTree.beautyPrint();
 
-                // expect(traceTree)
-                //     .and.to.emit("MarketOrderRequestRevert")
-                //     //there is no success process_requestMarketOrder call
-                //     .and.not.to.be.call("process_requestMarketOrder");
+                expect(traceTree).and.to.emit("MarketOrderExecution").withNamedArgs({
+                    callId: callId.toString(),
+                });
             });
         });
     });

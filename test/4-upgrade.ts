@@ -354,7 +354,6 @@ describe("Testing main orders flow", async function () {
                         }),
                         { allowedCodes: { compute: [null] } },
                     );
-                    await traceTree.beautyPrint();
                 }
                 await locklift.tracing.trace(vault.setNewAccountCode());
                 const accountDetailsBeforeUpgrade = await vault.account(user).then(res => res.getDetails());

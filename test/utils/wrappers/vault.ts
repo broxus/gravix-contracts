@@ -112,6 +112,18 @@ export class GravixVault {
             });
     }
 
+    async setPriceNode(priceNode: Address) {
+        return this.contract.methods
+            .setPriceNode({
+                newNode: priceNode,
+                meta: { callId: 0, nonce: 0, sendGasTo: this.owner.address },
+            })
+            .send({
+                from: this.owner.address,
+                amount: toNano(2),
+            });
+    }
+
     async addLiquidity(from_wallet: TokenWallet, amount: number, callId = 0) {
         const payload = (await this.contract.methods.encodeLiquidityDeposit({ nonce: 0, callId: callId }).call())
             .payload;

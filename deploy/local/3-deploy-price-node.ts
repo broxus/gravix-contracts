@@ -37,7 +37,6 @@ export default async () => {
             enableLogs: true,
         }),
     );
-    await traceTree.beautyPrint();
 };
 
 export const tag = "price_node";

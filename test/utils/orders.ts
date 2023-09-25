@@ -3,7 +3,7 @@ import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import BigNumber from "bignumber.js";
 import { GravixVaultAbi, PairMockAbi, PriceNodeMockAbi } from "../../build/factorySource";
-import { bn, getPriceForLimitOrder, PriceNodeMockAdapter, toUSD, tryIncreaseTime } from "./common";
+import { bn, getPriceForLimitOrder, pipe, PriceNodeMockAdapter, toUSD, tryIncreaseTime } from "./common";
 import { TokenWallet } from "./wrappers/token_wallet";
 import { LimitOrderSate, LimitType, PosType } from "./constants";
 import { GravixAccount } from "./wrappers/vault_acc";
@@ -59,7 +59,6 @@ export async function getOpenPositionInfo(
     leverage: number,
 ) {
     const initialPrice = Number(await getPrice(pair));
-    console.log(initialPrice);
     const market = (await vault.contract.methods.getMarket({ marketIdx: market_idx, answerId: 0 }).call())._market;
 
     const position = collateral * (leverage / 1000000);
@@ -153,7 +152,6 @@ export async function openMarketOrder({
         collateral,
         leverage,
     );
-    console.log("1");
     return vault.openMarketPosition(
         userWallet,
         collateral,
@@ -171,7 +169,7 @@ export async function openMarketOrder({
 }
 export async function openMarketOrderWithTests(
     vault: GravixVault,
-    pair: Contract<PairMockAbi>,
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter,
     user: Account,
     user_wallet: TokenWallet,
     market_idx: number,
@@ -307,7 +305,7 @@ export async function openLimitWithTestsOrder({
     stopLossTriggerPrice = 0,
 }: {
     vault: GravixVault;
-    pair: Contract<PairMockAbi>;
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
     user: Account;
     userWallet: TokenWallet;
     marketIdx: number;
@@ -441,6 +439,7 @@ export async function openLimitWithTestsOrder({
             }),
     );
 
+    expect(pipe(executeLimitOrderTraceTree!.getBalanceDiff, fromNano, Number)(vault.limitBot)).to.be.lt(0.4);
     const { colUp, posUp, liqPrice } = await checkOpenedPositionMath({
         market,
         posType,
@@ -598,7 +597,7 @@ export const closeOrderWithTraceTree = async ({
     stopOrderConfig,
 }: {
     vault: GravixVault;
-    pair: Contract<PairMockAbi>;
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
     user: Account;
     userWallet: TokenWallet;
     pos_key: number;
@@ -679,9 +678,6 @@ export const closeOrderWithTraceTree = async ({
         .minus(posView2.position.openFee)
         .times(posView2.position.leverage)
         .idiv(1000000);
-    // const leveraged_asset = leveraged_usd.times(TOKEN_DECIMALS).idiv(pos_view2.position.openPrice);
-
-    // console.log(event);
 
     const time_passed = bn(posView2.viewTime).minus(posView2.position.createdAt);
     const borrow_fee = time_passed
@@ -725,7 +721,6 @@ export const closeOrderWithTraceTree = async ({
         .plus(expected_pnl)
         .minus(borrow_fee)
         .minus(posView2.fundingFee);
-    // console.log(expected_pnl, borrow_fee);
     const expected_close_fee = up_pos.times(posView2.position.closeFeeRate).idiv(PERCENT_100);
 
     expect(liq_price.toFixed()).to.be.eq(posView2.liquidationPrice);
@@ -826,7 +821,7 @@ export const closeOrderWithTraceTree = async ({
 };
 export async function closePosition(
     vault: GravixVault,
-    pair: Contract<PairMockAbi>,
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter,
     user: Account,
     user_wallet: TokenWallet,
     pos_key: number,
@@ -849,7 +844,7 @@ export async function closePosition(
 
 export async function testMarketPosition(
     vault: GravixVault,
-    pair: Contract<PairMockAbi>,
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter,
     user: Account,
     user_wallet: TokenWallet,
     market_idx: number,
@@ -902,7 +897,7 @@ export const testLimitPosition = async ({
     triggerPrice,
 }: {
     vault: GravixVault;
-    pair: Contract<PairMockAbi>;
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
     user: Account;
     userWallet: TokenWallet;
     marketIdx: number;
@@ -939,7 +934,7 @@ export const testLimitPosition = async ({
 
 export async function testPositionFunding(
     vault: GravixVault,
-    pair: Contract<PairMockAbi>,
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter,
     user: Account,
     user_wallet: TokenWallet,
     market_idx: number,

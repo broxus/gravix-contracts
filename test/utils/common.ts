@@ -20,7 +20,10 @@ export const isValidEverAddress = (address: string) => /^(?:-1|0):[0-9a-fA-F]{64
 export async function sleep(ms = 1000) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
+export const pipe =
+    (...fns: Array<Function>) =>
+    (x: any) =>
+        fns.reduce((v, f) => f(v), x);
 export function bn(num: number | string) {
     return new Bignumber(num);
 }
@@ -330,12 +333,10 @@ export const DEFAULT_TICKER = "eth_usdt";
 
 export class PriceNodeMockAdapter {
     constructor(
-        private priceNodeMock: Contract<PriceNodeMockAbi>,
+        public priceNodeMock: Contract<PriceNodeMockAbi>,
         private ticker: string,
         private readonly signer: AccountWithSigner["signer"],
-    ) {
-        console.log(signer);
-    }
+    ) {}
 
     setPrice = async (price: number | string) => {
         await this.priceNodeMock.methods
