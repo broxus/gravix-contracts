@@ -173,6 +173,7 @@ export class GravixVault {
         callId = 0,
         stopLossTriggerPrice = 0,
         takeProfitTriggerPrice = 0,
+        value: string = toNano(5),
     ) {
         const payload = (
             await this.contract.methods
@@ -191,7 +192,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(5));
+        return await from_wallet.transfer(amount, this.contract.address, payload, value);
     }
 
     async openLimitPosition({

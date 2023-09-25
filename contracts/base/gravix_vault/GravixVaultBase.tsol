@@ -179,7 +179,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             TvmCell actionPayload,
             bool correct
         ) = decodeTokenTransfer(payload);
-        bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
+        bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER;
         if (msg.sender == usdt.wallet) {
             if (!exception && action == Action.MarketOrder) {
                 exception = exception || !_handleMarketOrder(
@@ -235,7 +235,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         _handleStgUsdtBurn(amount, payload);
     }
 
-    onBounce(TvmSlice slice) external view {
+    onBounce(TvmSlice slice) external {
         tvm.accept();
 
         uint32 functionId = slice.decode(uint32);
@@ -244,25 +244,40 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         if (functionId == tvm.functionId(IGravixAccount.process_requestMarketOrder)) {
             tvm.rawReserve(_reserve(), 0);
             uint32 _requestNonce = slice.decode(uint32);
-            PendingMarketOrder request = pendingMarketRequests[_requestNonce];
-
-            address gravixAcc = _deployGravixAccount(request.user, request.referrer);
+            PendingMarketOrder pendingRequest = pendingMarketRequests[_requestNonce];
+            uint128 minValue = calculateMinValueForContinueOpenMarketOrder(pendingRequest);
+            if (msg.value < minValue) {
+                _revertRequestMarketOrder(
+                    _requestNonce,
+                    pendingRequest
+                );
+                return;
+            }
+            address gravixAcc = _deployGravixAccount(pendingRequest.user, pendingRequest.referrer);
             IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _requestNonce,
-                request,
+                pendingRequest,
                 gravixAccountCode.version
             );
         }
         if (functionId == tvm.functionId(IGravixAccount.process_requestLimitOrder)) {
             tvm.rawReserve(_reserve(), 0);
-            uint32 _requestNonce = slice.decode(uint32);
-            PendingLimitOrder request = pendingLimitRequests[_requestNonce];
 
-            address gravixAcc = _deployGravixAccount(request.user, request.referrer);
+            uint32 _requestNonce = slice.decode(uint32);
+            PendingLimitOrder pendingRequest = pendingLimitRequests[_requestNonce];
+            uint128 minValue = calculateMinValueForContinueOpenLimitOrder(pendingRequest);
+            if (msg.value < minValue) {
+                _revertRequestLimitOrder(
+                    _requestNonce,
+                    pendingRequest
+                );
+                return;
+            }
+            address gravixAcc = _deployGravixAccount(pendingRequest.user, pendingRequest.referrer);
 
             IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _requestNonce,
-                request,
+                pendingRequest,
                 maxPnlRate,
                 minStopLossRate,
                 // we will be here only if contract was not deployed yet, and user tried to open limit order with provided price
@@ -275,10 +290,22 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             tvm.rawReserve(_reserve(), 0);
             uint32 _requestNonce = slice.decode(uint32);
             PendingLimitOrder request = pendingLimitRequests[_requestNonce];
+            uint128 minValue = calculateMinValueForContinueOpenLimitOrder(request);
+
+            if (msg.value < minValue) {
+                _revertRequestPendingLimitOrder(
+                    _requestNonce,
+                    request
+                );
+                return;
+            }
 
             address gravixAcc = _deployGravixAccount(request.user, request.referrer);
 
-            IGravixAccount(gravixAcc).process_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            IGravixAccount(gravixAcc).process_requestPendingLimitOrder{
+                value: 0,
+                flag: MsgFlag.ALL_NOT_RESERVED
+            }(
                 _requestNonce,
                 request,
                 gravixAccountCode.version

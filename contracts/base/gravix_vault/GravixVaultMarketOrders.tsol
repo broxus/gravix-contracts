@@ -36,7 +36,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             ? Gas.OPEN_LIMIT_ORDER_RESERVE
             : 0;
 
-        if (msg.value < Gas.MIN_MSG_VALUE + valueForTriggers) {
+        if (msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER + valueForTriggers) {
             return false;
         }
         // collateral has USDT decimals -> 6
@@ -128,6 +128,13 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint32 _reqNonce,
         PendingMarketOrder _pendRequest
     ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        _revertRequestMarketOrder(_reqNonce, _pendRequest);
+    }
+
+    function _revertRequestMarketOrder(
+        uint32 _reqNonce,
+        PendingMarketOrder _pendRequest
+    ) internal {
         delete pendingMarketRequests[_reqNonce];
         emit MarketOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
         if (_pendRequest.collateral > 0) {

@@ -386,6 +386,35 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         });
     }
 
+    function calculateMinValueForContinueOpenMarketOrder(
+        PendingMarketOrder _request
+    ) internal returns (uint128) {
+        uint128 valueForTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0
+            ? Gas.OPEN_LIMIT_ORDER_RESERVE
+            : 0;
+
+        return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
+            + Gas.OPEN_ORDER_FEE
+            + valueForTriggers
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL;
+    }
+
+    function calculateMinValueForContinueOpenLimitOrder(
+        PendingLimitOrder _request
+    ) internal returns (uint128) {
+        uint128 valueForTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0
+            ? Gas.OPEN_LIMIT_ORDER_RESERVE
+            : 0;
+
+        return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
+            + Gas.OPEN_ORDER_FEE
+            + valueForTriggers
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.OPEN_LIMIT_ORDER_RESERVE;
+    }
+
     modifier onlyGravixAccount(address user) {
         address gravixAccountAddr = getGravixAccountAddress(user);
         require (msg.sender == gravixAccountAddr, Errors.NOT_GRAVIX_ACCOUNT);

@@ -2,8 +2,8 @@ import { Address, Contract, fromNano, getRandomNonce, toNano, zeroAddress } from
 import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import BigNumber from "bignumber.js";
-import { GravixVaultAbi, PairMockAbi } from "../../build/factorySource";
-import { bn, getPriceForLimitOrder, toUSD, tryIncreaseTime } from "./common";
+import { GravixVaultAbi, PairMockAbi, PriceNodeMockAbi } from "../../build/factorySource";
+import { bn, getPriceForLimitOrder, PriceNodeMockAdapter, toUSD, tryIncreaseTime } from "./common";
 import { TokenWallet } from "./wrappers/token_wallet";
 import { LimitOrderSate, LimitType, PosType } from "./constants";
 import { GravixAccount } from "./wrappers/vault_acc";
@@ -23,24 +23,34 @@ const empty_price = {
     ticker: "",
     signature: "",
 };
-export async function getPrice(pair: Contract<PairMockAbi>): Promise<number> {
+export async function getPrice(pair: Contract<PairMockAbi> | PriceNodeMockAdapter): Promise<number> {
+    if (pair instanceof PriceNodeMockAdapter) {
+        return pair.getPrice();
+    }
     const reserves = (await pair.methods._reserves().call())._reserves;
     return Number(reserves[1]) * 100; // 6 to 8 decimals
 }
 
-export async function setPrice(pair: Contract<PairMockAbi>, price: number | string) {
+export async function setPrice<T extends Contract<PairMockAbi> | PriceNodeMockAdapter>(
+    pair: T,
+    price: number | string,
+) {
     const signer = await locklift.keystore.getSigner("0");
-    await pair.methods
-        .setReserves({
-            // 1 eth and {price}$ in reserves
-            // tokens in pairs have 9 decimals
-            newReserves: [10 ** 9, price],
-        })
-        .sendExternal({ publicKey: signer?.publicKey as string });
+    if (pair instanceof PriceNodeMockAdapter) {
+        await pair.setPrice(Number(price) * 100);
+    } else {
+        await pair.methods
+            .setReserves({
+                // 1 eth and {price}$ in reserves
+                // tokens in pairs have 9 decimals
+                newReserves: [10 ** 9, price],
+            })
+            .sendExternal({ publicKey: signer?.publicKey as string });
+    }
 }
 export async function getOpenPositionInfo(
     vault: GravixVault,
-    pair: Contract<PairMockAbi>,
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter,
     user: Account,
     user_wallet: TokenWallet,
     market_idx: number,
@@ -49,6 +59,7 @@ export async function getOpenPositionInfo(
     leverage: number,
 ) {
     const initialPrice = Number(await getPrice(pair));
+    console.log(initialPrice);
     const market = (await vault.contract.methods.getMarket({ marketIdx: market_idx, answerId: 0 }).call())._market;
 
     const position = collateral * (leverage / 1000000);
@@ -113,9 +124,13 @@ export async function openMarketOrder({
     referrer = zeroAddress,
     pair,
     posType,
+    takeProfitTriggerPrice,
+    stopLossTriggerPrice,
+    value = toNano(5),
+    callId = getRandomNonce(),
 }: {
     vault: GravixVault;
-    pair: Contract<PairMockAbi>;
+    pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
     user: Account;
     userWallet: TokenWallet;
     marketIdx: number;
@@ -123,6 +138,10 @@ export async function openMarketOrder({
     collateral: number;
     leverage: number;
     referrer?: Address;
+    stopLossTriggerPrice?: number;
+    takeProfitTriggerPrice?: number;
+    value?: string;
+    callId?: number;
 }) {
     const { expectedPrice } = await getOpenPositionInfo(
         vault,
@@ -134,7 +153,7 @@ export async function openMarketOrder({
         collateral,
         leverage,
     );
-
+    console.log("1");
     return vault.openMarketPosition(
         userWallet,
         collateral,
@@ -144,7 +163,10 @@ export async function openMarketOrder({
         expectedPrice.toString(),
         0,
         referrer,
-        getRandomNonce(),
+        callId,
+        stopLossTriggerPrice,
+        takeProfitTriggerPrice,
+        value,
     );
 }
 export async function openMarketOrderWithTests(
@@ -159,6 +181,7 @@ export async function openMarketOrderWithTests(
     referrer = zeroAddress,
     stopLooseTriggerPrice = 0,
     takeProfitTriggerPrice = 0,
+    openOrderValue: string = toNano(5),
 ): Promise<number> {
     const { position, expectedPrice, market, initialPrice, totalSpread } = await getOpenPositionInfo(
         vault,
@@ -198,6 +221,7 @@ export async function openMarketOrderWithTests(
             callId,
             stopLooseTriggerPrice * 100,
             takeProfitTriggerPrice * 100,
+            openOrderValue,
         ),
         { allowedCodes: { compute: [null] } },
     );

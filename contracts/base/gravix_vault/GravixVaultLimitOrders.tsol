@@ -41,7 +41,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             ? Gas.OPEN_LIMIT_ORDER_RESERVE
             : 0;
 
-        if (msg.value < Gas.MIN_MSG_VALUE + Gas.OPEN_LIMIT_ORDER_RESERVE + valueForTriggers) {
+        if (msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER + Gas.OPEN_LIMIT_ORDER_RESERVE + valueForTriggers) {
             return false;
         }
 
@@ -172,6 +172,13 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _reqNonce,
         IGravixVault.PendingLimitOrder _pendingRequest
     ) external override onlyGravixAccount(_pendingRequest.user) reserve {
+        _revertRequestPendingLimitOrder(_reqNonce, _pendingRequest);
+    }
+
+    function _revertRequestPendingLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendingRequest
+    ) internal {
         delete pendingLimitRequests[_reqNonce];
         emit LimitOrderPendingRequestRevert(_pendingRequest.meta.callId, _pendingRequest.user);
         if (_pendingRequest.collateral > 0) {
@@ -338,6 +345,13 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 _reqNonce,
         PendingLimitOrder _pendRequest
     ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        _revertRequestLimitOrder(_reqNonce, _pendRequest);
+    }
+
+    function _revertRequestLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest
+    ) internal {
         delete pendingLimitRequests[_reqNonce];
         emit LimitOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
         if (_pendRequest.collateral > 0) {

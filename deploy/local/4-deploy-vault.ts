@@ -11,7 +11,7 @@ export default async () => {
 
     const usdt_root = await locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT");
     const stg_root = await locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT");
-    const priceNode = await locklift.deployments.getContract("PriceNode");
+    const priceNode = await locklift.deployments.getContract("PriceNodeMock");
 
     const vault = await setupVault(
         owner,
