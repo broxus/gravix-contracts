@@ -716,7 +716,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
             if (isPositionHasTriggerPrice) {
                 ILimitBotVault(limitBotVault).sendTo{
-                    value: 0.1 ever,
+                    value: 0.01 ever,
                     flag: MsgFlag.SENDER_PAYS_FEES
                 }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
             }
@@ -738,16 +738,14 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 debt = _decreaseInsuranceFund(uint128(pnlWithFees));
             }
 
-            // if transaction trigger not a limit bot and position has trigger price, we need to repay the reserved gas
+            // if transaction was triggered by user + position has trigger price, we need to send him reserved gas
             if (_initiator != managers.limitBot && isPositionHasTriggerPrice) {
-                // if a user is emitter by closing position we need to send him reserved gas
                 ILimitBotVault(limitBotVault).sendTo{
-                    value: 0.1 ever,
+                    value: 0.01 ever,
                     flag: MsgFlag.SENDER_PAYS_FEES
                 }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
             } else if (isPositionHasTriggerPrice) {
-                // if position was closed by limit bot, we need to mark reserved value as free
-                // value 1 and flag 0 means that we are not sending any money
+                // if position was closed by limit bot, we just free some money in vault
                 ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
             }
                 // if position was closed by limit bot, we already emitted this event
