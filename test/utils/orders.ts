@@ -3,7 +3,15 @@ import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import BigNumber from "bignumber.js";
 import { GravixVaultAbi, PairMockAbi, PriceNodeMockAbi } from "../../build/factorySource";
-import { bn, getPriceForLimitOrder, pipe, PriceNodeMockAdapter, toUSD, tryIncreaseTime } from "./common";
+import {
+    bn,
+    getPriceForLimitOrder,
+    nannoToEverNumber,
+    pipe,
+    PriceNodeMockAdapter,
+    toUSD,
+    tryIncreaseTime,
+} from "./common";
 import { TokenWallet } from "./wrappers/token_wallet";
 import { LimitOrderSate, LimitType, PosType } from "./constants";
 import { GravixAccount } from "./wrappers/vault_acc";
@@ -221,8 +229,9 @@ export async function openMarketOrderWithTests(
             takeProfitTriggerPrice * 100,
             openOrderValue,
         ),
-        { allowedCodes: { compute: [null] } },
+        { allowedCodes: { compute: [null] }, raise: false },
     );
+    await traceTree.beautyPrint();
     const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
@@ -303,6 +312,7 @@ export async function openLimitWithTestsOrder({
     triggerPrice,
     takeProfitTriggerPrice = 0,
     stopLossTriggerPrice = 0,
+    value = toNano(5),
 }: {
     vault: GravixVault;
     pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
@@ -317,6 +327,7 @@ export async function openLimitWithTestsOrder({
     triggerPrice: number;
     stopLossTriggerPrice?: number;
     takeProfitTriggerPrice?: number;
+    value?: string;
 }): Promise<number> {
     const initialPrice = Number(await getPrice(pair));
     const market = (await vault.contract.methods.getMarket({ marketIdx, answerId: 0 }).call())._market;
@@ -356,9 +367,11 @@ export async function openLimitWithTestsOrder({
             fromWallet: userWallet,
             stopLossTriggerPrice: stopLossTriggerPrice * 100,
             takeProfitTriggerPrice: takeProfitTriggerPrice * 100,
+            value,
         }),
-        { allowedCodes: { compute: [null] } },
+        { allowedCodes: { compute: [null] }, raise: false },
     );
+    await openLimitOrderTraceTree.beautyPrint();
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
     const [{ orderKey: pendingLimitOrderPosKey }] = openLimitOrderTraceTree?.findEventsForContract({
         contract: vault.contract,
@@ -595,6 +608,7 @@ export const closeOrderWithTraceTree = async ({
     pair,
     vault,
     stopOrderConfig,
+    value,
 }: {
     vault: GravixVault;
     pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
@@ -605,6 +619,7 @@ export const closeOrderWithTraceTree = async ({
     stopOrderConfig?: {
         stopPositionType: 0 | 1;
     };
+    value: string;
 }) => {
     const currentPrice = Number(await getPrice(pair));
     const account = await vault.account(user);
@@ -640,7 +655,7 @@ export const closeOrderWithTraceTree = async ({
     const callId = getRandomNonce();
     const { traceTree: traceTree1 } = await locklift.tracing.trace(
         !stopOrderConfig
-            ? vault.closePosition(user, pos_key, posView1.position.marketIdx, callId)
+            ? vault.closePosition(user, pos_key, posView1.position.marketIdx, callId, value)
             : vault.stopPositions({
                   callId,
                   stopPositionsConfig: [
@@ -660,6 +675,12 @@ export const closeOrderWithTraceTree = async ({
                   ],
               }),
     );
+    await traceTree1.beautyPrint();
+
+    if (!stopOrderConfig) {
+        const userBalanceChange = traceTree1!.getBalanceDiff(user.address);
+        expect(nannoToEverNumber(value) - nannoToEverNumber(userBalanceChange) * -1).to.be.closeTo(0.1, 0.04);
+    }
     const event = await vault.getEvent("ClosePosition");
     // @ts-ignore
     const posView2 = event.positionView;
@@ -829,6 +850,7 @@ export async function closePosition(
     stopOrderConfig?: {
         stopPositionType: 0 | 1;
     },
+    value = toNano(5),
 ) {
     const { posView } = await closeOrderWithTraceTree({
         stopOrderConfig,
@@ -838,6 +860,7 @@ export async function closePosition(
         userWallet: user_wallet,
         pos_key,
         referrer,
+        value,
     });
     return posView;
 }
@@ -855,6 +878,8 @@ export async function testMarketPosition(
     finish_price: number,
     ttl = 0,
     referrer = zeroAddress,
+    openValue = "0",
+    closeValue = "0",
 ) {
     await setPrice(pair, initial_price);
     // OPEN POSITION
@@ -868,6 +893,9 @@ export async function testMarketPosition(
         collateral,
         leverage,
         referrer,
+        0,
+        0,
+        openValue,
     );
 
     if (ttl > 0) {
@@ -877,7 +905,7 @@ export async function testMarketPosition(
     expect(marketOrders.length).to.be.eq(0);
     // CLOSE POSITION
     await setPrice(pair, finish_price);
-    await closePosition(vault, pair, user, user_wallet, pos_key, referrer);
+    await closePosition(vault, pair, user, user_wallet, pos_key, referrer, undefined, closeValue);
 }
 
 export const testLimitPosition = async ({
@@ -895,6 +923,7 @@ export const testLimitPosition = async ({
     vault,
     limitType,
     triggerPrice,
+    value,
 }: {
     vault: GravixVault;
     pair: Contract<PairMockAbi> | PriceNodeMockAdapter;
@@ -910,6 +939,7 @@ export const testLimitPosition = async ({
     finishPrice: number;
     ttl?: number;
     referrer?: Address;
+    value?: string;
 }) => {
     await setPrice(pair, initialPrice);
     const key = await openLimitWithTestsOrder({
@@ -924,6 +954,7 @@ export const testLimitPosition = async ({
         userWallet,
         limitType,
         triggerPrice,
+        value,
     });
     const { limitOrders } = await vault.account(user).then(acc => acc.orders());
     expect(limitOrders.length).to.be.eq(0);

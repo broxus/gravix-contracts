@@ -607,7 +607,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         IPriceNode.Price price,
         Callback.CallMeta meta
     ) external onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= calculateMinValueForClosePosition(), Errors.LOW_MSG_VALUE);
 
         // soft fail
         // optimistic check on market, we will check that position matches it in account

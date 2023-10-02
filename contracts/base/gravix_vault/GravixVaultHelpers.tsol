@@ -388,33 +388,48 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         });
     }
 
+    function calculateBaseOpenMarketOrderValue(bool _triggersExists) public pure returns(uint128) {
+        uint128 valueForTriggers = _triggersExists ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+        return Gas.OPEN_ORDER_FEE
+                + Gas.ORACLE_PROXY_DEPLOY
+                + Gas.ORACLE_PROXY_CALL
+                + valueForTriggers;
+    }
+
+    function calculateBaseOpenLimitOrderValue(bool _triggersExists) public pure returns(uint128) {
+        uint128 valueForTriggers = _triggersExists ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+        return Gas.OPEN_ORDER_FEE
+            + Gas.OPEN_LIMIT_ORDER_RESERVE
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + valueForTriggers;
+    }
+
     function calculateMinValueForContinueOpenMarketOrder(
         PendingMarketOrder _request
     ) internal returns (uint128) {
-        uint128 valueForTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0
-            ? Gas.OPEN_LIMIT_ORDER_RESERVE
-            : 0;
-
+        bool hasTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0;
+        uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
         return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
-            + Gas.OPEN_ORDER_FEE
-            + valueForTriggers
-            + Gas.ORACLE_PROXY_DEPLOY
-            + Gas.ORACLE_PROXY_CALL;
+                + valueForReferrerRetrieval
+                + calculateBaseOpenMarketOrderValue(hasTriggers);
     }
 
     function calculateMinValueForContinueOpenLimitOrder(
         PendingLimitOrder _request
     ) internal returns (uint128) {
-        uint128 valueForTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0
-            ? Gas.OPEN_LIMIT_ORDER_RESERVE
-            : 0;
+        bool hasTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0;
+        uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
 
         return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
-            + Gas.OPEN_ORDER_FEE
-            + valueForTriggers
-            + Gas.ORACLE_PROXY_DEPLOY
-            + Gas.ORACLE_PROXY_CALL
-            + Gas.OPEN_LIMIT_ORDER_RESERVE;
+                + valueForReferrerRetrieval
+                + calculateBaseOpenLimitOrderValue(hasTriggers);
+    }
+
+    function calculateMinValueForClosePosition() public pure returns (uint128) {
+        return Gas.CLOSE_POSITION_FEE
+                + Gas.ORACLE_PROXY_DEPLOY
+                + Gas.ORACLE_PROXY_CALL;
     }
 
     modifier onlyGravixAccount(address user) {

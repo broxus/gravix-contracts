@@ -10,7 +10,6 @@ import {Gas} from "../../libraries/Gas.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
 
-
 abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOrders {
     function transferOwnership(address newOwner, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         managers.owner = newOwner;
@@ -179,7 +178,9 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             TvmCell actionPayload,
             bool correct
         ) = decodeTokenTransfer(payload);
-        bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER;
+//        bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER;
+        bool exception = !correct || paused;
+
         if (msg.sender == usdt.wallet) {
             if (!exception && action == Action.MarketOrder) {
                 exception = exception || !_handleMarketOrder(
@@ -291,7 +292,6 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             uint32 _requestNonce = slice.decode(uint32);
             PendingLimitOrder request = pendingLimitRequests[_requestNonce];
             uint128 minValue = calculateMinValueForContinueOpenLimitOrder(request);
-
             if (msg.value < minValue) {
                 _revertRequestPendingLimitOrder(
                     _requestNonce,

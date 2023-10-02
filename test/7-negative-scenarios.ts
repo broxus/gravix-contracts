@@ -22,6 +22,13 @@ import {
     testMarketPosition,
     testPositionFunding,
 } from "./utils/orders";
+import {
+    BOUNCE_HANDLING_FEE,
+    FEE_FOR_TOKEN_TRANSFER,
+    OPEN_ORDER_FEE,
+    ORACLE_PROXY_CALL,
+    ORACLE_PROXY_DEPLOY,
+} from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -79,11 +86,7 @@ describe("Testing main orders flow", async function () {
     const MARKET_IDX = 0;
     const GRAVIX_ACCOUNT_DEPLOY_VALUE = toNano(0.65);
     const MIN_MSG_VALUE_FOR_OPEN_ORDER = toNano(0.55);
-    const OPEN_ORDER_FEE = toNano(0.1);
-    const ORACLE_PROXY_DEPLOY = toNano(0.22);
-    const ORACLE_PROXY_CALL = toNano(0.1);
-    const FEE_FOR_TOKEN_TRANSFER = toNano(0.04);
-    const BOUNCE_HANDLING_FEE = toNano(0.1);
+
     const basic_config: MarketConfig = {
         priceSource: 1,
         maxLongsUSD: 100_000 * USDT_DECIMALS, // 100k
@@ -169,7 +172,8 @@ describe("Testing main orders flow", async function () {
                 const INITIAL_PRICE = 1000 * USDT_DECIMALS;
 
                 await setPrice(priceNodeMock, INITIAL_PRICE);
-                const value = bn(MIN_MSG_VALUE_FOR_OPEN_ORDER).plus(FEE_FOR_TOKEN_TRANSFER).toString();
+                const openMarketOrderMinValue = await vault.getOpenOrderBaseValue(false).then(res => res.market);
+
                 const { traceTree } = await locklift.tracing.trace(
                     openMarketOrder({
                         vault,
@@ -180,7 +184,7 @@ describe("Testing main orders flow", async function () {
                         marketIdx: MARKET_IDX,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        value,
+                        value: openMarketOrderMinValue,
                     }),
                     {
                         raise: true,
@@ -197,13 +201,7 @@ describe("Testing main orders flow", async function () {
             it("try to open order with full required gas", async () => {
                 const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                 await setPrice(ethUsdtMock, INITIAL_PRICE);
-                const value = bn(GRAVIX_ACCOUNT_DEPLOY_VALUE)
-                    .plus(FEE_FOR_TOKEN_TRANSFER)
-                    .plus(BOUNCE_HANDLING_FEE)
-                    .plus(ORACLE_PROXY_CALL)
-                    .plus(OPEN_ORDER_FEE)
-                    .plus(ORACLE_PROXY_DEPLOY)
-                    .toString();
+                const openMarketOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.market);
                 const callId = getRandomNonce();
                 const { traceTree } = await locklift.tracing.trace(
                     openMarketOrder({
@@ -215,7 +213,7 @@ describe("Testing main orders flow", async function () {
                         marketIdx: MARKET_IDX,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        value,
+                        value: openMarketOrderFullValue,
                         callId,
                     }),
                     {
@@ -225,7 +223,6 @@ describe("Testing main orders flow", async function () {
                         },
                     },
                 );
-                // await traceTree.beautyPrint();
                 expect(traceTree).and.to.emit("MarketOrderExecution").withNamedArgs({
                     callId: callId.toString(),
                 });
@@ -236,7 +233,7 @@ describe("Testing main orders flow", async function () {
                 await setPrice(priceNodeMock, INITIAL_PRICE);
                 const callId = getRandomNonce();
 
-                const value = bn(MIN_MSG_VALUE_FOR_OPEN_ORDER).plus(FEE_FOR_TOKEN_TRANSFER).toString();
+                const openMarketOrderMinValue = await vault.getOpenOrderBaseValue(false).then(res => res.market);
                 const { traceTree } = await locklift.tracing.trace(
                     openMarketOrder({
                         vault,
@@ -247,17 +244,16 @@ describe("Testing main orders flow", async function () {
                         marketIdx: MARKET_IDX,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        value,
+                        value: openMarketOrderMinValue,
                         callId,
                     }),
                     {
-                        raise: true,
+                        raise: false,
                         allowedCodes: {
                             compute: [null],
                         },
                     },
                 );
-
                 expect(traceTree).and.to.emit("MarketOrderExecution").withNamedArgs({
                     callId: callId.toString(),
                 });

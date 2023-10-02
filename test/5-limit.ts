@@ -14,7 +14,7 @@ import {
     testLimitPosition,
     testMarketPosition,
 } from "./utils/orders";
-import { LimitType } from "./utils/constants";
+import { LimitType, RETRIEVE_REFERRER_VALUE } from "./utils/constants";
 
 chai.use(lockliftChai);
 
@@ -22,7 +22,8 @@ describe("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
-
+    let openLimitOrderBaseValue: string;
+    let openLimitOrderFullValue: string;
     let usdt_root: Token;
     let stg_root: Token;
     const USDT_DECIMALS = 10 ** 6;
@@ -108,6 +109,9 @@ describe("Testing main orders flow", async function () {
             userUsdtWallet = await usdt_root.wallet(user);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
+
+            openLimitOrderBaseValue = await vault.getOpenOrderBaseValue(false).then(res => res.limit);
+            openLimitOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.limit);
         });
     });
 
@@ -168,6 +172,7 @@ describe("Testing main orders flow", async function () {
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
                         referrer: user1.address,
+                        value: bn(openLimitOrderFullValue).plus(RETRIEVE_REFERRER_VALUE).toString(),
                     });
                 });
             });
@@ -186,6 +191,7 @@ describe("Testing main orders flow", async function () {
                         posType: SHORT_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
+                        value: openLimitOrderBaseValue,
                     });
                 });
             });
@@ -204,6 +210,7 @@ describe("Testing main orders flow", async function () {
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Stop,
+                        value: openLimitOrderBaseValue,
                     });
                 });
             });
@@ -222,6 +229,7 @@ describe("Testing main orders flow", async function () {
                         posType: SHORT_POS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Stop,
+                        value: openLimitOrderBaseValue,
                     });
                 });
             });

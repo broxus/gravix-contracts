@@ -15,6 +15,7 @@ import {
     testMarketPosition,
     testPositionFunding,
 } from "./utils/orders";
+import { RETRIEVE_REFERRER_VALUE } from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -23,6 +24,9 @@ describe("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
+    let openMarketOrderBaseValue: string;
+    let openMarketOrderFullValue: string;
+    let closePositionValue: string;
 
     let usdt_root: Token;
     let stg_root: Token;
@@ -110,6 +114,10 @@ describe("Testing main orders flow", async function () {
             user_usdt_wallet = await usdt_root.wallet(user);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
+
+            openMarketOrderBaseValue = await vault.getOpenOrderBaseValue(false).then(res => res.market);
+            openMarketOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.market);
+            closePositionValue = await vault.getClosePositionValue();
         });
     });
 
@@ -155,6 +163,8 @@ describe("Testing main orders flow", async function () {
 
             describe("Test solo long positions", async function () {
                 it("Pnl+, 1x leverage, open/close 1000$/1100$", async function () {
+                    const openMarketOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.market);
+
                     await testMarketPosition(
                         vault,
                         priceNodeMock,
@@ -166,6 +176,10 @@ describe("Testing main orders flow", async function () {
                         LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1100 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderFullValue,
+                        closePositionValue,
                     );
                 });
 
@@ -181,6 +195,10 @@ describe("Testing main orders flow", async function () {
                         10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1500 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -196,6 +214,10 @@ describe("Testing main orders flow", async function () {
                         100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         2000 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -211,6 +233,10 @@ describe("Testing main orders flow", async function () {
                         LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         500 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -226,6 +252,10 @@ describe("Testing main orders flow", async function () {
                         10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         950 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -241,6 +271,10 @@ describe("Testing main orders flow", async function () {
                         100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         995 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
             });
@@ -258,6 +292,10 @@ describe("Testing main orders flow", async function () {
                         LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         900 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -273,6 +311,10 @@ describe("Testing main orders flow", async function () {
                         10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         650 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -288,6 +330,10 @@ describe("Testing main orders flow", async function () {
                         100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         300 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -303,6 +349,10 @@ describe("Testing main orders flow", async function () {
                         LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1850 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -318,6 +368,10 @@ describe("Testing main orders flow", async function () {
                         10 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1050 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
 
@@ -333,6 +387,10 @@ describe("Testing main orders flow", async function () {
                         100 * LEVERAGE_DECIMALS,
                         1000 * USDT_DECIMALS,
                         1005 * USDT_DECIMALS,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
                 });
             });
@@ -352,6 +410,10 @@ describe("Testing main orders flow", async function () {
                         LONG_POS,
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
                     );
                     short_pos_key = await openMarketOrderWithTests(
                         vault,
@@ -362,6 +424,10 @@ describe("Testing main orders flow", async function () {
                         SHORT_POS,
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
                     );
                     long_pos2_key = await openMarketOrderWithTests(
                         vault,
@@ -372,6 +438,10 @@ describe("Testing main orders flow", async function () {
                         LONG_POS,
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
                     );
                     short_pos2_key = await openMarketOrderWithTests(
                         vault,
@@ -382,6 +452,10 @@ describe("Testing main orders flow", async function () {
                         SHORT_POS,
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
                     );
                 });
 
@@ -432,6 +506,9 @@ describe("Testing main orders flow", async function () {
                     1000 * USDT_DECIMALS,
                     1100 * USDT_DECIMALS,
                     86400, // 1 day
+                    undefined,
+                    openMarketOrderBaseValue,
+                    closePositionValue,
                 );
 
                 await testMarketPosition(
@@ -446,6 +523,9 @@ describe("Testing main orders flow", async function () {
                     1000 * USDT_DECIMALS,
                     1100 * USDT_DECIMALS,
                     86400, // 1 day
+                    undefined,
+                    openMarketOrderBaseValue,
+                    closePositionValue,
                 );
             });
 
@@ -509,6 +589,11 @@ describe("Testing main orders flow", async function () {
                         LONG_POS,
                         100 * USDT_DECIMALS,
                         100 * LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
 
                     await testPositionFunding(
@@ -538,6 +623,11 @@ describe("Testing main orders flow", async function () {
                         SHORT_POS,
                         100 * USDT_DECIMALS,
                         100 * LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
+                        closePositionValue,
                     );
 
                     await testPositionFunding(
@@ -592,6 +682,10 @@ describe("Testing main orders flow", async function () {
                     LONG_POS,
                     100 * USDT_DECIMALS,
                     100000000,
+                    undefined,
+                    undefined,
+                    undefined,
+                    openMarketOrderBaseValue,
                 );
 
                 const pos_key2 = await openMarketOrderWithTests(
@@ -603,6 +697,10 @@ describe("Testing main orders flow", async function () {
                     LONG_POS,
                     100 * USDT_DECIMALS,
                     50000000,
+                    undefined,
+                    undefined,
+                    undefined,
+                    openMarketOrderBaseValue,
                 );
 
                 const acc = await vault.account(user);
@@ -708,6 +806,10 @@ describe("Testing main orders flow", async function () {
                     LONG_POS,
                     100 * USDT_DECIMALS,
                     100000000,
+                    undefined,
+                    undefined,
+                    undefined,
+                    openMarketOrderBaseValue,
                 );
             });
         });
@@ -727,6 +829,10 @@ describe("Testing main orders flow", async function () {
                         SHORT_POS,
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
                     );
                 });
 
@@ -772,6 +878,10 @@ describe("Testing main orders flow", async function () {
                         SHORT_POS,
                         100 * USDT_DECIMALS,
                         LEVERAGE_DECIMALS,
+                        undefined,
+                        undefined,
+                        undefined,
+                        openMarketOrderBaseValue,
                     );
                 });
 
@@ -833,6 +943,10 @@ describe("Testing main orders flow", async function () {
                     LONG_POS,
                     100 * USDT_DECIMALS,
                     100 * LEVERAGE_DECIMALS,
+                    undefined,
+                    undefined,
+                    undefined,
+                    openMarketOrderBaseValue,
                 );
             });
 
@@ -945,6 +1059,9 @@ describe("Testing main orders flow", async function () {
                     100 * USDT_DECIMALS,
                     LEVERAGE_DECIMALS,
                     user1.address, // user1 as a referrer + owner as a grand referrer
+                    undefined,
+                    undefined,
+                    bn(openMarketOrderFullValue).plus(RETRIEVE_REFERRER_VALUE).multipliedBy(2).toString(),
                 );
             });
 
@@ -964,6 +1081,9 @@ describe("Testing main orders flow", async function () {
                     100 * USDT_DECIMALS,
                     LEVERAGE_DECIMALS,
                     vault.address, // any address could be here, we just check original referrer is not changed
+                    undefined,
+                    undefined,
+                    openMarketOrderBaseValue,
                 );
 
                 const user1_details_2 = await user1_acc.contract.methods.getDetails({ answerId: 0 }).call();

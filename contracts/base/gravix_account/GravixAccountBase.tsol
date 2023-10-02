@@ -22,10 +22,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
     function process_sendReferrerFee(
         uint128 amount, Callback.CallMeta meta
-    ) external override onlyGravixVault reserve {
+    ) external override onlyGravixVault {
         referralBalance += amount;
-        meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
-
     }
 
     function process_requestMarketOrder(
@@ -63,6 +61,18 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
         // always trying to get grandReferrer on 1st request if referrer is set
         if (requestCounter == 1 && referrer != address(0)) {
+
+            uint128 minimalValueForContinue = getMinimalValueForRetrieveReferrersInMarketOrder(
+                _pendingRequest.stopLossTriggerPrice > 0 || _pendingRequest.takeProfitTriggerPrice> 0
+            );
+
+            if (msg.value < minimalValueForContinue) {
+                IGravixVault(vault).revert_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                    _reqNonce,
+                    _pendingRequest
+                );
+                return;
+            }
             retrieveReferrers();
         }
 
@@ -293,6 +303,16 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         limitOrders[requestCounter] = _order;
         // always trying to get grandReferrer on 1st request if referrer is set
         if (requestCounter == 1 && referrer != address(0)) {
+            uint128 minimalValueForContinue = getMinimalValueForRetrieveReferrersInLimitOrder(
+                _pendingRequest.stopLossTriggerPrice > 0 || _pendingRequest.takeProfitTriggerPrice> 0
+            );
+            if (msg.value < minimalValueForContinue) {
+                IGravixVault(vault).revert_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                    _reqNonce,
+                    _pendingRequest
+                );
+                return;
+            }
             retrieveReferrers();
         }
 

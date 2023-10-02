@@ -304,6 +304,26 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             ? takeProfitTriggerPrice <= _assetPrice
             : takeProfitTriggerPrice > _assetPrice;
     }
+    function getMinimalValueForRetrieveReferrersInMarketOrder(bool _isTriggersExist) internal pure returns (uint128) {
+        uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+
+        return  Gas.OPEN_ORDER_FEE / 2
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.GET_REFERRER_VALUE
+            + executeTriggerValue;
+    }
+
+    function getMinimalValueForRetrieveReferrersInLimitOrder(bool _isTriggersExist) internal pure returns (uint128) {
+        uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+
+        return  Gas.OPEN_ORDER_FEE / 2
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.GET_REFERRER_VALUE
+            + Gas.OPEN_LIMIT_ORDER_RESERVE
+            + executeTriggerValue;
+    }
 
     function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(PositionTrigger)) {
         if (_stopPrice == 0) {

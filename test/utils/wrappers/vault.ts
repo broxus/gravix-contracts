@@ -3,6 +3,8 @@ import { GravixVaultAbi } from "../../../build/factorySource";
 import { Account } from "locklift/everscale-client";
 import { TokenWallet } from "./token_wallet";
 import { GravixAccount } from "./vault_acc";
+import { bn } from "../common";
+import { BOUNCE_HANDLING_FEE, FEE_FOR_TOKEN_TRANSFER, GRAVIX_ACCOUNT_DEPLOY_VALUE } from "../constants";
 
 const logger = require("mocha-logger");
 
@@ -77,7 +79,31 @@ export class GravixVault {
         }
         return null;
     }
-
+    async getOpenOrderBaseValue(triggersExists: boolean): Promise<{ market: string; limit: string }> {
+        return (await Promise.all([
+            this.contract.methods
+                .calculateBaseOpenMarketOrderValue({ _triggersExists: triggersExists })
+                .call()
+                .then(res => ({ market: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
+            this.contract.methods
+                .calculateBaseOpenLimitOrderValue({ _triggersExists: triggersExists })
+                .call()
+                .then(res => ({ limit: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
+        ]).then(res => res.reduce((acc, val) => ({ ...acc, ...val }), {}))) as { market: string; limit: string };
+    }
+    async getClosePositionValue() {
+        return this.contract.methods
+            .calculateMinValueForClosePosition()
+            .call()
+            .then(res => res.value0);
+    }
+    async getFullOpenOrderValue(triggersExists: boolean): Promise<{ market: string; limit: string }> {
+        const { limit, market } = await this.getOpenOrderBaseValue(triggersExists);
+        return {
+            limit: bn(limit).plus(BOUNCE_HANDLING_FEE).plus(GRAVIX_ACCOUNT_DEPLOY_VALUE).toString(),
+            market: bn(market).plus(BOUNCE_HANDLING_FEE).plus(GRAVIX_ACCOUNT_DEPLOY_VALUE).toString(),
+        };
+    }
     async account(user: Account | Address) {
         return GravixAccount.from_addr(await this.getAccountAddress(user));
     }
@@ -219,6 +245,7 @@ export class GravixVault {
         fromWallet,
         stopLossTriggerPrice = 0,
         takeProfitTriggerPrice = 0,
+        value = toNano(5),
     }: {
         fromWallet: TokenWallet;
         amount: number;
@@ -231,6 +258,7 @@ export class GravixVault {
         callId: number;
         stopLossTriggerPrice?: number;
         takeProfitTriggerPrice?: number;
+        value?: string;
     }) {
         const payload = (
             await this.contract.methods
@@ -249,7 +277,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(5));
+        return await fromWallet.transfer(amount, this.contract.address, payload, value);
     }
 
     async addCollateral(
@@ -285,7 +313,13 @@ export class GravixVault {
             .send({ from: user.address, amount: toNano(2.1) });
     }
 
-    async closePosition(user: Account, positionKey: number, marketIdx: number | string, callId = 0) {
+    async closePosition(
+        user: Account,
+        positionKey: number,
+        marketIdx: number | string,
+        callId = 0,
+        value = toNano(2.1),
+    ) {
         return await this.contract.methods
             .closePosition({
                 positionKey: positionKey,
@@ -293,7 +327,7 @@ export class GravixVault {
                 price: empty_price,
                 meta: { callId: callId, nonce: 0, sendGasTo: user.address },
             })
-            .send({ from: user.address, amount: toNano(2.1) });
+            .send({ from: user.address, amount: value });
     }
 
     async stopPositions({

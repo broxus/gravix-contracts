@@ -1,5 +1,5 @@
 import { Token } from "./wrappers/token";
-import { Address, Contract, getRandomNonce, toNano, WalletTypes, zeroAddress } from "locklift";
+import { Address, Contract, fromNano, getRandomNonce, toNano, WalletTypes, zeroAddress } from "locklift";
 import { Account } from "locklift/everscale-client";
 import { GravixVault } from "./wrappers/vault";
 import Bignumber from "bignumber.js";
@@ -330,7 +330,9 @@ export const unwrapAddresses = <T extends Record<string, any>>(
     ) as { [key in keyof T]: T[key] extends Address ? string : T[key] };
 };
 export const DEFAULT_TICKER = "eth_usdt";
-
+export const nannoToEverNumber = (n: string | number): number => {
+    return pipe(fromNano, Number)(n);
+};
 export class PriceNodeMockAdapter {
     constructor(
         public priceNodeMock: Contract<PriceNodeMockAbi>,

@@ -32,11 +32,9 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             address referrer
         ) = decodeMarketOrder(orderParamsPayload);
 
-        uint128 valueForTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0
-            ? Gas.OPEN_LIMIT_ORDER_RESERVE
-            : 0;
+        bool hasTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0;
 
-        if (msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER + valueForTriggers) {
+        if (msg.value < calculateBaseOpenMarketOrderValue(hasTriggers)) {
             return false;
         }
         // collateral has USDT decimals -> 6
