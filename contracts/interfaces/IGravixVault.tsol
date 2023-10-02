@@ -279,7 +279,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address limitBotVault;
     }
 
-    event NewOwner(uint32 callId, address newOwner, IGr);
+    event NewOwner(uint32 callId, address newOwner);
     event GravixAccountCodeUpdate(uint32 callId, uint32 oldVersion, uint32 newVersion);
     event OracleProxyCodeUpdate(uint32 callId, uint32 oldVersion, uint32 newVersion);
     event GravixAccountUpgrade(uint32 callId, address user, uint32 oldVersion, uint32 newVersion);
@@ -303,7 +303,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 orderKey
     );
     event MarketOrderRequestRevert(uint32 callId, address user);
-    event MarketOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
+    event MarketOrderExecutionRevert(uint32 callId, address user, uint32 orderKey);
     event MarketOrderExecution(
         uint32 callId,
         address user,

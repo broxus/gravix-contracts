@@ -213,7 +213,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     // ----------------------------------------------------------------------------------
     function _sendOpenMarketOrderOracleRequest(
         address user,
-        uint32 positionKey,
+        uint32 orderKey,
         uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
@@ -223,7 +223,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         address proxy = _deployOracleProxy(marketIdx, meta);
         IOracleProxy(proxy).setExecuteCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
-            positionKey,
+            orderKey,
             collateral,
             leverage,
             positionType
@@ -245,7 +245,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
-        uint32 positionKey,
+        uint32 orderKey,
         uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
@@ -255,7 +255,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     ) external override onlyOracleProxy(nonce) reserve {
         _executeOrder(
             user,
-            positionKey,
+            orderKey,
             marketIdx,
             collateral,
             leverage,
