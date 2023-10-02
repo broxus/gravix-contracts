@@ -325,6 +325,11 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             + executeTriggerValue;
     }
 
+    function getMinimalValueForCreatingFirstTrigger() internal pure returns(uint128) {
+        return Gas.SET_OR_UPDATE_TRIGGERS_FEE / 2
+                + Gas.OPEN_LIMIT_ORDER_RESERVE;
+    }
+
     function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(PositionTrigger)) {
         if (_stopPrice == 0) {
             return null;

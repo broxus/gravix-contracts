@@ -104,6 +104,12 @@ export class GravixVault {
             market: bn(market).plus(BOUNCE_HANDLING_FEE).plus(GRAVIX_ACCOUNT_DEPLOY_VALUE).toString(),
         };
     }
+    async getSetOrUpdateTriggersValue() {
+        return this.contract.methods
+            .calculateSetOrUpdateTriggersMinValue()
+            .call()
+            .then(res => res.value0);
+    }
     async account(user: Account | Address) {
         return GravixAccount.from_addr(await this.getAccountAddress(user));
     }
@@ -287,6 +293,7 @@ export class GravixVault {
         positionKey: number,
         marketIdx: number | string,
         callId = 0,
+        value = toNano(2.1),
     ) {
         const payload = (
             await this.contract.methods
@@ -299,10 +306,17 @@ export class GravixVault {
                 .call()
         ).payload;
 
-        return fromWallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+        return fromWallet.transfer(amount, this.contract.address, payload, value);
     }
 
-    async removeCollateral(user: Account, amount: number, positionKey: number, marketIdx: number | string, callId = 0) {
+    async removeCollateral(
+        user: Account,
+        amount: number,
+        positionKey: number,
+        marketIdx: number | string,
+        callId = 0,
+        value = toNano(2.1),
+    ) {
         return await this.contract.methods
             .removeCollateral({
                 marketIdx: marketIdx,

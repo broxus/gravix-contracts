@@ -14,7 +14,13 @@ import {
     openMarketOrderWithTests,
     setPrice,
 } from "./utils/orders";
-import { LimitType, PosType, StopPositionType } from "./utils/constants";
+import {
+    EXECUTE_STOP_ORDER_VALUE,
+    LimitType,
+    OPEN_LIMIT_ORDER_RESERVE,
+    PosType,
+    StopPositionType,
+} from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -25,6 +31,8 @@ describe("Testing main orders flow", async function () {
     let owner: Account;
     let usdt_root: Token;
     let stg_root: Token;
+    let closePositionValue: string;
+
     const USDT_DECIMALS = 10 ** 6;
     const PRICE_DECIMALS = 10 ** 8;
     const LEVERAGE_DECIMALS = 10 ** 6;
@@ -114,6 +122,7 @@ describe("Testing main orders flow", async function () {
             await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
+            closePositionValue = await vault.getClosePositionValue();
         });
     });
 
@@ -268,6 +277,7 @@ describe("Testing main orders flow", async function () {
                         stopOrderConfig: {
                             stopPositionType: StopPositionType.TakeProfit,
                         },
+                        value: closePositionValue,
                     });
 
                     expect(Number(fromNano(traceTree!.getBalanceDiff(vault.limitBot))) * -1)
@@ -582,9 +592,31 @@ describe("Testing main orders flow", async function () {
                         leverage: LEVERAGE_DECIMALS,
                         collateral: 100 * USDT_DECIMALS,
                         limitType: LimitType.Limit,
-                        // takeProfitTriggerPrice: TAKE_PROFIT_PRICE,
                     });
-
+                    const minCallValue = await vault.getSetOrUpdateTriggersValue();
+                    {
+                        const { traceTree } = await locklift.tracing.trace(
+                            vault.contract.methods
+                                .setOrUpdatePositionTriggers({
+                                    _meta: {
+                                        nonce: 0,
+                                        callId: 0,
+                                        sendGasTo: user.address,
+                                    },
+                                    _takeProfitTriggerPrice: TAKE_PROFIT_PRICE * 100,
+                                    _marketIdx: marketIdx,
+                                    _price: empty_price,
+                                    _positionKey: pos_key,
+                                    _stopLossTriggerPrice: 0,
+                                })
+                                .send({
+                                    from: user.address,
+                                    amount: minCallValue,
+                                }),
+                        );
+                        // revert because this setter going to open first trigger, but value includes only base part
+                        expect(traceTree).to.emit("RevertSetOrUpdatePositionTriggers");
+                    }
                     const { traceTree } = await locklift.tracing.trace(
                         vault.contract.methods
                             .setOrUpdatePositionTriggers({
@@ -601,7 +633,7 @@ describe("Testing main orders flow", async function () {
                             })
                             .send({
                                 from: user.address,
-                                amount: toNano(2),
+                                amount: bn(minCallValue).plus(EXECUTE_STOP_ORDER_VALUE).toString(),
                             }),
                     );
                     const account = await vault.account(user);

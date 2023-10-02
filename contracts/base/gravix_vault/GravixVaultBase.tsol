@@ -178,7 +178,6 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             TvmCell actionPayload,
             bool correct
         ) = decodeTokenTransfer(payload);
-//        bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE_FOR_OPEN_ORDER;
         bool exception = !correct || paused;
 
         if (msg.sender == usdt.wallet) {
@@ -201,7 +200,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             } else if (!exception && action == Action.InsuranceDeposit) {
                 _handleInsuranceDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else if (!exception && action == Action.AddCollateral) {
-                _handleAddCollateral(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleAddCollateral(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else {
                 // bad action for USDT
                 exception = true;

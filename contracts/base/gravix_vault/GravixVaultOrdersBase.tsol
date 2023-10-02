@@ -190,7 +190,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         IPriceNode.Price _price,
         Callback.CallMeta _meta
     ) external onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= calculateSetOrUpdateTriggersMinValue(), Errors.LOW_MSG_VALUE);
         require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
@@ -399,6 +399,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function _handleAddCollateral(
         address user, uint128 amount, TvmCell actionPayload, Callback.CallMeta meta
     ) internal view returns (bool success) {
+        if (msg.value < Gas.EDIT_COLLATERAL_FEE) {
+            return false;
+        }
+
         (uint32 marketIdx, uint32 positionKey) = decodeAddCollateral(actionPayload);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(marketIdx)) return false;
@@ -475,7 +479,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function removeCollateral(
         uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external view onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.EDIT_COLLATERAL_FEE, Errors.LOW_MSG_VALUE);
 
         // optimistic check on market, we will check that position matches it in account
         // soft fail because market state is dynamic

@@ -610,8 +610,13 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isLatestVersion = isLatestVersion(_accountVersion);
         Position position = positions[_positionKey];
         bool isFirstPositionTriggerPrice = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
-
-        if (!isLatestVersion || position.marketIdx != _marketIdx || position.initialCollateral == 0) {
+        uint128 minimalValueForContinue = isFirstPositionTriggerPrice ? getMinimalValueForCreatingFirstTrigger() : 0;
+        if (
+            !isLatestVersion
+                || position.marketIdx != _marketIdx
+                || position.initialCollateral == 0
+                || msg.value < minimalValueForContinue
+        ) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
             }

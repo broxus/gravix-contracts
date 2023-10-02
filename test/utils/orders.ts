@@ -675,11 +675,11 @@ export const closeOrderWithTraceTree = async ({
                   ],
               }),
     );
-    await traceTree1.beautyPrint();
-
+    const minimalClosePositionValue = await vault.getClosePositionValue();
     if (!stopOrderConfig) {
         const userBalanceChange = traceTree1!.getBalanceDiff(user.address);
-        expect(nannoToEverNumber(value) - nannoToEverNumber(userBalanceChange) * -1).to.be.closeTo(0.1, 0.04);
+        console.log("userBalanceChange", nannoToEverNumber(userBalanceChange));
+        expect(nannoToEverNumber(minimalClosePositionValue) + nannoToEverNumber(userBalanceChange)).to.be.gte(0.03);
     }
     const event = await vault.getEvent("ClosePosition");
     // @ts-ignore

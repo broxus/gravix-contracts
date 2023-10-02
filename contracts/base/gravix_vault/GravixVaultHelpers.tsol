@@ -432,6 +432,12 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
                 + Gas.ORACLE_PROXY_CALL;
     }
 
+    function calculateSetOrUpdateTriggersMinValue() public pure returns (uint128) {
+        return Gas.SET_OR_UPDATE_TRIGGERS_FEE
+                + Gas.ORACLE_PROXY_DEPLOY
+                + Gas.ORACLE_PROXY_CALL;
+    }
+
     modifier onlyGravixAccount(address user) {
         address gravixAccountAddr = getGravixAccountAddress(user);
         require (msg.sender == gravixAccountAddr, Errors.NOT_GRAVIX_ACCOUNT);

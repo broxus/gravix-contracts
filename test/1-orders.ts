@@ -1,4 +1,4 @@
-import { bn, DEFAULT_TICKER, deployUser, PriceNodeMockAdapter } from "./utils/common";
+import { bn, DEFAULT_TICKER, deployUser, nannoToEverNumber, PriceNodeMockAdapter } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
@@ -15,7 +15,7 @@ import {
     testMarketPosition,
     testPositionFunding,
 } from "./utils/orders";
-import { RETRIEVE_REFERRER_VALUE } from "./utils/constants";
+import { EDIT_COLLATERAL_FEES, FEE_FOR_TOKEN_TRANSFER, RETRIEVE_REFERRER_VALUE } from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -843,8 +843,18 @@ describe("Testing main orders flow", async function () {
 
                     const amount = 50000000;
                     const { traceTree } = await locklift.tracing.trace(
-                        vault.addCollateral(user_usdt_wallet, user, amount, pos_key, 0),
+                        vault.addCollateral(
+                            user_usdt_wallet,
+                            user,
+                            amount,
+                            pos_key,
+                            0,
+                            undefined,
+                            bn(FEE_FOR_TOKEN_TRANSFER).plus(EDIT_COLLATERAL_FEES).toString(),
+                        ),
                     );
+                    const userBalanceChange = traceTree!.getBalanceDiff(user.address);
+                    expect(nannoToEverNumber(userBalanceChange) * -1).to.be.lt(nannoToEverNumber(EDIT_COLLATERAL_FEES));
 
                     const old_col = bn(pos.initialCollateral).minus(pos.openFee);
                     const new_col = old_col.plus(amount);
@@ -892,9 +902,17 @@ describe("Testing main orders flow", async function () {
 
                     const amount = 50000000;
                     const { traceTree } = await locklift.tracing.trace(
-                        vault.removeCollateral(user, amount, pos_key, 0, 1),
+                        vault.removeCollateral(
+                            user,
+                            amount,
+                            pos_key,
+                            0,
+                            1,
+                            bn(FEE_FOR_TOKEN_TRANSFER).plus(EDIT_COLLATERAL_FEES).toString(),
+                        ),
                     );
-
+                    const userBalanceChange = traceTree!.getBalanceDiff(user.address);
+                    expect(nannoToEverNumber(userBalanceChange) * -1).to.be.lt(nannoToEverNumber(EDIT_COLLATERAL_FEES));
                     const old_col = bn(pos.initialCollateral).minus(pos.openFee);
                     const new_col = old_col.minus(amount);
                     const leveraged_position_usd = old_col.times(pos.leverage).idiv(100);
@@ -1040,7 +1058,16 @@ describe("Testing main orders flow", async function () {
 
             it("Closing position with referrer", async function () {
                 await setPrice(priceNodeMock, 1100 * USDT_DECIMALS);
-                await closePosition(vault, priceNodeMock, user1, user1_usdt_wallet, user1_long_pos_key);
+                await closePosition(
+                    vault,
+                    priceNodeMock,
+                    user1,
+                    user1_usdt_wallet,
+                    user1_long_pos_key,
+                    undefined,
+                    undefined,
+                    closePositionValue,
+                );
             });
 
             it("User set referer + grand referer on position open", async function () {
