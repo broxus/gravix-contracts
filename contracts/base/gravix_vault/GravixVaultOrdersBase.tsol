@@ -360,10 +360,9 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
-        uint32 _prevPositionTriggerCount,
-        uint32 _currentPositionTriggerCount,
-        bool _stopLossRemoved,
-        bool _takeProfitRemoved,
+        uint8 _triggersBefore,
+        uint8 _triggersAfter,
+        IGravixAccount.Position _updatedPosition,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
         emit RemovePositionTriggers(
@@ -371,11 +370,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             _user,
             _positionKey,
             _marketIdx,
-            _stopLossRemoved,
-            _takeProfitRemoved
+            _updatedPosition
         );
 
-        if (_prevPositionTriggerCount >= 1 && _currentPositionTriggerCount == 0) {
+        if (_triggersBefore >= 1 && _triggersAfter == 0) {
             ILimitBotVault(limitBotVault).sendTo{
                 value: 0.01 ever,
                 flag: MsgFlag.SENDER_PAYS_FEES
