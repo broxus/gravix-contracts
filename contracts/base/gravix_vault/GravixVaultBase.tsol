@@ -182,23 +182,23 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
 
         if (msg.sender == usdt.wallet) {
             if (!exception && action == Action.MarketOrder) {
-                exception = exception || !_handleMarketOrder(
+                exception = !_handleMarketOrder(
                     sender,
                     amount,
                     actionPayload,
                     Callback.CallMeta(callId, nonce, remainingGasTo)
                 );
             } else if (!exception && action == Action.LimitOrder) {
-               exception = exception || !_handleLimitOrder(
+               exception = !_handleLimitOrder(
                     sender,
                     amount,
                     actionPayload,
                     Callback.CallMeta(callId, nonce, remainingGasTo)
                 );
             } else if (!exception && action == Action.LiquidityDeposit) {
-                _handleUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else if (!exception && action == Action.InsuranceDeposit) {
-                _handleInsuranceDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleInsuranceDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else if (!exception && action == Action.AddCollateral) {
                 exception = !_handleAddCollateral(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else {
@@ -207,7 +207,7 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             }
         } else if (msg.sender == stgUsdt.wallet) {
             if (!exception && action == Action.LiquidityWithdraw) {
-                _handleStgUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleStgUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else {
                 // bad action for stgUSDT
                 exception = true;

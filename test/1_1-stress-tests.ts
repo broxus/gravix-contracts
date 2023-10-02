@@ -207,7 +207,6 @@ describe("Testing main orders flow", async function () {
                     ]),
                     { raise: false },
                 );
-
                 expect(traceTree).to.emit("LiquidatePosition").count(300);
             });
         });

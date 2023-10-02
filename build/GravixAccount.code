@@ -572,29 +572,11 @@ IFREF {
 	CALL $c4_to_c7$
 }
 .loc ../contracts/base/gravix_account/GravixAccountBase.tsol, 23
-OVER
-PUSHCONT {
-	LDU 128
-	LDU 32
-	LDU 32
-	LDREF
-	ENDS
-	CTOS
-}
-PUSHCONT {
-	LDU 128
-	LDU 32
-	LDU 32
-}
-IFELSE
-LDMSGADDR
-ROLLREV 3
-TRIPLE
-SWAP
+LDU 128
 ENDS
 .loc ../contracts/base/gravix_account/GravixAccountBase.tsol, 0
 CALLREF {
-	CALL $process_sendReferrerFee_2c819c32_internal_macro$
+	CALL $process_sendReferrerFee_039ca322_internal_macro$
 }
 DROP
 CALLREF {
@@ -602,9 +584,8 @@ CALLREF {
 }
 THROW 0
 
-.macro process_sendReferrerFee_2c819c32_internal_macro
+.macro process_sendReferrerFee_039ca322_internal_macro
 .loc ../contracts/base/gravix_account/GravixAccountHelpers.tsol, 354
-DROP
 PUSHINT 3000
 GETGLOB 9
 GETGLOB 11
@@ -8719,68 +8700,83 @@ PUSHCONT {
 IF
 THROW 0
 
-.globl	GravixMath_with_obj_applyCloseSpread_96cc7f09
-.type	GravixMath_with_obj_applyCloseSpread_96cc7f09, @function
-CALL $GravixMath_with_obj_applyCloseSpread_96cc7f09_macro$
+.globl	GravixMath_with_obj_calculateBorrowFee_15b84727
+.type	GravixMath_with_obj_calculateBorrowFee_15b84727, @function
+CALL $GravixMath_with_obj_calculateBorrowFee_15b84727_macro$
 
-.macro GravixMath_with_obj_applyCloseSpread_96cc7f09_macro
-.loc ../contracts/libraries/GravixMath.tsol, 18
-SWAP
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	ADD
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	SUB
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-IFELSE
-.loc ../contracts/libraries/GravixMath.tsol, 21
-NIP
+.macro GravixMath_with_obj_calculateBorrowFee_15b84727_macro
+.loc ../contracts/libraries/GravixMath.tsol, 38
+NOW
+ROT
+SUB
+UFITS 32
+.loc ../contracts/libraries/GravixMath.tsol, 39
+PUSHINT 3600
+MULDIV
+UFITS 64
+.loc ../contracts/libraries/GravixMath.tsol, 40
+OVER
+PUSHINT 1000000000000
+MULDIV
+UFITS 128
 .loc ../contracts/libraries/GravixMath.tsol, 0
 
-.globl	GravixMath_no_obj_applyCloseSpread_96cc7f09
-.type	GravixMath_no_obj_applyCloseSpread_96cc7f09, @function
-CALL $GravixMath_no_obj_applyCloseSpread_96cc7f09_macro$
+.globl	GravixMath_no_obj_calculateBorrowFee_15b84727
+.type	GravixMath_no_obj_calculateBorrowFee_15b84727, @function
+CALL $GravixMath_no_obj_calculateBorrowFee_15b84727_macro$
 
-.macro GravixMath_no_obj_applyCloseSpread_96cc7f09_macro
-.loc ../contracts/libraries/GravixMath.tsol, 18
+.macro GravixMath_no_obj_calculateBorrowFee_15b84727_macro
+.loc ../contracts/libraries/GravixMath.tsol, 38
+NOW
+ROT
+SUB
+UFITS 32
+.loc ../contracts/libraries/GravixMath.tsol, 39
+PUSHINT 3600
+MULDIV
+UFITS 64
+.loc ../contracts/libraries/GravixMath.tsol, 40
 SWAP
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	ADD
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	SUB
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-IFELSE
-.loc ../contracts/libraries/GravixMath.tsol, 21
-BLKDROP2 2, 1
+PUSHINT 1000000000000
+MULDIV
+UFITS 128
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_with_obj_calculateLeveragedPosition_339e3c49
+.type	GravixMath_with_obj_calculateLeveragedPosition_339e3c49, @function
+CALL $GravixMath_with_obj_calculateLeveragedPosition_339e3c49_macro$
+
+.macro GravixMath_with_obj_calculateLeveragedPosition_339e3c49_macro
+.loc ../contracts/libraries/GravixMath.tsol, 29
+PUSH S2
+ROT
+PUSHINT 1000000
+MULDIV
+UFITS 128
+.loc ../contracts/libraries/GravixMath.tsol, 30
+DUP
+PUSHINT 100000000
+ROLL 3
+MULDIV
+UFITS 128
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_no_obj_calculateLeveragedPosition_339e3c49
+.type	GravixMath_no_obj_calculateLeveragedPosition_339e3c49, @function
+CALL $GravixMath_no_obj_calculateLeveragedPosition_339e3c49_macro$
+
+.macro GravixMath_no_obj_calculateLeveragedPosition_339e3c49_macro
+.loc ../contracts/libraries/GravixMath.tsol, 29
+ROTREV
+PUSHINT 1000000
+MULDIV
+UFITS 128
+.loc ../contracts/libraries/GravixMath.tsol, 30
+DUP
+PUSHINT 100000000
+ROLL 3
+MULDIV
+UFITS 128
 .loc ../contracts/libraries/GravixMath.tsol, 0
 
 .globl	GravixMath_with_obj_calculatePnl_4d324cd0
@@ -8845,6 +8841,174 @@ SWAP
 PUSHINT 1000000000000000000
 MULDIV
 FITS 256
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_with_obj_applyOpenSpread_69ea60c6
+.type	GravixMath_with_obj_applyOpenSpread_69ea60c6, @function
+CALL $GravixMath_with_obj_applyOpenSpread_69ea60c6_macro$
+
+.macro GravixMath_with_obj_applyOpenSpread_69ea60c6_macro
+.loc ../contracts/libraries/GravixMath.tsol, 11
+SWAP
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	SUB
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	ADD
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+IFELSE
+.loc ../contracts/libraries/GravixMath.tsol, 14
+NIP
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_no_obj_applyOpenSpread_69ea60c6
+.type	GravixMath_no_obj_applyOpenSpread_69ea60c6, @function
+CALL $GravixMath_no_obj_applyOpenSpread_69ea60c6_macro$
+
+.macro GravixMath_no_obj_applyOpenSpread_69ea60c6_macro
+.loc ../contracts/libraries/GravixMath.tsol, 11
+SWAP
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	SUB
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	ADD
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+IFELSE
+.loc ../contracts/libraries/GravixMath.tsol, 14
+BLKDROP2 2, 1
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_with_obj_calculateFundingFee_75c90bd5
+.type	GravixMath_with_obj_calculateFundingFee_75c90bd5, @function
+CALL $GravixMath_with_obj_calculateFundingFee_75c90bd5_macro$
+
+.macro GravixMath_with_obj_calculateFundingFee_75c90bd5_macro
+.loc ../contracts/libraries/GravixMath.tsol, 48
+DUP
+ROT
+PUSHINT 1000000000000000000
+MULDIV
+FITS 256
+.loc ../contracts/libraries/GravixMath.tsol, 50
+XCPU S1, S2
+PUSHINT 1000000000000000000
+MULDIV
+FITS 256
+SUBR
+FITS 256
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_no_obj_calculateFundingFee_75c90bd5
+.type	GravixMath_no_obj_calculateFundingFee_75c90bd5, @function
+CALL $GravixMath_no_obj_calculateFundingFee_75c90bd5_macro$
+
+.macro GravixMath_no_obj_calculateFundingFee_75c90bd5_macro
+.loc ../contracts/libraries/GravixMath.tsol, 48
+DUP
+ROT
+PUSHINT 1000000000000000000
+MULDIV
+FITS 256
+.loc ../contracts/libraries/GravixMath.tsol, 50
+XCHG S2
+PUSHINT 1000000000000000000
+MULDIV
+FITS 256
+SUBR
+FITS 256
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_with_obj_applyCloseSpread_96cc7f09
+.type	GravixMath_with_obj_applyCloseSpread_96cc7f09, @function
+CALL $GravixMath_with_obj_applyCloseSpread_96cc7f09_macro$
+
+.macro GravixMath_with_obj_applyCloseSpread_96cc7f09_macro
+.loc ../contracts/libraries/GravixMath.tsol, 18
+SWAP
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	ADD
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	SUB
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+IFELSE
+.loc ../contracts/libraries/GravixMath.tsol, 21
+NIP
+.loc ../contracts/libraries/GravixMath.tsol, 0
+
+.globl	GravixMath_no_obj_applyCloseSpread_96cc7f09
+.type	GravixMath_no_obj_applyCloseSpread_96cc7f09, @function
+CALL $GravixMath_no_obj_applyCloseSpread_96cc7f09_macro$
+
+.macro GravixMath_no_obj_applyCloseSpread_96cc7f09_macro
+.loc ../contracts/libraries/GravixMath.tsol, 18
+SWAP
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	ADD
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+PUSHCONT {
+	OVER
+	PUSHINT 1000000000000
+	PUSH S2
+	SUB
+	UFITS 128
+	PUSHINT 1000000000000
+	MULDIV
+	UFITS 128
+}
+IFELSE
+.loc ../contracts/libraries/GravixMath.tsol, 21
+BLKDROP2 2, 1
 .loc ../contracts/libraries/GravixMath.tsol, 0
 
 .globl	GravixMath_with_obj_calculateLiquidationPrice_444a33c5
@@ -8935,125 +9099,6 @@ UFITS 128
 BLKDROP2 3, 1
 .loc ../contracts/libraries/GravixMath.tsol, 0
 
-.globl	GravixMath_with_obj_calculateLeveragedPosition_339e3c49
-.type	GravixMath_with_obj_calculateLeveragedPosition_339e3c49, @function
-CALL $GravixMath_with_obj_calculateLeveragedPosition_339e3c49_macro$
-
-.macro GravixMath_with_obj_calculateLeveragedPosition_339e3c49_macro
-.loc ../contracts/libraries/GravixMath.tsol, 29
-PUSH S2
-ROT
-PUSHINT 1000000
-MULDIV
-UFITS 128
-.loc ../contracts/libraries/GravixMath.tsol, 30
-DUP
-PUSHINT 100000000
-ROLL 3
-MULDIV
-UFITS 128
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_no_obj_calculateLeveragedPosition_339e3c49
-.type	GravixMath_no_obj_calculateLeveragedPosition_339e3c49, @function
-CALL $GravixMath_no_obj_calculateLeveragedPosition_339e3c49_macro$
-
-.macro GravixMath_no_obj_calculateLeveragedPosition_339e3c49_macro
-.loc ../contracts/libraries/GravixMath.tsol, 29
-ROTREV
-PUSHINT 1000000
-MULDIV
-UFITS 128
-.loc ../contracts/libraries/GravixMath.tsol, 30
-DUP
-PUSHINT 100000000
-ROLL 3
-MULDIV
-UFITS 128
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_with_obj_calculateBorrowFee_15b84727
-.type	GravixMath_with_obj_calculateBorrowFee_15b84727, @function
-CALL $GravixMath_with_obj_calculateBorrowFee_15b84727_macro$
-
-.macro GravixMath_with_obj_calculateBorrowFee_15b84727_macro
-.loc ../contracts/libraries/GravixMath.tsol, 38
-NOW
-ROT
-SUB
-UFITS 32
-.loc ../contracts/libraries/GravixMath.tsol, 39
-PUSHINT 3600
-MULDIV
-UFITS 64
-.loc ../contracts/libraries/GravixMath.tsol, 40
-OVER
-PUSHINT 1000000000000
-MULDIV
-UFITS 128
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_no_obj_calculateBorrowFee_15b84727
-.type	GravixMath_no_obj_calculateBorrowFee_15b84727, @function
-CALL $GravixMath_no_obj_calculateBorrowFee_15b84727_macro$
-
-.macro GravixMath_no_obj_calculateBorrowFee_15b84727_macro
-.loc ../contracts/libraries/GravixMath.tsol, 38
-NOW
-ROT
-SUB
-UFITS 32
-.loc ../contracts/libraries/GravixMath.tsol, 39
-PUSHINT 3600
-MULDIV
-UFITS 64
-.loc ../contracts/libraries/GravixMath.tsol, 40
-SWAP
-PUSHINT 1000000000000
-MULDIV
-UFITS 128
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_with_obj_calculateFundingFee_75c90bd5
-.type	GravixMath_with_obj_calculateFundingFee_75c90bd5, @function
-CALL $GravixMath_with_obj_calculateFundingFee_75c90bd5_macro$
-
-.macro GravixMath_with_obj_calculateFundingFee_75c90bd5_macro
-.loc ../contracts/libraries/GravixMath.tsol, 48
-DUP
-ROT
-PUSHINT 1000000000000000000
-MULDIV
-FITS 256
-.loc ../contracts/libraries/GravixMath.tsol, 50
-XCPU S1, S2
-PUSHINT 1000000000000000000
-MULDIV
-FITS 256
-SUBR
-FITS 256
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_no_obj_calculateFundingFee_75c90bd5
-.type	GravixMath_no_obj_calculateFundingFee_75c90bd5, @function
-CALL $GravixMath_no_obj_calculateFundingFee_75c90bd5_macro$
-
-.macro GravixMath_no_obj_calculateFundingFee_75c90bd5_macro
-.loc ../contracts/libraries/GravixMath.tsol, 48
-DUP
-ROT
-PUSHINT 1000000000000000000
-MULDIV
-FITS 256
-.loc ../contracts/libraries/GravixMath.tsol, 50
-XCHG S2
-PUSHINT 1000000000000000000
-MULDIV
-FITS 256
-SUBR
-FITS 256
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
 .globl	GravixMath_with_obj_calculateLiquidationPriceDistance_e2eff6d6
 .type	GravixMath_with_obj_calculateLiquidationPriceDistance_e2eff6d6, @function
 CALL $GravixMath_with_obj_calculateLiquidationPriceDistance_e2eff6d6_macro$
@@ -9105,70 +9150,6 @@ FITS 256
 SWAP
 MULDIV
 FITS 256
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_with_obj_applyOpenSpread_69ea60c6
-.type	GravixMath_with_obj_applyOpenSpread_69ea60c6, @function
-CALL $GravixMath_with_obj_applyOpenSpread_69ea60c6_macro$
-
-.macro GravixMath_with_obj_applyOpenSpread_69ea60c6_macro
-.loc ../contracts/libraries/GravixMath.tsol, 11
-SWAP
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	SUB
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	ADD
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-IFELSE
-.loc ../contracts/libraries/GravixMath.tsol, 14
-NIP
-.loc ../contracts/libraries/GravixMath.tsol, 0
-
-.globl	GravixMath_no_obj_applyOpenSpread_69ea60c6
-.type	GravixMath_no_obj_applyOpenSpread_69ea60c6, @function
-CALL $GravixMath_no_obj_applyOpenSpread_69ea60c6_macro$
-
-.macro GravixMath_no_obj_applyOpenSpread_69ea60c6_macro
-.loc ../contracts/libraries/GravixMath.tsol, 11
-SWAP
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	SUB
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-PUSHCONT {
-	OVER
-	PUSHINT 1000000000000
-	PUSH S2
-	ADD
-	UFITS 128
-	PUSHINT 1000000000000
-	MULDIV
-	UFITS 128
-}
-IFELSE
-.loc ../contracts/libraries/GravixMath.tsol, 14
-BLKDROP2 2, 1
 .loc ../contracts/libraries/GravixMath.tsol, 0
 
 .macro public_function_selector
@@ -9298,7 +9279,7 @@ PUSHINT 2142422844
 LEQ
 IFJMPREF {
 	DUP
-	PUSHINT 1429697711
+	PUSHINT 1421556632
 	LEQ
 	IFJMPREF {
 		DUP
@@ -9306,6 +9287,12 @@ IFJMPREF {
 		EQUAL
 		IFJMPREF {
 			CALL $process_cancelLimitOrder$
+		}
+		DUP
+		PUSHINT 1329956353
+		EQUAL
+		IFJMPREF {
+			CALL $process_sendReferrerFee$
 		}
 		DUP
 		PUSHINT 1388999594
@@ -9319,17 +9306,17 @@ IFJMPREF {
 		IFJMPREF {
 			CALL $getPositionsView$
 		}
+	}
+	DUP
+	PUSHINT 1544438206
+	LEQ
+	IFJMPREF {
 		DUP
 		PUSHINT 1429697711
 		EQUAL
 		IFJMPREF {
 			CALL $process_executeLimitOrder$
 		}
-	}
-	DUP
-	PUSHINT 1608336886
-	LEQ
-	IFJMPREF {
 		DUP
 		PUSHINT 1466455560
 		EQUAL
@@ -9348,28 +9335,22 @@ IFJMPREF {
 		IFJMPREF {
 			CALL $process_addCollateral$
 		}
-		DUP
-		PUSHINT 1608336886
-		EQUAL
-		IFJMPREF {
-			CALL $getPositionView$
-		}
 	}
 	DUP
 	PUSHINT 1853897195
 	LEQ
 	IFJMPREF {
 		DUP
+		PUSHINT 1608336886
+		EQUAL
+		IFJMPREF {
+			CALL $getPositionView$
+		}
+		DUP
 		PUSHINT 1668634650
 		EQUAL
 		IFJMPREF {
 			CALL $process_getReferrer$
-		}
-		DUP
-		PUSHINT 1749819775
-		EQUAL
-		IFJMPREF {
-			CALL $process_sendReferrerFee$
 		}
 		DUP
 		PUSHINT 1756716863

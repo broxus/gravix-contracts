@@ -69,20 +69,19 @@ contract PriceNodeMock is IPriceNode {
     ) public view returns (bool) {
         TvmCell data = abi.encode(p, t1, t2, tick);
         return tvm.checkSign(tvm.hash(data), signature.toSlice(), oraclePubkey);
-        return true;
     }
     function validatePrice(Price price) public view {
-        TickerConfig config = tickerConfigs[price.ticker];
+        tickerConfigs[price.ticker];
         checkSign(price.price, price.serverTime, price.oracleTime, price.ticker, price.signature);
     }
 
-    function resolveRequests(Price[] prices) external {
+    function resolveRequests(Price[] _prices) external {
         require (msg.pubkey() == daemonPubkey || msg.sender == address(this), Errors.NOT_OWNER);
         require (requestsNum > 0, Errors.NO_REQUESTS);
         tvm.accept();
 
         uint32 requestsResolved = 0;
-        for (Price price: prices) {
+        for (Price price: _prices) {
             validatePrice(price);
 
             mapping (uint32 => Request) reqsMap = requests[price.ticker];
@@ -102,7 +101,7 @@ contract PriceNodeMock is IPriceNode {
 
             requests[price.ticker] = reqsMap;
             if (requestsResolved >= maxActionsPerTx) {
-                this.resolveRequests{value: 0.1 ever}(prices);
+                this.resolveRequests{value: 0.1 ever}(_prices);
                 return;
             }
         }

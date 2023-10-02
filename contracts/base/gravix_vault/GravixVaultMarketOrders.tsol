@@ -366,7 +366,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
     function cancelMarketOrder(address _user, uint32 _orderKey, Callback.CallMeta _meta) external view onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.CANCEL_ORDER_FEE, Errors.LOW_MSG_VALUE);
 
         address gravixAcc = getGravixAccountAddress(_user);
         IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(

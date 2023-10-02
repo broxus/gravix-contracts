@@ -17,7 +17,13 @@ import {
     testMarketPosition,
     testPositionFunding,
 } from "./utils/orders";
-import { LimitType, PosType, RETRIEVE_REFERRER_VALUE } from "./utils/constants";
+import {
+    EDIT_COLLATERAL_FEES,
+    FEE_FOR_TOKEN_TRANSFER,
+    LimitType,
+    PosType,
+    RETRIEVE_REFERRER_VALUE,
+} from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -180,7 +186,6 @@ describe("Testing main orders flow", async function () {
                     }),
                     { raise: false },
                 );
-                await traceTree.beautyPrint();
                 const newVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -226,7 +231,10 @@ describe("Testing main orders flow", async function () {
                 expect(oldAccountVersion).to.be.eq(1);
 
                 const posKey = await vault.account(user).then(res => res.positions().then(res => Number(res[0][0])));
-                const { traceTree } = await locklift.tracing.trace(vault.closePosition(user, posKey, MARKET_IDX));
+                const closePositionValue = await vault.getClosePositionValue();
+                const { traceTree } = await locklift.tracing.trace(
+                    vault.closePosition(user, posKey, MARKET_IDX, undefined, closePositionValue),
+                );
                 const newVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -245,9 +253,8 @@ describe("Testing main orders flow", async function () {
                     .and.emit("ClosePositionRevert");
             });
             it("Try to add collateral position with outdated account version", async function () {
-                {
-                    const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+
                 const oldAccountVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -256,7 +263,15 @@ describe("Testing main orders flow", async function () {
 
                 const posKey = await vault.account(user).then(res => res.positions().then(res => Number(res[0][0])));
                 const { traceTree } = await locklift.tracing.trace(
-                    vault.addCollateral(userUsdtWallet, user, 100 * USDT_DECIMALS, posKey, MARKET_IDX),
+                    vault.addCollateral(
+                        userUsdtWallet,
+                        user,
+                        100 * USDT_DECIMALS,
+                        posKey,
+                        MARKET_IDX,
+                        undefined,
+                        bn(FEE_FOR_TOKEN_TRANSFER).plus(EDIT_COLLATERAL_FEES).toString(),
+                    ),
                 );
                 const newVersion = await vault
                     .account(user)
@@ -286,7 +301,14 @@ describe("Testing main orders flow", async function () {
 
                 const posKey = await vault.account(user).then(res => res.positions().then(res => Number(res[0][0])));
                 const { traceTree } = await locklift.tracing.trace(
-                    vault.removeCollateral(user, 10 * USDT_DECIMALS, posKey, MARKET_IDX),
+                    vault.removeCollateral(
+                        user,
+                        10 * USDT_DECIMALS,
+                        posKey,
+                        MARKET_IDX,
+                        undefined,
+                        bn(FEE_FOR_TOKEN_TRANSFER).plus(EDIT_COLLATERAL_FEES).toString(),
+                    ),
                 );
                 const newVersion = await vault
                     .account(user)

@@ -407,7 +407,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
 
     function calculateMinValueForContinueOpenMarketOrder(
         PendingMarketOrder _request
-    ) internal returns (uint128) {
+    ) internal pure returns (uint128) {
         bool hasTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0;
         uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
         return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
@@ -417,7 +417,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
 
     function calculateMinValueForContinueOpenLimitOrder(
         PendingLimitOrder _request
-    ) internal returns (uint128) {
+    ) internal pure returns (uint128) {
         bool hasTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0;
         uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
 

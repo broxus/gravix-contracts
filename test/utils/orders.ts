@@ -231,7 +231,6 @@ export async function openMarketOrderWithTests(
         ),
         { allowedCodes: { compute: [null] }, raise: false },
     );
-    await traceTree.beautyPrint();
     const account = await vault.account(user);
     // @ts-ignore
     const [pos_key, pos] = (await account.positions()).pop();
@@ -371,7 +370,6 @@ export async function openLimitWithTestsOrder({
         }),
         { allowedCodes: { compute: [null] }, raise: false },
     );
-    await openLimitOrderTraceTree.beautyPrint();
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
     const [{ orderKey: pendingLimitOrderPosKey }] = openLimitOrderTraceTree?.findEventsForContract({
         contract: vault.contract,
@@ -678,7 +676,6 @@ export const closeOrderWithTraceTree = async ({
     const minimalClosePositionValue = await vault.getClosePositionValue();
     if (!stopOrderConfig) {
         const userBalanceChange = traceTree1!.getBalanceDiff(user.address);
-        console.log("userBalanceChange", nannoToEverNumber(userBalanceChange));
         expect(nannoToEverNumber(minimalClosePositionValue) + nannoToEverNumber(userBalanceChange)).to.be.gte(0.03);
     }
     const event = await vault.getEvent("ClosePosition");
