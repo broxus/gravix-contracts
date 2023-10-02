@@ -1,15 +1,12 @@
 pragma ever-solidity ^0.62.0;
 
 
-import {Callback} from "../libraries/Callback.tsol";
-import {IAcceptTokensBurnCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensBurnCallback.tsol";
 import {IAcceptTokensTransferCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
-import {IGravixAccount} from "./IGravixAccount.tsol";
-import {IGravixAccount} from "./IGravixAccount.tsol";
-import {IGravixAccount} from "./IGravixAccount.tsol";
-import {IGravixAccount} from "./IGravixAccount.tsol";
+import {IAcceptTokensBurnCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensBurnCallback.tsol";
 import {IOldGravixVault} from "./IOldGravixVault.tsol";
 import {IPriceNode} from "./IPriceNode.tsol";
+import {Callback} from "../libraries/Callback.tsol";
+import {IGravixAccount} from "./IGravixAccount.tsol";
 
 
 interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback, IOldGravixVault {
@@ -306,7 +303,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 orderKey
     );
     event MarketOrderRequestRevert(uint32 callId, address user);
-    event MarketOrderExecutionRevert(uint32 callId, address user, uint32 positionKey);
+    event MarketOrderExecutionRevert(uint32 callId, address user, uint32 orderKey);
     event MarketOrderExecution(
         uint32 callId,
         address user,
@@ -362,7 +359,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address user,
         uint32 positionKey,
         uint32 marketIdx,
-        IGravixAccount.Position position
+        IGravixAccount.Position updatedPos
     );
     event RevertSetOrUpdatePositionTriggers(
         uint32 callId,
@@ -402,11 +399,11 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     event MinPositionCollateralUpdate(uint32 callId, uint128 newVal);
     event MinStopLossRateUpdate(uint32 callId, uint64 newVal);
 
-    event CancelMarketOrderRevert(uint32 callId, address user, uint32 positionKey);
-    event CancelMarketOrder(uint32 callId, address user, uint32 positionKey);
+    event CancelMarketOrderRevert(uint32 callId, address user, uint32 orderKey);
+    event CancelMarketOrder(uint32 callId, address user, uint32 orderKey);
 
-    event CancelLimitOrderRevert(uint32 callId, address user, uint32 positionKey);
-    event CancelLimitOrder(uint32 callId, address user, uint32 positionKey);
+    event CancelLimitOrderRevert(uint32 callId, address user, uint32 orderKey);
+    event CancelLimitOrder(uint32 callId, address user, uint32 orderKey);
 
     event ClosePositionRevert(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
     event ClosePosition(uint32 callId, address user, uint32 positionKey, IGravixAccount.PositionView positionView);
@@ -421,8 +418,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address user,
         uint32 positionKey,
         uint32 marketIdx,
-        bool stopLossRemoved,
-        bool takeProfitRemoved
+        IGravixAccount.Position updatedPos
     );
     event RevertRemovePositionTriggers(uint32 callId, address user, uint32 positionKey, uint32 marketIdx);
     event LiquidatePosition(uint32 callId, address user, address liquidator, uint32 positionKey, IGravixAccount.PositionView positionView);
@@ -608,10 +604,9 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address user,
         uint32 positionKey,
         uint32 marketIdx,
-        uint32 prevPositionTriggerPricesCount,
-        uint32 currentPositionTriggerPricesCount,
-        bool stopLossRemoved,
-        bool takeProfitRemoved,
+        uint8 triggersBefore,
+        uint8 triggersAfter,
+        IGravixAccount.Position updatedPosition,
         Callback.CallMeta _meta
     ) external;
     function revert_removePositionTriggers(

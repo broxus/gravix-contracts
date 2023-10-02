@@ -708,27 +708,15 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             );
             return;
         }
-        uint32 prevCountOfStops;
-        uint32 updatedCountOfStops;
-        bool stopLossRemoved;
-        bool takeProfitRemoved;
 
-        if (position.stopLoss.hasValue()) {
-            prevCountOfStops += 1;
-            if (_removeStopLoss) {
-                stopLossRemoved = true;
-                updatedCountOfStops += 1;
-                position.stopLoss = null;
-            }
+        uint8 triggersBefore = (position.stopLoss.hasValue() ? 1 : 0) + (position.takeProfit.hasValue() ? 1 : 0);
+        if (position.stopLoss.hasValue() && _removeStopLoss) {
+            position.stopLoss = null;
         }
-        if (position.takeProfit.hasValue()) {
-            prevCountOfStops += 1;
-            if (_removeTakeProfit) {
-                takeProfitRemoved = true;
-                updatedCountOfStops += 1;
-                position.takeProfit = null;
-            }
+        if (position.takeProfit.hasValue() && _removeTakeProfit) {
+            position.takeProfit = null;
         }
+        uint8 triggersAfter = (position.stopLoss.hasValue() ? 1 : 0) + (position.takeProfit.hasValue() ? 1 : 0);
 
         positions[_positionKey] = position;
 
@@ -736,10 +724,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             user,
             _positionKey,
             _marketIdx,
-            prevCountOfStops,
-            updatedCountOfStops,
-            stopLossRemoved,
-            takeProfitRemoved,
+            triggersBefore,
+            triggersAfter,
+            position,
             _meta
         );
     }
