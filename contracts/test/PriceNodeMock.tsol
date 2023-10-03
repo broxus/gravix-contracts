@@ -44,7 +44,7 @@ contract PriceNodeMock is IPriceNode {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } requests[ticker].values();
     }
 
-    function makeRequest(string ticker) external override {
+    function makeRequest(string ticker, address sendGasTo) external override {
         require (msg.value >= MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
         require (requests[ticker].keys().length < maxRequests, Errors.MAX_REQUESTS);
 

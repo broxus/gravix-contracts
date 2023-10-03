@@ -202,7 +202,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     function _collectPriceFromPriceNode() internal view {
         tvm.rawReserve(CONTRACT_MIN_BALANCE, 0);
 
-        IPriceNode(priceNode).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(oracleConfig.priceNode.ticker);
+        IPriceNode(priceNode).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(oracleConfig.priceNode.ticker, meta.sendGasTo);
     }
 
     function _sendCallback(uint128 price) internal view {
