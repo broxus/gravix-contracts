@@ -32,6 +32,7 @@ contract PriceNode is IPriceNode {
 
     mapping (string => TickerConfig) tickerConfigs; // ticker hash as a key
     mapping (string => mapping (uint32 => Request)) requests;
+    mapping (string => uint32) requestsPerTicker;
 
     constructor(address _owner, uint256 _oraclePubkey, uint256 _daemonPubkey) public {
         require (tvm.pubkey() != 0, Errors.WRONG_PUBKEY);
@@ -48,6 +49,10 @@ contract PriceNode is IPriceNode {
         _;
     }
 
+    function getRequestsPerTicker(string ticker) external view responsible returns (uint32 _requestsPerTicker) {
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } requestsPerTicker[ticker];
+    }
+
     function getTickerConfigs() external view responsible returns (TickerConfig[] _configs) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } tickerConfigs.values();
     }
@@ -58,7 +63,6 @@ contract PriceNode is IPriceNode {
 
     function getDetails() external view responsible returns (
         address _owner,
-
         uint256 _daemonPubkey,
         uint256 _oraclePubkey,
         uint16 _maxRequests,
@@ -109,15 +113,21 @@ contract PriceNode is IPriceNode {
         return tvm.checkSign(tvm.hash(data), signature.toSlice(), oraclePubkey);
     }
 
-    function makeRequest(string ticker) external override {
+    function makeRequest(string ticker, address sendGasTo) external override {
         require (msg.value >= MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
         require (tickerConfigs[ticker].enabled, Errors.BAD_INPUT);
-        require (requests[ticker].keys().length < maxRequests, Errors.MAX_REQUESTS);
+        // soft fail not to loose gas
+        if (requestsPerTicker[ticker] >= maxRequests) {
+            sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS });
+            return;
+        }
+        require (requestsPerTicker[ticker] < maxRequests, Errors.MAX_REQUESTS);
 
         // just take 0.05 ever to cover this call fees
         requests[ticker][requestNonce] = Request(msg.sender, msg.value - Gas.PRICE_NODE_MAKE_REQUEST_FEE);
         requestsNum += 1;
         requestNonce += 1;
+        requestsPerTicker[ticker] += 1;
         emit NewRequest(msg.sender, requestNonce - 1, ticker);
     }
 
@@ -139,6 +149,7 @@ contract PriceNode is IPriceNode {
             validatePrice(price);
 
             mapping (uint32 => Request) reqsMap = requests[price.ticker];
+            uint32 requestsResolvedPerTicker = requestsResolved;
             for ((uint32 nonce, Request req) : reqsMap) {
                 requestsResolved += 1;
                 requestsNum -= 1;
@@ -150,6 +161,8 @@ contract PriceNode is IPriceNode {
                     break;
                 }
             }
+            requestsResolvedPerTicker = requestsResolved - requestsResolvedPerTicker;
+            requestsPerTicker[price.ticker] -= requestsResolvedPerTicker;
 
             requests[price.ticker] = reqsMap;
             if (requestsResolved >= maxActionsPerTx) {

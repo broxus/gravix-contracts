@@ -14,6 +14,16 @@
 			]
 		},
 		{
+			"name": "getRequestsPerTicker",
+			"inputs": [
+				{"name":"answerId","type":"uint32"},
+				{"name":"ticker","type":"string"}
+			],
+			"outputs": [
+				{"name":"_requestsPerTicker","type":"uint32"}
+			]
+		},
+		{
 			"name": "getTickerConfigs",
 			"inputs": [
 				{"name":"answerId","type":"uint32"}
@@ -111,7 +121,8 @@
 		{
 			"name": "makeRequest",
 			"inputs": [
-				{"name":"ticker","type":"string"}
+				{"name":"ticker","type":"string"},
+				{"name":"sendGasTo","type":"address"}
 			],
 			"outputs": [
 			]
@@ -216,6 +227,7 @@
 		{"name":"requestsNum","type":"uint16"},
 		{"name":"maxActionsPerTx","type":"uint16"},
 		{"name":"tickerConfigs","type":"optional(cell)"},
-		{"name":"requests","type":"optional(cell)"}
+		{"name":"requests","type":"optional(cell)"},
+		{"name":"requestsPerTicker","type":"optional(cell)"}
 	]
 }

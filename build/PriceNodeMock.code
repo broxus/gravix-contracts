@@ -361,11 +361,22 @@ IFREF {
 	CALL $c4_to_c7$
 }
 .loc ../contracts/test/PriceNodeMock.tsol, 47
-LDREF
+OVER
+PUSHCONT {
+	LDREF
+	LDREF
+	ENDS
+	CTOS
+}
+PUSHCONT {
+	LDREF
+}
+IFELSE
+LDMSGADDR
 ENDS
 .loc ../contracts/test/PriceNodeMock.tsol, 0
 CALLREF {
-	CALL $makeRequest_8e9dc380_internal_macro$
+	CALL $makeRequest_6561cf1c_internal_macro$
 }
 DROP
 CALLREF {
@@ -373,8 +384,9 @@ CALLREF {
 }
 THROW 0
 
-.macro makeRequest_8e9dc380_internal_macro
+.macro makeRequest_6561cf1c_internal_macro
 .loc ../contracts/test/PriceNodeMock.tsol, 48
+DROP
 DEPTH
 ADDCONST -2
 PICK
@@ -1295,7 +1307,7 @@ IFJMPREF {
 	}
 }
 DUP
-PUSHINT 1659095111
+PUSHINT 1982236200
 LEQ
 IFJMPREF {
 	DUP
@@ -1311,16 +1323,16 @@ IFJMPREF {
 		CALL $constructor$
 	}
 	DUP
-	PUSHINT 1279681561
-	EQUAL
-	IFJMPREF {
-		CALL $makeRequest$
-	}
-	DUP
 	PUSHINT 1659095111
 	EQUAL
 	IFJMPREF {
 		CALL $resolveRequests$
+	}
+	DUP
+	PUSHINT 1982236200
+	EQUAL
+	IFJMPREF {
+		CALL $makeRequest$
 	}
 }
 DUP
