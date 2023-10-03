@@ -370,6 +370,7 @@ export async function openLimitWithTestsOrder({
         }),
         { allowedCodes: { compute: [null] }, raise: false },
     );
+    await openLimitOrderTraceTree.beautyPrint();
     let openFeeExpected = bn(position).times(market.fees.openFeeRate).idiv(PERCENT_100);
     const [{ orderKey: pendingLimitOrderPosKey }] = openLimitOrderTraceTree?.findEventsForContract({
         contract: vault.contract,

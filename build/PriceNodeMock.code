@@ -23,15 +23,15 @@ ENDS
 CTOS
 LDU 256
 ENDS
-.loc ../contracts/test/PriceNodeMock.tsol, 32
-ACCEPT
 .loc ../contracts/test/PriceNodeMock.tsol, 34
+ACCEPT
+.loc ../contracts/test/PriceNodeMock.tsol, 36
 ROT
 SETGLOB 11
-.loc ../contracts/test/PriceNodeMock.tsol, 35
+.loc ../contracts/test/PriceNodeMock.tsol, 37
 SWAP
 SETGLOB 13
-.loc ../contracts/test/PriceNodeMock.tsol, 36
+.loc ../contracts/test/PriceNodeMock.tsol, 38
 SETGLOB 12
 .loc ../contracts/test/PriceNodeMock.tsol, 0
 CALLREF {
@@ -48,7 +48,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 39
+.loc ../contracts/test/PriceNodeMock.tsol, 41
 LDU 32
 GETGLOB 4
 ROT
@@ -119,7 +119,7 @@ IFREF {
 THROW 0
 
 .macro getTickerConfigs_83603f20_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 40
+.loc ../contracts/test/PriceNodeMock.tsol, 42
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -201,7 +201,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 43
+.loc ../contracts/test/PriceNodeMock.tsol, 45
 LDU 32
 GETGLOB 4
 ROT
@@ -273,7 +273,7 @@ IFREF {
 THROW 0
 
 .macro getTickerRequests_452efafe_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 44
+.loc ../contracts/test/PriceNodeMock.tsol, 46
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -360,7 +360,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 47
+.loc ../contracts/test/PriceNodeMock.tsol, 49
 OVER
 PUSHCONT {
 	LDREF
@@ -385,83 +385,68 @@ CALLREF {
 THROW 0
 
 .macro makeRequest_6561cf1c_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 48
-DROP
+.loc ../contracts/test/PriceNodeMock.tsol, 50
 DEPTH
 ADDCONST -2
 PICK
 PUSHINT 120000000
 GEQ
 THROWIFNOT 1004
-.loc ../contracts/test/PriceNodeMock.tsol, 49
-PUSHINT 5003
-PUSHINT 0
-NEWDICT
-PAIR
-PUSH S2
+.loc ../contracts/test/PriceNodeMock.tsol, 51
+OVER
 HASHCU
-GETGLOB 19
+GETGLOB 18
 PUSHPOW2 8
 DICTUGET
-PUSHCONT {
-	PLDDICT
-}
-PUSHCONT {
-	NEWDICT
-}
-IFELSE
-DUP
-PUSHINT 32
-DICTUMIN
-NULLSWAPIFNOT
-IFREF {
-	SWAP
-	LDMSGADDR
-	LDU 128
+IFREFELSEREF
+{
+	LDI 1
+	LDREF
+	LDU 32
+	LDU 32
 	ENDS
-	PAIR
-	PAIR
+	TUPLE 4
 }
-PUSHCONT {
-	DUP
-	ISNULL
-	NOT
-}
-PUSHCONT {
-	PUSH2 S2, S0
-	FIRST
-	NEWC
-	STU 32
-	SWAP
-	UNPAIR
-	OVER
-	INC
-	ROLLREV 3
-	PUSHINT 32
-	DICTUSETB
-	PAIR
-	POP S3
-	FIRST
-	OVER
-	PUSHINT 32
-	DICTUGETNEXT
-	NULLSWAPIFNOT
-	IFREF {
-		SWAP
-		LDMSGADDR
-		LDU 128
-		ENDS
-		PAIR
-		PAIR
+{
+	PUSHINT 0
+	PUSHREF {
 	}
+	PUSHINT 0
+	DUP
+	TUPLE 4
 }
-WHILE
-DROP2
 FIRST
+THROWIFNOT 1005
+.loc ../contracts/test/PriceNodeMock.tsol, 53
+OVER
+HASHCU
+GETGLOB 20
+PUSHPOW2 8
+DICTUGET
+ZEROSWAPIFNOT
+PUSHCONT {
+	PLDU 32
+}
+IF
 GETGLOB 15
-LESS
-THROWANYIFNOT
-.loc ../contracts/test/PriceNodeMock.tsol, 52
+GEQ
+PUSHCONT {
+	.loc ../contracts/test/PriceNodeMock.tsol, 54
+	NEWC
+	STSLICECONST x42_
+	STSLICE
+	PUSHINT 111
+	STZEROES
+	ENDC
+	PUSHINT 64
+	SENDRAWMSG
+	.loc ../contracts/test/PriceNodeMock.tsol, 55
+	DROP
+	.loc ../contracts/test/PriceNodeMock.tsol, 0
+}
+IFJMP
+.loc ../contracts/test/PriceNodeMock.tsol, 59
+DROP
 GETGLOB 9
 DEPTH
 ADDCONST -2
@@ -471,7 +456,7 @@ SUB
 UFITS 128
 PAIR
 GETGLOB 19
-ROT
+PUSH S2
 HASHCU
 TUCK
 OVER
@@ -503,18 +488,53 @@ ROTREV
 PUSHPOW2 8
 DICTUSETB
 SETGLOB 19
-.loc ../contracts/test/PriceNodeMock.tsol, 53
+.loc ../contracts/test/PriceNodeMock.tsol, 60
 GETGLOB 16
 INC
 UFITS 16
 SETGLOB 16
-.loc ../contracts/test/PriceNodeMock.tsol, 54
+.loc ../contracts/test/PriceNodeMock.tsol, 61
 GETGLOB 14
 INC
 UFITS 32
 SETGLOB 14
-.loc ../contracts/test/PriceNodeMock.tsol, 56
+.loc ../contracts/test/PriceNodeMock.tsol, 62
 GETGLOB 20
+OVER
+HASHCU
+TUCK
+OVER
+PUSHPOW2 8
+DICTUGET
+ZEROSWAPIFNOT
+PUSHCONT {
+	PLDU 32
+}
+IF
+INC
+UFITS 32
+NEWC
+STU 32
+ROTREV
+PUSHPOW2 8
+DICTUSETB
+SETGLOB 20
+.loc ../contracts/test/PriceNodeMock.tsol, 63
+GETGLOB 14
+DEC
+UFITS 32
+GETGLOB 9
+PUSHSLICE xc00000000000000000000000007081468e
+NEWC
+STSLICE
+STSLICE
+STU 32
+STREF
+ENDC
+PUSHINT 0
+SENDRAWMSG
+.loc ../contracts/test/PriceNodeMock.tsol, 64
+GETGLOB 21
 MYADDR
 NEWC
 STSLICECONST x62_
@@ -531,6 +551,85 @@ PUSHINT 0
 SENDRAWMSG
 .loc ../contracts/test/PriceNodeMock.tsol, 0
 
+.macro setTickerConfigs
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/test/PriceNodeMock.tsol, 67
+LDU 32
+LDDICT
+ROTREV
+PAIR
+SWAP
+ENDS
+.loc ../contracts/test/PriceNodeMock.tsol, 0
+CALLREF {
+	CALL $setTickerConfigs_ec6e28a9_internal_macro$
+}
+DROP
+CALLREF {
+	CALL $c7_to_c4$
+}
+THROW 0
+
+.macro setTickerConfigs_ec6e28a9_internal_macro
+.loc ../contracts/test/PriceNodeMock.tsol, 68
+SECOND
+PUSHINT 0
+NULL
+PUSHCONT {
+	PUSH2 S1, S2
+	PUSHINT 32
+	DICTUGET
+	NULLSWAPIFNOT
+	IFREF {
+		LDI 1
+		LDREF
+		LDU 32
+		LDU 32
+		ENDS
+		TUPLE 4
+	}
+	DUP
+	POP S2
+	ISNULL
+	NOT
+}
+PUSHCONT {
+	.loc ../contracts/test/PriceNodeMock.tsol, 69
+	DUP
+	GETGLOB 18
+	PUSH S2
+	SECOND
+	HASHCU
+	XCHG S2
+	CALLREF {
+		UNTUPLE 4
+		REVERSE 4, 0
+		NEWC
+		STI 1
+		STREF
+		STU 32
+		STU 32
+	}
+	ROTREV
+	PUSHPOW2 8
+	DICTUSETB
+	SETGLOB 18
+	.loc ../contracts/test/PriceNodeMock.tsol, 0
+	OVER
+	INC
+	POP S2
+}
+WHILE
+BLKDROP 3
+.loc ../contracts/test/PriceNodeMock.tsol, 0
+
 .macro setPrices
 DROP
 GETGLOB 6
@@ -540,7 +639,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 60
+.loc ../contracts/test/PriceNodeMock.tsol, 72
 LDU 32
 LDDICT
 ROTREV
@@ -558,10 +657,10 @@ CALLREF {
 THROW 0
 
 .macro setPrices_5318cf7f_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 61
+.loc ../contracts/test/PriceNodeMock.tsol, 73
 ACCEPT
-.loc ../contracts/test/PriceNodeMock.tsol, 62
-SETGLOB 20
+.loc ../contracts/test/PriceNodeMock.tsol, 74
+SETGLOB 21
 .loc ../contracts/test/PriceNodeMock.tsol, 0
 
 .macro getPrices
@@ -573,7 +672,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 64
+.loc ../contracts/test/PriceNodeMock.tsol, 76
 ENDS
 .loc ../contracts/test/PriceNodeMock.tsol, 0
 CALLREF {
@@ -611,8 +710,8 @@ IFREF {
 THROW 0
 
 .macro getPrices_bd9a548b_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 65
-GETGLOB 20
+.loc ../contracts/test/PriceNodeMock.tsol, 77
+GETGLOB 21
 .loc ../contracts/test/PriceNodeMock.tsol, 0
 
 .macro checkSign
@@ -624,7 +723,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 67
+.loc ../contracts/test/PriceNodeMock.tsol, 79
 OVER
 PUSHCONT {
 	LDREF
@@ -674,7 +773,7 @@ THROW 0
 CALL $checkSign_a936ad0d_internal_macro$
 
 .macro checkSign_a936ad0d_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 70
+.loc ../contracts/test/PriceNodeMock.tsol, 82
 REVERSE 5, 0
 NEWC
 STU 128
@@ -682,7 +781,7 @@ STU 32
 STU 32
 STREF
 ENDC
-.loc ../contracts/test/PriceNodeMock.tsol, 71
+.loc ../contracts/test/PriceNodeMock.tsol, 83
 HASHCU
 SWAP
 CTOS
@@ -699,7 +798,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 73
+.loc ../contracts/test/PriceNodeMock.tsol, 85
 OVER
 PUSHCONT {
 	LDREF
@@ -730,7 +829,7 @@ THROW 0
 CALL $validatePrice_eb8ca0fb_internal_macro$
 
 .macro validatePrice_eb8ca0fb_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 74
+.loc ../contracts/test/PriceNodeMock.tsol, 86
 DUP
 INDEX 3
 HASHCU
@@ -755,7 +854,7 @@ IFREFELSEREF
 	TUPLE 4
 }
 DROP
-.loc ../contracts/test/PriceNodeMock.tsol, 75
+.loc ../contracts/test/PriceNodeMock.tsol, 87
 DUP
 FIRST
 OVER
@@ -781,7 +880,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/test/PriceNodeMock.tsol, 78
+.loc ../contracts/test/PriceNodeMock.tsol, 90
 LDU 32
 LDDICT
 ROTREV
@@ -799,7 +898,7 @@ CALLREF {
 THROW 0
 
 .macro resolveRequests_dbf56c45_internal_macro
-.loc ../contracts/test/PriceNodeMock.tsol, 79
+.loc ../contracts/test/PriceNodeMock.tsol, 91
 GETGLOB 5
 DUP
 ISNULL
@@ -815,16 +914,16 @@ MYADDR
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/test/PriceNodeMock.tsol, 80
+.loc ../contracts/test/PriceNodeMock.tsol, 92
 PUSHINT 5002
 GETGLOB 16
 GTINT 0
 THROWANYIFNOT
-.loc ../contracts/test/PriceNodeMock.tsol, 81
+.loc ../contracts/test/PriceNodeMock.tsol, 93
 ACCEPT
-.loc ../contracts/test/PriceNodeMock.tsol, 83
+.loc ../contracts/test/PriceNodeMock.tsol, 95
 PUSHINT 0
-.loc ../contracts/test/PriceNodeMock.tsol, 84
+.loc ../contracts/test/PriceNodeMock.tsol, 96
 OVER
 SECOND
 PUSHINT 0
@@ -850,12 +949,12 @@ PUSHCONT {
 	NOT
 }
 PUSHCONT {
-	.loc ../contracts/test/PriceNodeMock.tsol, 85
+	.loc ../contracts/test/PriceNodeMock.tsol, 97
 	OVER
 	CALLREF {
 		CALL $validatePrice_eb8ca0fb_internal_macro$
 	}
-	.loc ../contracts/test/PriceNodeMock.tsol, 87
+	.loc ../contracts/test/PriceNodeMock.tsol, 99
 	OVER
 	INDEX 3
 	HASHCU
@@ -869,8 +968,9 @@ PUSHCONT {
 		NEWDICT
 	}
 	IFELSE
-	.loc ../contracts/test/PriceNodeMock.tsol, 88
-	BLKPUSH 2, 0
+	.loc ../contracts/test/PriceNodeMock.tsol, 100
+	PUSH3 S5, S0, S0
+	.loc ../contracts/test/PriceNodeMock.tsol, 101
 	PUSHINT 32
 	DICTUMIN
 	PUSHCONT {
@@ -891,26 +991,26 @@ IFREFELSE {
 		NOT
 	}
 	PUSHCONT {
-		.loc ../contracts/test/PriceNodeMock.tsol, 89
-		PUSH S9
+		.loc ../contracts/test/PriceNodeMock.tsol, 102
+		PUSH S10
 		INC
 		UFITS 32
-		POP S10
-		.loc ../contracts/test/PriceNodeMock.tsol, 90
+		POP S11
+		.loc ../contracts/test/PriceNodeMock.tsol, 103
 		GETGLOB 16
 		DEC
 		UFITS 16
 		SETGLOB 16
-		.loc ../contracts/test/PriceNodeMock.tsol, 91
-		PUSH2 S1, S4
+		.loc ../contracts/test/PriceNodeMock.tsol, 104
+		PUSH2 S1, S5
 		PUSHINT 32
 		DICTUDEL
 		DROP
-		POP S5
-		.loc ../contracts/test/PriceNodeMock.tsol, 92
-		PUSH S6
-		INDEX 3
+		POP S6
+		.loc ../contracts/test/PriceNodeMock.tsol, 105
 		PUSH S7
+		INDEX 3
+		PUSH S8
 		FIRST
 		PUSH S2
 		SECOND
@@ -931,8 +1031,8 @@ IFREFELSE {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/test/PriceNodeMock.tsol, 95
-		PUSH S6
+		.loc ../contracts/test/PriceNodeMock.tsol, 108
+		PUSH S7
 		INDEX 3
 		BLKPUSH 2, 2
 		FIRST
@@ -945,8 +1045,8 @@ IFREFELSE {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/test/PriceNodeMock.tsol, 97
-		PUSH S9
+		.loc ../contracts/test/PriceNodeMock.tsol, 110
+		PUSH S10
 		GETGLOB 17
 		GEQ
 		IFRETALT
@@ -970,7 +1070,34 @@ IFREFELSE {
 	}
 	WHILEBRK
 	BLKDROP 4
-	.loc ../contracts/test/PriceNodeMock.tsol, 102
+	.loc ../contracts/test/PriceNodeMock.tsol, 114
+	PUSH S6
+	SUBR
+	UFITS 32
+	.loc ../contracts/test/PriceNodeMock.tsol, 115
+	GETGLOB 20
+	PUSH S4
+	INDEX 3
+	HASHCU
+	TUCK
+	OVER
+	PUSHPOW2 8
+	DICTUGET
+	ZEROSWAPIFNOT
+	PUSHCONT {
+		PLDU 32
+	}
+	IF
+	ROLL 3
+	SUB
+	UFITS 32
+	NEWC
+	STU 32
+	ROTREV
+	PUSHPOW2 8
+	DICTUSETB
+	SETGLOB 20
+	.loc ../contracts/test/PriceNodeMock.tsol, 117
 	GETGLOB 19
 	PUSH S3
 	INDEX 3
@@ -982,12 +1109,12 @@ IFREFELSE {
 	PUSHPOW2 8
 	DICTUSETB
 	SETGLOB 19
-	.loc ../contracts/test/PriceNodeMock.tsol, 103
+	.loc ../contracts/test/PriceNodeMock.tsol, 118
 	PUSH S4
 	GETGLOB 17
 	GEQ
 	PUSHCONT {
-		.loc ../contracts/test/PriceNodeMock.tsol, 104
+		.loc ../contracts/test/PriceNodeMock.tsol, 119
 		ROLL 5
 		MYADDR
 		NEWC
@@ -1003,7 +1130,7 @@ IFREFELSE {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/test/PriceNodeMock.tsol, 105
+		.loc ../contracts/test/PriceNodeMock.tsol, 120
 		BLKDROP 5
 		PUSHINT 4
 		RETALT
@@ -1040,12 +1167,14 @@ LDU 16
 LDU 16
 LDDICT
 LDDICT
+LDDICT
 LDU 32
 LDDICT
 ROTREV
 PAIR
 SWAP
 ENDS
+SETGLOB 21
 SETGLOB 20
 SETGLOB 19
 SETGLOB 18
@@ -1085,10 +1214,11 @@ PUSHCONT {
 	PUSHINT 0
 	BLKPUSH 5, 0
 	NEWDICT
-	DUP
+	BLKPUSH 2, 0
 	PUSHINT 0
 	NEWDICT
 	PAIR
+	SETGLOB 21
 	SETGLOB 20
 	SETGLOB 19
 	SETGLOB 18
@@ -1117,6 +1247,7 @@ IFREFELSE {
 }
 
 .macro c7_to_c4
+GETGLOB 21
 GETGLOB 20
 GETGLOB 19
 GETGLOB 18
@@ -1136,7 +1267,7 @@ STU 64
 STONE
 STU 32
 STSLICE
-ROLLREV 9
+ROLLREV 10
 NEWC
 STU 256
 STU 256
@@ -1144,6 +1275,7 @@ STU 32
 STU 16
 STU 16
 STU 16
+STDICT
 STDICT
 STDICT
 SWAP
@@ -1307,7 +1439,7 @@ IFJMPREF {
 	}
 }
 DUP
-PUSHINT 1982236200
+PUSHINT 1811527890
 LEQ
 IFJMPREF {
 	DUP
@@ -1329,16 +1461,27 @@ IFJMPREF {
 		CALL $resolveRequests$
 	}
 	DUP
+	PUSHINT 1811527890
+	EQUAL
+	IFJMPREF {
+		CALL $setTickerConfigs$
+	}
+}
+DUP
+PUSHINT 2117122827
+LEQ
+IFJMPREF {
+	DUP
 	PUSHINT 1982236200
 	EQUAL
 	IFJMPREF {
 		CALL $makeRequest$
 	}
-}
-DUP
-PUSHINT 2117122827
-EQUAL
-IFJMPREF {
-	CALL $getTickerConfigs$
+	DUP
+	PUSHINT 2117122827
+	EQUAL
+	IFJMPREF {
+		CALL $getTickerConfigs$
+	}
 }
 

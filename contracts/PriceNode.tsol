@@ -28,7 +28,6 @@ contract PriceNode is IPriceNode {
     uint16 requestsNum;
 
     uint16 maxActionsPerTx = 20;
-    uint128 constant MIN_REQ_VALUE = 0.5 ever;
 
     mapping (string => TickerConfig) tickerConfigs; // ticker hash as a key
     mapping (string => mapping (uint32 => Request)) requests;
@@ -114,14 +113,13 @@ contract PriceNode is IPriceNode {
     }
 
     function makeRequest(string ticker, address sendGasTo) external override {
-        require (msg.value >= MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.PRICE_NODE_MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
         require (tickerConfigs[ticker].enabled, Errors.BAD_INPUT);
         // soft fail not to loose gas
         if (requestsPerTicker[ticker] >= maxRequests) {
             sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS });
             return;
         }
-        require (requestsPerTicker[ticker] < maxRequests, Errors.MAX_REQUESTS);
 
         // just take 0.05 ever to cover this call fees
         requests[ticker][requestNonce] = Request(msg.sender, msg.value - Gas.PRICE_NODE_MAKE_REQUEST_FEE);

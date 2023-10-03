@@ -118,11 +118,23 @@ describe("Testing main orders flow", async function () {
             stgRoot = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdRoot = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
-            priceNodeMock = new PriceNodeMockAdapter(
-                locklift.deployments.getContract("PriceNodeMock"),
-                DEFAULT_TICKER,
-                signer,
-            );
+            const priceNodeContract = locklift.deployments.getContract<PriceNodeMockAbi>("PriceNodeMock");
+            await priceNodeContract.methods
+                .setTickerConfigs({
+                    configs: [
+                        {
+                            ticker: DEFAULT_TICKER,
+                            maxOracleDelay: 10000000,
+                            maxServerDelay: 10000000,
+                            enabled: true,
+                        },
+                    ],
+                })
+                .send({
+                    from: owner.address,
+                    amount: toNano(1),
+                });
+            priceNodeMock = new PriceNodeMockAdapter(priceNodeContract, DEFAULT_TICKER, signer);
             await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             userUsdtWallet = await usdRoot.wallet(user);
             user1UsdtWallet = await usdRoot.wallet(user1);

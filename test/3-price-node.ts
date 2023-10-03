@@ -106,6 +106,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -113,6 +114,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -120,6 +122,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );

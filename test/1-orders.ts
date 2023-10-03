@@ -5,7 +5,13 @@ import { TokenWallet } from "./utils/wrappers/token_wallet";
 import { Address, Contract, lockliftChai, toNano, zeroAddress } from "locklift";
 import chai, { expect } from "chai";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
-import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
+import {
+    GravixVaultAbi,
+    PairMockAbi,
+    PriceNodeAbi,
+    PriceNodeMockAbi,
+    TokenRootUpgradeableAbi,
+} from "../build/factorySource";
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
@@ -105,11 +111,24 @@ describe("Testing main orders flow", async function () {
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
 
-            priceNodeMock = new PriceNodeMockAdapter(
-                locklift.deployments.getContract("PriceNodeMock"),
-                DEFAULT_TICKER,
-                signer,
-            );
+            const priceNodeContract = locklift.deployments.getContract<PriceNodeMockAbi>("PriceNodeMock");
+            await priceNodeContract.methods
+                .setTickerConfigs({
+                    configs: [
+                        {
+                            ticker: DEFAULT_TICKER,
+                            maxOracleDelay: 10000000,
+                            maxServerDelay: 10000000,
+                            enabled: true,
+                        },
+                    ],
+                })
+                .send({
+                    from: owner.address,
+                    amount: toNano(1),
+                });
+            priceNodeMock = new PriceNodeMockAdapter(priceNodeContract, DEFAULT_TICKER, signer);
+
             await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             user_usdt_wallet = await usdt_root.wallet(user);
             user1_usdt_wallet = await usdt_root.wallet(user1);

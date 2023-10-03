@@ -42,6 +42,14 @@
 			]
 		},
 		{
+			"name": "setTickerConfigs",
+			"inputs": [
+				{"components":[{"name":"enabled","type":"bool"},{"name":"ticker","type":"string"},{"name":"maxOracleDelay","type":"uint32"},{"name":"maxServerDelay","type":"uint32"}],"name":"configs","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setPrices",
 			"inputs": [
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"_prices","type":"tuple[]"}
@@ -100,6 +108,16 @@
 			],
 			"outputs": [
 			]
+		},
+		{
+			"name": "NewRequest",
+			"inputs": [
+				{"name":"sender","type":"address"},
+				{"name":"nonce","type":"uint32"},
+				{"name":"ticker","type":"string"}
+			],
+			"outputs": [
+			]
 		}
 	],
 	"fields": [
@@ -116,6 +134,7 @@
 		{"name":"maxActionsPerTx","type":"uint16"},
 		{"name":"tickerConfigs","type":"optional(cell)"},
 		{"name":"requests","type":"optional(cell)"},
+		{"name":"requestsPerTicker","type":"optional(cell)"},
 		{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"prices","type":"tuple[]"}
 	]
 }

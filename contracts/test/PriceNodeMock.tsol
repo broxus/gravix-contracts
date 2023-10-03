@@ -12,6 +12,7 @@ import {Gas} from "../libraries/Gas.tsol";
 contract PriceNodeMock is IPriceNode {
 
     event RequestResolved(address sender, uint32 nonce, string ticker);
+    event NewRequest(address sender, uint32 nonce, string ticker);
 
     uint32 static deployNonce;
     address owner;
@@ -23,10 +24,11 @@ contract PriceNodeMock is IPriceNode {
     uint16 requestsNum;
 
     uint16 maxActionsPerTx = 20;
-    uint128 constant MIN_REQ_VALUE = 0.12 ever;
 
     mapping (string => TickerConfig) tickerConfigs; // ticker hash as a key
     mapping (string => mapping (uint32 => Request)) requests;
+    mapping (string => uint32) requestsPerTicker;
+
     Price[] prices;
     constructor(address _owner, uint256 _oraclePubkey, uint256 _daemonPubkey) public {
         tvm.accept();
@@ -45,18 +47,28 @@ contract PriceNodeMock is IPriceNode {
     }
 
     function makeRequest(string ticker, address sendGasTo) external override {
-        require (msg.value >= MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
-        require (requests[ticker].keys().length < maxRequests, Errors.MAX_REQUESTS);
+        require (msg.value >= Gas.PRICE_NODE_MIN_REQ_VALUE, Errors.LOW_MSG_VALUE);
+        require (tickerConfigs[ticker].enabled, Errors.BAD_INPUT);
+        // soft fail not to loose gas
+        if (requestsPerTicker[ticker] >= maxRequests) {
+            sendGasTo.transfer({ value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS });
+            return;
+        }
 
         // just take 0.05 ever to cover this call fees
         requests[ticker][requestNonce] = Request(msg.sender, msg.value - Gas.PRICE_NODE_MAKE_REQUEST_FEE);
         requestsNum += 1;
         requestNonce += 1;
-
+        requestsPerTicker[ticker] += 1;
+        emit NewRequest(msg.sender, requestNonce - 1, ticker);
         this.resolveRequests(prices);
     }
 
-
+    function setTickerConfigs(TickerConfig[] configs) external {
+        for (TickerConfig config: configs) {
+            tickerConfigs[config.ticker] = config;
+        }
+    }
     function setPrices(Price[] _prices) external {
         tvm.accept();
         prices = _prices;
@@ -85,6 +97,7 @@ contract PriceNodeMock is IPriceNode {
             validatePrice(price);
 
             mapping (uint32 => Request) reqsMap = requests[price.ticker];
+            uint32 requestsResolvedPerTicker = requestsResolved;
             for ((uint32 nonce, Request req) : reqsMap) {
                 requestsResolved += 1;
                 requestsNum -= 1;
@@ -98,6 +111,8 @@ contract PriceNodeMock is IPriceNode {
                     break;
                 }
             }
+            requestsResolvedPerTicker = requestsResolved - requestsResolvedPerTicker;
+            requestsPerTicker[price.ticker] -= requestsResolvedPerTicker;
 
             requests[price.ticker] = reqsMap;
             if (requestsResolved >= maxActionsPerTx) {
