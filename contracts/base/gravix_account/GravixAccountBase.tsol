@@ -32,7 +32,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
 
-        if (!isLatestVersion(_accountVersion) || !checkStorageFeeAndUpdateLastUsed()) {
+        if (!isLatestVersion(_accountVersion) || !checkLastUsed()) {
 
             if (!isLatestVersion(_accountVersion)) {
                 requestUpgrade(user, currentVersion, _pendingRequest.meta);
@@ -257,7 +257,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (
             _request.collateral == 0
                 || !isLatestVersion
-                || !checkStorageFeeAndUpdateLastUsed()
+                || !checkLastUsed()
         ) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
@@ -279,7 +279,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault.PendingLimitOrder _pendingRequest,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
-        if (!isLatestVersion(_accountVersion) || !checkStorageFeeAndUpdateLastUsed()) {
+        if (!isLatestVersion(_accountVersion) || !checkLastUsed()) {
             if (!isLatestVersion(_accountVersion)) {
                 requestUpgrade(user, currentVersion, _pendingRequest.meta);
             }
@@ -380,7 +380,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (
             !isLatestVersion
             || limitOrder.collateral == 0
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _pendingRequest.meta);
@@ -592,7 +592,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (
             _request.collateral == 0
             || !isLatestVersion
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
 
             if (!isLatestVersion) {
@@ -638,7 +638,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 || position.marketIdx != _marketIdx
                 || position.initialCollateral == 0
                 || msg.value < minimalValueForContinue
-                || !checkStorageFeeAndUpdateLastUsed()
+                || !checkLastUsed()
         ) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _meta);
@@ -725,7 +725,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (
             !isLatestVersion
             || position.marketIdx != _marketIdx
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
 
             if (!isLatestVersion) {
@@ -779,7 +779,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         if (
             !isLatestVersion
             || position.marketIdx != _marketIdx
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
 
             if (!isLatestVersion) {
@@ -875,7 +875,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _position.initialCollateral == 0
             || _position.marketIdx != _marketIdx
             || !isLatestVersion
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
 
             if (!isLatestVersion) {
@@ -937,7 +937,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _position.initialCollateral == 0
             || _position.marketIdx != _marketIdx
             || !isLatestVersion
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
 
             if (!isLatestVersion) {
@@ -981,7 +981,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _position.initialCollateral == 0
             || _position.marketIdx != marketIdx
             || !isLatestVersion
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, meta);
@@ -1041,7 +1041,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             || _position.marketIdx != _marketIdx
             || newLeverage > _maxLeverage
             || !isLatestVersion
-            || !checkStorageFeeAndUpdateLastUsed()
+            || !checkLastUsed()
         ) {
 
             if (!isLatestVersion) {
