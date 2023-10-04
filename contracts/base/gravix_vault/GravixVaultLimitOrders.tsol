@@ -423,7 +423,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
-                uint128 value = uint128(limitOrders.orders.length * Gas.OPEN_LIMIT_ORDER_RESERVE);
+                uint128 value = uint128(limitOrders.orders.length * Gas.OPEN_LIMIT_ORDER_RESERVE) + Gas.ORACLE_PROXY_DEPLOY;
 
                 this.self_executeLimitOrders{value: value}(
                     limitOrders.orders,

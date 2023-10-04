@@ -1,12 +1,11 @@
-import { Token } from "./wrappers/token";
-import { Address, Contract, fromNano, getRandomNonce, toNano, WalletTypes, zeroAddress } from "locklift";
-import { Account } from "locklift/everscale-client";
-import { GravixVault } from "./wrappers/vault";
+import {Token} from "./wrappers/token";
+import {Address, Contract, fromNano, getRandomNonce, toNano, WalletTypes, zeroAddress} from "locklift";
+import {Account} from "locklift/everscale-client";
+import {GravixVault} from "./wrappers/vault";
 import Bignumber from "bignumber.js";
-import { LimitType, PosType } from "./constants";
-import BigNumber from "bignumber.js";
-import { PriceNodeMockAbi } from "../../build/factorySource";
-import { AccountWithSigner } from "locklift-deploy/dist/types";
+import {LimitType, PosType} from "./constants";
+import {PriceNodeMockAbi} from "../../build/factorySource";
+import {AccountWithSigner} from "locklift-deploy/dist/types";
 
 const logger = require("mocha-logger");
 const { expect } = require("chai");
@@ -56,7 +55,8 @@ export const sendAllEvers = async function (from: Account, to: Address) {
                 payload: "",
                 // @ts-ignore
             })
-            .sendExternal({ publicKey: from.publicKey }),
+          // @ts-ignore
+          .sendExternal({ publicKey: from.publicKey }),
         { allowedCodes: { compute: [null] } },
     );
 };
@@ -80,16 +80,17 @@ export const runTargets = async function (
 
     const walletContract = await locklift.factory.getDeployedContract("TestWallet", wallet.address);
 
-    return await walletContract.methods
+    // @ts-ignore
+  return await walletContract.methods
         .sendTransactions({
             dest: targets.map(contract => contract.address),
             value: values,
             bounce: new Array(targets.length).fill(true),
             flags: new Array(targets.length).fill(0),
             payload: bodies,
-            // @ts-ignore
         })
-        .sendExternal({ publicKey: wallet.publicKey });
+    // @ts-ignore
+    .sendExternal({ publicKey: wallet.publicKey });
 };
 
 export const deployUsers = async function (count: number, initial_balance: number) {
@@ -105,7 +106,7 @@ export const deployUsers = async function (count: number, initial_balance: numbe
         signers_map[`0x${signer.publicKey}`.toLowerCase()] = signer;
     });
 
-    const TestWallet = await locklift.factory.getContractArtifacts("TestWallet");
+    const TestWallet = locklift.factory.getContractArtifacts("TestWallet");
     const { contract: factory, tx } = await locklift.factory.deployContract({
         contract: "TestFactory",
         initParams: { walletCode: TestWallet.code, _randomNonce: getRandomNonce() },
@@ -171,9 +172,9 @@ export const deployUser = async function (initial_balance = 100, log = true): Pr
 
 export const setupTokenRoot = async function (token_name: string, token_symbol: string, owner: Account, decimals = 9) {
     const signer = await locklift.keystore.getSigner("0");
-    const TokenPlatform = await locklift.factory.getContractArtifacts("TokenWalletPlatform");
+    const TokenPlatform = locklift.factory.getContractArtifacts("TokenWalletPlatform");
 
-    const TokenWallet = await locklift.factory.getContractArtifacts("TokenWalletUpgradeable");
+    const TokenWallet = locklift.factory.getContractArtifacts("TokenWalletUpgradeable");
     const { contract: _root, tx } = await locklift.tracing.trace(
         locklift.factory.deployContract({
             contract: "TokenRootUpgradeable",
@@ -207,24 +208,31 @@ export const setupTokenRoot = async function (token_name: string, token_symbol: 
     return new Token(_root, owner);
 };
 
-export const setupVault = async function (
-    owner: Account,
-    usdt: Address,
-    stg_usdt: Address,
-    oracle: Address,
-    priceNode: Address,
-    limitBot: Address,
-    pricePk: string,
-    log = true,
-) {
+export const setupVault = async function ({
+  owner,
+  usdt,
+  stg_usdt,
+  priceNode,
+  limitBot,
+  pricePk,
+  log = true
+}: {
+  owner: Account,
+  usdt: Address,
+  stg_usdt: Address,
+  priceNode: Address,
+  limitBot: Address,
+  pricePk: string,
+  log : boolean
+}) {
     const signer = await locklift.keystore.getSigner("0");
 
-    const OracleProxy = await locklift.factory.getContractArtifacts("OracleProxy");
-    const Platform = await locklift.factory.getContractArtifacts("Platform");
-    const GravixAccount = await locklift.factory.getContractArtifacts("GravixAccount");
+    const OracleProxy = locklift.factory.getContractArtifacts("OracleProxy");
+    const Platform = locklift.factory.getContractArtifacts("Platform");
+    const GravixAccount = locklift.factory.getContractArtifacts("GravixAccount");
     // const { account: limitBot } = await locklift.deployments.getAccount("LimitBot");
 
-    const GravixVaultArtifacts = await locklift.factory.getContractArtifacts("GravixVault");
+    const GravixVaultArtifacts = locklift.factory.getContractArtifacts("GravixVault");
 
     const { contract: _deployer, tx } = await locklift.tracing.trace(
         locklift.factory.deployContract({
@@ -267,14 +275,6 @@ export const setupVault = async function (
             },
         })
         .send({ from: owner.address, amount: toNano(2) });
-    // vault.contract.methods.setLimitBot({
-    //     _meta: {
-    //         callId: 0,
-    //         sendGasTo: owner.address,
-    //         nonce: getRandomNonce(),
-    //     },
-    //     _newLimitBot: owner.address,
-    // });
     return vault;
 };
 

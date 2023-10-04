@@ -329,7 +329,9 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
                 + Gas.OPEN_LIMIT_ORDER_RESERVE;
     }
 
-    function checkStorageFeeAndUpdateLastUsed() internal returns (bool) {
+    // @dev If user haven't used his account for a long time (more than 80 days)
+    // storage fee could be too big and can lead to insufficient gas errors
+    function checkLastUsed() internal returns (bool) {
         bool isOk = now - lastUsedTimeStamp < Constants.MAX_UNUSED_PERIOD;
         lastUsedTimeStamp = now;
         return isOk;
