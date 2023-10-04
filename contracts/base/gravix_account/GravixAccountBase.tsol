@@ -144,8 +144,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 requestUpgrade(user, currentVersion, _meta);
             }
 
-            delete marketOrders[_orderKey];
-
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _orderKey,
@@ -193,7 +191,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         // TODO: add reason to revert
         // checking slippage
         if (openPrice < minPrice || openPrice > maxPrice || !triggersValid) {
-            delete marketOrders[_orderKey];
 
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
@@ -388,8 +385,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _pendingRequest.meta);
             }
-
-            delete limitOrders[orderKey];
+            // set it as 0 for prevent withdraw collateral value
+            _pendingRequest.collateral = 0;
 
             IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _reqNonce,
