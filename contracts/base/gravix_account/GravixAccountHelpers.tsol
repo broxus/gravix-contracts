@@ -13,7 +13,6 @@ import {Callback} from "../../libraries/Callback.tsol";
 import {Gas} from "../../libraries/Gas.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
 
-
 abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getDetails() external view responsible returns (
         uint32 _currentVersion, address _vault, address _user, address _referrer, address _grandReferrer, uint128 _referralBalance
@@ -328,6 +327,12 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getMinimalValueForCreatingFirstTrigger() internal pure returns(uint128) {
         return Gas.SET_OR_UPDATE_TRIGGERS_FEE / 2
                 + Gas.OPEN_LIMIT_ORDER_RESERVE;
+    }
+
+    function checkStorageFeeAndUpdateLastUsed() internal returns (bool) {
+        bool isOk = now - lastUsedTimeStamp < Constants.MAX_UNUSED_PERIOD;
+        lastUsedTimeStamp = now;
+        return isOk;
     }
 
     function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(PositionTrigger)) {
