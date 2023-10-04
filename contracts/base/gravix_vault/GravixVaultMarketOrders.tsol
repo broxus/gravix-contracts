@@ -124,17 +124,19 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
 
     function revert_requestMarketOrder(
         uint32 _reqNonce,
-        PendingMarketOrder _pendRequest
+        PendingMarketOrder _pendRequest,
+        uint32 _revertReason
     ) external override onlyGravixAccount(_pendRequest.user) reserve {
-        _revertRequestMarketOrder(_reqNonce, _pendRequest);
+        _revertRequestMarketOrder(_reqNonce, _pendRequest, _revertReason);
     }
 
     function _revertRequestMarketOrder(
         uint32 _reqNonce,
-        PendingMarketOrder _pendRequest
+        PendingMarketOrder _pendRequest,
+        uint32 _revertReason
     ) internal {
         delete pendingMarketRequests[_reqNonce];
-        emit MarketOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
+        emit MarketOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user, _revertReason);
         if (_pendRequest.collateral > 0) {
             _transfer(
                 usdt.wallet,
@@ -314,9 +316,10 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint128 _positionSizeAsset,
         uint128 _assetPrice,
         PositionType _positionType,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserve {
-        emit MarketOrderExecutionRevert(_meta.callId, _user, _orderKey);
+        emit MarketOrderExecutionRevert(_meta.callId, _user, _orderKey, _revertReason);
 
         // too high slippage / bad triggers
         if (_collateral > 0) {
@@ -377,9 +380,17 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     }
 
     function revert_cancelMarketOrder(
-        address _user, uint32 _orderKey, Callback.CallMeta _meta
+        address _user,
+        uint32 _orderKey,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
     ) external view override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
-        emit CancelMarketOrderRevert(_meta.callId, _user, _orderKey);
+        emit CancelMarketOrderRevert(
+            _meta.callId,
+            _user,
+            _orderKey,
+            _revertReason
+        );
     }
 
     function finish_cancelMarketOrder(

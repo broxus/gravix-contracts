@@ -194,7 +194,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
-            emit RevertSetOrUpdatePositionTriggers(_meta.callId, msg.sender, _positionKey, _marketIdx);
+            emit RevertSetOrUpdatePositionTriggers(
+                _meta.callId,
+                msg.sender,
+                _positionKey,
+                _marketIdx,
+                Errors.MARKET_CLOSED
+            );
             _sendCallbackOrGas(msg.sender, _meta.nonce, false, _meta.sendGasTo);
             return;
         }
@@ -313,13 +319,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
         emit RevertSetOrUpdatePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
-            _marketIdx
+            _marketIdx,
+            _revertReason
         );
     }
 
@@ -336,7 +344,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 _meta.callId,
                 msg.sender,
                 _positionKey,
-                _marketIdx
+                _marketIdx,
+                Errors.MARKET_CLOSED
             );
             _sendCallbackOrGas(
                 msg.sender,
@@ -385,13 +394,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
         emit RevertRemovePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
-            _marketIdx
+            _marketIdx,
+            _revertReason
         );
     }
     //endregion
@@ -428,12 +439,24 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_addCollateral(
-        address user, uint128 amount, uint32 marketIdx, uint32 positionKey, Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
-        emit AddPositionCollateralRevert(meta.callId, user, marketIdx, positionKey, amount);
+        address _user,
+        uint128 _amount,
+        uint32 _marketIdx,
+        uint32 _positionKey,
+        uint32 _revertReason,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit AddPositionCollateralRevert(
+            meta.callId,
+            _user,
+            _marketIdx,
+            _positionKey,
+            _amount,
+            _revertReason
+        );
 
         _transfer(
-            usdt.wallet, amount, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+            usdt.wallet, _amount, _user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
         );
     }
 
@@ -484,7 +507,14 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         // optimistic check on market, we will check that position matches it in account
         // soft fail because market state is dynamic
         if (!marketOpen(marketIdx)) {
-            emit RemovePositionCollateralRevert(meta.callId, msg.sender, positionKey, marketIdx, amount);
+            emit RemovePositionCollateralRevert(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                amount,
+                Errors.MARKET_CLOSED
+            );
             _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
             return;
         }
@@ -502,9 +532,21 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_removeCollateral(
-        address user, uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit RemovePositionCollateralRevert(meta.callId, user, positionKey, marketIdx, amount);
+        address _user,
+        uint128 _amount,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
+        emit RemovePositionCollateralRevert(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _amount,
+            _revertReason
+        );
     }
 
     function finish_removeCollateral(
@@ -614,7 +656,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         // soft fail
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(marketIdx)) {
-            emit ClosePositionRevert(meta.callId, msg.sender, positionKey, marketIdx);
+            emit ClosePositionRevert(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                Errors.MARKET_CLOSED
+            );
             _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
             return;
         }
@@ -683,9 +731,16 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address user,
         uint32 positionKey,
         uint32 marketIdx,
+        uint32 revertReason,
         Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit ClosePositionRevert(meta.callId, user, positionKey, marketIdx);
+        emit ClosePositionRevert(
+            meta.callId,
+            user,
+            positionKey,
+            marketIdx,
+            revertReason
+        );
     }
 
     function finish_closePosition(
@@ -885,12 +940,19 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_executePositionsTriggers(
-        address user,
-        uint32 positionKey,
-        uint32 marketIdx,
-        Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
-        emit ExecutePositionTriggerRevert(meta.callId, user, positionKey, marketIdx);
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit ExecutePositionTriggerRevert(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
         managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
     //region liquidation
@@ -938,13 +1000,21 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_liquidatePositions(
-        address user,
-        address liquidator,
-        uint32 positionKey,
-        uint32 marketIdx,
+        address _user,
+        address _liquidator,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
         Callback.CallMeta meta
-    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit LiquidatePositionRevert(meta.callId, liquidator, user, positionKey, marketIdx);
+    ) external view override onlyGravixAccount(_user) reserveAndFailCallback(meta) {
+        emit LiquidatePositionRevert(
+            meta.callId,
+            _liquidator,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
     }
 
     function oracle_liquidatePositions(

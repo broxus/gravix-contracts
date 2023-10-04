@@ -249,7 +249,8 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             if (msg.value < minValue) {
                 _revertRequestMarketOrder(
                     _requestNonce,
-                    pendingRequest
+                    pendingRequest,
+                    Errors.NOT_ENOUGH_VALUE_FOR_CONTINUE_OPEN_MARKET_ORDER
                 );
                 return;
             }
@@ -269,7 +270,8 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             if (msg.value < minValue) {
                 _revertRequestLimitOrder(
                     _requestNonce,
-                    pendingRequest
+                    pendingRequest,
+                    Errors.NOT_ENOUGH_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
                 );
                 return;
             }
@@ -294,7 +296,8 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             if (msg.value < minValue) {
                 _revertRequestPendingLimitOrder(
                     _requestNonce,
-                    request
+                    request,
+                    Errors.NOT_ENOUGH_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
                 );
                 return;
             }
