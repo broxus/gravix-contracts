@@ -207,16 +207,23 @@ export const setupTokenRoot = async function (token_name: string, token_symbol: 
     return new Token(_root, owner);
 };
 
-export const setupVault = async function (
-    owner: Account,
-    usdt: Address,
-    stg_usdt: Address,
-    oracle: Address,
-    priceNode: Address,
-    limitBot: Address,
-    pricePk: string,
-    log = true,
-) {
+export const setupVault = async function ({
+  owner,
+  usdt,
+  stg_usdt,
+  priceNode,
+  limitBot,
+  pricePk,
+  log = true
+}: {
+  owner: Account,
+  usdt: Address,
+  stg_usdt: Address,
+  priceNode: Address,
+  limitBot: Address,
+  pricePk: string,
+  log : true
+}) {
     const signer = await locklift.keystore.getSigner("0");
 
     const OracleProxy = await locklift.factory.getContractArtifacts("OracleProxy");
