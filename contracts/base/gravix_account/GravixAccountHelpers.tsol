@@ -82,23 +82,6 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         );
     }
 
-    function getPositionViewInternal(
-        Position _position,
-        uint128 _assetPrice
-    ) internal pure returns (PositionView positionView) {
-        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
-
-        ViewInputInternal input = ViewInputInternal({
-            assetPrice: _assetPrice,
-            funding: IGravixVault.Funding({
-                accLongUSDFundingPerShare: isLong ? _position.accUSDFundingPerShare : 0,
-                accShortUSDFundingPerShare: isLong ? 0 : _position.accUSDFundingPerShare
-            })
-        });
-
-        return _getPositionView(_position, input);
-    }
-
     function _getPositionView(Position _position, ViewInputInternal input) internal pure returns (PositionView positionView) {
         bool isLong = _position.positionType == IGravixVault.PositionType.Long;
 
