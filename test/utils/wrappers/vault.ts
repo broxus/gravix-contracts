@@ -82,18 +82,18 @@ export class GravixVault {
     async getOpenOrderBaseValue(triggersExists: boolean): Promise<{ market: string; limit: string }> {
         return (await Promise.all([
             this.contract.methods
-                .calculateBaseOpenMarketOrderValue({ _triggersExists: triggersExists })
+                .getBaseOpenLimitOrderValue({ _triggersExists: triggersExists })
                 .call()
                 .then(res => ({ market: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
             this.contract.methods
-                .calculateBaseOpenLimitOrderValue({ _triggersExists: triggersExists })
+                .getBaseOpenLimitOrderValue({ _triggersExists: triggersExists })
                 .call()
                 .then(res => ({ limit: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
         ]).then(res => res.reduce((acc, val) => ({ ...acc, ...val }), {}))) as { market: string; limit: string };
     }
     async getClosePositionValue() {
         return this.contract.methods
-            .calculateMinValueForClosePosition()
+            .getMinValueForClosePosition()
             .call()
             .then(res => res.value0);
     }
@@ -106,7 +106,7 @@ export class GravixVault {
     }
     async getSetOrUpdateTriggersValue() {
         return this.contract.methods
-            .calculateSetOrUpdateTriggersMinValue()
+            .getSetOrUpdateTriggersMinValue()
             .call()
             .then(res => res.value0);
     }
