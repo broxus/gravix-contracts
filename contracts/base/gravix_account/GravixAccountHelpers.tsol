@@ -303,7 +303,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             ? takeProfitTriggerPrice <= _assetPrice
             : takeProfitTriggerPrice > _assetPrice;
     }
-    function getMinimalValueForRetrieveReferrersInMarketOrder(bool _isTriggersExist) internal pure returns (uint128) {
+    function getMinValueForRetrieveReferrersInMarketOrder(bool _isTriggersExist) internal pure returns (uint128) {
         uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
 
         return  Gas.OPEN_ORDER_FEE / 2
@@ -313,7 +313,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             + executeTriggerValue;
     }
 
-    function getMinimalValueForRetrieveReferrersInLimitOrder(bool _isTriggersExist) internal pure returns (uint128) {
+    function getMinValueForRetrieveReferrersInLimitOrder(bool _isTriggersExist) internal pure returns (uint128) {
         uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
 
         return  Gas.OPEN_ORDER_FEE / 2
@@ -324,25 +324,25 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             + executeTriggerValue;
     }
 
-    function getMinimalValueForCreatingFirstTrigger() internal pure returns(uint128) {
+    function getMinValueForCreatingFirstTrigger() internal pure returns(uint128) {
         return Gas.SET_OR_UPDATE_TRIGGERS_FEE / 2
                 + Gas.OPEN_LIMIT_ORDER_RESERVE;
     }
 
     // @dev If user haven't used his account for a long time (more than 80 days)
     // storage fee could be too big and can lead to insufficient gas errors
-    function checkLastUsed() internal returns (bool) {
+    function checkStorageFeeAndUpdateLastUsed() internal returns (bool) {
         bool isOk = now - lastUsedTimeStamp < Constants.MAX_UNUSED_PERIOD;
         lastUsedTimeStamp = now;
         return isOk;
     }
 
-    function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(PositionTrigger)) {
-        if (_stopPrice == 0) {
+    function _convertPriceToTrigger(uint128 _price) internal pure returns (optional(PositionTrigger)) {
+        if (_price == 0) {
             return null;
         }
         return PositionTrigger({
-            triggerPrice: _stopPrice,
+            triggerPrice: _price,
             createdAt: now
         });
     }
