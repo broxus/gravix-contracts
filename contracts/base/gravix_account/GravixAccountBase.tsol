@@ -32,7 +32,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
         bool isLatestVersion = isLatestVersion(_accountVersion);
-        bool isStorageFeeEnough = checkStorageFeeAndUpdateLastUsed();
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
         if (!isLatestVersion || !isStorageFeeEnough) {
 
 
@@ -269,7 +269,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
         bool isOrderExists = _request.collateral > 0;
-        bool isStorageFeeEnough = checkStorageFeeAndUpdateLastUsed();
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
         // check request exists
         if (
             !isOrderExists
@@ -310,7 +310,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
         bool isLatestVersion = isLatestVersion(_accountVersion);
-        bool isStorageFeeEnough = checkStorageFeeAndUpdateLastUsed();
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
         if (!isLatestVersion || !isStorageFeeEnough) {
             if (!isLatestVersion) {
                 requestUpgrade(user, currentVersion, _pendingRequest.meta);
@@ -411,7 +411,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isLatestVersion = isLatestVersion(_accountVersion);
 
         bool isOrderExists = limitOrder.collateral > 0;
-        bool isEnoughStorageFee = checkStorageFeeAndUpdateLastUsed();
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
         // bad version or order does not exists
         if (
             !isLatestVersion
@@ -635,7 +635,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
         bool isOrderExists = _request.collateral > 0;
-        bool isEnoughStorageFee = checkStorageFeeAndUpdateLastUsed();
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
 
         if (!isOrderExists || !isLatestVersion || !isEnoughStorageFee) {
             uint32 revertReason;
@@ -684,7 +684,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isFirstPositionTriggerPrice = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
         uint128 minimalValueForContinue = isFirstPositionTriggerPrice ? getMinimalValueForCreatingFirstTrigger() : 0;
 
-        bool isStorageFeeEnough = checkStorageFeeAndUpdateLastUsed();
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
         bool isOrderExists = position.initialCollateral > 0 && position.marketIdx == _marketIdx;
         bool isEnoughValue = msg.value >= minimalValueForContinue;
         if (
@@ -790,7 +790,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
 
         bool isPositionExists = position.marketIdx == _marketIdx;
-        bool isEnoughStorageFee = checkStorageFeeAndUpdateLastUsed();
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
         if (
             !isLatestVersion
             || !isPositionExists
@@ -853,7 +853,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isLatestVersion = isLatestVersion(_accountVersion);
         Position position = positions[_positionKey];
         bool isPositionExists = position.marketIdx == _marketIdx;
-        bool isEnoughStorageFee = checkStorageFeeAndUpdateLastUsed();
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
         if (
             !isLatestVersion
             || !isPositionExists
@@ -957,7 +957,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
         bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == _marketIdx;
-        bool isEnoughStorageFee = checkStorageFeeAndUpdateLastUsed();
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
         // if collateral == 0, position does not exist
         if (
             !isPositionExists
@@ -1037,7 +1037,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
         bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == _marketIdx;
-        bool isEnoughStorageFee = checkStorageFeeAndUpdateLastUsed();
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
         if (
             !isPositionExists
             || !isLatestVersion
@@ -1092,7 +1092,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
         bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == marketIdx;
-        bool isStorageFeeEnough = checkStorageFeeAndUpdateLastUsed();
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
         // if collateral == 0, position does not exist
         if (
             !isPositionExists
@@ -1166,7 +1166,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         bool isCollateralMoreThanMin = (oldCollateral - math.min(oldCollateral, _amount) > _minCollateral);
         bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == _marketIdx;
         bool isNewLeverageLessThanMax = newLeverage < _maxLeverage;
-        bool isStorageFeeEnough = checkStorageFeeAndUpdateLastUsed();
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
 
         if (
             !isPositionExists
