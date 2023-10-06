@@ -7182,7 +7182,7 @@ ADDCONST -2
 PICK
 SWAP
 CALLREF {
-	CALL $getOpenMarketOrderValue_bdb6b23a_internal_macro$
+	CALL $getBaseOpenMarketOrderValue_d34f25be_internal_macro$
 }
 LESS
 PUSHCONT {
@@ -25008,7 +25008,7 @@ STZERO
 ENDC
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 
-.macro getOpenMarketOrderValue
+.macro getBaseOpenMarketOrderValue
 DROP
 GETGLOB 6
 THROWIFNOT 76
@@ -25017,7 +25017,7 @@ LDI 1
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 CALLREF {
-	CALL $getOpenMarketOrderValue_bdb6b23a_internal_macro$
+	CALL $getBaseOpenMarketOrderValue_d34f25be_internal_macro$
 }
 OVER
 PUSHCONT {
@@ -25030,7 +25030,7 @@ PUSHCONT {
 	NEWC
 	STSLICECONST xc
 	STSLICE
-	PUSHINT 2930459653
+	PUSHINT 2801133426
 	STUR 130
 	STU 128
 	ENDC
@@ -25046,11 +25046,11 @@ IFREF {
 }
 THROW 0
 
-.globl	getOpenMarketOrderValue_bdb6b23a_internal
-.type	getOpenMarketOrderValue_bdb6b23a_internal, @function
-CALL $getOpenMarketOrderValue_bdb6b23a_internal_macro$
+.globl	getBaseOpenMarketOrderValue_d34f25be_internal
+.type	getBaseOpenMarketOrderValue_d34f25be_internal, @function
+CALL $getBaseOpenMarketOrderValue_d34f25be_internal_macro$
 
-.macro getOpenMarketOrderValue_bdb6b23a_internal_macro
+.macro getBaseOpenMarketOrderValue_d34f25be_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 392
 PUSHINT 500000000
 PUSHINT 0
@@ -25158,7 +25158,7 @@ ADD
 UFITS 128
 SWAP
 CALLREF {
-	CALL $getOpenMarketOrderValue_bdb6b23a_internal_macro$
+	CALL $getBaseOpenMarketOrderValue_d34f25be_internal_macro$
 }
 ADD
 UFITS 128
@@ -26021,37 +26021,6 @@ CALLREF {
 }
 THROW 60
 
-.globl	DateTime_with_obj_getDayOfWeek_22f8a2b8
-.type	DateTime_with_obj_getDayOfWeek_22f8a2b8, @function
-CALL $DateTime_with_obj_getDayOfWeek_22f8a2b8_macro$
-
-.macro DateTime_with_obj_getDayOfWeek_22f8a2b8_macro
-.loc ../contracts/libraries/DateTime.tsol, 204
-DUP
-PUSHINT 86400
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 205
-ADDCONST 3
-PUSHINT 7
-MOD
-INC
-.loc ../contracts/libraries/DateTime.tsol, 0
-
-.globl	DateTime_no_obj_getDayOfWeek_22f8a2b8
-.type	DateTime_no_obj_getDayOfWeek_22f8a2b8, @function
-CALL $DateTime_no_obj_getDayOfWeek_22f8a2b8_macro$
-
-.macro DateTime_no_obj_getDayOfWeek_22f8a2b8_macro
-.loc ../contracts/libraries/DateTime.tsol, 204
-PUSHINT 86400
-DIV
-.loc ../contracts/libraries/DateTime.tsol, 205
-ADDCONST 3
-PUSHINT 7
-MOD
-INC
-.loc ../contracts/libraries/DateTime.tsol, 0
-
 .globl	DateTime_with_obj_timestampFromDateTime_5e05bd6d
 .type	DateTime_with_obj_timestampFromDateTime_5e05bd6d, @function
 CALL $DateTime_with_obj_timestampFromDateTime_5e05bd6d_macro$
@@ -26682,6 +26651,37 @@ POP S2
 UFITS 256
 .loc ../contracts/libraries/DateTime.tsol, 0
 
+.globl	DateTime_with_obj_getDayOfWeek_22f8a2b8
+.type	DateTime_with_obj_getDayOfWeek_22f8a2b8, @function
+CALL $DateTime_with_obj_getDayOfWeek_22f8a2b8_macro$
+
+.macro DateTime_with_obj_getDayOfWeek_22f8a2b8_macro
+.loc ../contracts/libraries/DateTime.tsol, 204
+DUP
+PUSHINT 86400
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 205
+ADDCONST 3
+PUSHINT 7
+MOD
+INC
+.loc ../contracts/libraries/DateTime.tsol, 0
+
+.globl	DateTime_no_obj_getDayOfWeek_22f8a2b8
+.type	DateTime_no_obj_getDayOfWeek_22f8a2b8, @function
+CALL $DateTime_no_obj_getDayOfWeek_22f8a2b8_macro$
+
+.macro DateTime_no_obj_getDayOfWeek_22f8a2b8_macro
+.loc ../contracts/libraries/DateTime.tsol, 204
+PUSHINT 86400
+DIV
+.loc ../contracts/libraries/DateTime.tsol, 205
+ADDCONST 3
+PUSHINT 7
+MOD
+INC
+.loc ../contracts/libraries/DateTime.tsol, 0
+
 .macro public_function_selector
 DUP
 PUSHINT 918680811
@@ -26930,7 +26930,7 @@ IFJMPREF {
 		}
 	}
 	DUP
-	PUSHINT 725850610
+	PUSHINT 715458284
 	LEQ
 	IFJMPREF {
 		DUP
@@ -27021,9 +27021,15 @@ IFJMPREF {
 			}
 		}
 		DUP
-		PUSHINT 725850610
+		PUSHINT 715458284
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 653649778
+			EQUAL
+			IFJMPREF {
+				CALL $getBaseOpenMarketOrderValue$
+			}
 			DUP
 			PUSHINT 682981493
 			EQUAL
@@ -27042,12 +27048,6 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $getMinValueForClosePosition$
 			}
-			DUP
-			PUSHINT 725850610
-			EQUAL
-			IFJMPREF {
-				CALL $finish_closePosition$
-			}
 		}
 	}
 	DUP
@@ -27055,9 +27055,15 @@ IFJMPREF {
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 773109784
+		PUSHINT 761539021
 		LEQ
 		IFJMPREF {
+			DUP
+			PUSHINT 725850610
+			EQUAL
+			IFJMPREF {
+				CALL $finish_closePosition$
+			}
 			DUP
 			PUSHINT 756989703
 			EQUAL
@@ -27076,28 +27082,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $oracle_setOrUpdatePositionTriggers$
 			}
-			DUP
-			PUSHINT 773109784
-			EQUAL
-			IFJMPREF {
-				CALL $getMarket$
-			}
 		}
 		DUP
 		PUSHINT 802788579
 		LEQ
 		IFJMPREF {
 			DUP
+			PUSHINT 773109784
+			EQUAL
+			IFJMPREF {
+				CALL $getMarket$
+			}
+			DUP
 			PUSHINT 781149731
 			EQUAL
 			IFJMPREF {
 				CALL $setManager$
-			}
-			DUP
-			PUSHINT 782976005
-			EQUAL
-			IFJMPREF {
-				CALL $getOpenMarketOrderValue$
 			}
 			DUP
 			PUSHINT 788458251
