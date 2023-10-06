@@ -1,19 +1,19 @@
 pragma ever-solidity ^0.62.0;
 
 
-import {Callback} from "../../libraries/Callback.tsol";
-import {Callback} from "../../libraries/Callback.tsol";
-import {Constants} from "../../libraries/Constants.tsol";
-import {Errors} from "../../libraries/Errors.tsol";
-import {Gas} from "../../libraries/Gas.tsol";
 import {GravixVaultOrdersBase} from "./GravixVaultOrdersBase.tsol";
-import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
-import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
 import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
-import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
-import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
 import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {GravixVaultHelpers} from "./GravixVaultHelpers.tsol";
+import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
 
 
 abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
@@ -39,7 +39,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
         bool hasTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0;
 
-        if (msg.value < calculateBaseOpenLimitOrderValue(hasTriggers)) {
+        if (msg.value < getBaseOpenLimitOrderValue(hasTriggers)) {
             return false;
         }
 

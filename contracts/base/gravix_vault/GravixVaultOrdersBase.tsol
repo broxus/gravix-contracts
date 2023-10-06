@@ -105,24 +105,24 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function _distributeReferralFee(
-        uint128 fee,
+        uint128 taxedAmount,
         address referrer,
         address grandReferrer,
         address referral,
         ReferralFeeSchema feeSchema,
         Callback.CallMeta meta
-    ) internal view returns (uint128 remainingFee) {
-        remainingFee = fee;
+    ) internal view returns (uint128 remainingAmount) {
+        remainingAmount = taxedAmount;
         if (referrer != address(0)) {
-            uint128 referrerFee = math.muldiv(fee, referralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
-            remainingFee -= referrerFee;
+            uint128 referrerFee = math.muldiv(taxedAmount, referralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingAmount -= referrerFee;
             if (referrerFee > 0) {
                 _sendReferrerFee(referrer, referral, referrerFee, meta);
             }
         }
         if (grandReferrer != address(0)) {
-            uint128 grandReferrerFee = math.muldiv(fee, grandReferralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
-            remainingFee -= grandReferrerFee;
+            uint128 grandReferrerFee = math.muldiv(taxedAmount, grandReferralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingAmount -= grandReferrerFee;
             if (grandReferrerFee > 0) {
                 _sendReferrerFee(grandReferrer, referral, grandReferrerFee, meta);
             }
@@ -190,7 +190,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         IPriceNode.Price _price,
         Callback.CallMeta _meta
     ) external onlyActive reserve {
-        require (msg.value >= calculateSetOrUpdateTriggersMinValue(), Errors.LOW_MSG_VALUE);
+        require (msg.value >= getSetOrUpdateTriggersMinValue(), Errors.LOW_MSG_VALUE);
         require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
@@ -651,7 +651,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         IPriceNode.Price price,
         Callback.CallMeta meta
     ) external onlyActive reserve {
-        require (msg.value >= calculateMinValueForClosePosition(), Errors.LOW_MSG_VALUE);
+        require (msg.value >= getMinValueForClosePosition(), Errors.LOW_MSG_VALUE);
 
         // soft fail
         // optimistic check on market, we will check that position matches it in account

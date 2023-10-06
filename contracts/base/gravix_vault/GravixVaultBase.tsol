@@ -3,10 +3,11 @@ pragma ever-solidity ^0.62.0;
 import {GravixVaultMarketOrders} from "./GravixVaultMarketOrders.tsol";
 import {GravixVaultLimitOrders} from "./GravixVaultLimitOrders.tsol";
 import {Callback} from "../../libraries/Callback.tsol";
+import {GravixVaultHelpers} from "./GravixVaultHelpers.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
 import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
 import {Constants} from "../../libraries/Constants.tsol";
 import {Errors} from "../../libraries/Errors.tsol";
-import {Gas} from "../../libraries/Gas.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
 
@@ -245,12 +246,12 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             tvm.rawReserve(_reserve(), 0);
             uint32 _requestNonce = slice.decode(uint32);
             PendingMarketOrder pendingRequest = pendingMarketRequests[_requestNonce];
-            uint128 minValue = calculateMinValueForContinueOpenMarketOrder(pendingRequest);
+            uint128 minValue = getMinValueForContinueOpenMarketOrder(pendingRequest);
             if (msg.value < minValue) {
                 _revertRequestMarketOrder(
                     _requestNonce,
                     pendingRequest,
-                    Errors.NOT_ENOUGH_VALUE_FOR_CONTINUE_OPEN_MARKET_ORDER
+                    Errors.LOW_VALUE_FOR_CONTINUE_OPEN_MARKET_ORDER
                 );
                 return;
             }
@@ -266,12 +267,12 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
 
             uint32 _requestNonce = slice.decode(uint32);
             PendingLimitOrder pendingRequest = pendingLimitRequests[_requestNonce];
-            uint128 minValue = calculateMinValueForContinueOpenLimitOrder(pendingRequest);
+            uint128 minValue = getMinValueForContinueOpenLimitOrder(pendingRequest);
             if (msg.value < minValue) {
                 _revertRequestLimitOrder(
                     _requestNonce,
                     pendingRequest,
-                    Errors.NOT_ENOUGH_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
+                    Errors.LOW_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
                 );
                 return;
             }
@@ -292,12 +293,12 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
             tvm.rawReserve(_reserve(), 0);
             uint32 _requestNonce = slice.decode(uint32);
             PendingLimitOrder request = pendingLimitRequests[_requestNonce];
-            uint128 minValue = calculateMinValueForContinueOpenLimitOrder(request);
+            uint128 minValue = getMinValueForContinueOpenLimitOrder(request);
             if (msg.value < minValue) {
                 _revertRequestPendingLimitOrder(
                     _requestNonce,
                     request,
-                    Errors.NOT_ENOUGH_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
+                    Errors.LOW_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
                 );
                 return;
             }
