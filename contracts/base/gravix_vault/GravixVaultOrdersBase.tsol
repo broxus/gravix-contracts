@@ -332,35 +332,35 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function removePositionTriggers(
-        uint32 _positionKey,
-        uint32 _marketIdx,
-        bool _removeStopLoss,
-        bool _removeTakeProfit,
-        Callback.CallMeta _meta
+        uint32 positionKey,
+        uint32 marketIdx,
+        bool removeStopLoss,
+        bool removeTakeProfit,
+        Callback.CallMeta meta
     ) external override reserve {
         // optimistic check on market, we will check that position matches it in account
-        if (!marketOpen(_marketIdx)) {
+        if (!marketOpen(marketIdx)) {
             emit RevertRemovePositionTriggers(
-                _meta.callId,
+                meta.callId,
                 msg.sender,
-                _positionKey,
-                _marketIdx,
+                positionKey,
+                marketIdx,
                 Errors.MARKET_CLOSED
             );
             _sendCallbackOrGas(
                 msg.sender,
-                _meta.nonce,
-                false, _meta.sendGasTo);
+                meta.nonce,
+                false, meta.sendGasTo);
             return;
         }
 
         address gravixAcc = getGravixAccountAddress(msg.sender);
         IGravixAccount(gravixAcc).process_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            _positionKey,
-            _marketIdx,
-            _removeStopLoss,
-            _removeTakeProfit,
-            _meta,
+            positionKey,
+            marketIdx,
+            removeStopLoss,
+            removeTakeProfit,
+            meta,
             gravixAccountCode.version
         );
     }
@@ -824,10 +824,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
     //endregion
     function executePositionsTriggers(
-        mapping(uint32 => PositionTriggerData) _positionsMap,
-        Callback.CallMeta _meta
+        mapping(uint32 => PositionTriggerData) positionsMap,
+        Callback.CallMeta meta
     ) external override onlyLimitBot reserve {
-        for ((uint32 marketIdx, PositionTriggerData _positions) : _positionsMap) {
+        for ((uint32 marketIdx, PositionTriggerData _positions) : positionsMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
@@ -839,7 +839,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                     _positions.positions,
                     marketIdx,
                     _positions.price.price,
-                    _meta,
+                    meta,
                     0
                 );
                 continue;
@@ -849,11 +849,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 marketIdx,
                 managers.limitBot,
                 _positions.positions,
-                _meta
+                meta
             );
         }
 
-        _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+        meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
     function _sendExecutePositionsTriggersOracleRequest(
@@ -920,12 +920,12 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function oracle_executePositionsTriggers(
-        uint64 nonce,
+        uint64 _nonce,
         uint32 _marketIdx,
         PositionTriggerIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
-    ) external override onlyOracleProxy(nonce) reserve {
+    ) external override onlyOracleProxy(_nonce) reserve {
         this.self_executePositionsTriggers{
                 value: 0,
                 flag: MsgFlag.ALL_NOT_RESERVED,

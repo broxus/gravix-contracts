@@ -492,9 +492,9 @@
 		{
 			"name": "cancelMarketOrder",
 			"inputs": [
-				{"name":"_user","type":"address"},
-				{"name":"_orderKey","type":"uint32"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+				{"name":"user","type":"address"},
+				{"name":"orderKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -618,11 +618,11 @@
 		{
 			"name": "removePositionTriggers",
 			"inputs": [
-				{"name":"_positionKey","type":"uint32"},
-				{"name":"_marketIdx","type":"uint32"},
-				{"name":"_removeStopLoss","type":"bool"},
-				{"name":"_removeTakeProfit","type":"bool"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"removeStopLoss","type":"bool"},
+				{"name":"removeTakeProfit","type":"bool"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -794,8 +794,8 @@
 		{
 			"name": "executePositionsTriggers",
 			"inputs": [
-				{"components":[{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"},{"name":"triggerPositionType","type":"uint8"}],"name":"positions","type":"tuple[]"}],"name":"_positionsMap","type":"map(uint32,tuple)"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+				{"components":[{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"},{"name":"triggerPositionType","type":"uint8"}],"name":"positions","type":"tuple[]"}],"name":"positionsMap","type":"map(uint32,tuple)"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -815,7 +815,7 @@
 		{
 			"name": "oracle_executePositionsTriggers",
 			"inputs": [
-				{"name":"nonce","type":"uint64"},
+				{"name":"_nonce","type":"uint64"},
 				{"name":"_marketIdx","type":"uint32"},
 				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"},{"name":"triggerPositionType","type":"uint8"}],"name":"_positions","type":"tuple[]"},
 				{"name":"_assetPrice","type":"uint128"},
