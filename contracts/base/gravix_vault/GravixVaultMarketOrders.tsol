@@ -34,7 +34,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
 
         bool hasTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0;
 
-        if (msg.value < getOpenMarketOrderValue(hasTriggers)) {
+        if (msg.value < getBaseOpenMarketOrderValue(hasTriggers)) {
             return false;
         }
         // collateral has USDT decimals -> 6

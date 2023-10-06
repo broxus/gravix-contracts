@@ -82,7 +82,7 @@ export class GravixVault {
     async getOpenOrderBaseValue(triggersExists: boolean): Promise<{ market: string; limit: string }> {
         return (await Promise.all([
             this.contract.methods
-                .getBaseOpenLimitOrderValue({ _triggersExists: triggersExists })
+                .getBaseOpenMarketOrderValue({ _triggersExists: triggersExists })
                 .call()
                 .then(res => ({ market: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
             this.contract.methods

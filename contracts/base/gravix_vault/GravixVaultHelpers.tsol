@@ -388,7 +388,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         });
     }
 
-    function getOpenMarketOrderValue(bool _triggersExists) public pure returns(uint128) {
+    function getBaseOpenMarketOrderValue(bool _triggersExists) public pure returns(uint128) {
         uint128 valueForTriggers = _triggersExists ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
         return Gas.OPEN_ORDER_FEE
                 + Gas.ORACLE_PROXY_DEPLOY
@@ -412,7 +412,7 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
         return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
                 + valueForReferrerRetrieval
-                + getOpenMarketOrderValue(hasTriggers);
+                + getBaseOpenMarketOrderValue(hasTriggers);
     }
 
     function getMinValueForContinueOpenLimitOrder(
