@@ -654,7 +654,7 @@ export const closeOrderWithTraceTree = async ({
     const { traceTree: traceTree1 } = await locklift.tracing.trace(
         !stopOrderConfig
             ? vault.closePosition(user, pos_key, posView1.position.marketIdx, callId, value)
-            : vault.stopPositions({
+            : vault.executeTriggers({
                   callId,
                   stopPositionsConfig: [
                       [

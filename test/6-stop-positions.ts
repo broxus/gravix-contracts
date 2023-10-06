@@ -1,10 +1,10 @@
-import { bn, DEFAULT_TICKER, PriceNodeMockAdapter } from "./utils/common";
-import { Account } from "locklift/everscale-client";
-import { Token } from "./utils/wrappers/token";
-import { TokenWallet } from "./utils/wrappers/token_wallet";
-import { Address, Contract, fromNano, lockliftChai, toNano, zeroAddress } from "locklift";
-import chai, { expect } from "chai";
-import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
+import {bn, DEFAULT_TICKER, PriceNodeMockAdapter} from "./utils/common";
+import {Account} from "locklift/everscale-client";
+import {Token} from "./utils/wrappers/token";
+import {TokenWallet} from "./utils/wrappers/token_wallet";
+import {Address, Contract, fromNano, lockliftChai, toNano, zeroAddress} from "locklift";
+import chai, {expect} from "chai";
+import {GravixVault, MarketConfig, Oracle} from "./utils/wrappers/vault";
 import {
     GravixVaultAbi,
     PairMockAbi,
@@ -14,19 +14,13 @@ import {
 } from "../build/factorySource";
 import BigNumber from "bignumber.js";
 import {
-    closePosition,
     closeOrderWithTraceTree,
+    closePosition,
     openLimitWithTestsOrder,
     openMarketOrderWithTests,
     setPrice,
 } from "./utils/orders";
-import {
-    EXECUTE_STOP_ORDER_VALUE,
-    LimitType,
-    OPEN_LIMIT_ORDER_RESERVE,
-    PosType,
-    StopPositionType,
-} from "./utils/constants";
+import {EXECUTE_STOP_ORDER_VALUE, LimitType, PosType, StopPositionType,} from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -713,15 +707,15 @@ describe("Testing main orders flow", async function () {
                         const { traceTree } = await locklift.tracing.trace(
                             vault.contract.methods
                                 .removePositionTriggers({
-                                    _meta: {
+                                    meta: {
                                         nonce: 0,
                                         callId: 0,
                                         sendGasTo: user.address,
                                     },
-                                    _positionKey: pos_key,
-                                    _marketIdx: marketIdx,
-                                    _removeTakeProfit: true,
-                                    _removeStopLoss: false,
+                                    positionKey: pos_key,
+                                    marketIdx: marketIdx,
+                                    removeTakeProfit: true,
+                                    removeStopLoss: false,
                                 })
                                 .send({
                                     from: user.address,
@@ -770,15 +764,15 @@ describe("Testing main orders flow", async function () {
                         const { traceTree } = await locklift.tracing.trace(
                             vault.contract.methods
                                 .removePositionTriggers({
-                                    _meta: {
+                                    meta: {
                                         nonce: 0,
                                         callId: 0,
                                         sendGasTo: user.address,
                                     },
-                                    _positionKey: pos_key,
-                                    _marketIdx: marketIdx,
-                                    _removeTakeProfit: true,
-                                    _removeStopLoss: true,
+                                    positionKey: pos_key,
+                                    marketIdx: marketIdx,
+                                    removeTakeProfit: true,
+                                    removeStopLoss: true,
                                 })
                                 .send({
                                     from: user.address,

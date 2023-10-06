@@ -344,7 +344,7 @@ export class GravixVault {
             .send({ from: user.address, amount: value });
     }
 
-    async stopPositions({
+    async executeTriggers({
         callId = 0,
         stopPositionsConfig,
     }: {
