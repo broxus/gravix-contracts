@@ -1,0 +1,64 @@
+pragma ever-solidity ^0.62.0;
+
+import {ILimitBotVault} from "./interfaces/ILimitBotVault.tsol";
+import {Errors} from "./libraries/Errors.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+
+contract LimitBotVault is ILimitBotVault {
+    uint32 static nonce;
+    address owner;
+    address gravixVault;
+    uint128 constant CONTRACT_MIN_BALANCE = 1 ever;
+    uint128 constant HANDLE_CB_FEE = 0.006 ever;
+    uint128 currentFreeBalance;
+    uint128 freeBalanceThreshold = 10 ever;
+
+    modifier onlyOwnerOrGravixVault() {
+        require(msg.sender == owner || msg.sender == gravixVault, Errors.NOT_OWNER_OR_GRAVIX_VAULT);
+        _;
+    }
+    modifier onlyGravixVault() {
+        require(msg.sender == gravixVault, Errors.NOT_OWNER_OR_GRAVIX_VAULT);
+        _;
+    }
+    modifier onlyGravixOwnerReserveAndSendRemainingGas() {
+        require(msg.sender == owner, Errors.NOT_OWNER_OR_GRAVIX_VAULT);
+        tvm.rawReserve(_reserveWithValue(0), 0);
+        _;
+        owner.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
+    }
+
+    constructor(
+        address _gravixVault,
+        address _owner
+    ) public {
+        tvm.accept();
+        owner = _owner;
+        gravixVault = _gravixVault;
+    }
+
+    function setFreeBalanceThreshold(uint128 _threshold) external onlyGravixOwnerReserveAndSendRemainingGas {
+        freeBalanceThreshold = _threshold;
+    }
+
+    function _reserveWithValue(uint128 _value) internal pure returns (uint128) {
+        return math.max(address(this).balance - (msg.value + _value), CONTRACT_MIN_BALANCE);
+    }
+
+    function sendTo(address _to, uint128 _amount) external override onlyOwnerOrGravixVault {
+        tvm.rawReserve(_reserveWithValue(_amount), 0);
+        _to.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
+    }
+
+    function onMoneyFree(uint128 _amount) external override onlyGravixVault {
+        if (_amount < HANDLE_CB_FEE) {
+            return;
+        }
+        currentFreeBalance += _amount - HANDLE_CB_FEE;
+        if (currentFreeBalance >= freeBalanceThreshold) {
+            tvm.rawReserve(_reserveWithValue(currentFreeBalance), 0);
+            currentFreeBalance = 0;
+            owner.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
+        }
+    }
+}

@@ -1,14 +1,14 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "./interfaces/IOnRateCallback.tsol";
-import "./interfaces/IGravixVault.tsol";
-import "./interfaces/ITWAPOracle.tsol";
-import "./libraries/Callback.tsol";
-import "./libraries/Errors.tsol";
-import "./interfaces/IPriceNode.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "./interfaces/IOnPriceCallback.tsol";
+import {IOnRateCallback} from "./interfaces/IOnRateCallback.tsol";
+import {IOnPriceCallback} from "./interfaces/IOnPriceCallback.tsol";
+import {IGravixVault} from "./interfaces/IGravixVault.tsol";
+import {Callback} from "./libraries/Callback.tsol";
+import {Errors} from "./libraries/Errors.tsol";
+import {ITWAPOracle} from "./interfaces/ITWAPOracle.tsol";
+import {IPriceNode} from "./interfaces/IPriceNode.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
 
 contract OracleProxy is IOnRateCallback, IOnPriceCallback {
@@ -31,12 +31,27 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     uint128 collateral;
     uint32 leverage;
     IGravixVault.PositionType positionType;
+    IGravixVault.LimitOrderType limitOrderType;
+    uint128 triggerPrice;
+    uint128 stopLossTriggerPrice;
+    uint128 takeProfitTriggerPrice;
 
     // this is set for liquidations
     IGravixVault.PositionIdx[] positions;
+    IGravixVault.LimitOrderIdx[] limitPositions;
+    IGravixVault.PositionTriggerIdx[] triggerPositions;
+
     address liquidator;
 
-    enum CallbackType { Execute, Close, Liquidation }
+    enum CallbackType {
+        Execute,
+        RequestLimit,
+        ExecuteLimit,
+        UpdatePositionTriggerPrice,
+        SetExecutePositionsTriggers,
+        Close,
+        Liquidation
+    }
     CallbackType callbackType;
     // dex oracle utility staff
     // pair addr => current reserves
@@ -82,6 +97,69 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
         _collectPrice(user);
     }
 
+    function setRequestLimitCallback(
+        address _user,
+        uint32 _positionKey,
+        uint128 _collateral,
+        uint32 _leverage,
+        IGravixVault.PositionType _positionType,
+        IGravixVault.LimitOrderType _limitOrderType,
+        uint128 _triggerPrice,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice
+    ) external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+
+        user = _user;
+        positionKey = _positionKey;
+        collateral = _collateral;
+        leverage = _leverage;
+        positionType = _positionType;
+        callbackType = CallbackType.RequestLimit;
+        limitOrderType = _limitOrderType;
+        triggerPrice = _triggerPrice;
+        stopLossTriggerPrice = _stopLossTriggerPrice;
+        takeProfitTriggerPrice = _takeProfitTriggerPrice;
+        _collectPrice(user);
+    }
+
+    function setExecuteLimitCallback(
+        address _limitOrdersExecutor,
+        IGravixVault.LimitOrderIdx[] _limitPositions
+    ) external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+
+        user = _limitOrdersExecutor;
+        callbackType = CallbackType.ExecuteLimit;
+        limitPositions = _limitPositions;
+        _collectPrice(_limitOrdersExecutor);
+    }
+    function setUpdatePositionTriggersCallback(
+        address _user,
+        uint32 _positionKey,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice
+    ) external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+        callbackType = CallbackType.UpdatePositionTriggerPrice;
+        user = _user;
+        positionKey = _positionKey;
+        stopLossTriggerPrice = _stopLossTriggerPrice;
+        takeProfitTriggerPrice = _takeProfitTriggerPrice;
+        _collectPrice(user);
+    }
+    function setExecutePositionsTriggersCallback(
+        address _limitOrdersExecutor,
+        IGravixVault.PositionTriggerIdx[] _triggerPositions
+    ) external {
+        require (msg.sender == vault, Errors.BAD_SENDER);
+
+        user = _limitOrdersExecutor;
+        callbackType = CallbackType.SetExecutePositionsTriggers;
+        triggerPositions = _triggerPositions;
+        _collectPrice(_limitOrdersExecutor);
+    }
+
     function setCloseCallback(address _user, uint32 _positionKey) external {
         require (msg.sender == vault, Errors.BAD_SENDER);
 
@@ -124,7 +202,7 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
     function _collectPriceFromPriceNode() internal view {
         tvm.rawReserve(CONTRACT_MIN_BALANCE, 0);
 
-        IPriceNode(priceNode).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(oracleConfig.priceNode.ticker);
+        IPriceNode(priceNode).makeRequest{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(oracleConfig.priceNode.ticker, meta.sendGasTo);
     }
 
     function _sendCallback(uint128 price) internal view {
@@ -138,6 +216,49 @@ contract OracleProxy is IOnRateCallback, IOnPriceCallback {
                 collateral,
                 leverage,
                 positionType,
+                price,
+                meta
+            );
+        } else if (callbackType == CallbackType.RequestLimit) {
+            IGravixVault(vault).oracle_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                nonce,
+                positionKey,
+                user,
+                marketIdx,
+                positionType,
+                collateral,
+                leverage,
+                triggerPrice,
+                limitOrderType,
+                stopLossTriggerPrice,
+                takeProfitTriggerPrice,
+                meta,
+                price
+
+            );
+        } else if (callbackType == CallbackType.ExecuteLimit) {
+            IGravixVault(vault).oracle_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                nonce,
+                limitPositions,
+                price,
+                meta
+            );
+        } else if (callbackType == CallbackType.UpdatePositionTriggerPrice) {
+            IGravixVault(vault).oracle_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                nonce,
+                user,
+                marketIdx,
+                positionKey,
+                stopLossTriggerPrice,
+                takeProfitTriggerPrice,
+                price,
+                meta
+            );
+        } else if (callbackType == CallbackType.SetExecutePositionsTriggers) {
+            IGravixVault(vault).oracle_executePositionsTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                nonce,
+                marketIdx,
+                triggerPositions,
                 price,
                 meta
             );

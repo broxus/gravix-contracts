@@ -21,8 +21,17 @@ export class GravixAccount {
     async positions() {
         return (await this.contract.methods.positions().call()).positions;
     }
+    async orders() {
+        return {
+            limitOrders: (await this.contract.methods.limitOrders().call()).limitOrders,
+            marketOrders: (await this.contract.methods.marketOrders().call()).marketOrders,
+        };
+    }
     async getDetails() {
         return this.contract.methods.getDetails({ answerId: 0 }).call();
+    }
+    async getFields() {
+        return this.contract.getFields().then(res => res.fields);
     }
     async getVersion() {
         return this.getDetails().then(res => res._currentVersion);

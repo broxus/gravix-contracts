@@ -1,14 +1,15 @@
 pragma ever-solidity ^0.62.0;
 
 
-
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "../../libraries/Callback.tsol";
-import "../../interfaces/IGravixVault.tsol";
-import "./GravixAccountHelpers.tsol";
-import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
-import "locklift/src/console.tsol";
-
+import {GravixAccountHelpers} from "./GravixAccountHelpers.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {GravixMath} from "../../libraries/GravixMath.tsol";
 
 
 abstract contract GravixAccountBase is GravixAccountHelpers {
@@ -20,10 +21,9 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     }
 
     function process_sendReferrerFee(
-        uint128 amount, Callback.CallMeta meta
-    ) external override onlyGravixVault reserve {
+        uint128 amount
+    ) external override onlyGravixVault {
         referralBalance += amount;
-        meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
     }
 
     function process_requestMarketOrder(
@@ -31,15 +31,21 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault.PendingMarketOrder _pendingRequest,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
-        if (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, _pendingRequest.meta);
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
+        if (!isLatestVersion || !isStorageFeeEnough) {
+            if (!isLatestVersion) {
+                requestUpgrade(user, currentVersion, _pendingRequest.meta);
+            }
 
             IGravixVault(vault).revert_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 _reqNonce,
-                _pendingRequest
+                _pendingRequest,
+                !isLatestVersion ? Errors.NOT_LATEST_ACCOUNT_VERSION : Errors.HIGH_STORAGE_FEE
             );
             return;
         }
+
         requestCounter += 1;
         marketOrders[requestCounter] = MarketOrder(
             _pendingRequest.marketIdx,
@@ -52,18 +58,27 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             _pendingRequest.closeFeeRate,
             _pendingRequest.baseSpreadRate,
             _pendingRequest.liquidationThresholdRate,
-            _pendingRequest.borrowBaseRatePerHour
+            _pendingRequest.borrowBaseRatePerHour,
+            _pendingRequest.stopLossTriggerPrice,
+            _pendingRequest.takeProfitTriggerPrice,
+            now
         );
-
         // always trying to get grandReferrer on 1st request if referrer is set
         if (requestCounter == 1 && referrer != address(0)) {
-            address referrerAcc = _getGravixAccountAddress(referrer);
-            firstRequest = _pendingRequest;
-            firstReqNonce = _reqNonce;
-            IGravixAccount(referrerAcc).getReferrer{
-                value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getReferrer
-            }();
-            return;
+
+            uint128 minValueForContinue = getMinValueForRetrieveReferrersInMarketOrder(
+                _pendingRequest.stopLossTriggerPrice > 0 || _pendingRequest.takeProfitTriggerPrice> 0
+            );
+
+            if (msg.value < minValueForContinue) {
+                IGravixVault(vault).revert_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                    _reqNonce,
+                    _pendingRequest,
+                    Errors.LOW_VALUE_FOR_RETRIEVE_REFERRERS
+                );
+                return;
+            }
+            retrieveReferrers();
         }
 
         IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
@@ -71,64 +86,74 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         );
     }
 
+    function retrieveReferrers() internal view {
+        address referrerAcc = _getGravixAccountAddress(referrer);
+        IGravixAccount(referrerAcc).getReferrer{
+            value: Gas.GET_REFERRER_VALUE,
+            callback: IGravixAccount.process_getReferrer
+        }();
+    }
     function process_getReferrer(address _referrer, address _grandReferrer) external override reserve {
         require (msg.sender == _getGravixAccountAddress(_referrer), Errors.NOT_GRAVIX_ACCOUNT);
 
+        if (!referrerChecked) {
+            // we got this callback from our referrer account
+            referrerChecked = true;
+        } else {
+            grandReferrerChecked = true;
+        }
+
         // we got this callback from our referrer account
         // + we got correct grand referrer address
-        if (_referrer == referrer && _grandReferrer != address(0)) {
+        if (_referrer == _getReferrer() && _grandReferrer != address(0)) {
             grandReferrer = _grandReferrer;
             // we dont really need data from our grand referrer, we just want to check if he exists
             address grandReferrerAcc = _getGravixAccountAddress(grandReferrer);
             IGravixAccount(grandReferrerAcc).getReferrer{
                 value: 0, flag: MsgFlag.ALL_NOT_RESERVED, callback: IGravixAccount.process_getReferrer
             }();
+
             return;
         }
 
-        // if we get here, it means we have no grand referrer/we got correct callback from grand referrer
-        IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            firstReqNonce, firstRequest, 1 // we can get here only of 1st request
-        );
+        user.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false});
     }
 
+
     function process_executeMarketOrder(
-        uint32 _positionKey,
+        uint32 _orderKey,
         uint32 _marketIdx,
         uint128 _positionSizeAsset,
         IGravixVault.PositionType _positionType,
         uint128 _assetPrice,
         uint64 _dynamicSpread,
         int256 _accUSDFundingPerShare,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
-        MarketOrder request = marketOrders[_positionKey];
-
-        if (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, _meta);
-
+        MarketOrder request = marketOrders[_orderKey];
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isOrderExists = request.collateral > 0 && request.marketIdx == _marketIdx;
+        // check if request exists + double check market idx
+        if (!isOrderExists || !isLatestVersion) {
+            if (!isLatestVersion) {
+                requestUpgrade(user, currentVersion, _meta);
+            }
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
-                _positionKey,
+                _orderKey,
                 _marketIdx,
-                request.collateral,
+                0,
                 _positionSizeAsset,
                 _assetPrice,
                 _positionType,
+                !isLatestVersion ? Errors.NOT_LATEST_ACCOUNT_VERSION : Errors.ORDER_NOT_EXISTS,
                 _meta
             );
             return;
         }
-        // check if request exists + double check market idx
-        if (request.collateral == 0 || request.marketIdx != _marketIdx) {
-            IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _marketIdx, 0, _positionSizeAsset, _assetPrice, _positionType, _meta
-            );
-            return;
-        }
-
-        delete marketOrders[_positionKey];
 
         uint128 allowedDelta = math.muldiv(request.expectedPrice, request.maxSlippageRate, Constants.HUNDRED_PERCENT);
         uint128 minPrice = request.expectedPrice - allowedDelta;
@@ -141,13 +166,410 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.baseSpreadRate + _dynamicSpread
         );
 
-        if (openPrice < minPrice || openPrice > maxPrice) {
+        uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
+        uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
+
+        bool triggersValid = validateTriggerPrices(
+            request.collateral - openFee,
+            request.leverage,
+            request.positionType,
+            request.baseSpreadRate,
+            _maxPnlRate,
+            _minStopLossRate,
+            openPrice,
+            _assetPrice,
+            request.takeProfitTriggerPrice,
+            request.stopLossTriggerPrice
+        );
+
+        delete marketOrders[_orderKey];
+
+        // checking slippage
+        bool tooHighSlippage = openPrice < minPrice || openPrice > maxPrice;
+        if (tooHighSlippage || !triggersValid) {
+            uint32 revertReason;
+            if (tooHighSlippage) {
+                revertReason = Errors.HIGH_SLIPPAGE;
+            } else if (!triggersValid) {
+                revertReason = Errors.INVALID_TRIGGER_PRICE;
+            }
             IGravixVault(vault).revert_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _marketIdx, request.collateral,
-                _positionSizeAsset, _assetPrice, _positionType, _meta
+                user,
+                _orderKey,
+                _marketIdx,
+                request.collateral,
+                _positionSizeAsset,
+                _assetPrice,
+                _positionType,
+                revertReason,
+                _meta
             );
             return;
         }
+
+        optional(PositionTrigger) stopLoss;
+        if (request.stopLossTriggerPrice > 0) {
+            stopLoss = PositionTrigger(request.stopLossTriggerPrice, now);
+        }
+
+        optional(PositionTrigger) takeProfit;
+        if  (request.takeProfitTriggerPrice > 0) {
+            takeProfit = PositionTrigger(request.takeProfitTriggerPrice, now);
+        }
+        Position openedPosition = Position(
+            request.marketIdx,
+            request.positionType,
+            request.collateral,
+            openFee,
+            openPrice,
+            _assetPrice,
+            request.leverage,
+            _accUSDFundingPerShare,
+            request.borrowBaseRatePerHour,
+            request.baseSpreadRate,
+            request.closeFeeRate,
+            request.liquidationThresholdRate,
+            now,
+            stopLoss,
+            takeProfit
+        );
+
+        positions[_orderKey] = openedPosition;
+
+        IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _orderKey,
+            openedPosition,
+            _getReferrer(),
+            _getGrandReferrer(),
+            _meta
+        );
+    }
+
+    function process_cancelMarketOrder(
+        uint32 _orderKey,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        MarketOrder _request = marketOrders[_orderKey];
+
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isOrderExists = _request.collateral > 0;
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
+        // check request exists
+        if (
+            !isOrderExists
+            || !isLatestVersion
+            || !isStorageFeeEnough
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isOrderExists) {
+                revertReason = Errors.ORDER_NOT_EXISTS;
+            } else if (!isStorageFeeEnough) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
+
+            IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _orderKey,
+                revertReason,
+                _meta
+            );
+            return;
+        }
+
+        delete marketOrders[_orderKey];
+
+        IGravixVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user, _orderKey, _request.collateral, _meta
+        );
+    }
+    function process_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
+        if (!isLatestVersion || !isStorageFeeEnough) {
+            if (!isLatestVersion) {
+                requestUpgrade(user, currentVersion, _pendingRequest.meta);
+            }
+            IGravixVault(vault).revert_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _reqNonce,
+                _pendingRequest,
+                !isLatestVersion ? Errors.NOT_LATEST_ACCOUNT_VERSION : Errors.HIGH_STORAGE_FEE
+            );
+            return;
+        }
+
+        requestCounter += 1;
+        LimitOrder _order = LimitOrder(
+            _pendingRequest.marketIdx,
+            _pendingRequest.positionType,
+            _pendingRequest.orderType,
+            _pendingRequest.collateral,
+            _pendingRequest.triggerPrice,
+            _pendingRequest.leverage,
+            _pendingRequest.openFeeRate,
+            _pendingRequest.closeFeeRate,
+            _pendingRequest.baseSpreadRate,
+            _pendingRequest.liquidationThresholdRate,
+            _pendingRequest.borrowBaseRatePerHour,
+            _pendingRequest.stopLossTriggerPrice,
+            _pendingRequest.takeProfitTriggerPrice,
+            LimitOrderSate.Pending,
+            now
+        );
+
+        // always trying to get grandReferrer on 1st request if referrer is set
+        if (requestCounter == 1 && referrer != address(0)) {
+            uint128 minValueForContinue = getMinValueForRetrieveReferrersInLimitOrder(
+                _pendingRequest.stopLossTriggerPrice > 0 || _pendingRequest.takeProfitTriggerPrice> 0
+            );
+            if (msg.value < minValueForContinue) {
+                IGravixVault(vault).revert_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                    _reqNonce,
+                    _pendingRequest,
+                    Errors.LOW_VALUE_FOR_RETRIEVE_REFERRERS
+                );
+                return;
+            }
+            retrieveReferrers();
+        }
+
+        limitOrders[requestCounter] = _order;
+
+        IGravixVault(vault).finish_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _reqNonce,
+            _order,
+            requestCounter,
+            _pendingRequest.meta
+        );
+    }
+
+    function process_requestLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
+        optional(uint32) _orderKey,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+
+        LimitOrder limitOrder;
+        uint32 orderKey;
+
+        if (_orderKey.hasValue()) {
+            orderKey = _orderKey.get();
+            limitOrder = limitOrders[orderKey];
+            limitOrder.state = LimitOrderSate.Opened;
+        } else {
+            requestCounter++;
+            orderKey = requestCounter;
+
+            limitOrder = LimitOrder(
+                _pendingRequest.marketIdx,
+                _pendingRequest.positionType,
+                _pendingRequest.orderType,
+                _pendingRequest.collateral,
+                _pendingRequest.triggerPrice,
+                _pendingRequest.leverage,
+                _pendingRequest.openFeeRate,
+                _pendingRequest.closeFeeRate,
+                _pendingRequest.baseSpreadRate,
+                _pendingRequest.liquidationThresholdRate,
+                _pendingRequest.borrowBaseRatePerHour,
+                _pendingRequest.stopLossTriggerPrice,
+                _pendingRequest.takeProfitTriggerPrice,
+                LimitOrderSate.Opened,
+                now
+            );
+        }
+
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isOrderExists = limitOrder.collateral > 0;
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
+        // bad version or order does not exists
+        if (
+            !isLatestVersion
+            || !isOrderExists
+            || !isEnoughStorageFee
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _pendingRequest.meta);
+            } else if (!isOrderExists) {
+                revertReason = Errors.ORDER_NOT_EXISTS;
+            } else if (!isEnoughStorageFee) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
+            // set it as 0 for prevent withdraw collateral value
+            _pendingRequest.collateral = 0;
+
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _reqNonce,
+                _pendingRequest,
+                revertReason
+            );
+            return;
+        }
+
+
+        bool isPriceOk;
+        if (limitOrder.orderType == IGravixVault.LimitOrderType.Limit) {
+            isPriceOk = limitOrder.positionType == IGravixVault.PositionType.Long
+                ? limitOrder.triggerPrice < _pendingRequest.assetPrice
+                : limitOrder.triggerPrice > _pendingRequest.assetPrice;
+        }
+
+        if (limitOrder.orderType == IGravixVault.LimitOrderType.Stop) {
+            isPriceOk = limitOrder.positionType == IGravixVault.PositionType.Long
+                ? limitOrder.triggerPrice > _pendingRequest.assetPrice
+                : limitOrder.triggerPrice < _pendingRequest.assetPrice;
+        }
+
+
+        uint128 openPrice = applyOpenSpread(
+            limitOrder.triggerPrice,
+            limitOrder.positionType,
+            limitOrder.baseSpreadRate
+        );
+
+        uint128 leveragedPositionUsd = math.muldiv(
+            limitOrder.collateral,
+            limitOrder.leverage,
+            Constants.LEVERAGE_BASE
+        );
+
+        uint128 openFee = math.muldiv(
+            leveragedPositionUsd,
+            limitOrder.openFeeRate,
+            Constants.HUNDRED_PERCENT
+        );
+
+        bool triggersValid = validateTriggerPrices(
+            limitOrder.collateral - openFee,
+            limitOrder.leverage,
+            limitOrder.positionType,
+            limitOrder.baseSpreadRate,
+            _maxPnlRate,
+            _minStopLossRate,
+            openPrice,
+            limitOrder.triggerPrice,
+            limitOrder.takeProfitTriggerPrice,
+            limitOrder.stopLossTriggerPrice
+        );
+
+        if (!isPriceOk || !triggersValid) {
+            delete limitOrders[orderKey];
+
+            IGravixVault(vault).revert_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _reqNonce,
+                _pendingRequest,
+                !isPriceOk ? Errors.INVALID_OPEN_LIMIT_ORDER_PRICE : Errors.INVALID_TRIGGER_PRICE
+            );
+            return;
+        }
+
+        limitOrders[orderKey] = limitOrder;
+
+        // always trying to get grandReferrer on 1st request if referrer is set
+        if (requestCounter == 1 && referrer != address(0)) {
+            retrieveReferrers();
+        }
+
+        IGravixVault(vault).finish_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _reqNonce,
+            limitOrder,
+            orderKey,
+            _pendingRequest.meta
+        );
+    }
+
+    function process_executeLimitOrder(
+        uint32 _orderKey,
+        uint32 _marketIdx,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _positionSizeAsset,
+        IGravixVault.PositionType _positionType,
+        uint128 _assetPrice,
+        int256 _accUSDFundingPerShare,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        LimitOrder request = limitOrders[_orderKey];
+
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isOrderExists = request.collateral > 0
+            && request.marketIdx == _marketIdx
+            && request.positionType == _positionType
+            && request.collateral == _collateral
+            && request.leverage == _leverage;
+        // check if request exists + double check market idx
+        if (!isOrderExists || !isLatestVersion) {
+            if (!isLatestVersion) {
+                requestUpgrade(user, currentVersion, _meta);
+            }
+
+            IGravixVault(vault).revert_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _orderKey,
+                _marketIdx,
+                0,
+                _positionSizeAsset,
+                _assetPrice,
+                _positionType,
+                !isLatestVersion ? Errors.NOT_LATEST_ACCOUNT_VERSION : Errors.ORDER_NOT_EXISTS,
+                _meta
+            );
+            return;
+        }
+
+
+        bool isPriceOk;
+        if (request.orderType == IGravixVault.LimitOrderType.Limit) {
+            isPriceOk = request.positionType == IGravixVault.PositionType.Long
+                ? request.triggerPrice >= _assetPrice
+                : request.triggerPrice <= _assetPrice;
+        }
+
+        if (request.orderType == IGravixVault.LimitOrderType.Stop) {
+            isPriceOk = request.positionType == IGravixVault.PositionType.Long
+                ? request.triggerPrice <= _assetPrice
+                : request.triggerPrice >= _assetPrice;
+        }
+
+        if (!isPriceOk) {
+            IGravixVault(vault).revert_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _orderKey,
+                _marketIdx,
+                request.collateral,
+                _positionSizeAsset,
+                _assetPrice,
+                _positionType,
+                Errors.INVALID_OPEN_LIMIT_ORDER_PRICE,
+                _meta
+            );
+            return;
+        }
+
+        delete limitOrders[_orderKey];
+
+        // add base spread
+        uint128 openPrice = applyOpenSpread(
+            request.triggerPrice,
+            request.positionType,
+            request.baseSpreadRate
+        );
 
         uint128 leveragedPositionUsd = math.muldiv(request.collateral, request.leverage, Constants.LEVERAGE_BASE);
         uint128 openFee = math.muldiv(leveragedPositionUsd, request.openFeeRate, Constants.HUNDRED_PERCENT);
@@ -165,43 +587,331 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
             request.baseSpreadRate,
             request.closeFeeRate,
             request.liquidationThresholdRate,
-            now
+            now,
+            _convertPriceToTrigger(request.stopLossTriggerPrice),
+            _convertPriceToTrigger(request.takeProfitTriggerPrice)
         );
-        positions[_positionKey] = openedPosition;
+        positions[_orderKey] = openedPosition;
 
-        IGravixVault(vault).finish_executeMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, _positionKey, openedPosition, referrer, grandReferrer, _meta
+        IGravixVault(vault).finish_executeLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _orderKey,
+            openedPosition,
+            referrer,
+            grandReferrer,
+            _meta
         );
     }
 
-    function process_cancelMarketOrder(
-        uint32 _positionKey,
+    function process_cancelLimitOrder(
+        uint32 _orderKey,
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
-        MarketOrder _request = marketOrders[_positionKey];
+        LimitOrder _request = limitOrders[_orderKey];
 
-        if (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, _meta);
-            IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _meta
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isOrderExists = _request.collateral > 0;
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
+
+        if (!isOrderExists || !isLatestVersion || !isEnoughStorageFee) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isOrderExists) {
+                revertReason = Errors.ORDER_NOT_EXISTS;
+            } else if (!isEnoughStorageFee) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
+
+            IGravixVault(vault).revert_cancelLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, _orderKey, revertReason, _meta
             );
             return;
         }
-        // check request exists
-        if (_request.collateral == 0) {
-            IGravixVault(vault).revert_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _meta
-            );
-            return;
-        }
 
-        delete marketOrders[_positionKey];
+        delete limitOrders[_orderKey];
 
-        IGravixVault(vault).finish_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, _positionKey, _request.collateral, _meta
+        IGravixVault(vault).finish_cancelLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _orderKey,
+            _request.collateral,
+            _request.stopLossTriggerPrice> 0 || _request.takeProfitTriggerPrice> 0,
+            _meta
         );
     }
+
+    function process_setOrUpdatePositionTriggers(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.Funding funding,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        Position position = positions[_positionKey];
+
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isFirstPositionTrigger = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
+        uint128 minValueForContinue = isFirstPositionTrigger ? getMinValueForCreatingFirstTrigger() : 0;
+
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
+        bool isOrderExists = position.initialCollateral > 0 && position.marketIdx == _marketIdx;
+        bool isEnoughValue = msg.value >= minValueForContinue;
+        if (
+            !isLatestVersion
+            || !isOrderExists
+            || !isEnoughValue
+            || !isStorageFeeEnough
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isStorageFeeEnough) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            } else if (!isOrderExists) {
+                revertReason = Errors.ORDER_NOT_EXISTS;
+            } else if (!isEnoughValue) {
+                revertReason = Errors.LOW_VALUE_FOR_CREATING_FIRST_POSITION_TRIGGER;
+            }
+            IGravixVault(vault).revert_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                revertReason,
+                _meta
+            );
+            return;
+        }
+
+        if (_stopLossTriggerPrice > 0) {
+            position.stopLoss = PositionTrigger(_stopLossTriggerPrice, now);
+        }
+
+        if  (_takeProfitTriggerPrice > 0) {
+            position.takeProfit = PositionTrigger(_takeProfitTriggerPrice, now);
+        }
+
+        bool isLong = position.positionType == IGravixVault.PositionType.Long;
+        int256 newAccFunding = isLong ? funding.accLongUSDFundingPerShare : funding.accShortUSDFundingPerShare;
+        uint128 collateral = position.initialCollateral - position.openFee;
+
+        (uint128 leveragedPosUsd, uint128 leveragedPosAsset) = GravixMath.calculateLeveragedPosition(
+            collateral,
+            position.leverage,
+            position.openPrice
+        );
+        uint128 borrowFee = GravixMath.calculateBorrowFee(leveragedPosUsd, position.createdAt, position.borrowBaseRatePerHour);
+        int256 fundingFee = GravixMath.calculateFundingFee(
+            newAccFunding,
+            position.accUSDFundingPerShare,
+            leveragedPosAsset
+        );
+
+        bool triggersValid = validateTriggerPrices(
+            collateral,
+            position.leverage,
+            borrowFee,
+            fundingFee,
+            position.positionType,
+            position.baseSpreadRate,
+            _maxPnlRate,
+            _minStopLossRate,
+            position.openPrice,
+            _assetPrice,
+            _takeProfitTriggerPrice,
+            _stopLossTriggerPrice
+        );
+
+        if (!triggersValid) {
+            IGravixVault(vault).revert_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                Errors.INVALID_TRIGGER_PRICE,
+                _meta
+            );
+            return;
+        }
+
+        positions[_positionKey] = position;
+        IGravixVault(vault).finish_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            position,
+            _positionKey,
+            _marketIdx,
+            isFirstPositionTrigger,
+            _meta
+        );
+    }
+
+    function process_removePositionTriggers(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        bool _removeStopLoss,
+        bool _removeTakeProfit,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        Position position = positions[_positionKey];
+
+        bool isPositionExists = position.marketIdx == _marketIdx;
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
+        if (
+            !isLatestVersion
+            || !isPositionExists
+            || !isEnoughStorageFee
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isPositionExists){
+                revertReason = Errors.POSITION_NOT_EXISTS;
+            } else if (!isEnoughStorageFee) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
+
+            IGravixVault(vault).revert_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                revertReason,
+                _meta
+            );
+            return;
+        }
+
+        uint8 triggersBefore = (position.stopLoss.hasValue() ? 1 : 0) + (position.takeProfit.hasValue() ? 1 : 0);
+        if (position.stopLoss.hasValue() && _removeStopLoss) {
+            position.stopLoss = null;
+        }
+        if (position.takeProfit.hasValue() && _removeTakeProfit) {
+            position.takeProfit = null;
+        }
+        uint8 triggersAfter = (position.stopLoss.hasValue() ? 1 : 0) + (position.takeProfit.hasValue() ? 1 : 0);
+
+        positions[_positionKey] = position;
+
+        IGravixVault(vault).finish_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _positionKey,
+            _marketIdx,
+            triggersBefore,
+            triggersAfter,
+            position,
+            _meta
+        );
+    }
+
+    function process_executePositionsTriggers(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.TriggerPositionType _stopOrderType,
+        IGravixVault.Funding _funding,
+        address _initiator,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external override onlyGravixVault reserve {
+        Position position = positions[_positionKey];
+
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isPositionExists = position.marketIdx == _marketIdx;
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
+        if (
+            !isLatestVersion
+            || !isPositionExists
+            || !isEnoughStorageFee
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isPositionExists){
+                revertReason = Errors.POSITION_NOT_EXISTS;
+            } else if (!isEnoughStorageFee) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
+            IGravixVault(vault).revert_executePositionsTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                revertReason,
+                _meta
+            );
+            return;
+        }
+
+        _executePositionTriggers(
+            _positionKey,
+            _marketIdx,
+            _assetPrice,
+            _stopOrderType,
+            _funding,
+            _initiator,
+            _meta
+        );
+
+    }
+
+    function _executePositionTriggers(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.TriggerPositionType _stopOrderType,
+        IGravixVault.Funding _funding,
+        address _initiator,
+        Callback.CallMeta _meta
+    ) internal {
+        Position position = positions[_positionKey];
+        bool isReadyToClose;
+        uint128 stopPrice;
+        if (_stopOrderType == IGravixVault.TriggerPositionType.StopLoss && position.stopLoss.hasValue()) {
+            isReadyToClose = isStopLossReady(position, _assetPrice);
+            stopPrice = position.stopLoss.get().triggerPrice;
+        }
+
+        if (_stopOrderType == IGravixVault.TriggerPositionType.TakeProfit && position.takeProfit.hasValue()) {
+            isReadyToClose = isTakeProfitReady(position, _assetPrice);
+            stopPrice = position.takeProfit.get().triggerPrice;
+        }
+
+        if (!isReadyToClose) {
+            IGravixVault(vault).revert_executePositionsTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user,
+                _positionKey,
+                _marketIdx,
+                Errors.POSITION_NOT_READY_TO_CLOSE,
+                _meta
+            );
+            return;
+        }
+
+        PositionView positionView = getPositionView(
+            ViewInput(_positionKey, stopPrice, _funding)
+        );
+        delete positions[_positionKey];
+
+        IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            user,
+            _positionKey,
+            stopPrice,
+            positionView,
+            referrer,
+            grandReferrer,
+            _initiator,
+            _meta
+        );
+    }
+
 
     function process_liquidatePositions(
         address _liquidator,
@@ -214,36 +924,77 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     ) external override onlyGravixVault reserve {
         Position _position = positions[_positionKey];
 
-        if (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, _meta);
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == _marketIdx;
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
+        // if collateral == 0, position does not exist
+        if (
+            !isPositionExists
+            || !isLatestVersion
+            || !isEnoughStorageFee
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isPositionExists) {
+                revertReason = Errors.POSITION_NOT_EXISTS;
+            } else if (!isEnoughStorageFee) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
 
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user,
                 _liquidator,
                 _positionKey,
                 _marketIdx,
+                revertReason,
                 _meta
-            );
-            return;
-        }
-        // if collateral == 0, position does not exist
-        if (_position.initialCollateral == 0 || _position.marketIdx != _marketIdx) {
-            IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _liquidator, _positionKey, _marketIdx, _meta
             );
             return;
         }
 
         PositionView positionView = getPositionView(ViewInput(_positionKey, _assetPrice, _funding));
+        // try execute stop loss first, but check if it is not stale
+        if (_position.stopLoss.hasValue()) {
+            uint128 slPrice = _position.stopLoss.get().triggerPrice;
+            if (
+                (_position.positionType == IGravixVault.PositionType.Long && slPrice > positionView.liquidationPrice)
+                || (_position.positionType == IGravixVault.PositionType.Short && slPrice < positionView.liquidationPrice)
+            ) {
+                _executePositionTriggers(
+                    _positionKey,
+                    _marketIdx,
+                    _assetPrice,
+                    IGravixVault.TriggerPositionType.StopLoss,
+                    _funding,
+                    _liquidator,
+                    _meta
+                );
+                return;
+            }
+        }
+
         if (positionView.liquidate) {
             delete positions[_positionKey];
             IGravixVault(vault).finish_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _liquidator, _positionKey, _assetPrice, positionView,
-                referrer, grandReferrer, _meta
+                user,
+                _liquidator,
+                _positionKey,
+                _assetPrice,
+                positionView,
+                referrer,
+                grandReferrer,
+                _meta
             );
         } else {
             IGravixVault(vault).revert_liquidatePositions{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _liquidator, _positionKey, _marketIdx, _meta
+                user,
+                _liquidator,
+                _positionKey,
+                _marketIdx,
+                Errors.POSITION_NOT_READY_TO_LIQUIDATE,
+                _meta
             );
         }
     }
@@ -258,17 +1009,30 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     ) external override onlyGravixVault reserve {
         Position _position = positions[_positionKey];
 
-        if (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, _meta);
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == _marketIdx;
+        bool isEnoughStorageFee = checkAndUpdateLastUsed();
+        if (
+            !isPositionExists
+            || !isLatestVersion
+            || !isEnoughStorageFee
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isPositionExists) {
+                revertReason = Errors.POSITION_NOT_EXISTS;
+            } else if (!isEnoughStorageFee) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
 
             IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _marketIdx, _meta
-            );
-            return;
-        }
-        if (_position.initialCollateral == 0 || _position.marketIdx != _marketIdx) {
-            IGravixVault(vault).revert_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _positionKey, _marketIdx, _meta
+                user,
+                _positionKey,
+                _marketIdx,
+                revertReason,
+                _meta
             );
             return;
         }
@@ -277,8 +1041,14 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         delete positions[_positionKey];
 
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            user, _positionKey, _assetPrice, positionView,
-            referrer, grandReferrer, _meta
+            user,
+            _positionKey,
+            _assetPrice,
+            positionView,
+            referrer,
+            grandReferrer,
+            user,
+            _meta
         );
     }
 
@@ -291,18 +1061,31 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
     ) external override onlyGravixVault reserve {
         Position _position = positions[positionKey];
 
-        if  (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, meta);
-            IGravixVault(vault).revert_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, amount, marketIdx, positionKey, meta
-            );
-            return;
-        }
-
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == marketIdx;
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
         // if collateral == 0, position does not exist
-        if (_position.initialCollateral == 0 || _position.marketIdx != marketIdx) {
+        if (
+            !isPositionExists
+            || !isLatestVersion
+            || !isStorageFeeEnough
+        ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, meta);
+            } else if (!isPositionExists) {
+                revertReason = Errors.POSITION_NOT_EXISTS;
+            } else if (!isStorageFeeEnough) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
             IGravixVault(vault).revert_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, amount, marketIdx, positionKey, meta
+                user,
+                amount,
+                marketIdx,
+                positionKey,
+                revertReason,
+                meta
             );
             return;
         }
@@ -337,17 +1120,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Callback.CallMeta _meta,
         uint32 _accountVersion
     ) external override onlyGravixVault reserve {
-        if (_accountVersion != currentVersion) {
-            requestUpgrade(user, currentVersion, _meta);
-            IGravixVault(vault).revert_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user,
-                _amount,
-                _positionKey,
-                _marketIdx,
-                _meta
-            );
-            return;
-        }
         Position _position = positions[_positionKey];
         uint128 oldCollateral = _position.initialCollateral - _position.openFee;
 
@@ -357,15 +1129,40 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         // math.max(col, 1) because we dont want to div by 0 if position does not exist
         uint32 newLeverage = uint32(math.muldiv(leveragedPositionUsd, Constants.LEVERAGE_BASE, math.max(newCollateral, 1)));
 
-        // if collateral == 0, position does not exist
+        bool isLatestVersion = isLatestVersion(_accountVersion);
+        bool isCollateralMoreThanMin = (oldCollateral - math.min(oldCollateral, _amount) > _minCollateral);
+        bool isPositionExists = _position.initialCollateral > 0 && _position.marketIdx == _marketIdx;
+        bool isNewLeverageLessThanMax = newLeverage < _maxLeverage;
+        bool isStorageFeeEnough = checkAndUpdateLastUsed();
+
         if (
-            _position.initialCollateral == 0 ||
-            (oldCollateral - math.min(oldCollateral, _amount) < _minCollateral) ||
-            _position.marketIdx != _marketIdx ||
-            newLeverage > _maxLeverage
+            !isPositionExists
+            || !isCollateralMoreThanMin
+            || !isNewLeverageLessThanMax
+            || !isLatestVersion
+            || !isStorageFeeEnough
         ) {
+            uint32 revertReason;
+            if (!isLatestVersion) {
+                revertReason = Errors.NOT_LATEST_ACCOUNT_VERSION;
+                requestUpgrade(user, currentVersion, _meta);
+            } else if (!isCollateralMoreThanMin) {
+                revertReason = Errors.LOW_COLLATERAL;
+            } else if (!isPositionExists) {
+                revertReason = Errors.POSITION_NOT_EXISTS;
+            } else if (!isNewLeverageLessThanMax) {
+                revertReason = Errors.LEVERAGE_MORE_THAN_MAX;
+            } else if (!isStorageFeeEnough) {
+                revertReason = Errors.HIGH_STORAGE_FEE;
+            }
+
             IGravixVault(vault).revert_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-                user, _amount, _positionKey, _marketIdx, _meta
+                user,
+                _amount,
+                _positionKey,
+                _marketIdx,
+                revertReason,
+                _meta
             );
             return;
         }
@@ -391,6 +1188,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
 
         uint32 functionId = slice.decode(uint32);
         // we can get here because of failed referrer/grand referrer callback
+
         if (functionId == tvm.functionId(IGravixAccount.getReferrer)) {
             tvm.rawReserve(_reserve(), 0);
             if (referrer != address(0) && grandReferrer != address(0)) {
@@ -402,9 +1200,8 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 // We tried to check that referrer exists and got bounce
                 delete referrer;
             }
-            IGravixVault(vault).finish_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(firstReqNonce, firstRequest, 1);
-            delete firstRequest;
-            delete firstReqNonce;
+
+            user.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
         }
     }
 }

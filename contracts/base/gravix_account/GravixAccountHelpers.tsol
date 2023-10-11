@@ -1,41 +1,45 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "./GravixAccountStorage.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "../../libraries/Gas.tsol";
-import "../../libraries/Callback.tsol";
-import "../../libraries/PlatformTypes.tsol";
-import "../../libraries/Errors.tsol";
-import "locklift/src/console.tsol";
-import "../../libraries/Constants.tsol";
+import {GravixAccountStorage} from "./GravixAccountStorage.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {GravixMath} from "../../libraries/GravixMath.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {PlatformTypes} from "../../libraries/PlatformTypes.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
-
 
 abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getDetails() external view responsible returns (
         uint32 _currentVersion, address _vault, address _user, address _referrer, address _grandReferrer, uint128 _referralBalance
     ) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (currentVersion, vault, user, referrer, grandReferrer, referralBalance);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (
+            currentVersion,
+            vault,
+            user,
+            _getReferrer(),
+            _getGrandReferrer(),
+            referralBalance
+        );
     }
 
     function getReferrer() external view override responsible returns (address _user, address _referrer) {
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, referrer);
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } (user, _getReferrer());
     }
+
 
     // @param price - 8 decimals number
     function applyOpenSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 newPrice) {
-        newPrice = _type == IGravixVault.PositionType.Long ?
-            math.muldiv(price, (Constants.HUNDRED_PERCENT + spread), Constants.HUNDRED_PERCENT) :
-            math.muldiv(price, (Constants.HUNDRED_PERCENT - spread), Constants.HUNDRED_PERCENT);
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } GravixMath.applyOpenSpread(price, _type, spread);
     }
 
+    // @param price - 8 decimals number
     function applyCloseSpread(uint128 price, IGravixVault.PositionType _type, uint128 spread) public pure responsible returns (uint128 newPrice) {
-        newPrice = _type == IGravixVault.PositionType.Long ?
-            math.muldiv(price, (Constants.HUNDRED_PERCENT - spread), Constants.HUNDRED_PERCENT) :
-            math.muldiv(price, (Constants.HUNDRED_PERCENT + spread), Constants.HUNDRED_PERCENT);
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } newPrice;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } GravixMath.applyCloseSpread(price, _type, spread);
     }
 
     function getPosition(uint32 posKey) external view responsible returns (Position position) {
@@ -50,50 +54,68 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }positionsViews;
     }
 
+    function _getReferrer() internal view returns (address _referrer) {
+        _referrer = referrerChecked ? referrer : address(0);
+    }
+    function _getGrandReferrer() internal view returns (address _grandReferrer) {
+        _grandReferrer = grandReferrerChecked ? grandReferrer : address(0);
+    }
+
+    function isLatestVersion(uint32 _version) internal view returns(bool) {
+        return _version == currentVersion;
+    }
+
     function getPositionView(ViewInput input) public view responsible returns (PositionView positionView) {
         Position position = positions[input.positionKey];
         require (position.createdAt != 0, Errors.POSITION_NOT_FOUND);
 
-        bool isLong = position.positionType == IGravixVault.PositionType.Long;
+        return {
+            value: 0,
+            bounce: false,
+            flag: MsgFlag.REMAINING_GAS
+        }_getPositionView(
+            position,
+            ViewInputInternal({
+                funding: input.funding,
+                assetPrice: input.assetPrice
+            })
+        );
+    }
 
-        uint128 collateral = position.initialCollateral - position.openFee;
-        uint128 leveragedPositionUsd = math.muldiv(collateral, position.leverage, Constants.LEVERAGE_BASE);
-        uint128 leveragedPositionAsset = math.muldiv(leveragedPositionUsd, Constants.PRICE_DECIMALS, position.openPrice);
+    function _getPositionView(Position _position, ViewInputInternal input) internal pure returns (PositionView positionView) {
+        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
 
-        // borrow fee
-        uint32 timePassed = now - position.createdAt;
-        uint128 borrowFeeShare = math.muldiv(position.borrowBaseRatePerHour, timePassed, Constants.HOUR);
-        uint128 borrowFeeUsd = math.muldiv(borrowFeeShare, leveragedPositionUsd, Constants.HUNDRED_PERCENT);
+        uint128 collateral = _position.initialCollateral - _position.openFee;
+        (uint128 leveragedPositionUsd, uint128 leveragedPositionAsset) = GravixMath.calculateLeveragedPosition(
+            collateral, _position.leverage, _position.openPrice
+        );
 
-        // funding
+        uint128 borrowFeeUsd = GravixMath.calculateBorrowFee(
+            leveragedPositionUsd, _position.createdAt, _position.borrowBaseRatePerHour
+        );
+
         int256 newAccFunding = isLong ? input.funding.accLongUSDFundingPerShare : input.funding.accShortUSDFundingPerShare;
-        int256 fundingDebt = math.muldiv(leveragedPositionAsset, position.accUSDFundingPerShare, Constants.SCALING_FACTOR);
-        // if fundingFee > 0, trader pays
-        int256 fundingFeeUsd = math.muldiv(leveragedPositionAsset, newAccFunding, Constants.SCALING_FACTOR) - fundingDebt;
-        // close price
-        uint128 closePrice = applyCloseSpread(input.assetPrice, position.positionType, position.baseSpreadRate);
-        // pnl (no funding and borrow fees)
-        // (closePrice/openPrice - 1)
-        int256 pnl = int256(math.muldiv(closePrice, Constants.SCALING_FACTOR, position.openPrice)) - Constants.SCALING_FACTOR;
-        // * (-1) for shorts
-        pnl = isLong ? pnl : -pnl;
-        // * collateral * leverage
-        pnl = math.muldiv(pnl, leveragedPositionUsd, Constants.SCALING_FACTOR);
-        // liquidation price
-        // collateral * 0.9
-        int256 liqPriceDist = math.muldiv(collateral, (Constants.HUNDRED_PERCENT - position.liquidationThresholdRate),  Constants.HUNDRED_PERCENT);
-        // - borrowFee - fundingFeeUsd
-        liqPriceDist -= borrowFeeUsd + fundingFeeUsd;
-        // * openPrice / collateral / leverage
-        liqPriceDist = math.muldiv(position.openPrice, liqPriceDist, leveragedPositionUsd);
+        int256 fundingFeeUsd = GravixMath.calculateFundingFee(newAccFunding, _position.accUSDFundingPerShare, leveragedPositionAsset);
 
-        int256 _liqPrice_raw = isLong ?
-            math.muldiv(position.openPrice - liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT - position.baseSpreadRate) :
-            math.muldiv(position.openPrice + liqPriceDist, Constants.HUNDRED_PERCENT, Constants.HUNDRED_PERCENT + position.baseSpreadRate);
-        uint128 liqPrice = uint128(math.max(_liqPrice_raw, 0)); // price cant be negative
+        uint128 closePrice = applyCloseSpread(input.assetPrice, _position.positionType, _position.baseSpreadRate);
+        // pnl (no funding and borrow fees)
+        int256 pnl = GravixMath.calculatePnl(
+            _position.openPrice, closePrice, _position.positionType, leveragedPositionUsd
+        );
+        // liquidation price
+        uint128 liqPrice = GravixMath.calculateLiquidationPrice(
+            _position.openPrice,
+            collateral,
+            _position.positionType,
+            borrowFeeUsd,
+            fundingFeeUsd,
+            leveragedPositionUsd,
+            _position.liquidationThresholdRate,
+            _position.baseSpreadRate
+        );
 
         int256 upPos = leveragedPositionUsd + pnl - fundingFeeUsd - borrowFeeUsd;
-        uint128 closeFee = uint128(math.muldiv(math.max(upPos, 0), position.closeFeeRate, Constants.HUNDRED_PERCENT));
+        uint128 closeFee = uint128(math.muldiv(math.max(upPos, 0), _position.closeFeeRate, Constants.HUNDRED_PERCENT));
 
         // now check if position could be liquidated
         //        int256 currentCollateral = collateral - borrowFee - fundingFee + pnl;
@@ -101,8 +123,8 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         //        bool liquidate = currentCollateral <= liqThreshold;
         bool liquidate = isLong ? input.assetPrice <= liqPrice : input.assetPrice >= liqPrice;
 
-        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }PositionView(
-            position,
+        return PositionView(
+            _position,
             leveragedPositionUsd,
             closePrice,
             borrowFeeUsd,
@@ -114,6 +136,7 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             now
         );
     }
+
 
     function _getGravixAccountAddress(address _user) internal view returns (address) {
         return address(tvm.hash(_buildGravixAccountInitData(_buildGravixAccountParams(_user))));
@@ -147,6 +170,165 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
         );
     }
 
+    // basic check for adequate trigger prices
+    function validateTriggerPrices(
+        uint128 collateral, // collateral - open fee
+        uint32 leverage,
+        uint128 borrowFee,
+        int256 fundingFee,
+        IGravixVault.PositionType positionType,
+        uint64 baseSpreadRate,
+        uint64 maxPnlRate, // usually 300%
+        uint64 minStopLossRate, // usually 25%
+        uint128 openPrice,
+        uint128 marketPrice,
+        uint128 takeProfitTriggerPrice,
+        uint128 stopLossTriggerPrice
+    ) internal pure returns (bool correct) {
+        uint128 leveragedPosition = math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE);
+
+        correct = true;
+        bool isLong = positionType == IGravixVault.PositionType.Long;
+        if (stopLossTriggerPrice > 0) {
+            // we can calculate price by just providing stop loss threshold instead of liq threshold
+            uint128 minStopLossPrice = GravixMath.calculateLiquidationPrice(
+                openPrice,
+                collateral,
+                positionType,
+                borrowFee,
+                fundingFee,
+                leveragedPosition,
+                minStopLossRate,
+                baseSpreadRate
+            );
+
+            correct = correct && isLong
+                ? stopLossTriggerPrice < marketPrice
+                : stopLossTriggerPrice > marketPrice;
+            correct = correct && isLong
+                ? stopLossTriggerPrice > minStopLossPrice
+                : stopLossTriggerPrice < minStopLossPrice;
+        }
+
+        if (takeProfitTriggerPrice > 0) {
+            uint128 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
+            uint128 takeProfitClosePrice = applyCloseSpread(takeProfitTriggerPrice, positionType, baseSpreadRate);
+            int256 takeProfitPnl = GravixMath.calculatePnl(
+                openPrice,
+                takeProfitClosePrice,
+                positionType,
+                leveragedPosition
+            );
+
+            correct = correct && isLong
+                ? takeProfitTriggerPrice > marketPrice
+                : takeProfitTriggerPrice < marketPrice;
+            correct = correct && takeProfitPnl <= pnlLimit;
+        }
+    }
+
+    function validateTriggerPrices(
+        uint128 collateral, // collateral - open fee
+        uint32 leverage,
+        IGravixVault.PositionType positionType,
+        uint64 baseSpreadRate,
+        uint64 maxPnlRate, // usually 300%
+        uint64 minStopLossRate, // usually 25%
+        uint128 openPrice,
+        uint128 marketPrice,
+        uint128 takeProfitTriggerPrice,
+        uint128 stopLossTriggerPrice
+    ) internal pure returns (bool correct) {
+        return validateTriggerPrices(
+            collateral,
+            leverage,
+            0,
+            0,
+            positionType,
+            baseSpreadRate,
+            maxPnlRate,
+            minStopLossRate,
+            openPrice,
+            marketPrice,
+            takeProfitTriggerPrice,
+            stopLossTriggerPrice
+        );
+    }
+
+    function isStopLossReady(
+        Position _position,
+        uint128 _assetPrice
+    ) internal pure returns (bool) {
+        optional(PositionTrigger) stopLoss = _position.stopLoss;
+        if (!stopLoss.hasValue()) {
+            return false;
+        }
+
+        uint128 stopLossTriggerPrice = stopLoss.get().triggerPrice;
+
+        return _position.positionType == IGravixVault.PositionType.Long
+            ?  stopLossTriggerPrice >= _assetPrice
+            : stopLossTriggerPrice < _assetPrice;
+    }
+
+    function isTakeProfitReady(
+        Position _position,
+        uint128 _assetPrice
+    ) internal pure returns (bool) {
+        optional(PositionTrigger) takeProfit = _position.takeProfit;
+        if (!takeProfit.hasValue()) {
+            return false;
+        }
+
+        uint128 takeProfitTriggerPrice = takeProfit.get().triggerPrice;
+
+        return _position.positionType == IGravixVault.PositionType.Long
+            ? takeProfitTriggerPrice <= _assetPrice
+            : takeProfitTriggerPrice > _assetPrice;
+    }
+    function getMinValueForRetrieveReferrersInMarketOrder(bool _isTriggersExist) internal pure returns (uint128) {
+        uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+
+        return  Gas.OPEN_ORDER_FEE / 2
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.GET_REFERRER_VALUE
+            + executeTriggerValue;
+    }
+
+    function getMinValueForRetrieveReferrersInLimitOrder(bool _isTriggersExist) internal pure returns (uint128) {
+        uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+
+        return  Gas.OPEN_ORDER_FEE / 2
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.GET_REFERRER_VALUE
+            + Gas.OPEN_LIMIT_ORDER_RESERVE
+            + executeTriggerValue;
+    }
+
+    function getMinValueForCreatingFirstTrigger() internal pure returns(uint128) {
+        return Gas.SET_OR_UPDATE_TRIGGERS_FEE / 2
+                + Gas.OPEN_LIMIT_ORDER_RESERVE;
+    }
+
+    // @dev If user haven't used his account for a long time (more than 80 days)
+    // storage fee could be too big and can lead to insufficient gas errors
+    function checkAndUpdateLastUsed() internal returns (bool) {
+        bool isOk = now - lastUsedTimeStamp < Constants.MAX_UNUSED_PERIOD;
+        lastUsedTimeStamp = now;
+        return isOk;
+    }
+
+    function _convertPriceToTrigger(uint128 _price) internal pure returns (optional(PositionTrigger)) {
+        if (_price == 0) {
+            return null;
+        }
+        return PositionTrigger({
+            triggerPrice: _price,
+            createdAt: now
+        });
+    }
 
     function _reserve() internal pure returns (uint128) {
         return math.max(address(this).balance - msg.value, CONTRACT_MIN_BALANCE);

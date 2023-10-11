@@ -1,20 +1,21 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "@broxus/tip3/contracts/interfaces/ITokenRootUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/ITokenWalletUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "../../libraries/Gas.tsol";
-import "../../libraries/Callback.tsol";
-import "../../libraries/PlatformTypes.tsol";
-import "../../libraries/Errors.tsol";
-import "../../interfaces/ICallbackReceiver.tsol";
-import "../../interfaces/IGravixAccount.tsol";
-import "./GravixVaultStorage.tsol";
-import "../../OracleProxy.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {ICallbackReceiver} from "../../interfaces/ICallbackReceiver.tsol";
+import {ITokenRoot} from "@broxus/tip3/contracts/interfaces/ITokenRoot.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {ITokenWallet} from "@broxus/tip3/contracts/interfaces/ITokenWallet.tsol";
+import {OracleProxy} from "../../OracleProxy.tsol";
+import {PlatformTypes} from "../../libraries/PlatformTypes.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
+
 
 
 abstract contract GravixVaultHelpers is GravixVaultStorage {
@@ -35,12 +36,14 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         bool _totalNOILimitEnabled,
         uint64 _maxPoolUtilRatio,
         uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
         uint128 _minPositionCollateral,
         bool _paused,
         LiquidationParams _liquidation,
         uint64[2] _openFeeDistributionSchema,
         uint64[2] _closeFeeDistributionSchema,
-        uint32 _marketCount
+        uint32 _marketCount,
+        address _limitBotVault
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             managers,
@@ -59,12 +62,14 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
             totalNOILimitEnabled,
             maxPoolUtilRatio,
             maxPnlRate,
+            minStopLossRate,
             minPositionCollateral,
             paused,
             liquidationParams,
             openFeeDistributionSchema,
             closeFeeDistributionSchema,
-            marketCount
+            marketCount,
+            limitBotVault
         );
     }
 
@@ -118,18 +123,30 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function encodeMarketOrder(
-        uint32 marketIdx,
-        PositionType positionType,
-        uint32 leverage,
-        uint128 expectedPrice,
-        uint64 maxSlippageRate,
-        IPriceNode.Price price,
-        address referrer,
-        uint32 nonce,
-        uint32 callId
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint32 _leverage,
+        uint128 _expectedPrice,
+        uint64 _maxSlippageRate,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        IPriceNode.Price _price,
+        address _referrer,
+        uint32 _nonce,
+        uint32 _callId
     ) external pure returns (TvmCell payload) {
-        TvmCell cell = abi.encode(marketIdx, positionType, leverage, expectedPrice, maxSlippageRate, price, referrer);
-        return encodeTokenTransfer(Action.MarketOrder, nonce, callId, cell);
+        TvmCell cell = abi.encode(
+            _marketIdx,
+            _positionType,
+            _leverage,
+            _expectedPrice,
+            _maxSlippageRate,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _price,
+            _referrer
+        );
+        return encodeTokenTransfer(Action.MarketOrder, _nonce, _callId, cell);
     }
 
     function decodeMarketOrder(
@@ -140,12 +157,101 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         uint32 leverage,
         uint128 expectedPrice,
         uint64 maxSlippageRate,
+        uint128 stopLossTriggerPrice,
+        uint128 takeProfitTriggerPrice,
         IPriceNode.Price price,
         address referrer
     ) {
         (
-        marketIdx, positionType, leverage, expectedPrice, maxSlippageRate, price, referrer
-        ) = abi.decode(actionPayload, (uint32, PositionType, uint32, uint128, uint64, IPriceNode.Price, address));
+            marketIdx,
+            positionType,
+            leverage,
+            expectedPrice,
+            maxSlippageRate,
+            stopLossTriggerPrice,
+            takeProfitTriggerPrice,
+            price,
+            referrer
+        ) = abi.decode(
+            actionPayload,
+            (
+                uint32,
+                PositionType,
+                uint32,
+                uint128,
+                uint64,
+                uint128,
+                uint128,
+                IPriceNode.Price,
+                address
+            )
+        );
+    }
+
+    function encodeLimitOrder(
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint32 _leverage,
+        uint128 _triggerPrice,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        IPriceNode.Price _price,
+        LimitOrderType _limitOrderType,
+        address _referrer,
+        uint32 _nonce,
+        uint32 _callId
+    ) external pure returns (TvmCell payload) {
+        TvmCell cell = abi.encode(
+            _marketIdx,
+            _positionType,
+            _leverage,
+            _triggerPrice,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _limitOrderType,
+            _price,
+            _referrer
+        );
+        return encodeTokenTransfer(Action.LimitOrder, _nonce, _callId, cell);
+    }
+
+    function decodeLimitOrder(
+        TvmCell actionPayload
+    ) public pure returns (
+        uint32 marketIdx,
+        PositionType positionType,
+        uint32 leverage,
+        uint128 triggerPrice,
+        uint128 stopLossTriggerPrice,
+        uint128 takeProfitTriggerPrice,
+        LimitOrderType _limitOrderType,
+        IPriceNode.Price price,
+        address referrer
+    ) {
+        (
+            marketIdx,
+            positionType,
+            leverage,
+            triggerPrice,
+            stopLossTriggerPrice,
+            takeProfitTriggerPrice,
+            _limitOrderType,
+            price,
+            referrer
+        ) = abi.decode(
+            actionPayload,
+                (
+                    uint32,
+                    PositionType,
+                    uint32,
+                    uint128,
+                    uint128,
+                    uint128,
+                    LimitOrderType,
+                    IPriceNode.Price,
+                    address
+                )
+        );
     }
 
     function encodeAddCollateral(
@@ -180,7 +286,11 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     }
 
     function decodeTokenTransfer(TvmCell payload) public pure returns (
-        Action action, uint32 nonce, uint32 callId, TvmCell actionPayload, bool correct
+        Action action,
+        uint32 nonce,
+        uint32 callId,
+        TvmCell actionPayload,
+        bool correct
     ){
         // check if payload assembled correctly
         TvmSlice slice = payload.toSlice();
@@ -278,6 +388,56 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
         });
     }
 
+    function getBaseOpenMarketOrderValue(bool _triggersExists) public pure returns(uint128) {
+        uint128 valueForTriggers = _triggersExists ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+        return Gas.OPEN_ORDER_FEE
+                + Gas.ORACLE_PROXY_DEPLOY
+                + Gas.ORACLE_PROXY_CALL
+                + valueForTriggers;
+    }
+
+    function getBaseOpenLimitOrderValue(bool _triggersExists) public pure returns(uint128) {
+        uint128 valueForTriggers = _triggersExists ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+        return Gas.OPEN_ORDER_FEE
+            + Gas.OPEN_LIMIT_ORDER_RESERVE
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + valueForTriggers;
+    }
+
+    function getMinValueForContinueOpenMarketOrder(
+        PendingMarketOrder _request
+    ) internal pure returns (uint128) {
+        bool hasTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0;
+        uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
+        return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
+                + valueForReferrerRetrieval
+                + getBaseOpenMarketOrderValue(hasTriggers);
+    }
+
+    function getMinValueForContinueOpenLimitOrder(
+        PendingLimitOrder _request
+    ) internal pure returns (uint128) {
+        bool hasTriggers = _request.stopLossTriggerPrice > 0 || _request.takeProfitTriggerPrice > 0;
+        uint128 valueForReferrerRetrieval = _request.referrer == address(0) ? 0 : Gas.GET_REFERRER_VALUE;
+
+        return Gas.GRAVIX_ACCOUNT_DEPLOY_VALUE
+                + valueForReferrerRetrieval
+                + getBaseOpenLimitOrderValue(hasTriggers);
+    }
+
+    function getMinValueForClosePosition() public pure returns (uint128) {
+        return Gas.CLOSE_POSITION_FEE
+                + Gas.ORACLE_PROXY_DEPLOY
+                + Gas.ORACLE_PROXY_CALL;
+    }
+
+    function getSetOrUpdateTriggersMinValue() public pure returns (uint128) {
+        return Gas.SET_OR_UPDATE_TRIGGERS_FEE
+                + Gas.ORACLE_PROXY_DEPLOY
+                + Gas.ORACLE_PROXY_CALL;
+    }
+
     modifier onlyGravixAccount(address user) {
         address gravixAccountAddr = getGravixAccountAddress(user);
         require (msg.sender == gravixAccountAddr, Errors.NOT_GRAVIX_ACCOUNT);
@@ -287,6 +447,11 @@ abstract contract GravixVaultHelpers is GravixVaultStorage {
     modifier onlyOracleProxy(uint64 nonce) {
         address proxy = getOracleProxyAddress(nonce);
         require (msg.sender == proxy, Errors.NOT_ORACLE_PROXY);
+        _;
+    }
+
+    modifier onlyLimitBot() {
+        require (msg.sender == managers.limitBot, Errors.NOT_LIMIT_BOT);
         _;
     }
 

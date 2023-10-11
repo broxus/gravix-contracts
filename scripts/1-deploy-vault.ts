@@ -44,7 +44,7 @@ const main = async () => {
             type: "text",
             name: "_pricePubkey",
             message: "Oracle service pubkey",
-        },
+        }
     ]);
     console.log("\x1b[1m", "\nSetup complete! ✔");
 
@@ -53,15 +53,15 @@ const main = async () => {
     spinner.succeed(`Tmp owner deployed: ${user.address}`);
 
     spinner.start("Deploying vault...");
-    const vault = await setupVault(
-        user,
-        response._usdt,
-        response._stg_usdt,
-        response._oracle,
-        response._priceNode,
-        `0x${response._pricePubkey}`,
-        false,
-    );
+    const vault = await setupVault({
+        owner: user,
+        usdt: response._usdt,
+        stg_usdt: response._stg_usdt,
+        priceNode: response._priceNode,
+        pricePk: `0x${response._pricePubkey}`,
+        limitBot: user.address,
+        log: false
+      });
     spinner.succeed(`Gravix Vault deployed: ${vault.address}`);
 
     const market_configs = JSON.parse(readFileSync("./setup.json").toString());
