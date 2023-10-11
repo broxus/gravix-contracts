@@ -1,0 +1,661 @@
+pragma ever-solidity ^0.62.0;
+
+
+import {GravixVaultOrdersBase} from "./GravixVaultOrdersBase.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {GravixVaultHelpers} from "./GravixVaultHelpers.tsol";
+import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
+
+
+abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
+
+    // region request order
+    function _handleLimitOrder(
+        address _user,
+        uint128 collateral,
+        TvmCell orderParamsPayload,
+        Callback.CallMeta meta
+    ) internal returns (bool) {
+        (
+            uint32 marketIdx,
+            PositionType positionType,
+            uint32 leverage,
+            uint128 triggerPrice,
+            uint128 stopLossTriggerPrice,
+            uint128 takeProfitTriggerPrice,
+            LimitOrderType limitOrderType,
+            IPriceNode.Price price,
+            address referrer
+        ) = decodeLimitOrder(orderParamsPayload);
+
+        bool hasTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0;
+
+        if (msg.value < getBaseOpenLimitOrderValue(hasTriggers)) {
+            return false;
+        }
+
+        if (!validateOrderParams(marketIdx, collateral, leverage, 0)) return false;
+        if (checkPositionAllowed(
+            marketIdx,
+            collateral,
+            leverage,
+            triggerPrice,
+            positionType) > 0
+        ) return false;
+        if (!marketOpen(marketIdx)) return false;
+
+        _limitOrder(
+            _user,
+            marketIdx,
+            positionType,
+            collateral,
+            leverage,
+            triggerPrice,
+            limitOrderType,
+            stopLossTriggerPrice,
+            takeProfitTriggerPrice,
+            price,
+            referrer,
+            meta
+        );
+        return true;
+    }
+
+    function _limitOrder(
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _triggerPrice,
+        LimitOrderType _limitOrderType,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        IPriceNode.Price _price,
+        address _referrer,
+        Callback.CallMeta _meta
+    ) internal {
+        OracleType priceSource = markets[_marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[_marketIdx];
+
+        if (priceSource == OracleType.PriceNode && checkPrice(_price, oracleConf.priceNode)) {
+            _requestLimitOrder(
+                _user,
+                _marketIdx,
+                _positionType,
+                _collateral,
+                _leverage,
+                _triggerPrice,
+                _limitOrderType,
+                _stopLossTriggerPrice,
+                _takeProfitTriggerPrice,
+                _referrer,
+                _meta,
+                _price.price,
+                null
+            );
+            return;
+        }
+        _requestPendingLimitOrder(
+            _user,
+            _marketIdx,
+            _positionType,
+            _collateral,
+            _leverage,
+            _triggerPrice,
+            _limitOrderType,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _referrer,
+            _meta
+        );
+    }
+
+    function _requestPendingLimitOrder(
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _triggerPrice,
+        LimitOrderType _limitOrderType,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        address _referrer,
+        Callback.CallMeta _meta
+    ) internal {
+        Market _market = markets[_marketIdx];
+        requestNonce += 1;
+
+        PendingLimitOrder newRequest = PendingLimitOrder(
+            _user,
+            _marketIdx,
+            _positionType,
+            _collateral,
+            _triggerPrice,
+            _limitOrderType,
+            _leverage,
+            _market.fees.openFeeRate,
+            _market.fees.closeFeeRate,
+            _market.fees.baseSpreadRate,
+            liquidationParams.thresholdRate,
+            _market.fees.borrowBaseRatePerHour,
+            _referrer,
+            0,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _meta
+        );
+        pendingLimitRequests[requestNonce] = newRequest;
+
+        address gravixAcc = getGravixAccountAddress(_user);
+
+        IGravixAccount(gravixAcc).process_requestPendingLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            requestNonce,
+            newRequest,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _revertReason
+    ) external override onlyGravixAccount(_pendingRequest.user) reserve {
+        _revertRequestPendingLimitOrder(_reqNonce, _pendingRequest, _revertReason);
+    }
+
+    function _revertRequestPendingLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendingRequest,
+        uint32 _revertReason
+    ) internal {
+        delete pendingLimitRequests[_reqNonce];
+        emit LimitOrderPendingRequestRevert(_pendingRequest.meta.callId, _pendingRequest.user, _revertReason);
+        if (_pendingRequest.collateral > 0) {
+            _transfer(
+                usdt.wallet,
+                _pendingRequest.collateral,
+                _pendingRequest.user,
+                _makeCell(_pendingRequest.meta.nonce),
+                _pendingRequest.meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(
+                _pendingRequest.user,
+                _pendingRequest.meta.nonce,
+                false, _pendingRequest.meta.sendGasTo
+            );
+        }
+    }
+
+    function finish_requestPendingLimitOrder(
+        address _user,
+        uint32 reqNonce,
+        IGravixAccount.LimitOrder _order,
+        uint32 _orderKey,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        delete pendingLimitRequests[reqNonce];
+
+        emit PendingLimitOrderCreated(
+            _meta.callId,
+            _user,
+            _order,
+            _orderKey
+        );
+        _sendOpenLimitOrderOracleRequest(
+            _user,
+            _orderKey,
+            _order.marketIdx,
+            _order.collateral,
+            _order.leverage,
+            _order.positionType,
+            _order.orderType,
+            _order.triggerPrice,
+            _order.stopLossTriggerPrice,
+            _order.takeProfitTriggerPrice,
+            _meta
+        );
+    }
+
+    function _sendOpenLimitOrderOracleRequest(
+        address _user,
+        uint32 _orderKey,
+        uint32 _marketIdx,
+        uint128 _collateral,
+        uint32 _leverage,
+        PositionType _positionType,
+        LimitOrderType _limitOrderType,
+        uint128 _triggerPrice,
+        uint128 stopLossTriggerPrice,
+        uint128 takeProfitTriggerPrice,
+        Callback.CallMeta _meta
+    ) internal view {
+        address proxy = _deployOracleProxy(_marketIdx, _meta);
+        IOracleProxy(proxy).setRequestLimitCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _user,
+            _orderKey,
+            _collateral,
+            _leverage,
+            _positionType,
+            _limitOrderType,
+            _triggerPrice,
+            stopLossTriggerPrice,
+            takeProfitTriggerPrice
+        );
+    }
+    function oracle_requestLimitOrder(
+        uint64 _nonce,
+        uint32 _orderKey,
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _triggerPrice,
+        LimitOrderType _limitOrderType,
+        uint128 stopLossTriggerPrice,
+        uint128 takeProfitTriggerPrice,
+        Callback.CallMeta _meta,
+        uint128 _assetPrice
+    ) external override onlyOracleProxy(_nonce) reserve {
+        _requestLimitOrder(
+            _user,
+            _marketIdx,
+            _positionType,
+            _collateral,
+            _leverage,
+            _triggerPrice,
+            _limitOrderType,
+            stopLossTriggerPrice,
+            takeProfitTriggerPrice,
+            address(0),
+            _meta,
+            _assetPrice,
+            _orderKey
+        );
+    }
+
+    function _requestLimitOrder(
+        address _user,
+        uint32 _marketIdx,
+        PositionType _positionType,
+        uint128 _collateral,
+        uint32 _leverage,
+        uint128 _triggerPrice,
+        LimitOrderType _limitOrderType,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        address _referrer,
+        Callback.CallMeta _meta,
+        uint128 _assetPrice,
+        optional(uint32) _orderKey
+    ) internal {
+        Market _market = markets[_marketIdx];
+        requestNonce += 1;
+
+        PendingLimitOrder newRequest = PendingLimitOrder(
+            _user,
+            _marketIdx,
+            _positionType,
+            _collateral,
+            _triggerPrice,
+            _limitOrderType,
+            _leverage,
+            _market.fees.openFeeRate,
+            _market.fees.closeFeeRate,
+            _market.fees.baseSpreadRate,
+            liquidationParams.thresholdRate,
+            _market.fees.borrowBaseRatePerHour,
+            _referrer,
+            _assetPrice,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _meta
+        );
+
+        if (!_orderKey.hasValue()) {
+            pendingLimitRequests[requestNonce] = newRequest;
+        }
+
+        address gravixAcc = getGravixAccountAddress(_user);
+
+        IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            requestNonce,
+            newRequest,
+            maxPnlRate,
+            minStopLossRate,
+            _orderKey,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_requestLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest,
+        uint32 _revertReason
+    ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        _revertRequestLimitOrder(_reqNonce, _pendRequest, _revertReason);
+    }
+
+    function _revertRequestLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest,
+        uint32 _revertReason
+    ) internal {
+        delete pendingLimitRequests[_reqNonce];
+        emit LimitOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user, _revertReason);
+        if (_pendRequest.collateral > 0) {
+            _transfer(
+                usdt.wallet,
+                _pendRequest.collateral,
+                _pendRequest.user,
+                _makeCell(_pendRequest.meta.nonce),
+                _pendRequest.meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(
+                _pendRequest.user,
+                _pendRequest.meta.nonce,
+                false, _pendRequest.meta.sendGasTo
+            );
+        }
+    }
+
+    function finish_requestLimitOrder(
+        address user,
+        uint32 reqNonce,
+        IGravixAccount.LimitOrder order,
+        uint32 orderKey,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        delete pendingLimitRequests[reqNonce];
+        collateralReserve += order.collateral;
+
+        emit LimitOrder(
+            meta.callId,
+            user,
+            order,
+            orderKey
+        );
+
+        // reserve evers for feature order execution
+        uint128 stopOrderValue = order.stopLossTriggerPrice > 0 || order.takeProfitTriggerPrice > 0
+            ? Gas.OPEN_LIMIT_ORDER_RESERVE
+            : 0;
+
+        limitBotVault.transfer({
+            value: Gas.OPEN_LIMIT_ORDER_RESERVE + stopOrderValue,
+            flag: MsgFlag.SENDER_PAYS_FEES
+        });
+
+        _sendCallbackOrGas(
+            user,
+            meta.nonce,
+            true,
+            meta.sendGasTo
+        );
+    }
+
+    //endregion
+
+    // region limit bot
+    function executeLimitOrders(
+        mapping (uint32 => ExecuteLimitOrderData) limitOrdersMap,
+        Callback.CallMeta meta
+    ) external override reserveAndSendGas(meta) onlyLimitBot {
+        for ((uint32 marketIdx, ExecuteLimitOrderData limitOrders) : limitOrdersMap) {
+            OracleType priceSource = markets[marketIdx].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+
+            // if market uses offchain oracle and we have valid price, we can liquidate positions right now
+            if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
+                uint128 value = uint128(limitOrders.orders.length * Gas.OPEN_LIMIT_ORDER_RESERVE) + Gas.ORACLE_PROXY_DEPLOY;
+
+                this.self_executeLimitOrders{value: value}(
+                    limitOrders.orders,
+                    limitOrders.price.price,
+                    meta,
+                    0
+                );
+                continue;
+            }
+
+            _sendExecuteLimitOrderOracleRequest(
+                marketIdx,
+                managers.limitBot,
+                limitOrders.orders,
+                meta
+            );
+        }
+    }
+    //endregion
+
+    //region execute limit orders
+    function self_executeLimitOrders(
+        LimitOrderIdx[] _limitOrders,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta,
+        uint256 _startIdx
+    ) external reserve {
+        require (msg.sender == address(this), Errors.BAD_SENDER);
+        for (uint i = _startIdx; i < _limitOrders.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
+            LimitOrderIdx limitOrder = _limitOrders[i];
+            _executeLimitOrder(
+                limitOrder.user,
+                limitOrder.orderKey,
+                limitOrder.marketIdx,
+                limitOrder.collateral,
+                limitOrder.leverage,
+                limitOrder.positionType,
+                _assetPrice,
+                _meta
+            );
+        }
+
+        if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < _limitOrders.length) {
+            this.self_executeLimitOrders{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _limitOrders,
+                _assetPrice,
+                _meta,
+                _startIdx + Constants.LIQUIDATION_BATCH_SIZE
+            );
+        } else {
+            _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+        }
+    }
+
+    function _sendExecuteLimitOrderOracleRequest(
+        uint32 _marketIdx,
+        address _executor,
+        LimitOrderIdx[] _limitOrders,
+        Callback.CallMeta _meta
+    ) internal view {
+        uint128 value = uint128(_limitOrders.length * Gas.OPEN_LIMIT_ORDER_RESERVE);
+        address proxy = _deployOracleProxy(_marketIdx, _meta);
+        IOracleProxy(proxy).setExecuteLimitCallback{
+            value: value
+        }(
+            _executor,
+            _limitOrders
+        );
+    }
+
+    function oracle_executeLimitOrder(
+        uint64 _nonce,
+        LimitOrderIdx[] limitOrders,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external override onlyOracleProxy(_nonce) reserve {
+        this.self_executeLimitOrders{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            limitOrders,
+            _assetPrice,
+            _meta,
+            0
+        );
+    }
+
+    function _executeLimitOrder(
+        address _user,
+        uint32 _orderKey,
+        uint32 _marketIdx,
+        uint128 _collateral,
+        uint32 _leverage,
+        PositionType _positionType,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) internal {
+        // reserve should be
+        uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
+
+        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
+        _addPositionToMarket(_marketIdx, positionSizeAsset, _assetPrice, _positionType);
+
+        address gravixAcc = getGravixAccountAddress(_user);
+
+        _meta = Callback.CallMeta({
+            nonce: _meta.nonce,
+            // return remaining evers from order creating
+            sendGasTo: _user,
+            callId: _meta.callId
+        });
+
+        int256 funding = _positionType == PositionType.Long ? _funding.accLongUSDFundingPerShare : _funding.accShortUSDFundingPerShare;
+
+        IGravixAccount(gravixAcc).process_executeLimitOrder{
+            value: Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever
+        }(
+            _orderKey,
+            _marketIdx,
+            _collateral,
+            _leverage,
+            positionSizeAsset,
+            _positionType,
+            _assetPrice,
+            funding,
+            _meta,
+            gravixAccountCode.version
+        );
+
+    }
+
+
+    function revert_executeLimitOrder(
+        address _user,
+        uint32 _orderKey,
+        uint32 _marketIdx,
+        uint128,
+        uint128 _positionSizeAsset,
+        uint128 _assetPrice,
+        PositionType _positionType,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit LimitOrderExecutionRevert(_meta.callId, _user, _orderKey, _revertReason);
+        _removePositionFromMarket(_marketIdx, _positionSizeAsset, _assetPrice, _positionType);
+
+        limitBotVault.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+    }
+
+    function finish_executeLimitOrder(
+        address user,
+        uint32 positionKey,
+        IGravixAccount.Position newPos,
+        address referrer,
+        address grandReferrer,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
+        _collectOpenFeeAndReferral(newPos.openFee, referrer, grandReferrer, user, meta);
+        collateralReserve -= newPos.openFee;
+
+        uint128 positionSizeAssetRaw = calculatePositionAssetSize(newPos.initialCollateral, newPos.leverage, newPos.markPrice);
+        _removePositionFromMarket(newPos.marketIdx, positionSizeAssetRaw, newPos.markPrice, newPos.positionType);
+
+        uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
+        _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
+        ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
+
+        emit LimitOrderExecution(
+            meta.callId,
+            user,
+            newPos,
+            positionKey
+        );
+    }
+    //endregion
+
+    //region cancel order
+    // ----------------------------------------------------------------------------------
+    // --------------------------- ORDER CANCEL HANDLERS --------------------------------
+    // ----------------------------------------------------------------------------------
+    function cancelLimitOrder(
+        address user,
+        uint32 orderKey,
+        Callback.CallMeta meta
+    ) external view onlyActive reserve {
+        require (msg.value >= Gas.CANCEL_ORDER_FEE, Errors.LOW_MSG_VALUE);
+
+        address gravixAcc = getGravixAccountAddress(user);
+
+        IGravixAccount(gravixAcc).process_cancelLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            orderKey,
+            meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_cancelLimitOrder(
+        address user,
+        uint32 orderKey,
+        uint32 revertReason,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserveAndFailCallback(meta) {
+        emit CancelLimitOrderRevert(meta.callId, user, orderKey, revertReason);
+    }
+
+    function finish_cancelLimitOrder(
+        address _user,
+        uint32 _orderKey,
+        uint128 _collateral,
+        bool _positionHasTriggers,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        collateralReserve -= _collateral;
+
+        emit CancelLimitOrder(_meta.callId, _user, _orderKey);
+        uint128 unusedTriggerValue = _positionHasTriggers ? Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever : 0;
+        uint128 totalUnusedValue = Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever + unusedTriggerValue;
+
+        ILimitBotVault(limitBotVault).sendTo{
+            value: 0.01 ever,
+            flag: MsgFlag.SENDER_PAYS_FEES
+        }(
+            _user,
+            totalUnusedValue
+        );
+
+        _transfer(
+            usdt.wallet,
+            _collateral,
+            _user,
+            _makeCell(_meta.nonce),
+            _meta.sendGasTo,
+            MsgFlag.ALL_NOT_RESERVED
+        );
+    }
+
+    //endregion
+}

@@ -1,15 +1,12 @@
 pragma ever-solidity ^0.62.0;
 
 
-
-import "@broxus/tip3/contracts/interfaces/ITokenRootUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/ITokenWalletUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "../../libraries/Gas.tsol";
-import "../../libraries/Callback.tsol";
-import "../../interfaces/IGravixAccount.tsol";
-import "./GravixVaultLiquidityPool.tsol";
+import {GravixVaultLiquidityPool} from "./GravixVaultLiquidityPool.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
 
 
@@ -35,10 +32,11 @@ abstract contract GravixVaultMarkets is GravixVaultLiquidityPool {
         }
 
         // now lets check if we are on working hours of market
-        mapping (uint8 => TimeInterval[]) workingHours = workingHours[marketIdx];
-        if (!workingHours.exists(uint8(curWeekDay))) return false;
+        mapping (uint8 => TimeInterval[]) _marketWorkingHours = workingHours[marketIdx];
+
+        if (!_marketWorkingHours.exists(uint8(curWeekDay))) return false;
         // ok, so, we are on working day, lets get timestamp of start/end of the working day
-        TimeInterval[] workIntervals = workingHours[uint8(curWeekDay)];
+        TimeInterval[] workIntervals = _marketWorkingHours[uint8(curWeekDay)];
         for (TimeInterval interval: workIntervals) {
             uint32 fromTs = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.from));
             uint32 toTs = _dateTimeToTimestamp(_timeToDateTime(year, month, day, interval.to));

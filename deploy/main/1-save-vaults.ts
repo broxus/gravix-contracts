@@ -1,5 +1,3 @@
-import { toNano, WalletTypes } from "locklift";
-
 export default async () => {
     await locklift.deployments.saveContract({
         deploymentName: "prod_Vault",

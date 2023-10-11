@@ -15,10 +15,11 @@ pragma ever-solidity ^0.62.0;
 //───────────────────────────────────────────────────────────────────────────────────────────────
 
 
-import "./libraries/Callback.tsol";
-import "./base/gravix_vault/GravixVaultBase.tsol";
-import "./interfaces/IGravixAccount.tsol";
-import {DateTime as DateTimeLib} from "./libraries/DateTime.tsol";
+import {GravixVaultBase} from "./base/gravix_vault/GravixVaultBase.tsol";
+import {Callback} from "./libraries/Callback.tsol";
+import {IGravixVault} from "./interfaces/IGravixVault.tsol";
+import {IOldGravixVault} from "./interfaces/IOldGravixVault.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
 
 contract GravixVault is GravixVaultBase {
@@ -45,37 +46,43 @@ contract GravixVault is GravixVaultBase {
     function upgrade(TvmCell code,  Callback.CallMeta meta) external onlyManager {
         TvmCell data = abi.encode(
             meta,
-            managers,
-            priceNode,
-            pricePubkey,
-            usdt,
-            stgUsdt,
-            treasuries,
-            oracleProxyCode,
-            platformCode,
-            gravixAccountCode,
-            gravixVaultVersion,
-            poolAssets,
-            insuranceFund, // collected fees, pnl and etc.
-            insuranceFundOverflowDistributionSchema,
-            referralFeeSchema,
-            grandReferralFeeSchema,
-            collateralReserve, // sum of all usdt provided as a collateral for open order
-            totalNOI,
-            totalNOILimitEnabled,
-            maxPoolUtilRatio,
-            maxPnlRate,
-            minPositionCollateral,
-            paused,
-            liquidationParams,
-            openFeeDistributionSchema,
-            closeFeeDistributionSchema,
-            marketCount,
-            markets,
-            workingHours,
-            weekends,
-            oracleConfigs,
-            pendingMarketRequests
+            UpgradeStorage({
+                managers: managers,
+                priceNode: priceNode,
+                pricePubkey: pricePubkey,
+                usdt: usdt,
+                stgUsdt: stgUsdt,
+                treasuries: treasuries,
+                platformCode: platformCode,
+                gravixVaultVersion: gravixVaultVersion,
+                oracleProxyCode: oracleProxyCode,
+                gravixAccountCode: gravixAccountCode,
+                poolAssets: poolAssets,
+                insuranceFund: insuranceFund, // collected fees, pnl and etc.
+                insuranceFundOverflowDistributionSchema: insuranceFundOverflowDistributionSchema,
+                referralFeeSchema: referralFeeSchema,
+                grandReferralFeeSchema: grandReferralFeeSchema,
+                collateralReserve: collateralReserve, // sum of all usdt provided as a collateral for open order
+                totalNOI: totalNOI,
+                totalNOILimitEnabled: totalNOILimitEnabled,
+                maxPoolUtilRatio: maxPoolUtilRatio,
+                maxPnlRate: maxPnlRate,
+                minPositionCollateral: minPositionCollateral,
+                paused: paused,
+                liquidationParams: liquidationParams,
+                minStopLossRate: minStopLossRate,
+                openFeeDistributionSchema: openFeeDistributionSchema,
+                closeFeeDistributionSchema: closeFeeDistributionSchema,
+                marketCount: marketCount,
+                markets: markets,
+                workingHours: workingHours,
+                weekends: weekends,
+                oracleConfigs: oracleConfigs,
+                requestNonce: requestNonce,
+                pendingMarketRequests: pendingMarketRequests,
+                pendingLimitRequests: pendingLimitRequests,
+                limitBotVault: limitBotVault
+            })
         );
 
         // set code after complete this method
@@ -191,7 +198,8 @@ contract GravixVault is GravixVaultBase {
         managers = Managers({
             owner: _owner,
             manager: _manager,
-            marketManager: _marketManager
+            marketManager: _marketManager,
+            limitBot: address(0)
         });
         priceNode = _priceNode;
         pricePubkey = _pricePubkey;
@@ -317,3 +325,6 @@ contract GravixVault is GravixVaultBase {
     }
 
 }
+// add bot interface for controlling pending limit requests
+// add ever transfer mechanism to the bot
+// add methods for handling pending limit submissions

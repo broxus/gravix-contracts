@@ -1,18 +1,43 @@
 pragma ton-solidity ^0.62.0;
 
 
-import "./IGravixVault.tsol";
+import {IGravixVault} from "./IGravixVault.tsol";
 
 
 interface IOracleProxy {
     function setExecuteCallback(
         address _user,
-        uint32 _position_key,
+        uint32 _orderKey,
         uint128 _collateral,
         uint32 _leverage,
         IGravixVault.PositionType _position_type
     ) external;
 
+    function setRequestLimitCallback(
+        address _user,
+        uint32 _orderKey,
+        uint128 _collateral,
+        uint32 _leverage,
+        IGravixVault.PositionType _positionType,
+        IGravixVault.LimitOrderType _limitOrderType,
+        uint128 _triggerPrice,
+        uint128 stopLossTriggerPrice,
+        uint128 takeProfitTriggerPrice
+    ) external;
+    function setExecuteLimitCallback(
+        address _limitOrdersExecutor,
+        IGravixVault.LimitOrderIdx[] _limitOrders
+    ) external;
+    function setExecutePositionsTriggersCallback(
+        address _limitOrdersExecutor,
+        IGravixVault.PositionTriggerIdx[] _positions
+    ) external;
     function setCloseCallback(address _user, uint32 _position_key) external;
+    function setUpdatePositionTriggersCallback(
+        address _user,
+        uint32 _positionKey,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice
+    ) external;
     function setLiquidationCallback(address _liquidator, IGravixVault.PositionIdx[] _positions) external;
 }

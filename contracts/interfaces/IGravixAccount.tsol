@@ -1,26 +1,52 @@
 pragma ever-solidity ^0.62.0;
 
 
-import "../libraries/Callback.tsol";
-import "./IGravixVault.tsol";
-import "./IPriceNode.tsol";
-
+import {IGravixVault} from "./IGravixVault.tsol";
+import {Callback} from "../libraries/Callback.tsol";
 
 
 interface IGravixAccount {
-
+    enum LimitOrderSate {
+        Pending,
+        Opened
+    }
+    struct PositionTrigger {
+        uint128 triggerPrice;
+        uint32 createdAt;
+    }
     struct MarketOrder {
         uint32 marketIdx;
         IGravixVault.PositionType positionType;
         uint128 collateral; // 6 decimals number
         uint128 expectedPrice; // 8 decimals number
-        uint32 leverage; // 2 decimals number
+        uint32 leverage; // 6 decimals number
         uint64 maxSlippageRate; // %
         uint64 openFeeRate; // %
         uint64 closeFeeRate; // %
         uint64 baseSpreadRate; // %
         uint64 liquidationThresholdRate; // %
         uint64 borrowBaseRatePerHour; // %
+        uint128 stopLossTriggerPrice;
+        uint128 takeProfitTriggerPrice;
+        uint32 createdAt;
+    }
+
+    struct LimitOrder {
+        uint32 marketIdx;
+        IGravixVault.PositionType positionType;
+        IGravixVault.LimitOrderType orderType;
+        uint128 collateral; // 6 decimals number
+        uint128 triggerPrice; // 8 decimals number
+        uint32 leverage; // 6 decimals number
+        uint64 openFeeRate; // %
+        uint64 closeFeeRate; // %
+        uint64 baseSpreadRate; // %
+        uint64 liquidationThresholdRate; // %
+        uint64 borrowBaseRatePerHour; // %
+        uint128 stopLossTriggerPrice;
+        uint128 takeProfitTriggerPrice;
+        LimitOrderSate state;
+        uint32 createdAt;
     }
 
     struct Position {
@@ -37,6 +63,8 @@ interface IGravixAccount {
         uint64 closeFeeRate; // %
         uint64 liquidationThresholdRate; // %
         uint32 createdAt; // %
+        optional(PositionTrigger) stopLoss;
+        optional(PositionTrigger) takeProfit;
     }
 
     struct PositionView {
@@ -57,6 +85,10 @@ interface IGravixAccount {
         uint128 assetPrice; // 8 decimals number
         IGravixVault.Funding funding;
     }
+    struct ViewInputInternal {
+        uint128 assetPrice; // 8 decimals number
+        IGravixVault.Funding funding;
+    }
 
     function process_requestMarketOrder(
         uint32 reqNonce,
@@ -64,20 +96,57 @@ interface IGravixAccount {
         uint32 accountVersion
     ) external;
     function process_cancelMarketOrder(
-        uint32 positionKey,
+        uint32 orderKey,
         Callback.CallMeta meta,
         uint32 accountVersion
     ) external;
+
     function process_executeMarketOrder(
-        uint32 positionKey,
-        uint32 marketIdx,
-        uint128 positionSize,
-        IGravixVault.PositionType positionType,
-        uint128 assetPrice,
-        uint64 dynamicSpread,
-        int256 accUSDFundingPerShare,
-        Callback.CallMeta meta,
-        uint32 accountVersion
+        uint32 _orderKey,
+        uint32 _marketIdx,
+        uint128 _positionSizeAsset,
+        IGravixVault.PositionType _positionType,
+        uint128 _assetPrice,
+        uint64 _dynamicSpread,
+        int256 _accUSDFundingPerShare,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external;
+
+    function process_requestLimitOrder(
+        uint32 reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
+        optional(uint32) _orderKey,
+        uint32 _accountVersion
+    ) external;
+
+    function process_requestPendingLimitOrder(
+        uint32 _reqNonce,
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _accountVersion
+    ) external;
+
+    function process_executeLimitOrder(
+        uint32 _orderKey,
+        uint32 _marketIdx,
+        uint128 collateral,
+        uint32 leverage,
+        uint128 _positionSizeAsset,
+        IGravixVault.PositionType _positionType,
+        uint128 _assetPrice,
+        int256 _accUSDFundingPerShare,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
+    ) external;
+
+    function process_cancelLimitOrder(
+        uint32 _orderKey,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
     ) external;
     function process_closePosition(
         uint32 positionKey,
@@ -86,6 +155,36 @@ interface IGravixAccount {
         IGravixVault.Funding funding,
         Callback.CallMeta meta,
         uint32 accountVersion
+    ) external;
+    function process_setOrUpdatePositionTriggers(
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
+        IGravixVault.Funding funding,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        uint64 _maxPnlRate,
+        uint64 _minStopLossRate,
+        Callback.CallMeta meta,
+        uint32 accountVersion
+    ) external;
+    function process_removePositionTriggers(
+        uint32 positionKey,
+        uint32 marketIdx,
+        bool removeStopLoss,
+        bool removeTakeProfit,
+        Callback.CallMeta,
+        uint32 accountVersion
+    ) external;
+    function process_executePositionsTriggers(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        IGravixVault.TriggerPositionType _stopOrderType,
+        IGravixVault.Funding _funding,
+        address initiator,
+        Callback.CallMeta _meta,
+        uint32 _accountVersion
     ) external;
     function process_liquidatePositions(
         address liquidator,
@@ -113,10 +212,12 @@ interface IGravixAccount {
         uint32 accountVersion
     ) external;
     function process_sendReferrerFee(
-        uint128 amount, Callback.CallMeta meta
+        uint128 amount
     ) external;
     function process_withdrawReferralBalance(Callback.CallMeta meta) external;
     function getReferrer() external view responsible returns (address user, address _referrer);
+
     function process_getReferrer(address _user, address _referrer) external;
+
     function upgrade(TvmCell newCode, uint32 newVersion, Callback.CallMeta meta) external;
 }

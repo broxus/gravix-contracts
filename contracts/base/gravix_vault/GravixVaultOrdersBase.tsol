@@ -1,0 +1,1345 @@
+pragma ever-solidity ^0.62.0;
+
+
+import {GravixVaultMarkets} from "./GravixVaultMarkets.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
+import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
+import {OracleProxy} from "../../OracleProxy.tsol";
+
+
+abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
+    // region validators
+    // ----------------------------------------------------------------------------------
+    // --------------------------- VALIDATORS -------------------------------------------
+    // ----------------------------------------------------------------------------------
+
+    // @param marketIdx - market id
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param maxSlippage - max order price slippage, percent number, 10**12 - 100%
+    function validateOrderParams(uint32 marketIdx, uint128 collateral, uint32 leverage, uint64 maxSlippage) internal view returns (bool correct) {
+        if (collateral < minPositionCollateral) return false;
+        if (!markets.exists(marketIdx)) return false;
+        if (leverage > markets[marketIdx].maxLeverage) return false;
+        if (maxSlippage > Constants.HUNDRED_PERCENT) return false;
+        return true;
+    }
+
+    function validateOrderParams(
+        uint32 marketIdx,
+        uint128 collateral,
+        uint32 leverage
+    ) internal view returns (bool) {
+        return validateOrderParams(marketIdx, collateral, leverage, 0);
+    }
+
+    //endregion
+
+    //region proxy deploy
+    function _deployOracleProxy(
+        uint32 marketIdx, Callback.CallMeta meta
+    ) internal view returns (address) {
+        OracleType priceSource = markets[marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+        emit OraclePriceRequested(meta.callId, marketIdx);
+        // update random seed
+        rnd.shuffle();
+        return new OracleProxy{
+                stateInit: _buildOracleProxyInitData(rnd.next(uint64(2**64 - 1))),
+                value: Gas.ORACLE_PROXY_DEPLOY
+            }(
+                usdt.root,
+                priceNode,
+                marketIdx,
+                priceSource,
+                oracleConf,
+                meta
+        );
+    }
+    //endregion
+
+    //region referral logic
+    // --------------------------- REFERRAL LOGIC ---------------------------------------
+    function withdrawReferralBalance(Callback.CallMeta meta) external view onlyActive reserve {
+        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+
+        address acc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(acc).process_withdrawReferralBalance{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(meta);
+    }
+
+    function finish_withdrawReferralBalance(
+        address user, uint128 refBal, Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserve {
+        if (refBal > 0) {
+            emit ReferralBalanceWithdraw(meta.callId, user, refBal);
+            _transfer(
+                usdt.wallet, refBal, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+            );
+        } else {
+            _sendCallbackOrGas(user, meta.nonce, false, meta.sendGasTo);
+        }
+    }
+
+    function _sendReferrerFee(address referrer, address referral, uint128 fee, Callback.CallMeta meta) internal view {
+        address referrerAcc = getGravixAccountAddress(referrer);
+
+        emit ReferralPayment(
+            meta.callId,
+            referrer,
+            referral,
+            fee
+        );
+        IGravixAccount(referrerAcc).process_sendReferrerFee{value: Gas.SEND_REF_FEE_VALUE, flag: MsgFlag.SENDER_PAYS_FEES}(
+            fee
+        );
+    }
+
+    function _distributeReferralFee(
+        uint128 taxedAmount,
+        address referrer,
+        address grandReferrer,
+        address referral,
+        ReferralFeeSchema feeSchema,
+        Callback.CallMeta meta
+    ) internal view returns (uint128 remainingAmount) {
+        remainingAmount = taxedAmount;
+        if (referrer != address(0)) {
+            uint128 referrerFee = math.muldiv(taxedAmount, referralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingAmount -= referrerFee;
+            if (referrerFee > 0) {
+                _sendReferrerFee(referrer, referral, referrerFee, meta);
+            }
+        }
+        if (grandReferrer != address(0)) {
+            uint128 grandReferrerFee = math.muldiv(taxedAmount, grandReferralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingAmount -= grandReferrerFee;
+            if (grandReferrerFee > 0) {
+                _sendReferrerFee(grandReferrer, referral, grandReferrerFee, meta);
+            }
+        }
+    }
+
+    function _collectOpenFeeAndReferral(
+        uint128 openFee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+    ) internal {
+        openFee = _distributeReferralFee(openFee, referrer, grandReferrer, referral, ReferralFeeSchema.OpenFee, meta);
+        _collectOpenFee(openFee);
+    }
+
+    function _collectCloseFeeAndReferral(
+        uint128 closeFee, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+    ) internal {
+        closeFee = _distributeReferralFee(closeFee, referrer, grandReferrer, referral, ReferralFeeSchema.CloseFee, meta);
+        _collectCloseFee(closeFee);
+    }
+
+    function _collectPnlAndReferral(
+        uint128 pnl, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
+    ) internal {
+        pnl = _distributeReferralFee(pnl, referrer, grandReferrer, referral, ReferralFeeSchema.PnlFee, meta);
+        _increaseInsuranceFund(pnl);
+    }
+
+    //endregion
+
+    //region calculators
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param assetPrice - position price, 8 decimals number
+    function calculatePositionAssetSize(uint128 collateral, uint32 leverage, uint128 assetPrice) public pure returns (uint128 positionSizeAsset) {
+        return math.muldiv(math.muldiv(collateral, leverage, Constants.LEVERAGE_BASE), Constants.PRICE_DECIMALS, assetPrice);
+    }
+
+    function getDynamicSpread(
+        uint128 positionSizeAsset,
+        uint32 marketIdx,
+        PositionType positionType
+    ) public view responsible returns (uint64 dynamicSpread) {
+        uint128 newNoi;
+
+        Market market = markets[marketIdx];
+        // calculate dynamic dynamicSpread multiplier
+        if (positionType == PositionType.Long) {
+            uint128 newLongsTotal = market.totalLongsAsset + positionSizeAsset / 2;
+            newNoi = newLongsTotal - math.min(market.totalShortsAsset, newLongsTotal);
+        } else {
+            uint128 newShortsTotal = market.totalShortsAsset + positionSizeAsset / 2;
+            newNoi = newShortsTotal - math.min(market.totalLongsAsset, newShortsTotal);
+        }
+        dynamicSpread = uint64(math.muldiv(newNoi, market.fees.baseDynamicSpreadRate, market.depthAsset));
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } dynamicSpread;
+    }
+    //endregion
+
+    //region update stop position
+    function setOrUpdatePositionTriggers(
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        IPriceNode.Price _price,
+        Callback.CallMeta _meta
+    ) external onlyActive reserve {
+        require (msg.value >= getSetOrUpdateTriggersMinValue(), Errors.LOW_MSG_VALUE);
+        require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
+        // optimistic check on market, we will check that position matches it in account
+        if (!marketOpen(_marketIdx)) {
+            emit RevertSetOrUpdatePositionTriggers(
+                _meta.callId,
+                msg.sender,
+                _positionKey,
+                _marketIdx,
+                Errors.MARKET_CLOSED
+            );
+            _sendCallbackOrGas(msg.sender, _meta.nonce, false, _meta.sendGasTo);
+            return;
+        }
+        OracleType priceSource = markets[_marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[_marketIdx];
+        if (priceSource == OracleType.PriceNode && checkPrice(_price, oracleConf.priceNode)) {
+            _setOrUpdatePositionTriggers(
+                msg.sender,
+                _positionKey,
+                _marketIdx,
+                _stopLossTriggerPrice,
+                _takeProfitTriggerPrice,
+                _price.price,
+                _meta
+            );
+            return;
+        }
+
+        _sendSetOrUpdatePositionTriggersOracleRequest(
+            msg.sender,
+            _positionKey,
+            _marketIdx,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _meta
+        );
+
+    }
+
+    function _sendSetOrUpdatePositionTriggersOracleRequest(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        Callback.CallMeta meta
+    ) internal view {
+        address proxy = _deployOracleProxy(_marketIdx, meta);
+        IOracleProxy(proxy).setUpdatePositionTriggersCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _user,
+            _positionKey,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice
+        );
+    }
+
+    function oracle_setOrUpdatePositionTriggers(
+        uint64 _nonce,
+        address _user,
+        uint32 _marketIdx,
+        uint32 _positionKey,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external override onlyOracleProxy(_nonce) reserve {
+        _setOrUpdatePositionTriggers(
+            _user,
+            _positionKey,
+            _marketIdx,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            _assetPrice,
+            _meta
+        );
+    }
+
+    function _setOrUpdatePositionTriggers(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint128 _stopLossTriggerPrice,
+        uint128 _takeProfitTriggerPrice,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) internal {
+        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
+
+        address gravixAcc = getGravixAccountAddress(_user);
+        IGravixAccount(gravixAcc).process_setOrUpdatePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            _positionKey,
+            _marketIdx,
+            _assetPrice,
+            _funding,
+            _stopLossTriggerPrice,
+            _takeProfitTriggerPrice,
+            maxPnlRate,
+            minStopLossRate,
+            _meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function finish_setOrUpdatePositionTriggers(
+        address _user,
+        IGravixAccount.Position _position,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        bool _isFirstPositionTriggerPrice,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
+        emit SetOrUpdatePositionTriggers(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _position
+        );
+        if (_isFirstPositionTriggerPrice) {
+            limitBotVault.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE});
+
+        }
+    }
+
+    function revert_setOrUpdatePositionTriggers(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
+        emit RevertSetOrUpdatePositionTriggers(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
+    }
+
+    function removePositionTriggers(
+        uint32 positionKey,
+        uint32 marketIdx,
+        bool removeStopLoss,
+        bool removeTakeProfit,
+        Callback.CallMeta meta
+    ) external override reserve {
+        // optimistic check on market, we will check that position matches it in account
+        if (!marketOpen(marketIdx)) {
+            emit RevertRemovePositionTriggers(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                Errors.MARKET_CLOSED
+            );
+            _sendCallbackOrGas(
+                msg.sender,
+                meta.nonce,
+                false, meta.sendGasTo);
+            return;
+        }
+
+        address gravixAcc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(gravixAcc).process_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            positionKey,
+            marketIdx,
+            removeStopLoss,
+            removeTakeProfit,
+            meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function finish_removePositionTriggers(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint8 _triggersBefore,
+        uint8 _triggersAfter,
+        IGravixAccount.Position _updatedPosition,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
+        emit RemovePositionTriggers(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _updatedPosition
+        );
+
+        if (_triggersBefore >= 1 && _triggersAfter == 0) {
+            ILimitBotVault(limitBotVault).sendTo{
+                value: 0.01 ever,
+                flag: MsgFlag.SENDER_PAYS_FEES
+            }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
+        }
+    }
+
+    function revert_removePositionTriggers(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
+        emit RevertRemovePositionTriggers(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
+    }
+    //endregion
+    //region collateral
+    function _handleAddCollateral(
+        address user, uint128 amount, TvmCell actionPayload, Callback.CallMeta meta
+    ) internal view returns (bool success) {
+        if (msg.value < Gas.EDIT_COLLATERAL_FEE) {
+            return false;
+        }
+
+        (uint32 marketIdx, uint32 positionKey) = decodeAddCollateral(actionPayload);
+        // optimistic check on market, we will check that position matches it in account
+        if (!marketOpen(marketIdx)) return false;
+        _addCollateral(amount, user, marketIdx, positionKey, meta);
+        return true;
+    }
+
+    function _addCollateral(
+        uint128 amount,
+        address user,
+        uint32 marketIdx,
+        uint32 positionKey,
+        Callback.CallMeta meta
+    ) internal view {
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_addCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount,
+            marketIdx,
+            positionKey,
+            meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_addCollateral(
+        address _user,
+        uint128 _amount,
+        uint32 _marketIdx,
+        uint32 _positionKey,
+        uint32 _revertReason,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit AddPositionCollateralRevert(
+            meta.callId,
+            _user,
+            _marketIdx,
+            _positionKey,
+            _amount,
+            _revertReason
+        );
+
+        _transfer(
+            usdt.wallet, _amount, _user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+        );
+    }
+
+    function finish_addCollateral(
+        address user,
+        uint128 amount,
+        IGravixAccount.Position position,
+        uint32 oldLeverage,
+        uint32 positionKey,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserveAndSuccessCallback(meta) {
+        collateralReserve += amount;
+
+        uint128 newCollateral = position.initialCollateral - position.openFee;
+        uint128 oldCollateral = newCollateral - amount;
+
+        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.markPrice);
+        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.markPrice);
+
+        // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
+        // we dont want it to accumulate because it could affect further calculations
+        if (oldPosSize != newPosSize) {
+            Market _market = markets[position.marketIdx];
+
+            _removePositionFromMarket(
+                position.marketIdx,
+                oldPosSize,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+
+            _addPositionToMarket(
+                position.marketIdx,
+                newPosSize,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+        }
+
+        emit AddPositionCollateral(meta.callId, user, positionKey, amount, position);
+    }
+
+    function removeCollateral(
+        uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
+    ) external view onlyActive reserve {
+        require (msg.value >= Gas.EDIT_COLLATERAL_FEE, Errors.LOW_MSG_VALUE);
+
+        // optimistic check on market, we will check that position matches it in account
+        // soft fail because market state is dynamic
+        if (!marketOpen(marketIdx)) {
+            emit RemovePositionCollateralRevert(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                amount,
+                Errors.MARKET_CLOSED
+            );
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
+            return;
+        }
+
+        address gravixAcc = getGravixAccountAddress(msg.sender);
+        IGravixAccount(gravixAcc).process_removeCollateral{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            amount,
+            positionKey,
+            marketIdx,
+            markets[marketIdx].maxLeverage,
+            minPositionCollateral,
+            meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_removeCollateral(
+        address _user,
+        uint128 _amount,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
+        emit RemovePositionCollateralRevert(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _amount,
+            _revertReason
+        );
+    }
+
+    function finish_removeCollateral(
+        address user,
+        uint128 amount,
+        IGravixAccount.Position position,
+        uint32 oldLeverage,
+        uint32 positionKey,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        collateralReserve -= amount;
+
+        uint128 newCollateral = position.initialCollateral - position.openFee;
+        uint128 oldCollateral = newCollateral + amount;
+
+        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.markPrice);
+        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.markPrice);
+
+        // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
+        // we dont want it to accumulate because it could affect further calculations
+        if (oldPosSize != newPosSize) {
+            Market _market = markets[position.marketIdx];
+
+            _removePositionFromMarket(
+                position.marketIdx,
+                oldPosSize,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+
+            _addPositionToMarket(
+                position.marketIdx,
+                newPosSize,
+                _market.lastNoiUpdatePrice,
+                position.positionType
+            );
+        }
+
+        emit RemovePositionCollateral(meta.callId, user, positionKey, amount, position);
+        _transfer(usdt.wallet, amount , user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED);
+    }
+    //endregion
+
+    // region close position
+    // ----------------------------------------------------------------------------------
+    // --------------------------- POSITION CLOSE HANDLERS ---------------------------------
+    // ----------------------------------------------------------------------------------
+    function forceClosePositions(
+        address[] users,
+        uint32[] positionKeys,
+        uint32[] marketIdx,
+        IPriceNode.Price[] prices,
+        Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        require (users.length == positionKeys.length, Errors.BAD_INPUT);
+        require (users.length == marketIdx.length, Errors.BAD_INPUT);
+        require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
+
+        for (uint i = 0; i < users.length; i++) {
+            OracleType priceSource = markets[marketIdx[i]].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx[i]];
+
+            // if market uses offchain oracle and we have valid price, we can close order right now
+            if (priceSource == OracleType.PriceNode && checkPrice(prices[i], oracleConf.priceNode)) {
+                _closePosition(
+                    users[i], positionKeys[i], marketIdx[i], prices[i].price, Gas.MIN_MSG_VALUE - 0.1 ever, meta
+                );
+                continue;
+            }
+
+            address proxy = _deployOracleProxy(marketIdx[i], meta);
+            IOracleProxy(proxy).setCloseCallback{value: Gas.MIN_MSG_VALUE - Gas.ORACLE_PROXY_DEPLOY - 0.01 ever}(
+                users[i], positionKeys[i]
+            );
+        }
+    }
+
+    // @notice Should be used by admin very carefully when oracle is dead by some reason to save users
+    // Bad price here can cause bad contract state!
+    function forceClosePositionsWithPrice(
+        address[] users,
+        uint32[] positionKeys,
+        uint32[] marketIdx,
+        uint128[] assetPrices,
+        Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        require (users.length == positionKeys.length, Errors.BAD_INPUT);
+        require (positionKeys.length == marketIdx.length, Errors.BAD_INPUT);
+        require (marketIdx.length == assetPrices.length, Errors.BAD_INPUT);
+        require (msg.value >= Gas.MIN_MSG_VALUE * users.length, Errors.LOW_MSG_VALUE);
+
+        for (uint i = 0; i < users.length; i++) {
+            _closePosition(
+                users[i], positionKeys[i], marketIdx[i], assetPrices[i], Gas.MIN_MSG_VALUE - 0.1 ever, meta
+            );
+        }
+    }
+
+    function closePosition(
+        uint32 positionKey,
+        uint32 marketIdx,
+        IPriceNode.Price price,
+        Callback.CallMeta meta
+    ) external onlyActive reserve {
+        require (msg.value >= getMinValueForClosePosition(), Errors.LOW_MSG_VALUE);
+
+        // soft fail
+        // optimistic check on market, we will check that position matches it in account
+        if (!marketOpen(marketIdx)) {
+            emit ClosePositionRevert(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                Errors.MARKET_CLOSED
+            );
+            _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
+            return;
+        }
+
+        OracleType priceSource = markets[marketIdx].priceSource;
+        OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+        // if market uses offchain oracle and we have valid price, we can close order right now
+        if (priceSource == OracleType.PriceNode && checkPrice(price, oracleConf.priceNode)) {
+            _closePosition(msg.sender, positionKey, marketIdx, price.price, 0, meta);
+            return;
+        }
+
+        _sendClosePositionOracleRequest(msg.sender, positionKey, marketIdx, meta);
+    }
+
+    function _sendClosePositionOracleRequest(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        Callback.CallMeta meta
+    ) internal view {
+        address proxy = _deployOracleProxy(marketIdx, meta);
+        IOracleProxy(proxy).setCloseCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(user, positionKey);
+    }
+
+    // @param nonce - oracle static parameter, required for addr calculation
+    // @param user - order maker
+    // @param positionKey - unique(per user) position key
+    // @param marketIdx - market id
+    // @param assetPrice - current asset price for this market, 8 decimals number
+    // @param meta - txn meta
+    function oracle_closePosition(
+        uint64 nonce,
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
+        Callback.CallMeta meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        _closePosition(user, positionKey, marketIdx, assetPrice, 0, meta);
+    }
+
+    function _closePosition(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint128 assetPrice,
+        uint128 value,
+        Callback.CallMeta meta
+    ) internal {
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        address gravixAcc = getGravixAccountAddress(user);
+        IGravixAccount(gravixAcc).process_closePosition{value: value, flag: flag}(
+            positionKey,
+            marketIdx,
+            assetPrice,
+            _funding,
+            meta,
+            gravixAccountCode.version
+        );
+    }
+
+    function revert_closePosition(
+        address user,
+        uint32 positionKey,
+        uint32 marketIdx,
+        uint32 revertReason,
+        Callback.CallMeta meta
+    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
+        emit ClosePositionRevert(
+            meta.callId,
+            user,
+            positionKey,
+            marketIdx,
+            revertReason
+        );
+    }
+
+    function finish_closePosition(
+        address _user,
+        uint32 _positionKey,
+        uint128 _assetPrice,
+        IGravixAccount.PositionView _positionView,
+        address _referrer,
+        address _grandReferrer,
+        address _initiator,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        // we already deducted open fee when position was opened
+        uint128 collateral = _positionView.position.initialCollateral - _positionView.position.openFee;
+        collateralReserve -= collateral;
+        bool isPositionHasTriggerPrice = _positionView.position.stopLoss.hasValue() || _positionView.position.takeProfit.hasValue();
+        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, _positionView.position.leverage, _positionView.position.openPrice);
+        _removePositionFromMarket(
+            _positionView.position.marketIdx,
+            initialPositionSizeAsset,
+            _assetPrice,
+            _positionView.position.positionType
+        );
+
+        if (_positionView.liquidate) {
+            // increase insurance fund + send referrer payment
+            _collectPnlAndReferral(collateral, _referrer, _grandReferrer, _user, _meta);
+
+            emit LiquidatePosition(_meta.callId, _user, _user, _positionKey, _positionView);
+
+            if (isPositionHasTriggerPrice) {
+                ILimitBotVault(limitBotVault).sendTo{
+                    value: 0.01 ever,
+                    flag: MsgFlag.SENDER_PAYS_FEES
+                }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
+            }
+            _sendCallbackOrGas(_user, _meta.nonce, true, _meta.sendGasTo);
+        } else {
+            int256 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
+            int256 limitedPnl = math.min(_positionView.pnl, pnlLimit);
+
+            int256 pnlWithFees = limitedPnl - _positionView.borrowFee - _positionView.fundingFee;
+            _collectCloseFeeAndReferral(_positionView.closeFee, _referrer, _grandReferrer, _user, _meta);
+
+            uint128 debt;
+            if (pnlWithFees < 0) {
+                // increase insurance fund + send referrer payment
+                _collectPnlAndReferral(uint128(math.abs(pnlWithFees)), _referrer, _grandReferrer, _user, _meta);
+            }
+            if (pnlWithFees > 0) {
+                // positive debt if we dont have enough money to pay pnl
+                debt = _decreaseInsuranceFund(uint128(pnlWithFees));
+            }
+
+            // if transaction was triggered by user + position has trigger price, we need to send him reserved gas
+            if (_initiator != managers.limitBot && isPositionHasTriggerPrice) {
+                ILimitBotVault(limitBotVault).sendTo{
+                    value: 0.01 ever,
+                    flag: MsgFlag.SENDER_PAYS_FEES
+                }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
+            } else if (isPositionHasTriggerPrice) {
+                // if position was closed by limit bot, we just free some money in vault
+                ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
+            }
+                // if position was closed by limit bot, we already emitted this event
+            emit ClosePosition(_meta.callId, _user, _positionKey, _positionView);
+            // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
+            uint128 userNetUsdt = uint128(collateral + pnlWithFees - debt - _positionView.closeFee);
+            _transfer(
+                usdt.wallet,
+                userNetUsdt,
+                _user,
+                _makeCell(_meta.nonce),
+                _meta.sendGasTo,
+                MsgFlag.ALL_NOT_RESERVED
+            );
+            if (debt > 0) {
+                emit Debt(_meta.callId, _user, debt);
+            }
+        }
+    }
+    //endregion
+    function executePositionsTriggers(
+        mapping(uint32 => PositionTriggerData) positionsMap,
+        Callback.CallMeta meta
+    ) external override onlyLimitBot reserve {
+        for ((uint32 marketIdx, PositionTriggerData _positions) : positionsMap) {
+            OracleType priceSource = markets[marketIdx].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+
+            // if market uses offchain oracle and we have valid price, we can liquidate positions right now
+            if (priceSource == OracleType.PriceNode && checkPrice(_positions.price, oracleConf.priceNode)) {
+                uint128 value = uint128(_positions.positions.length * Gas.EXECUTE_STOP_ORDER_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+                this.self_executePositionsTriggers{value: value, flag: MsgFlag.SENDER_PAYS_FEES}(
+                    _positions.positions,
+                    marketIdx,
+                    _positions.price.price,
+                    meta,
+                    0
+                );
+                continue;
+            }
+
+            _sendExecutePositionsTriggersOracleRequest(
+                marketIdx,
+                managers.limitBot,
+                _positions.positions,
+                meta
+            );
+        }
+
+        meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+    }
+
+    function _sendExecutePositionsTriggersOracleRequest(
+        uint32 _marketIdx,
+        address _executor,
+        PositionTriggerIdx[] _triggerPositions,
+        Callback.CallMeta _meta
+    ) internal view {
+        address proxy = _deployOracleProxy(_marketIdx, _meta);
+
+        uint128 value = uint128(_triggerPositions.length * Gas.EXECUTE_STOP_ORDER_VALUE);
+        IOracleProxy(proxy).setExecutePositionsTriggersCallback{
+                value: value,
+                flag: MsgFlag.SENDER_PAYS_FEES
+        }(
+            _executor,
+            _triggerPositions
+        );
+    }
+
+    function self_executePositionsTriggers(
+        PositionTriggerIdx[] _positions,
+        uint32 _marketIdx,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta,
+        uint _startIdx
+    ) external reserve {
+        require (msg.sender == address(this), Errors.BAD_SENDER);
+        Funding _funding = _updateFunding(_marketIdx, _assetPrice);
+
+        for (uint i = _startIdx; i < _positions.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
+            PositionTriggerIdx position = _positions[i];
+
+            address gravixAcc = getGravixAccountAddress(position.user);
+            //0.06 ever here to cover computation costs of iterating, needed for big arrays
+            IGravixAccount(gravixAcc).process_executePositionsTriggers{value: Gas.EXECUTE_STOP_ORDER_VALUE - 0.06 ever}(
+                position.positionKey,
+                _marketIdx,
+                _assetPrice,
+                position.triggerPositionType,
+                _funding,
+                managers.limitBot,
+                _meta,
+                gravixAccountCode.version
+            );
+        }
+
+        if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < _positions.length) {
+            this.self_executePositionsTriggers{
+                    value: 0,
+                    flag: MsgFlag.ALL_NOT_RESERVED,
+                    bounce: false
+                }(
+                _positions,
+                _marketIdx,
+                _assetPrice,
+                _meta,
+                _startIdx + Constants.LIQUIDATION_BATCH_SIZE
+            );
+        } else {
+            _meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        }
+
+    }
+
+    function oracle_executePositionsTriggers(
+        uint64 _nonce,
+        uint32 _marketIdx,
+        PositionTriggerIdx[] _positions,
+        uint128 _assetPrice,
+        Callback.CallMeta _meta
+    ) external override onlyOracleProxy(_nonce) reserve {
+        this.self_executePositionsTriggers{
+                value: 0,
+                flag: MsgFlag.ALL_NOT_RESERVED,
+                bounce: false
+            }(
+            _positions,
+            _marketIdx,
+            _assetPrice,
+            _meta,
+            0
+        );
+    }
+
+    function revert_executePositionsTriggers(
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit ExecutePositionTriggerRevert(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
+        managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+    }
+    //region liquidation
+    // ----------------------------------------------------------------------------------
+    // --------------------------- LIQUIDATION ------------------------------------------
+    // ----------------------------------------------------------------------------------
+    // @notice 3 ever for every market + 1.05 ever for every position
+    // @dev Aggregate by market to minimize requests to oracle
+    function liquidatePositions(
+        mapping (uint32 => LiquidationData) liquidations, Callback.CallMeta meta
+    ) external view onlyActive reserveAndSendGas(meta) {
+        // dont spend gas to check msg.value, it will fail with 37 code anyway if user didnt send enough, because we use exact values here
+        for ((uint32 marketIdx, LiquidationData liqData) : liquidations) {
+
+            OracleType priceSource = markets[marketIdx].priceSource;
+            OracleConfig oracleConf = oracleConfigs[marketIdx];
+
+            // if market uses offchain oracle and we have valid price, we can liquidate positions right now
+            if (priceSource == OracleType.PriceNode && checkPrice(liqData.price, oracleConf.priceNode)) {
+                uint128 value = uint128(liqData.positions.length * Gas.LIQUIDATION_VALUE) + Gas.ORACLE_PROXY_DEPLOY;
+                this.self_liquidatePositions{value: value, flag: MsgFlag.SENDER_PAYS_FEES}(
+                    msg.sender,
+                    marketIdx,
+                    liqData.positions,
+                    liqData.price.price,
+                    meta,
+                    0
+                );
+                continue;
+            }
+
+            _sendLiquidationOracleRequest(msg.sender, marketIdx, liqData.positions, meta);
+        }
+    }
+
+    function _sendLiquidationOracleRequest(
+        address liquidator,
+        uint32 marketIdx,
+        PositionIdx[] positions,
+        Callback.CallMeta meta
+    ) internal view {
+        address proxy = _deployOracleProxy(marketIdx, meta);
+        uint128 callbackValue = uint128(positions.length) * Gas.LIQUIDATION_VALUE;
+        IOracleProxy(proxy).setLiquidationCallback{value: callbackValue, flag: MsgFlag.SENDER_PAYS_FEES}(liquidator, positions);
+    }
+
+    function revert_liquidatePositions(
+        address _user,
+        address _liquidator,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta meta
+    ) external view override onlyGravixAccount(_user) reserveAndFailCallback(meta) {
+        emit LiquidatePositionRevert(
+            meta.callId,
+            _liquidator,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
+    }
+
+    function oracle_liquidatePositions(
+        uint64 nonce, address liquidator, uint32 marketIdx, PositionIdx[] positions, uint128 assetPrice, Callback.CallMeta meta
+    ) external override onlyOracleProxy(nonce) reserve {
+        this.self_liquidatePositions{
+                value: 0,
+                flag: MsgFlag.ALL_NOT_RESERVED,
+                bounce: false
+            }(
+            liquidator,
+            marketIdx,
+            positions,
+            assetPrice,
+            meta,
+            0
+        );
+    }
+
+
+
+    function self_liquidatePositions(
+        address liquidator,
+        uint32 marketIdx,
+        PositionIdx[] positions,
+        uint128 assetPrice,
+        Callback.CallMeta meta,
+        uint256 _startIdx
+    ) external reserve {
+        require (msg.sender == address(this), Errors.BAD_SENDER);
+
+        Funding _funding = _updateFunding(marketIdx, assetPrice);
+        for (uint i = _startIdx; i < positions.length && i < _startIdx + Constants.LIQUIDATION_BATCH_SIZE; i++) {
+            PositionIdx position = positions[i];
+            address gravixAcc = getGravixAccountAddress(position.user);
+            // reserve 0.06 ever here to cover computation costs of iterating, needed for big arrays
+            IGravixAccount(gravixAcc).process_liquidatePositions{value: Gas.LIQUIDATION_VALUE - 0.06 ever}(
+                liquidator,
+                position.positionKey,
+                marketIdx,
+                assetPrice,
+                _funding,
+                meta,
+                gravixAccountCode.version
+            );
+        }
+
+        if (_startIdx + Constants.LIQUIDATION_BATCH_SIZE < positions.length) {
+            this.self_liquidatePositions{
+                    value: 0,
+                    flag: MsgFlag.ALL_NOT_RESERVED,
+                    bounce: false
+                }(
+                liquidator,
+                marketIdx,
+                positions,
+                assetPrice,
+                meta,
+                _startIdx + Constants.LIQUIDATION_BATCH_SIZE
+            );
+        } else {
+            meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        }
+    }
+
+    function finish_liquidatePositions(
+        address user,
+        address liquidator,
+        uint32 positionKey,
+        uint128 assetPrice,
+        IGravixAccount.PositionView positionView,
+        address referrer,
+        address grandReferrer,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(user) reserve {
+        // we already deducted open fee when position was opened
+        uint128 collateral = positionView.position.initialCollateral - positionView.position.openFee;
+        collateralReserve -= collateral;
+
+        // we added exactly this amount when opened order
+        uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, positionView.position.leverage, positionView.position.openPrice);
+        _removePositionFromMarket(
+            positionView.position.marketIdx,
+            initialPositionSizeAsset,
+            assetPrice,
+            positionView.position.positionType
+        );
+
+        uint128 liquidatorReward = math.muldiv(collateral, liquidationParams.rewardShare, Constants.HUNDRED_PERCENT);
+
+        _collectPnlAndReferral(collateral - liquidatorReward, referrer, grandReferrer, user, meta);
+
+        emit LiquidatePosition(meta.callId, user, liquidator, positionKey, positionView);
+
+        _transfer(usdt.wallet, liquidatorReward, liquidator, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.SENDER_PAYS_FEES);
+        _sendCallbackOrGas(user, meta.nonce, true, meta.sendGasTo);
+    }
+    //endregion
+
+    //region position limits
+    // ----------------------------------------------------------------------------------
+    // --------------------------- POSITION LIMITS --------------------------------------
+    // ----------------------------------------------------------------------------------
+    // @param marketIdx - market id
+    // @param collateral - order collateral, 6 decimals number
+    // @param leverage - order leverage, 2 decimals number
+    // @param assetPrice - position price, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
+    function checkPositionAllowed(
+        uint32 marketIdx,
+        uint128 collateral,
+        uint32 leverage,
+        uint128 assetPrice,
+        PositionType positionType
+    ) public view returns (uint16) {
+        uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
+        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, assetPrice, positionType);
+        return _error;
+    }
+
+    function _marketNOI(Market _market) internal pure returns (uint128) {
+        return _market.totalLongsAsset > _market.totalShortsAsset ?
+        _market.totalLongsAsset - _market.totalShortsAsset :
+        _market.totalShortsAsset - _market.totalLongsAsset;
+    }
+
+    // @dev Will not apply changes if _error > 0
+    // @param marketIdx - market id
+    // @param positionSizeAsset - position value in asset, 6 decimals number
+    // @param curAssetPrice - position price, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
+    function _addPositionToMarketOrReturnErr(
+        uint32 marketIdx, uint128 positionSizeAsset, uint128 curAssetPrice, PositionType positionType
+    ) internal returns (uint16) {
+        (
+        Market _market,
+        uint128 _totalNOI,
+        uint16 _error
+        ) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, curAssetPrice, positionType);
+        if (_error == 0) {
+            markets[marketIdx] = _market;
+            totalNOI = _totalNOI;
+        }
+        return _error;
+    }
+
+    // @param marketIdx - market id
+    // @param positionSizeAsset - position value in asset, 6 decimals number
+    // @param curAssetPrice - position price, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
+    function _calculatePositionImpactAndCheckAllowed(
+        uint32 marketIdx,
+        uint128 positionSizeAsset,
+        uint128 curAssetPrice,
+        PositionType positionType
+    ) internal view returns (Market _market, uint128 _totalNOI, uint16 _error) {
+        (_market, _totalNOI) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, false);
+
+        uint128 shortsUsd = math.muldiv(_market.totalShortsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
+        uint128 longsUsd = math.muldiv(_market.totalLongsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
+        // market limits
+        if (shortsUsd > _market.maxTotalShortsUSD || longsUsd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
+        // common platform limit
+        if (totalNOILimitEnabled && math.muldiv(
+            poolAssets.balance,
+            maxPoolUtilRatio,
+            Constants.HUNDRED_PERCENT
+        ) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
+        return (_market, _totalNOI, _error);
+    }
+
+    // @param marketIdx - market id
+    // @param positionSizeAsset - position value in asset, 6 decimals number
+    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    // @param positionType - 0 - long, 1 - short
+    // @param bool - whether position is removed or added
+    function _calculatePositionImpact(
+        uint32 marketIdx, uint128 positionSizeAsset, uint128 curAssetPrice, PositionType positionType, bool remove
+    ) internal view returns (Market _market, uint128 _totalNOI) {
+        _market = markets[marketIdx];
+        _totalNOI = totalNOI;
+
+        uint128 noiAssetBefore = _marketNOI(_market);
+        uint128 noiUsdBefore = math.muldiv(noiAssetBefore, _market.lastNoiUpdatePrice, Constants.PRICE_DECIMALS);
+
+        if (positionType == PositionType.Long) {
+            _market.totalLongsAsset = remove ? (_market.totalLongsAsset - positionSizeAsset) : (_market.totalLongsAsset + positionSizeAsset);
+        } else {
+            _market.totalShortsAsset = remove ? (_market.totalShortsAsset - positionSizeAsset) : (_market.totalShortsAsset + positionSizeAsset);
+        }
+
+        uint128 noiAssetAfter = _marketNOI(_market);
+        uint128 noiUsdAfter = math.muldiv(noiAssetAfter, curAssetPrice, Constants.PRICE_DECIMALS);
+
+        _totalNOI -= math.muldiv(noiUsdBefore, _market.noiWeight, Constants.WEIGHT_BASE);
+        _totalNOI += math.muldiv(noiUsdAfter, _market.noiWeight, Constants.WEIGHT_BASE);
+
+        _market.lastNoiUpdatePrice = curAssetPrice;
+    }
+
+
+    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    function _addPositionToMarket(
+        uint32 marketIdx,
+        uint128 positionSizeAsset,
+        uint128 curAssetPrice,
+        PositionType positionType
+    ) internal {
+        (
+            markets[marketIdx],
+            totalNOI
+        ) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, false);
+    }
+
+    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
+    function _removePositionFromMarket(
+        uint32 marketIdx,
+        uint128 positionSizeAsset,
+        uint128 curAssetPrice,
+        PositionType positionType
+    ) internal {
+        (
+            markets[marketIdx],
+            totalNOI
+        ) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, true);
+    }
+    //endregion
+
+    //region funding
+    // ----------------------------------------------------------------------------------
+    // --------------------------- FUNDING ----------------------------------------------
+    // ----------------------------------------------------------------------------------
+    // @param marketIdx - market id
+    // @param assetPrice - asset price, 8 decimals number
+    function _updateFunding(uint32 marketIdx, uint128 assetPrice) internal returns (Funding funding) {
+        Market _market = markets[marketIdx];
+
+        if (_market.lastFundingUpdateTime == now) {
+            return _market.funding;
+        }
+
+        if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
+
+        _market.funding = _getUpdatedFunding(_market, assetPrice);
+        _market.lastFundingUpdateTime = now;
+
+        markets[marketIdx] = _market;
+        return _market.funding;
+    }
+
+    // TODO: function for updating funding without real deal
+
+    function getUpdatedFunding(
+        mapping (uint32 => uint128) prices
+    ) external view returns (mapping (uint32 => Funding) funding) {
+        for ((uint32 marketIdx, uint128 assetPrice): prices) {
+            funding[marketIdx] = _getUpdatedFunding(markets[marketIdx], assetPrice);
+        }
+        return funding;
+    }
+
+    function _getUpdatedFunding(Market _market, uint128 assetPrice) internal pure returns (Funding _funding) {
+        if (_market.lastFundingUpdateTime == 0) _market.lastFundingUpdateTime = now;
+        (int128 longRatePerHour, int128 shortRatePerHour) = _getFundingRates(_market);
+
+        _funding.accLongUSDFundingPerShare = _market.funding.accLongUSDFundingPerShare + _calculateFunding(
+            longRatePerHour,
+            _market.totalLongsAsset,
+            assetPrice,
+            _market.lastFundingUpdateTime
+        );
+
+        _funding.accShortUSDFundingPerShare = _market.funding.accShortUSDFundingPerShare + _calculateFunding(
+            shortRatePerHour,
+            _market.totalShortsAsset,
+            assetPrice,
+            _market.lastFundingUpdateTime
+        );
+
+        return _funding;
+    }
+
+    // @param assetPrice - asset price, 8 decimals number
+    function _calculateFunding(
+        int256 ratePerHour,
+        uint128 totalPosition,
+        uint128 assetPrice,
+        uint32 lastUpdateTime
+    ) internal pure returns (int256) {
+        if (ratePerHour == 0 || totalPosition == 0) return 0;
+        // multiply by SCALING FACTOR in the beginning to prevent precision loss
+        int256 fundingAsset = math.muldiv(ratePerHour * Constants.SCALING_FACTOR, totalPosition, Constants.HUNDRED_PERCENT);
+        fundingAsset = math.muldiv(fundingAsset, (now - lastUpdateTime), Constants.HOUR);
+        int256 fundingUsd = math.muldiv(fundingAsset, assetPrice, Constants.PRICE_DECIMALS);
+        return fundingUsd / totalPosition;
+    }
+
+    // @notice returned rates are multiplied by 10**12, e.g 100% = 1_000_000_000_000
+    function getFundingRates(uint32 marketIdx) public view returns (int128 longRatePerHour, int128 shortRatePerHour) {
+        return _getFundingRates(markets[marketIdx]);
+    }
+
+    // @notice If rate is positive - trader should pay, negative - receive payment
+    function _getFundingRates(Market _market) internal pure returns (int128 longRatePerHour, int128 shortRatePerHour) {
+        uint128 noi = uint128(math.abs(int256(_market.totalLongsAsset) - _market.totalShortsAsset));
+        uint128 fundingRatePerHour = math.muldiv(
+            _market.fees.fundingBaseRatePerHour,
+            math.muldiv(noi, Constants.SCALING_FACTOR, _market.depthAsset),
+            Constants.SCALING_FACTOR
+        );
+
+        if (_market.totalLongsAsset >= _market.totalShortsAsset) {
+            longRatePerHour = int128(fundingRatePerHour);
+            if (_market.totalShortsAsset > 0) {
+                shortRatePerHour = -1 * int128(
+                    math.muldiv(fundingRatePerHour, _market.totalLongsAsset, _market.totalShortsAsset)
+                );
+            }
+        } else {
+            shortRatePerHour = int128(fundingRatePerHour);
+            if (_market.totalLongsAsset > 0) {
+                longRatePerHour = -1 * int128(math.muldiv(fundingRatePerHour, _market.totalShortsAsset, _market.totalLongsAsset));
+            }
+        }
+        return (longRatePerHour, shortRatePerHour);
+    }
+    //endregion
+}

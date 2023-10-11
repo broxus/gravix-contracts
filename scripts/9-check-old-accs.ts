@@ -44,7 +44,6 @@ const main = async () => {
     for (const acc of Array.from(uSet)) {
         const account = await locklift.factory.getDeployedContract("GravixAccount", acc);
         const details = await account.methods.getDetails({ answerId: 0 }).call();
-        console.log("call");
         if (details._vault.equals(vault.address)) {
             vault_old_accs.push(acc);
             vault_old_users.push(details._user);

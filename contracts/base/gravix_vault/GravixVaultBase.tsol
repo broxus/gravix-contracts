@@ -1,14 +1,17 @@
 pragma ever-solidity ^0.62.0;
 
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "../../libraries/Gas.tsol";
-import "../../libraries/Callback.tsol";
-import "../../interfaces/IGravixAccount.tsol";
-import "./GravixVaultOrders.tsol";
-import {DateTime as DateTimeLib} from "../../libraries/DateTime.tsol";
+import {GravixVaultMarketOrders} from "./GravixVaultMarketOrders.tsol";
+import {GravixVaultLimitOrders} from "./GravixVaultLimitOrders.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
+import {GravixVaultHelpers} from "./GravixVaultHelpers.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
+import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
 
-
-abstract contract GravixVaultBase is GravixVaultOrders {
+abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOrders {
     function transferOwnership(address newOwner, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         managers.owner = newOwner;
         emit NewOwner(meta.callId, newOwner);
@@ -33,6 +36,16 @@ abstract contract GravixVaultBase is GravixVaultOrders {
     function setPricePubkey(uint256 newPubkey, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
         pricePubkey = newPubkey;
         emit NewPricePubkey(meta.callId, newPubkey);
+    }
+
+    function setLimitBot(address _newLimitBot, Callback.CallMeta _meta) external onlyOwner reserveAndSendGas(_meta) {
+        managers.limitBot = _newLimitBot;
+        emit NewLimitBot(_meta.callId, _newLimitBot);
+    }
+
+    function setLimitBotVault(address _newLimitBotVault, Callback.CallMeta _meta) external onlyOwner reserveAndSendGas(_meta) {
+        limitBotVault = _newLimitBotVault;
+        emit NewLimitBotVault(_meta.callId, _newLimitBotVault);
     }
 
     function setPause(bool newState, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
@@ -137,6 +150,13 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         emit MinPositionCollateralUpdate(meta.callId, newVal);
     }
 
+    function setMinStopLossRate(
+        uint64 newVal, Callback.CallMeta meta
+    ) external onlyOwner reserveAndSendGas(meta) {
+        minStopLossRate = newVal;
+        emit MinStopLossRateUpdate(meta.callId, newVal);
+    }
+
     function receiveTokenWalletAddress(address wallet) external override {
         if (msg.sender == usdt.root) usdt.wallet = wallet;
         if (msg.sender == stgUsdt.root) stgUsdt.wallet = wallet;
@@ -159,24 +179,36 @@ abstract contract GravixVaultBase is GravixVaultOrders {
             TvmCell actionPayload,
             bool correct
         ) = decodeTokenTransfer(payload);
-        bool exception = !correct || paused || msg.value < Gas.MIN_MSG_VALUE;
+        bool exception = !correct || paused;
 
         if (msg.sender == usdt.wallet) {
             if (!exception && action == Action.MarketOrder) {
-                exception = exception || !_handleMarketOrder(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleMarketOrder(
+                    sender,
+                    amount,
+                    actionPayload,
+                    Callback.CallMeta(callId, nonce, remainingGasTo)
+                );
+            } else if (!exception && action == Action.LimitOrder) {
+               exception = !_handleLimitOrder(
+                    sender,
+                    amount,
+                    actionPayload,
+                    Callback.CallMeta(callId, nonce, remainingGasTo)
+                );
             } else if (!exception && action == Action.LiquidityDeposit) {
-                _handleUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else if (!exception && action == Action.InsuranceDeposit) {
-                _handleInsuranceDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleInsuranceDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else if (!exception && action == Action.AddCollateral) {
-                _handleAddCollateral(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleAddCollateral(sender, amount, actionPayload, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else {
                 // bad action for USDT
                 exception = true;
             }
         } else if (msg.sender == stgUsdt.wallet) {
             if (!exception && action == Action.LiquidityWithdraw) {
-                _handleStgUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
+                exception = !_handleStgUsdtDeposit(sender, amount, Callback.CallMeta(callId, nonce, remainingGasTo));
             } else {
                 // bad action for stgUSDT
                 exception = true;
@@ -204,7 +236,7 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         _handleStgUsdtBurn(amount, payload);
     }
 
-    onBounce(TvmSlice slice) external view {
+    onBounce(TvmSlice slice) external {
         tvm.accept();
 
         uint32 functionId = slice.decode(uint32);
@@ -213,10 +245,70 @@ abstract contract GravixVaultBase is GravixVaultOrders {
         if (functionId == tvm.functionId(IGravixAccount.process_requestMarketOrder)) {
             tvm.rawReserve(_reserve(), 0);
             uint32 _requestNonce = slice.decode(uint32);
-            PendingMarketOrder request = pendingMarketRequests[_requestNonce];
+            PendingMarketOrder pendingRequest = pendingMarketRequests[_requestNonce];
+            uint128 minValue = getMinValueForContinueOpenMarketOrder(pendingRequest);
+            if (msg.value < minValue) {
+                _revertRequestMarketOrder(
+                    _requestNonce,
+                    pendingRequest,
+                    Errors.LOW_VALUE_FOR_CONTINUE_OPEN_MARKET_ORDER
+                );
+                return;
+            }
+            address gravixAcc = _deployGravixAccount(pendingRequest.user, pendingRequest.referrer);
+            IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _requestNonce,
+                pendingRequest,
+                gravixAccountCode.version
+            );
+        }
+        if (functionId == tvm.functionId(IGravixAccount.process_requestLimitOrder)) {
+            tvm.rawReserve(_reserve(), 0);
+
+            uint32 _requestNonce = slice.decode(uint32);
+            PendingLimitOrder pendingRequest = pendingLimitRequests[_requestNonce];
+            uint128 minValue = getMinValueForContinueOpenLimitOrder(pendingRequest);
+            if (msg.value < minValue) {
+                _revertRequestLimitOrder(
+                    _requestNonce,
+                    pendingRequest,
+                    Errors.LOW_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
+                );
+                return;
+            }
+            address gravixAcc = _deployGravixAccount(pendingRequest.user, pendingRequest.referrer);
+
+            IGravixAccount(gravixAcc).process_requestLimitOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                _requestNonce,
+                pendingRequest,
+                maxPnlRate,
+                minStopLossRate,
+                // we will be here only if contract was not deployed yet, and user tried to open limit order with provided price
+                // so we should provide null as a _positionKey
+                null,
+                gravixAccountCode.version
+            );
+        }
+        if (functionId == tvm.functionId(IGravixAccount.process_requestPendingLimitOrder)) {
+            tvm.rawReserve(_reserve(), 0);
+            uint32 _requestNonce = slice.decode(uint32);
+            PendingLimitOrder request = pendingLimitRequests[_requestNonce];
+            uint128 minValue = getMinValueForContinueOpenLimitOrder(request);
+            if (msg.value < minValue) {
+                _revertRequestPendingLimitOrder(
+                    _requestNonce,
+                    request,
+                    Errors.LOW_VALUE_FOR_CONTINUE_OPEN_LIMIT_ORDER
+                );
+                return;
+            }
 
             address gravixAcc = _deployGravixAccount(request.user, request.referrer);
-            IGravixAccount(gravixAcc).process_requestMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+
+            IGravixAccount(gravixAcc).process_requestPendingLimitOrder{
+                value: 0,
+                flag: MsgFlag.ALL_NOT_RESERVED
+            }(
                 _requestNonce,
                 request,
                 gravixAccountCode.version

@@ -14,13 +14,11 @@ pragma ever-solidity ^0.62.0;
 //─██████████████─██████──██████████─██████──██████─────██████─────██████████─████████──████████─
 //───────────────────────────────────────────────────────────────────────────────────────────────
 
-import "@broxus/tip3/contracts/interfaces/ITokenRootUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/ITokenWalletUpgradeable.tsol";
-import "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
-import "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
-import "./libraries/Gas.tsol";
-import "./libraries/Callback.tsol";
-import "./base/gravix_account/GravixAccountBase.tsol";
+import {GravixAccountBase} from "./base/gravix_account/GravixAccountBase.tsol";
+import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {Callback} from "./libraries/Callback.tsol";
+import {IGravixVault} from "./interfaces/IGravixVault.tsol";
+import {IGravixAccount} from "./interfaces/IGravixAccount.tsol";
 
 
 contract GravixAccount is GravixAccountBase {
@@ -59,7 +57,17 @@ contract GravixAccount is GravixAccountBase {
 
         mainBuilder.storeRef(params); // ref3
 
-        TvmCell storageData = abi.encode(marketOrders, positions, requestCounter, grandReferrer, referralBalance);
+        TvmCell storageData = abi.encode(
+            referrerChecked, //bool
+            grandReferrer, //address
+            grandReferrerChecked, //bool
+            referralBalance, //uint128
+            marketOrders, //mapping(uint32 => MarketOrder),
+            limitOrders, //mapping(uint32 => LimitOrder),
+            positions, //mapping(uint32 => Position),
+            requestCounter, //uint32
+            lastUsedTimeStamp //uint32
+        );
         TvmCell data = abi.encode(meta.callId, meta.nonce, storageData);
 
         mainBuilder.storeRef(data); // ref3
@@ -96,6 +104,7 @@ contract GravixAccount is GravixAccountBase {
             platformCode = _platformCode;
             user = _user;
             currentVersion = _currentVersion;
+            lastUsedTimeStamp = now;
             IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, Callback.CallMeta(0, 0, sendGasTo)
             );
@@ -112,12 +121,29 @@ contract GravixAccount is GravixAccountBase {
             TvmCell data = s.loadRef();
             (uint32 callId, uint32 nonce, TvmCell storageData) = abi.decode(data, (uint32, uint32, TvmCell));
             (
+                referrerChecked,
+                grandReferrer,
+                grandReferrerChecked,
+                referralBalance,
                 marketOrders,
+                limitOrders,
                 positions,
                 requestCounter,
-                grandReferrer,
-                referralBalance
-            ) = abi.decode(storageData, (mapping(uint32 => MarketOrder), mapping(uint32 => Position), uint32, address, uint128));
+                lastUsedTimeStamp
+            ) = abi.decode(
+                storageData,
+                    (
+                        bool,
+                        address,
+                        bool,
+                        uint128,
+                        mapping(uint32 => MarketOrder),
+                        mapping(uint32 => LimitOrder),
+                        mapping(uint32 => Position),
+                        uint32,
+                        uint32
+                    )
+            );
 
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, _oldVersion, _currentVersion, Callback.CallMeta(callId, nonce, sendGasTo)

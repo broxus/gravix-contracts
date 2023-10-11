@@ -1,4 +1,4 @@
-import { bn, deployUser } from "./utils/common";
+import { bn, deployUser, unwrapAddresses } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
@@ -9,13 +9,21 @@ import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } fr
 import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
-    closeOrder,
+    closePosition,
+    openLimitWithTestsOrder,
     openMarketOrder,
-    openMarketWithTestsOrder,
+    openMarketOrderWithTests,
     setPrice,
     testMarketPosition,
     testPositionFunding,
 } from "./utils/orders";
+import {
+    EDIT_COLLATERAL_FEES,
+    FEE_FOR_TOKEN_TRANSFER,
+    LimitType,
+    PosType,
+    RETRIEVE_REFERRER_VALUE,
+} from "./utils/constants";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -24,7 +32,10 @@ describe("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
-
+    let openMarketOrderBaseValue: string;
+    let openMarketOrderFullValue: string;
+    let openLimitOrderBaseValue: string;
+    let openLimitOrderFullValue: string;
     let usdt_root: Token;
     let stg_root: Token;
     const USDT_DECIMALS = 10 ** 6;
@@ -94,13 +105,19 @@ describe("Testing main orders flow", async function () {
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
             user1 = locklift.deployments.getAccount("User1").account;
-            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner);
+            const { account: limitBot } = locklift.deployments.getAccount("LimitBot");
+            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
             stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
             userUsdtWallet = await usdt_root.wallet(user);
             user1_usdt_wallet = await usdt_root.wallet(user1);
             owner_usdt_wallet = await usdt_root.wallet(owner);
+
+            openMarketOrderBaseValue = await vault.getOpenOrderBaseValue(false).then(res => res.market);
+            openMarketOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.market);
+            openLimitOrderBaseValue = await vault.getOpenOrderBaseValue(false).then(res => res.limit);
+            openLimitOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.limit);
         });
     });
 
@@ -126,7 +143,6 @@ describe("Testing main orders flow", async function () {
 
             const deposit_amount = 10000000 * USDT_DECIMALS;
             const { traceTree } = await locklift.tracing.trace(vault.addLiquidity(userUsdtWallet, deposit_amount));
-            await traceTree?.beautyPrint();
             expect(traceTree).to.emit("LiquidityPoolDeposit").withNamedArgs({
                 usdtAmountIn: deposit_amount.toString(),
                 stgUsdtAmountOut: deposit_amount.toString(),
@@ -146,11 +162,11 @@ describe("Testing main orders flow", async function () {
             it("Try to open position with outdated account version", async function () {
                 const INITIAL_PRICE = 1000 * USDT_DECIMALS;
                 await setPrice(ethUsdtMock, INITIAL_PRICE);
-                await vault.deployGravixAccount(user);
-                {
-                    const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
-                }
+                await vault.deployGravixAccount(user1);
+
+                await vault.deployGravixAccount(user, user1.address);
+                await locklift.tracing.trace(vault.setNewAccountCode());
+
                 const oldAccountVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -166,6 +182,7 @@ describe("Testing main orders flow", async function () {
                         marketIdx: MARKET_IDX,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
+                        value: openLimitOrderBaseValue,
                     }),
                     { raise: false },
                 );
@@ -188,7 +205,7 @@ describe("Testing main orders flow", async function () {
             });
 
             it("Open long position", async function () {
-                await openMarketWithTestsOrder(
+                await openMarketOrderWithTests(
                     vault,
                     ethUsdtMock,
                     user,
@@ -197,14 +214,16 @@ describe("Testing main orders flow", async function () {
                     LONG_POS,
                     100 * USDT_DECIMALS,
                     LEVERAGE_DECIMALS,
+                    user1.address,
+                    undefined,
+                    undefined,
+                    bn(openMarketOrderBaseValue).plus(RETRIEVE_REFERRER_VALUE).toString(),
                 );
             });
 
             it("Try to close position with outdated account version", async function () {
-                {
-                    const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
-                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+
                 const oldAccountVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -212,7 +231,10 @@ describe("Testing main orders flow", async function () {
                 expect(oldAccountVersion).to.be.eq(1);
 
                 const posKey = await vault.account(user).then(res => res.positions().then(res => Number(res[0][0])));
-                const { traceTree } = await locklift.tracing.trace(vault.closePosition(user, posKey, MARKET_IDX));
+                const closePositionValue = await vault.getClosePositionValue();
+                const { traceTree } = await locklift.tracing.trace(
+                    vault.closePosition(user, posKey, MARKET_IDX, undefined, closePositionValue),
+                );
                 const newVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -231,10 +253,8 @@ describe("Testing main orders flow", async function () {
                     .and.emit("ClosePositionRevert");
             });
             it("Try to add collateral position with outdated account version", async function () {
-                {
-                    const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
-                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+
                 const oldAccountVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -243,7 +263,15 @@ describe("Testing main orders flow", async function () {
 
                 const posKey = await vault.account(user).then(res => res.positions().then(res => Number(res[0][0])));
                 const { traceTree } = await locklift.tracing.trace(
-                    vault.addCollateral(userUsdtWallet, user, 100 * USDT_DECIMALS, posKey, MARKET_IDX),
+                    vault.addCollateral(
+                        userUsdtWallet,
+                        user,
+                        100 * USDT_DECIMALS,
+                        posKey,
+                        MARKET_IDX,
+                        undefined,
+                        bn(FEE_FOR_TOKEN_TRANSFER).plus(EDIT_COLLATERAL_FEES).toString(),
+                    ),
                 );
                 const newVersion = await vault
                     .account(user)
@@ -263,10 +291,8 @@ describe("Testing main orders flow", async function () {
                     .and.emit("AddPositionCollateralRevert");
             });
             it("Try to remove collateral position with outdated account version", async function () {
-                {
-                    const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
-                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+
                 const oldAccountVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -275,7 +301,14 @@ describe("Testing main orders flow", async function () {
 
                 const posKey = await vault.account(user).then(res => res.positions().then(res => Number(res[0][0])));
                 const { traceTree } = await locklift.tracing.trace(
-                    vault.removeCollateral(user, 10 * USDT_DECIMALS, posKey, MARKET_IDX),
+                    vault.removeCollateral(
+                        user,
+                        10 * USDT_DECIMALS,
+                        posKey,
+                        MARKET_IDX,
+                        undefined,
+                        bn(FEE_FOR_TOKEN_TRANSFER).plus(EDIT_COLLATERAL_FEES).toString(),
+                    ),
                 );
                 const newVersion = await vault
                     .account(user)
@@ -295,10 +328,8 @@ describe("Testing main orders flow", async function () {
                     .and.emit("RemovePositionCollateralRevert");
             });
             it("Try to liquidate position with outdated account version", async function () {
-                {
-                    const { traceTree } = await locklift.tracing.trace(vault.setNewAccountCode());
-                    await traceTree?.beautyPrint();
-                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+
                 const oldAccountVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -317,7 +348,6 @@ describe("Testing main orders flow", async function () {
                         ],
                     ]),
                 );
-                await traceTree?.beautyPrint();
                 const newVersion = await vault
                     .account(user)
                     .then(res => res.getVersion())
@@ -334,6 +364,85 @@ describe("Testing main orders flow", async function () {
                     })
                     .and.call("revert_liquidatePositions")
                     .and.emit("LiquidatePositionRevert");
+            });
+            it("Try to open limit with outdated account version", async function () {
+                const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+                await setPrice(ethUsdtMock, INITIAL_PRICE);
+                await vault.deployGravixAccount(user);
+                await vault.deployGravixAccount(user1);
+
+                {
+                    const { traceTree } = await locklift.tracing.trace(
+                        vault.openLimitPosition({
+                            limitType: LimitType.Limit,
+                            callId: 0,
+                            amount: 100 * USDT_DECIMALS,
+                            triggerPrice: 1001 * 100,
+                            leverage: LEVERAGE_DECIMALS,
+                            positionType: PosType.Long,
+                            marketIdx: 0,
+                            fromWallet: userUsdtWallet,
+                            value: openLimitOrderBaseValue,
+                        }),
+                        { allowedCodes: { compute: [null] } },
+                    );
+                }
+                await locklift.tracing.trace(vault.setNewAccountCode());
+                const accountDetailsBeforeUpgrade = await vault.account(user).then(res => res.getDetails());
+
+                expect(unwrapAddresses(accountDetailsBeforeUpgrade)).to.be.deep.eq({
+                    _currentVersion: "5",
+                    _vault: vault.address.toString(),
+                    _user: user.address.toString(),
+                    _referrer: user1.address.toString(),
+                    _grandReferrer: zeroAddress.toString(),
+                    _referralBalance: "0",
+                });
+                const firstLimitOrderBeforeUpgrade = await vault
+                    .account(user)
+                    .then(res => res.contract.getFields().then(res => res.fields!.limitOrders))
+                    .then(res => res[0]);
+                const { traceTree } = await locklift.tracing.trace(
+                    vault.openLimitPosition({
+                        limitType: LimitType.Limit,
+                        callId: 0,
+                        amount: 100 * USDT_DECIMALS,
+                        triggerPrice: 1001 * 100,
+                        referrer: zeroAddress,
+                        leverage: LEVERAGE_DECIMALS,
+                        positionType: PosType.Long,
+                        marketIdx: 0,
+                        fromWallet: userUsdtWallet,
+                        value: openLimitOrderBaseValue,
+                    }),
+                    { allowedCodes: { compute: [null] } },
+                );
+                const accountDetailsAfterUpgrade = await vault.account(user).then(res => res.getDetails());
+                const firstLimitOrderAfterUpgrade = await vault
+                    .account(user)
+                    .then(res => res.contract.getFields().then(res => res.fields!.limitOrders))
+                    .then(res => res[0]);
+                expect(firstLimitOrderBeforeUpgrade[0]).to.be.eq(firstLimitOrderAfterUpgrade[0]);
+                expect(unwrapAddresses(accountDetailsAfterUpgrade)).to.be.deep.eq({
+                    _currentVersion: "6",
+                    _vault: vault.address.toString(),
+                    _user: user.address.toString(),
+                    _referrer: user1.address.toString(),
+                    _grandReferrer: zeroAddress.toString(),
+                    _referralBalance: "0",
+                });
+
+                expect(traceTree)
+                    .to.call("onGravixAccountRequestUpgrade")
+                    .withNamedArgs({
+                        _accountVersion: "5",
+                    })
+                    .and.call("upgrade")
+                    .withNamedArgs({
+                        newVersion: "6",
+                    })
+                    .and.call("revert_requestPendingLimitOrder")
+                    .and.emit("LimitOrderPendingRequestRevert");
             });
         });
     });

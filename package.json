@@ -6,23 +6,38 @@
     "author": "30mb1 <steam.30mb1@gmail.com>",
     "license": "ISC",
     "scripts": {
-        "test": "npx locklift test -n local"
+        "tests": "npx locklift test",
+        "tests-market": "npx locklift test --tests test/1-orders.ts",
+        "tests-stress": "npx locklift test --tests test/1_1-stress-tests.ts",
+        "tests-liquidity": "npx locklift test --tests test/2-liquidity.ts",
+        "tests-price-node": "npx locklift test --tests test/3-price-node.ts",
+        "tests-upgrade": "npx locklift test --tests test/4-upgrade.ts",
+        "tests-limit": "npx locklift test --tests test/5-limit.ts",
+        "tests-triggers": "npx locklift test --tests test/6-stop-positions.ts",
+        "tests-negative": "npx locklift test --tests test/7-negative-scenarios.ts"
+
     },
     "dependencies": {
         "@broxus/contracts": "^1.1.1",
+        "@broxus/tip3": "^1.0.2",
         "@types/chai": "^4.3.1",
         "@types/mocha": "^9.1.1",
         "@types/node": "^18.0.4",
-        "@broxus/tip3": "^1.0.2",
+        "bignumber.js": "^9.1.2",
         "chai": "^4.3.6",
         "dotenv": "^16.3.1",
         "everscan-verify": "^1.6.1",
-        "locklift": "^2.5.6",
+        "locklift": "^2.8.3",
         "locklift-deploy": "^1.0.2",
-        "locklift-verifier": "^1.0.3",
+        "@broxus/locklift-verifier": "^1.0.5",
         "mocha-logger": "^1.0.7",
+        "ora": "^5.4.1",
         "prettier": "^2.7.1",
+        "prompts": "^2.4.2",
         "ts-mocha": "^10.0.0",
         "typescript": "^4.7.4"
+    },
+    "overrides": {
+        "nekoton-wasm": "npm:nekoton-wasm-locklift@^1.20.2"
     }
 }

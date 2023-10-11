@@ -72,7 +72,8 @@ describe("Testing liquidity pool mechanics", async function () {
 
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
-            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner);
+            const { account: limitBot } = locklift.deployments.getAccount("LimitBot");
+            vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
             stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             eth_usdt_mock = locklift.deployments.getContract("ETH_USDT");
@@ -105,6 +106,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -112,6 +114,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -119,11 +122,10 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
-
-                await traceTree?.beautyPrint();
             });
 
             it("Resolve request", async function () {
@@ -181,7 +183,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         },
                     })
                     .call();
-                // console.log(res2);
 
                 const { traceTree } = await locklift.tracing.trace(
                     priceNode.methods
@@ -199,8 +200,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         .sendExternal({ publicKey: signer?.publicKey as string }),
                     { allowedCodes: { compute: [60] } },
                 );
-
-                await traceTree?.beautyPrint();
             });
         });
 
@@ -243,7 +242,7 @@ describe("Testing liquidity pool mechanics", async function () {
 
             it("Open position request", async function () {
                 const { traceTree } = await locklift.tracing.trace(
-                    vault.openPosition(
+                    vault.openMarketPosition(
                         user_usdt_wallet,
                         10000000,
                         0,
@@ -296,7 +295,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         signature: cell.boc,
                     })
                     .call();
-                // console.log(res);
 
                 const res2 = await priceNode.methods
                     .validatePrice({
@@ -309,7 +307,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         },
                     })
                     .call();
-                // console.log(res2);
 
                 const { traceTree } = await locklift.tracing.trace(
                     priceNode.methods
@@ -326,8 +323,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         })
                         .sendExternal({ publicKey: signer?.publicKey as string }),
                 );
-
-                await traceTree?.beautyPrint();
             });
         });
     });

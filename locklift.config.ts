@@ -1,7 +1,7 @@
 import { LockliftConfig } from "locklift";
 import { FactorySource } from "./build/factorySource";
 import * as dotenv from "dotenv";
-import "locklift-verifier";
+import "@broxus/locklift-verifier";
 import "locklift-deploy";
 import { Deployments } from "locklift-deploy";
 dotenv.config();
@@ -33,7 +33,7 @@ const config: LockliftConfig = {
 
         // Specify config for external contracts as in example
         externalContracts: {
-            "node_modules/@broxus/tip3/build": [
+            "node_modules/@broxus/tip3/contracts": [
                 "TokenRootUpgradeable",
                 "TokenWalletUpgradeable",
                 "TokenWalletPlatform",
@@ -50,6 +50,22 @@ const config: LockliftConfig = {
         version: "0.15.48",
     },
     networks: {
+        locklift: {
+            deploy: ["local/"],
+            connection: {
+                id: 1001,
+                // @ts-ignore
+                type: "proxy",
+                // @ts-ignore
+                data: {},
+            },
+            keys: {
+                // Use everdev to generate your phrase
+                // !!! Never commit it in your repos !!!
+                // phrase: "action inject penalty envelope rabbit element slim tornado dinner pizza off blood",
+                amount: 20,
+            },
+        },
         local: {
             deploy: ["local/"],
             // Specify connection settings for https://github.com/broxus/everscale-client/
@@ -96,7 +112,7 @@ const config: LockliftConfig = {
                 key: process.env.TESTNET_GIVER_KEY ?? "",
             },
             tracing: {
-                endpoint: process.env.TEST_GQL_ENDPOINT ?? "",
+                endpoint: process.env.TEST_GQL_ENDPOINT
             },
 
             keys: {
@@ -112,9 +128,6 @@ const config: LockliftConfig = {
             giver: {
                 address: "0:3bcef54ea5fe3e68ac31b17799cdea8b7cffd4da75b0b1a70b93a18b5c87f723",
                 key: process.env.MAIN_GIVER_KEY ?? "",
-            },
-            tracing: {
-                endpoint: process.env.MAIN_GQL_ENDPOINT ?? "",
             },
             keys: {
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
@@ -134,9 +147,6 @@ const config: LockliftConfig = {
                 address: "0:73a868302a14a05ee6de24eed367bd42e7cd345406bb12e5fc6749de91a579ff",
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
                 accountId: 0,
-            },
-            tracing: {
-                endpoint: process.env.MAIN_GQL_ENDPOINT ?? "",
             },
             keys: {
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
