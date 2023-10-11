@@ -32,11 +32,9 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
             address referrer
         ) = decodeMarketOrder(orderParamsPayload);
 
-        uint128 valueForTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0
-            ? Gas.OPEN_LIMIT_ORDER_RESERVE
-            : 0;
+        bool hasTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0;
 
-        if (msg.value < Gas.MIN_MSG_VALUE + valueForTriggers) {
+        if (msg.value < getBaseOpenMarketOrderValue(hasTriggers)) {
             return false;
         }
         // collateral has USDT decimals -> 6
@@ -126,10 +124,19 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
 
     function revert_requestMarketOrder(
         uint32 _reqNonce,
-        PendingMarketOrder _pendRequest
+        PendingMarketOrder _pendRequest,
+        uint32 _revertReason
     ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        _revertRequestMarketOrder(_reqNonce, _pendRequest, _revertReason);
+    }
+
+    function _revertRequestMarketOrder(
+        uint32 _reqNonce,
+        PendingMarketOrder _pendRequest,
+        uint32 _revertReason
+    ) internal {
         delete pendingMarketRequests[_reqNonce];
-        emit MarketOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
+        emit MarketOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user, _revertReason);
         if (_pendRequest.collateral > 0) {
             _transfer(
                 usdt.wallet,
@@ -206,7 +213,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     // ----------------------------------------------------------------------------------
     function _sendOpenMarketOrderOracleRequest(
         address user,
-        uint32 positionKey,
+        uint32 orderKey,
         uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
@@ -216,7 +223,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         address proxy = _deployOracleProxy(marketIdx, meta);
         IOracleProxy(proxy).setExecuteCallback{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
-            positionKey,
+            orderKey,
             collateral,
             leverage,
             positionType
@@ -238,7 +245,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     function oracle_executeMarketOrder(
         uint64 nonce,
         address user,
-        uint32 positionKey,
+        uint32 orderKey,
         uint32 marketIdx,
         uint128 collateral,
         uint32 leverage,
@@ -248,7 +255,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     ) external override onlyOracleProxy(nonce) reserve {
         _executeOrder(
             user,
-            positionKey,
+            orderKey,
             marketIdx,
             collateral,
             leverage,
@@ -309,9 +316,10 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint128 _positionSizeAsset,
         uint128 _assetPrice,
         PositionType _positionType,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserve {
-        emit MarketOrderExecutionRevert(_meta.callId, _user, _orderKey);
+        emit MarketOrderExecutionRevert(_meta.callId, _user, _orderKey, _revertReason);
 
         // too high slippage / bad triggers
         if (_collateral > 0) {
@@ -360,21 +368,29 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     // ----------------------------------------------------------------------------------
     // --------------------------- ORDER CANCEL HANDLERS --------------------------------
     // ----------------------------------------------------------------------------------
-    function cancelMarketOrder(address _user, uint32 _orderKey, Callback.CallMeta _meta) external view onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+    function cancelMarketOrder(address user, uint32 orderKey, Callback.CallMeta meta) external view onlyActive reserve {
+        require (msg.value >= Gas.CANCEL_ORDER_FEE, Errors.LOW_MSG_VALUE);
 
-        address gravixAcc = getGravixAccountAddress(_user);
+        address gravixAcc = getGravixAccountAddress(user);
         IGravixAccount(gravixAcc).process_cancelMarketOrder{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            _orderKey,
-            _meta,
+            orderKey,
+            meta,
             gravixAccountCode.version
         );
     }
 
     function revert_cancelMarketOrder(
-        address _user, uint32 _orderKey, Callback.CallMeta _meta
+        address _user,
+        uint32 _orderKey,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
     ) external view override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
-        emit CancelMarketOrderRevert(_meta.callId, _user, _orderKey);
+        emit CancelMarketOrderRevert(
+            _meta.callId,
+            _user,
+            _orderKey,
+            _revertReason
+        );
     }
 
     function finish_cancelMarketOrder(

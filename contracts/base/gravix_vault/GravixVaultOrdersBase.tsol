@@ -100,29 +100,29 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             fee
         );
         IGravixAccount(referrerAcc).process_sendReferrerFee{value: Gas.SEND_REF_FEE_VALUE, flag: MsgFlag.SENDER_PAYS_FEES}(
-            fee, meta
+            fee
         );
     }
 
     function _distributeReferralFee(
-        uint128 fee,
+        uint128 taxedAmount,
         address referrer,
         address grandReferrer,
         address referral,
         ReferralFeeSchema feeSchema,
         Callback.CallMeta meta
-    ) internal view returns (uint128 remainingFee) {
-        remainingFee = fee;
+    ) internal view returns (uint128 remainingAmount) {
+        remainingAmount = taxedAmount;
         if (referrer != address(0)) {
-            uint128 referrerFee = math.muldiv(fee, referralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
-            remainingFee -= referrerFee;
+            uint128 referrerFee = math.muldiv(taxedAmount, referralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingAmount -= referrerFee;
             if (referrerFee > 0) {
                 _sendReferrerFee(referrer, referral, referrerFee, meta);
             }
         }
         if (grandReferrer != address(0)) {
-            uint128 grandReferrerFee = math.muldiv(fee, grandReferralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
-            remainingFee -= grandReferrerFee;
+            uint128 grandReferrerFee = math.muldiv(taxedAmount, grandReferralFeeSchema[uint8(feeSchema)], Constants.HUNDRED_PERCENT);
+            remainingAmount -= grandReferrerFee;
             if (grandReferrerFee > 0) {
                 _sendReferrerFee(grandReferrer, referral, grandReferrerFee, meta);
             }
@@ -190,11 +190,17 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         IPriceNode.Price _price,
         Callback.CallMeta _meta
     ) external onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= getSetOrUpdateTriggersMinValue(), Errors.LOW_MSG_VALUE);
         require (_stopLossTriggerPrice > 0 || _takeProfitTriggerPrice > 0, Errors.BAD_INPUT);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(_marketIdx)) {
-            emit RevertSetOrUpdatePositionTriggers(_meta.callId, msg.sender, _positionKey, _marketIdx);
+            emit RevertSetOrUpdatePositionTriggers(
+                _meta.callId,
+                msg.sender,
+                _positionKey,
+                _marketIdx,
+                Errors.MARKET_CLOSED
+            );
             _sendCallbackOrGas(msg.sender, _meta.nonce, false, _meta.sendGasTo);
             return;
         }
@@ -313,45 +319,48 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
         emit RevertSetOrUpdatePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
-            _marketIdx
+            _marketIdx,
+            _revertReason
         );
     }
 
     function removePositionTriggers(
-        uint32 _positionKey,
-        uint32 _marketIdx,
-        bool _removeStopLoss,
-        bool _removeTakeProfit,
-        Callback.CallMeta _meta
+        uint32 positionKey,
+        uint32 marketIdx,
+        bool removeStopLoss,
+        bool removeTakeProfit,
+        Callback.CallMeta meta
     ) external override reserve {
         // optimistic check on market, we will check that position matches it in account
-        if (!marketOpen(_marketIdx)) {
+        if (!marketOpen(marketIdx)) {
             emit RevertRemovePositionTriggers(
-                _meta.callId,
+                meta.callId,
                 msg.sender,
-                _positionKey,
-                _marketIdx
+                positionKey,
+                marketIdx,
+                Errors.MARKET_CLOSED
             );
             _sendCallbackOrGas(
                 msg.sender,
-                _meta.nonce,
-                false, _meta.sendGasTo);
+                meta.nonce,
+                false, meta.sendGasTo);
             return;
         }
 
         address gravixAcc = getGravixAccountAddress(msg.sender);
         IGravixAccount(gravixAcc).process_removePositionTriggers{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            _positionKey,
-            _marketIdx,
-            _removeStopLoss,
-            _removeTakeProfit,
-            _meta,
+            positionKey,
+            marketIdx,
+            removeStopLoss,
+            removeTakeProfit,
+            meta,
             gravixAccountCode.version
         );
     }
@@ -360,10 +369,9 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
-        uint32 _prevPositionTriggerCount,
-        uint32 _currentPositionTriggerCount,
-        bool _stopLossRemoved,
-        bool _takeProfitRemoved,
+        uint8 _triggersBefore,
+        uint8 _triggersAfter,
+        IGravixAccount.Position _updatedPosition,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndSuccessCallback(_meta) {
         emit RemovePositionTriggers(
@@ -371,11 +379,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             _user,
             _positionKey,
             _marketIdx,
-            _stopLossRemoved,
-            _takeProfitRemoved
+            _updatedPosition
         );
 
-        if (_prevPositionTriggerCount >= 1 && _currentPositionTriggerCount == 0) {
+        if (_triggersBefore >= 1 && _triggersAfter == 0) {
             ILimitBotVault(limitBotVault).sendTo{
                 value: 0.01 ever,
                 flag: MsgFlag.SENDER_PAYS_FEES
@@ -387,13 +394,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address _user,
         uint32 _positionKey,
         uint32 _marketIdx,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
         emit RevertRemovePositionTriggers(
             _meta.callId,
             _user,
             _positionKey,
-            _marketIdx
+            _marketIdx,
+            _revertReason
         );
     }
     //endregion
@@ -401,6 +410,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function _handleAddCollateral(
         address user, uint128 amount, TvmCell actionPayload, Callback.CallMeta meta
     ) internal view returns (bool success) {
+        if (msg.value < Gas.EDIT_COLLATERAL_FEE) {
+            return false;
+        }
+
         (uint32 marketIdx, uint32 positionKey) = decodeAddCollateral(actionPayload);
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(marketIdx)) return false;
@@ -426,12 +439,24 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_addCollateral(
-        address user, uint128 amount, uint32 marketIdx, uint32 positionKey, Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
-        emit AddPositionCollateralRevert(meta.callId, user, marketIdx, positionKey, amount);
+        address _user,
+        uint128 _amount,
+        uint32 _marketIdx,
+        uint32 _positionKey,
+        uint32 _revertReason,
+        Callback.CallMeta meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit AddPositionCollateralRevert(
+            meta.callId,
+            _user,
+            _marketIdx,
+            _positionKey,
+            _amount,
+            _revertReason
+        );
 
         _transfer(
-            usdt.wallet, amount, user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
+            usdt.wallet, _amount, _user, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
         );
     }
 
@@ -477,12 +502,19 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function removeCollateral(
         uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
     ) external view onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.EDIT_COLLATERAL_FEE, Errors.LOW_MSG_VALUE);
 
         // optimistic check on market, we will check that position matches it in account
         // soft fail because market state is dynamic
         if (!marketOpen(marketIdx)) {
-            emit RemovePositionCollateralRevert(meta.callId, msg.sender, positionKey, marketIdx, amount);
+            emit RemovePositionCollateralRevert(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                amount,
+                Errors.MARKET_CLOSED
+            );
             _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
             return;
         }
@@ -500,9 +532,21 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_removeCollateral(
-        address user, uint128 amount, uint32 positionKey, uint32 marketIdx, Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit RemovePositionCollateralRevert(meta.callId, user, positionKey, marketIdx, amount);
+        address _user,
+        uint128 _amount,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserveAndFailCallback(_meta) {
+        emit RemovePositionCollateralRevert(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _amount,
+            _revertReason
+        );
     }
 
     function finish_removeCollateral(
@@ -607,12 +651,18 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         IPriceNode.Price price,
         Callback.CallMeta meta
     ) external onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= getMinValueForClosePosition(), Errors.LOW_MSG_VALUE);
 
         // soft fail
         // optimistic check on market, we will check that position matches it in account
         if (!marketOpen(marketIdx)) {
-            emit ClosePositionRevert(meta.callId, msg.sender, positionKey, marketIdx);
+            emit ClosePositionRevert(
+                meta.callId,
+                msg.sender,
+                positionKey,
+                marketIdx,
+                Errors.MARKET_CLOSED
+            );
             _sendCallbackOrGas(msg.sender, meta.nonce, false, meta.sendGasTo);
             return;
         }
@@ -626,10 +676,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             return;
         }
 
-        _sendCloseOrderOracleRequest(msg.sender, positionKey, marketIdx, meta);
+        _sendClosePositionOracleRequest(msg.sender, positionKey, marketIdx, meta);
     }
 
-    function _sendCloseOrderOracleRequest(
+    function _sendClosePositionOracleRequest(
         address user,
         uint32 positionKey,
         uint32 marketIdx,
@@ -681,9 +731,16 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address user,
         uint32 positionKey,
         uint32 marketIdx,
+        uint32 revertReason,
         Callback.CallMeta meta
     ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit ClosePositionRevert(meta.callId, user, positionKey, marketIdx);
+        emit ClosePositionRevert(
+            meta.callId,
+            user,
+            positionKey,
+            marketIdx,
+            revertReason
+        );
     }
 
     function finish_closePosition(
@@ -716,7 +773,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
 
             if (isPositionHasTriggerPrice) {
                 ILimitBotVault(limitBotVault).sendTo{
-                    value: 0.1 ever,
+                    value: 0.01 ever,
                     flag: MsgFlag.SENDER_PAYS_FEES
                 }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
             }
@@ -738,16 +795,14 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 debt = _decreaseInsuranceFund(uint128(pnlWithFees));
             }
 
-            // if transaction trigger not a limit bot and position has trigger price, we need to repay the reserved gas
+            // if transaction was triggered by user + position has trigger price, we need to send him reserved gas
             if (_initiator != managers.limitBot && isPositionHasTriggerPrice) {
-                // if a user is emitter by closing position we need to send him reserved gas
                 ILimitBotVault(limitBotVault).sendTo{
-                    value: 0.1 ever,
+                    value: 0.01 ever,
                     flag: MsgFlag.SENDER_PAYS_FEES
                 }(_user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
             } else if (isPositionHasTriggerPrice) {
-                // if position was closed by limit bot, we need to mark reserved value as free
-                // value 1 and flag 0 means that we are not sending any money
+                // if position was closed by limit bot, we just free some money in vault
                 ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
             }
                 // if position was closed by limit bot, we already emitted this event
@@ -769,10 +824,10 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
     //endregion
     function executePositionsTriggers(
-        mapping(uint32 => PositionTriggerData) _positionsMap,
-        Callback.CallMeta _meta
+        mapping(uint32 => PositionTriggerData) positionsMap,
+        Callback.CallMeta meta
     ) external override onlyLimitBot reserve {
-        for ((uint32 marketIdx, PositionTriggerData _positions) : _positionsMap) {
+        for ((uint32 marketIdx, PositionTriggerData _positions) : positionsMap) {
             OracleType priceSource = markets[marketIdx].priceSource;
             OracleConfig oracleConf = oracleConfigs[marketIdx];
 
@@ -784,7 +839,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                     _positions.positions,
                     marketIdx,
                     _positions.price.price,
-                    _meta,
+                    meta,
                     0
                 );
                 continue;
@@ -794,11 +849,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 marketIdx,
                 managers.limitBot,
                 _positions.positions,
-                _meta
+                meta
             );
         }
 
-        _meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
+        meta.sendGasTo.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
 
     function _sendExecutePositionsTriggersOracleRequest(
@@ -865,12 +920,12 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function oracle_executePositionsTriggers(
-        uint64 nonce,
+        uint64 _nonce,
         uint32 _marketIdx,
         PositionTriggerIdx[] _positions,
         uint128 _assetPrice,
         Callback.CallMeta _meta
-    ) external override onlyOracleProxy(nonce) reserve {
+    ) external override onlyOracleProxy(_nonce) reserve {
         this.self_executePositionsTriggers{
                 value: 0,
                 flag: MsgFlag.ALL_NOT_RESERVED,
@@ -885,12 +940,19 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_executePositionsTriggers(
-        address user,
-        uint32 positionKey,
-        uint32 marketIdx,
-        Callback.CallMeta meta
-    ) external override onlyGravixAccount(user) reserve {
-        emit ExecutePositionTriggerRevert(meta.callId, user, positionKey, marketIdx);
+        address _user,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
+        Callback.CallMeta _meta
+    ) external override onlyGravixAccount(_user) reserve {
+        emit ExecutePositionTriggerRevert(
+            _meta.callId,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
         managers.limitBot.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
     //region liquidation
@@ -938,13 +1000,21 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     }
 
     function revert_liquidatePositions(
-        address user,
-        address liquidator,
-        uint32 positionKey,
-        uint32 marketIdx,
+        address _user,
+        address _liquidator,
+        uint32 _positionKey,
+        uint32 _marketIdx,
+        uint32 _revertReason,
         Callback.CallMeta meta
-    ) external view override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit LiquidatePositionRevert(meta.callId, liquidator, user, positionKey, marketIdx);
+    ) external view override onlyGravixAccount(_user) reserveAndFailCallback(meta) {
+        emit LiquidatePositionRevert(
+            meta.callId,
+            _liquidator,
+            _user,
+            _positionKey,
+            _marketIdx,
+            _revertReason
+        );
     }
 
     function oracle_liquidatePositions(

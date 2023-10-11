@@ -271,7 +271,8 @@
 			"name": "revert_requestPendingLimitOrder",
 			"inputs": [
 				{"name":"_reqNonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendingRequest","type":"tuple"}
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendingRequest","type":"tuple"},
+				{"name":"_revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -312,7 +313,8 @@
 			"name": "revert_requestLimitOrder",
 			"inputs": [
 				{"name":"_reqNonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"}
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"triggerPrice","type":"uint128"},{"name":"orderType","type":"uint8"},{"name":"leverage","type":"uint32"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"referrer","type":"address"},{"name":"assetPrice","type":"uint128"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"},
+				{"name":"_revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -370,6 +372,7 @@
 				{"name":"_positionSizeAsset","type":"uint128"},
 				{"name":"_assetPrice","type":"uint128"},
 				{"name":"_positionType","type":"uint8"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -403,6 +406,7 @@
 			"inputs": [
 				{"name":"user","type":"address"},
 				{"name":"orderKey","type":"uint32"},
+				{"name":"revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -424,7 +428,8 @@
 			"name": "revert_requestMarketOrder",
 			"inputs": [
 				{"name":"_reqNonce","type":"uint32"},
-				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"}
+				{"components":[{"name":"user","type":"address"},{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"collateral","type":"uint128"},{"name":"expectedPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"maxSlippageRate","type":"uint64"},{"name":"openFeeRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"name":"referrer","type":"address"},{"name":"stopLossTriggerPrice","type":"uint128"},{"name":"takeProfitTriggerPrice","type":"uint128"},{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}],"name":"_pendRequest","type":"tuple"},
+				{"name":"_revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -444,7 +449,7 @@
 			"inputs": [
 				{"name":"nonce","type":"uint64"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"},
+				{"name":"orderKey","type":"uint32"},
 				{"name":"marketIdx","type":"uint32"},
 				{"name":"collateral","type":"uint128"},
 				{"name":"leverage","type":"uint32"},
@@ -465,6 +470,7 @@
 				{"name":"_positionSizeAsset","type":"uint128"},
 				{"name":"_assetPrice","type":"uint128"},
 				{"name":"_positionType","type":"uint8"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -486,9 +492,9 @@
 		{
 			"name": "cancelMarketOrder",
 			"inputs": [
-				{"name":"_user","type":"address"},
-				{"name":"_orderKey","type":"uint32"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+				{"name":"user","type":"address"},
+				{"name":"orderKey","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -498,6 +504,7 @@
 			"inputs": [
 				{"name":"_user","type":"address"},
 				{"name":"_orderKey","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -602,6 +609,7 @@
 				{"name":"_user","type":"address"},
 				{"name":"_positionKey","type":"uint32"},
 				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -610,11 +618,11 @@
 		{
 			"name": "removePositionTriggers",
 			"inputs": [
-				{"name":"_positionKey","type":"uint32"},
-				{"name":"_marketIdx","type":"uint32"},
-				{"name":"_removeStopLoss","type":"bool"},
-				{"name":"_removeTakeProfit","type":"bool"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"removeStopLoss","type":"bool"},
+				{"name":"removeTakeProfit","type":"bool"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -625,10 +633,9 @@
 				{"name":"_user","type":"address"},
 				{"name":"_positionKey","type":"uint32"},
 				{"name":"_marketIdx","type":"uint32"},
-				{"name":"_prevPositionTriggerCount","type":"uint32"},
-				{"name":"_currentPositionTriggerCount","type":"uint32"},
-				{"name":"_stopLossRemoved","type":"bool"},
-				{"name":"_takeProfitRemoved","type":"bool"},
+				{"name":"_triggersBefore","type":"uint8"},
+				{"name":"_triggersAfter","type":"uint8"},
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"stopLoss","type":"optional(tuple)"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"takeProfit","type":"optional(tuple)"}],"name":"_updatedPosition","type":"tuple"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -640,6 +647,7 @@
 				{"name":"_user","type":"address"},
 				{"name":"_positionKey","type":"uint32"},
 				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
@@ -648,10 +656,11 @@
 		{
 			"name": "revert_addCollateral",
 			"inputs": [
-				{"name":"user","type":"address"},
-				{"name":"amount","type":"uint128"},
-				{"name":"marketIdx","type":"uint32"},
-				{"name":"positionKey","type":"uint32"},
+				{"name":"_user","type":"address"},
+				{"name":"_amount","type":"uint128"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -684,11 +693,12 @@
 		{
 			"name": "revert_removeCollateral",
 			"inputs": [
-				{"name":"user","type":"address"},
-				{"name":"amount","type":"uint128"},
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_user","type":"address"},
+				{"name":"_amount","type":"uint128"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -760,6 +770,7 @@
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
 				{"name":"marketIdx","type":"uint32"},
+				{"name":"revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -783,8 +794,8 @@
 		{
 			"name": "executePositionsTriggers",
 			"inputs": [
-				{"components":[{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"},{"name":"triggerPositionType","type":"uint8"}],"name":"positions","type":"tuple[]"}],"name":"_positionsMap","type":"map(uint32,tuple)"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
+				{"components":[{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"},{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"},{"name":"triggerPositionType","type":"uint8"}],"name":"positions","type":"tuple[]"}],"name":"positionsMap","type":"map(uint32,tuple)"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -804,7 +815,7 @@
 		{
 			"name": "oracle_executePositionsTriggers",
 			"inputs": [
-				{"name":"nonce","type":"uint64"},
+				{"name":"_nonce","type":"uint64"},
 				{"name":"_marketIdx","type":"uint32"},
 				{"components":[{"name":"user","type":"address"},{"name":"positionKey","type":"uint32"},{"name":"triggerPositionType","type":"uint8"}],"name":"_positions","type":"tuple[]"},
 				{"name":"_assetPrice","type":"uint128"},
@@ -816,10 +827,11 @@
 		{
 			"name": "revert_executePositionsTriggers",
 			"inputs": [
-				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
-				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
+				{"name":"_user","type":"address"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
+				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"_meta","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -836,10 +848,11 @@
 		{
 			"name": "revert_liquidatePositions",
 			"inputs": [
-				{"name":"user","type":"address"},
-				{"name":"liquidator","type":"address"},
-				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"},
+				{"name":"_user","type":"address"},
+				{"name":"_liquidator","type":"address"},
+				{"name":"_positionKey","type":"uint32"},
+				{"name":"_marketIdx","type":"uint32"},
+				{"name":"_revertReason","type":"uint32"},
 				{"components":[{"name":"callId","type":"uint32"},{"name":"nonce","type":"uint32"},{"name":"sendGasTo","type":"address"}],"name":"meta","type":"tuple"}
 			],
 			"outputs": [
@@ -1462,6 +1475,40 @@
 			"outputs": [
 				{"name":"value0","type":"address"}
 			]
+		},
+		{
+			"name": "getBaseOpenMarketOrderValue",
+			"inputs": [
+				{"name":"_triggersExists","type":"bool"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getBaseOpenLimitOrderValue",
+			"inputs": [
+				{"name":"_triggersExists","type":"bool"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getMinValueForClosePosition",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getSetOrUpdateTriggersMinValue",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
 		}
 	],
 	"data": [
@@ -1585,7 +1632,8 @@
 			"name": "MarketOrderRequestRevert",
 			"inputs": [
 				{"name":"callId","type":"uint32"},
-				{"name":"user","type":"address"}
+				{"name":"user","type":"address"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1595,7 +1643,8 @@
 			"inputs": [
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"}
+				{"name":"orderKey","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1626,7 +1675,8 @@
 			"name": "LimitOrderRequestRevert",
 			"inputs": [
 				{"name":"callId","type":"uint32"},
-				{"name":"user","type":"address"}
+				{"name":"user","type":"address"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1635,7 +1685,8 @@
 			"name": "LimitOrderPendingRequestRevert",
 			"inputs": [
 				{"name":"callId","type":"uint32"},
-				{"name":"user","type":"address"}
+				{"name":"user","type":"address"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1667,7 +1718,8 @@
 			"inputs": [
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"}
+				{"name":"positionKey","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1718,7 +1770,7 @@
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
 				{"name":"marketIdx","type":"uint32"},
-				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"stopLoss","type":"optional(tuple)"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"takeProfit","type":"optional(tuple)"}],"name":"position","type":"tuple"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"stopLoss","type":"optional(tuple)"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"takeProfit","type":"optional(tuple)"}],"name":"updatedPos","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -1729,7 +1781,8 @@
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1982,7 +2035,8 @@
 			"inputs": [
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"}
+				{"name":"orderKey","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -1992,7 +2046,7 @@
 			"inputs": [
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"}
+				{"name":"orderKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2002,7 +2056,8 @@
 			"inputs": [
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"}
+				{"name":"orderKey","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2012,7 +2067,7 @@
 			"inputs": [
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
-				{"name":"positionKey","type":"uint32"}
+				{"name":"orderKey","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2023,7 +2078,8 @@
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2058,7 +2114,8 @@
 				{"name":"user","type":"address"},
 				{"name":"marketIdx","type":"uint32"},
 				{"name":"positionKey","type":"uint32"},
-				{"name":"amount","type":"uint128"}
+				{"name":"amount","type":"uint128"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2082,7 +2139,8 @@
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
 				{"name":"marketIdx","type":"uint32"},
-				{"name":"amount","type":"uint128"}
+				{"name":"amount","type":"uint128"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2103,7 +2161,8 @@
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2115,8 +2174,7 @@
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
 				{"name":"marketIdx","type":"uint32"},
-				{"name":"stopLossRemoved","type":"bool"},
-				{"name":"takeProfitRemoved","type":"bool"}
+				{"components":[{"name":"marketIdx","type":"uint32"},{"name":"positionType","type":"uint8"},{"name":"initialCollateral","type":"uint128"},{"name":"openFee","type":"uint128"},{"name":"openPrice","type":"uint128"},{"name":"markPrice","type":"uint128"},{"name":"leverage","type":"uint32"},{"name":"accUSDFundingPerShare","type":"int256"},{"name":"borrowBaseRatePerHour","type":"uint64"},{"name":"baseSpreadRate","type":"uint64"},{"name":"closeFeeRate","type":"uint64"},{"name":"liquidationThresholdRate","type":"uint64"},{"name":"createdAt","type":"uint32"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"stopLoss","type":"optional(tuple)"},{"components":[{"name":"triggerPrice","type":"uint128"},{"name":"createdAt","type":"uint32"}],"name":"takeProfit","type":"optional(tuple)"}],"name":"updatedPos","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -2127,7 +2185,8 @@
 				{"name":"callId","type":"uint32"},
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -2151,7 +2210,8 @@
 				{"name":"liquidator","type":"address"},
 				{"name":"user","type":"address"},
 				{"name":"positionKey","type":"uint32"},
-				{"name":"marketIdx","type":"uint32"}
+				{"name":"marketIdx","type":"uint32"},
+				{"name":"revertReason","type":"uint32"}
 			],
 			"outputs": [
 			]

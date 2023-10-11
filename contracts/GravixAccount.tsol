@@ -65,7 +65,8 @@ contract GravixAccount is GravixAccountBase {
             marketOrders, //mapping(uint32 => MarketOrder),
             limitOrders, //mapping(uint32 => LimitOrder),
             positions, //mapping(uint32 => Position),
-            requestCounter //uint32
+            requestCounter, //uint32
+            lastUsedTimeStamp //uint32
         );
         TvmCell data = abi.encode(meta.callId, meta.nonce, storageData);
 
@@ -103,6 +104,7 @@ contract GravixAccount is GravixAccountBase {
             platformCode = _platformCode;
             user = _user;
             currentVersion = _currentVersion;
+            lastUsedTimeStamp = now;
             IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, Callback.CallMeta(0, 0, sendGasTo)
             );
@@ -126,7 +128,8 @@ contract GravixAccount is GravixAccountBase {
                 marketOrders,
                 limitOrders,
                 positions,
-                requestCounter
+                requestCounter,
+                lastUsedTimeStamp
             ) = abi.decode(
                 storageData,
                     (
@@ -137,6 +140,7 @@ contract GravixAccount is GravixAccountBase {
                         mapping(uint32 => MarketOrder),
                         mapping(uint32 => LimitOrder),
                         mapping(uint32 => Position),
+                        uint32,
                         uint32
                     )
             );

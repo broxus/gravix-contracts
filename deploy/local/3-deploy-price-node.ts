@@ -19,6 +19,24 @@ export default async () => {
         },
         enableLogs: true,
     });
+
+    const { traceTree } = await locklift.tracing.trace(
+        locklift.deployments.deploy({
+            deploymentName: "PriceNodeMock",
+            deployConfig: {
+                contract: "PriceNodeMock",
+                value: toNano(1),
+                constructorParams: {
+                    _owner: owner.address,
+                    _daemonPubkey: `0x${signer?.publicKey}`,
+                    _oraclePubkey: `0x${signer?.publicKey}`,
+                },
+                publicKey: signer?.publicKey as string,
+                initParams: { deployNonce: getRandomNonce() },
+            },
+            enableLogs: true,
+        }),
+    );
 };
 
 export const tag = "price_node";
