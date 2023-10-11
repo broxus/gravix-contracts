@@ -1,19 +1,19 @@
 pragma ever-solidity ^0.62.0;
 
 
-import {Callback} from "../../libraries/Callback.tsol";
-import {Callback} from "../../libraries/Callback.tsol";
-import {Constants} from "../../libraries/Constants.tsol";
-import {Errors} from "../../libraries/Errors.tsol";
-import {Gas} from "../../libraries/Gas.tsol";
 import {GravixVaultOrdersBase} from "./GravixVaultOrdersBase.tsol";
-import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
-import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
+import {Callback} from "../../libraries/Callback.tsol";
 import {IGravixVault} from "../../interfaces/IGravixVault.tsol";
-import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
-import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
 import {IPriceNode} from "../../interfaces/IPriceNode.tsol";
+import {GravixVaultStorage} from "./GravixVaultStorage.tsol";
+import {IGravixAccount} from "../../interfaces/IGravixAccount.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
+import {GravixVaultHelpers} from "./GravixVaultHelpers.tsol";
+import {IOracleProxy} from "../../interfaces/IOracleProxy.tsol";
+import {Gas} from "../../libraries/Gas.tsol";
+import {Errors} from "../../libraries/Errors.tsol";
+import {Constants} from "../../libraries/Constants.tsol";
+import {ILimitBotVault} from "../../interfaces/ILimitBotVault.tsol";
 
 
 abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
@@ -37,11 +37,9 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
             address referrer
         ) = decodeLimitOrder(orderParamsPayload);
 
-        uint128 valueForTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0
-            ? Gas.OPEN_LIMIT_ORDER_RESERVE
-            : 0;
+        bool hasTriggers = stopLossTriggerPrice > 0 || takeProfitTriggerPrice > 0;
 
-        if (msg.value < Gas.MIN_MSG_VALUE + Gas.OPEN_LIMIT_ORDER_RESERVE + valueForTriggers) {
+        if (msg.value < getBaseOpenLimitOrderValue(hasTriggers)) {
             return false;
         }
 
@@ -170,10 +168,19 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
     function revert_requestPendingLimitOrder(
         uint32 _reqNonce,
-        IGravixVault.PendingLimitOrder _pendingRequest
+        IGravixVault.PendingLimitOrder _pendingRequest,
+        uint32 _revertReason
     ) external override onlyGravixAccount(_pendingRequest.user) reserve {
+        _revertRequestPendingLimitOrder(_reqNonce, _pendingRequest, _revertReason);
+    }
+
+    function _revertRequestPendingLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendingRequest,
+        uint32 _revertReason
+    ) internal {
         delete pendingLimitRequests[_reqNonce];
-        emit LimitOrderPendingRequestRevert(_pendingRequest.meta.callId, _pendingRequest.user);
+        emit LimitOrderPendingRequestRevert(_pendingRequest.meta.callId, _pendingRequest.user, _revertReason);
         if (_pendingRequest.collateral > 0) {
             _transfer(
                 usdt.wallet,
@@ -336,10 +343,19 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
     function revert_requestLimitOrder(
         uint32 _reqNonce,
-        PendingLimitOrder _pendRequest
+        PendingLimitOrder _pendRequest,
+        uint32 _revertReason
     ) external override onlyGravixAccount(_pendRequest.user) reserve {
+        _revertRequestLimitOrder(_reqNonce, _pendRequest, _revertReason);
+    }
+
+    function _revertRequestLimitOrder(
+        uint32 _reqNonce,
+        PendingLimitOrder _pendRequest,
+        uint32 _revertReason
+    ) internal {
         delete pendingLimitRequests[_reqNonce];
-        emit LimitOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user);
+        emit LimitOrderRequestRevert(_pendRequest.meta.callId, _pendRequest.user, _revertReason);
         if (_pendRequest.collateral > 0) {
             _transfer(
                 usdt.wallet,
@@ -407,7 +423,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
             // if market uses offchain oracle and we have valid price, we can liquidate positions right now
             if (priceSource == OracleType.PriceNode && checkPrice(limitOrders.price, oracleConf.priceNode)) {
-                uint128 value = uint128(limitOrders.orders.length * Gas.OPEN_LIMIT_ORDER_RESERVE);
+                uint128 value = uint128(limitOrders.orders.length * Gas.OPEN_LIMIT_ORDER_RESERVE) + Gas.ORACLE_PROXY_DEPLOY;
 
                 this.self_executeLimitOrders{value: value}(
                     limitOrders.orders,
@@ -418,7 +434,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
                 continue;
             }
 
-            _sendExecuteLimitOracleRequest(
+            _sendExecuteLimitOrderOracleRequest(
                 marketIdx,
                 managers.limitBot,
                 limitOrders.orders,
@@ -462,7 +478,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         }
     }
 
-    function _sendExecuteLimitOracleRequest(
+    function _sendExecuteLimitOrderOracleRequest(
         uint32 _marketIdx,
         address _executor,
         LimitOrderIdx[] _limitOrders,
@@ -545,9 +561,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint128 _positionSizeAsset,
         uint128 _assetPrice,
         PositionType _positionType,
+        uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserve {
-        emit LimitOrderExecutionRevert(_meta.callId, _user, _orderKey);
+        emit LimitOrderExecutionRevert(_meta.callId, _user, _orderKey, _revertReason);
         _removePositionFromMarket(_marketIdx, _positionSizeAsset, _assetPrice, _positionType);
 
         limitBotVault.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
@@ -589,7 +606,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint32 orderKey,
         Callback.CallMeta meta
     ) external view onlyActive reserve {
-        require (msg.value >= Gas.MIN_MSG_VALUE, Errors.LOW_MSG_VALUE);
+        require (msg.value >= Gas.CANCEL_ORDER_FEE, Errors.LOW_MSG_VALUE);
 
         address gravixAcc = getGravixAccountAddress(user);
 
@@ -603,9 +620,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
     function revert_cancelLimitOrder(
         address user,
         uint32 orderKey,
+        uint32 revertReason,
         Callback.CallMeta meta
     ) external override onlyGravixAccount(user) reserveAndFailCallback(meta) {
-        emit CancelLimitOrderRevert(meta.callId, user, orderKey);
+        emit CancelLimitOrderRevert(meta.callId, user, orderKey, revertReason);
     }
 
     function finish_cancelLimitOrder(

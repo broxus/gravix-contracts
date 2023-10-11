@@ -3,6 +3,8 @@ import { GravixVaultAbi } from "../../../build/factorySource";
 import { Account } from "locklift/everscale-client";
 import { TokenWallet } from "./token_wallet";
 import { GravixAccount } from "./vault_acc";
+import { bn } from "../common";
+import { BOUNCE_HANDLING_FEE, FEE_FOR_TOKEN_TRANSFER, GRAVIX_ACCOUNT_DEPLOY_VALUE } from "../constants";
 
 const logger = require("mocha-logger");
 
@@ -77,7 +79,37 @@ export class GravixVault {
         }
         return null;
     }
-
+    async getOpenOrderBaseValue(triggersExists: boolean): Promise<{ market: string; limit: string }> {
+        return (await Promise.all([
+            this.contract.methods
+                .getBaseOpenMarketOrderValue({ _triggersExists: triggersExists })
+                .call()
+                .then(res => ({ market: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
+            this.contract.methods
+                .getBaseOpenLimitOrderValue({ _triggersExists: triggersExists })
+                .call()
+                .then(res => ({ limit: bn(res.value0).plus(FEE_FOR_TOKEN_TRANSFER).toString() })),
+        ]).then(res => res.reduce((acc, val) => ({ ...acc, ...val }), {}))) as { market: string; limit: string };
+    }
+    async getClosePositionValue() {
+        return this.contract.methods
+            .getMinValueForClosePosition()
+            .call()
+            .then(res => res.value0);
+    }
+    async getFullOpenOrderValue(triggersExists: boolean): Promise<{ market: string; limit: string }> {
+        const { limit, market } = await this.getOpenOrderBaseValue(triggersExists);
+        return {
+            limit: bn(limit).plus(BOUNCE_HANDLING_FEE).plus(GRAVIX_ACCOUNT_DEPLOY_VALUE).toString(),
+            market: bn(market).plus(BOUNCE_HANDLING_FEE).plus(GRAVIX_ACCOUNT_DEPLOY_VALUE).toString(),
+        };
+    }
+    async getSetOrUpdateTriggersValue() {
+        return this.contract.methods
+            .getSetOrUpdateTriggersMinValue()
+            .call()
+            .then(res => res.value0);
+    }
     async account(user: Account | Address) {
         return GravixAccount.from_addr(await this.getAccountAddress(user));
     }
@@ -105,6 +137,18 @@ export class GravixVault {
             .setOracleConfigs({
                 newOracles: oracles,
                 meta: { callId: callId, nonce: 0, sendGasTo: this.owner.address },
+            })
+            .send({
+                from: this.owner.address,
+                amount: toNano(2),
+            });
+    }
+
+    async setPriceNode(priceNode: Address) {
+        return this.contract.methods
+            .setPriceNode({
+                newNode: priceNode,
+                meta: { callId: 0, nonce: 0, sendGasTo: this.owner.address },
             })
             .send({
                 from: this.owner.address,
@@ -173,6 +217,7 @@ export class GravixVault {
         callId = 0,
         stopLossTriggerPrice = 0,
         takeProfitTriggerPrice = 0,
+        value: string = toNano(5),
     ) {
         const payload = (
             await this.contract.methods
@@ -191,7 +236,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await from_wallet.transfer(amount, this.contract.address, payload, toNano(5));
+        return await from_wallet.transfer(amount, this.contract.address, payload, value);
     }
 
     async openLimitPosition({
@@ -206,6 +251,7 @@ export class GravixVault {
         fromWallet,
         stopLossTriggerPrice = 0,
         takeProfitTriggerPrice = 0,
+        value = toNano(5),
     }: {
         fromWallet: TokenWallet;
         amount: number;
@@ -218,6 +264,7 @@ export class GravixVault {
         callId: number;
         stopLossTriggerPrice?: number;
         takeProfitTriggerPrice?: number;
+        value?: string;
     }) {
         const payload = (
             await this.contract.methods
@@ -236,7 +283,7 @@ export class GravixVault {
                 })
                 .call()
         ).payload;
-        return await fromWallet.transfer(amount, this.contract.address, payload, toNano(5));
+        return await fromWallet.transfer(amount, this.contract.address, payload, value);
     }
 
     async addCollateral(
@@ -246,6 +293,7 @@ export class GravixVault {
         positionKey: number,
         marketIdx: number | string,
         callId = 0,
+        value = toNano(2.1),
     ) {
         const payload = (
             await this.contract.methods
@@ -258,10 +306,17 @@ export class GravixVault {
                 .call()
         ).payload;
 
-        return fromWallet.transfer(amount, this.contract.address, payload, toNano(2.1));
+        return fromWallet.transfer(amount, this.contract.address, payload, value);
     }
 
-    async removeCollateral(user: Account, amount: number, positionKey: number, marketIdx: number | string, callId = 0) {
+    async removeCollateral(
+        user: Account,
+        amount: number,
+        positionKey: number,
+        marketIdx: number | string,
+        callId = 0,
+        value = toNano(2.1),
+    ) {
         return await this.contract.methods
             .removeCollateral({
                 marketIdx: marketIdx,
@@ -272,7 +327,13 @@ export class GravixVault {
             .send({ from: user.address, amount: toNano(2.1) });
     }
 
-    async closePosition(user: Account, positionKey: number, marketIdx: number | string, callId = 0) {
+    async closePosition(
+        user: Account,
+        positionKey: number,
+        marketIdx: number | string,
+        callId = 0,
+        value = toNano(2.1),
+    ) {
         return await this.contract.methods
             .closePosition({
                 positionKey: positionKey,
@@ -280,26 +341,26 @@ export class GravixVault {
                 price: empty_price,
                 meta: { callId: callId, nonce: 0, sendGasTo: user.address },
             })
-            .send({ from: user.address, amount: toNano(2.1) });
+            .send({ from: user.address, amount: value });
     }
 
-    async stopPositions({
+    async executeTriggers({
         callId = 0,
         stopPositionsConfig,
     }: {
         callId?: number;
         stopPositionsConfig: Parameters<
             Contract<GravixVaultAbi>["methods"]["executePositionsTriggers"]
-        >[0]["_positionsMap"];
+        >[0]["positionsMap"];
     }) {
         return this.contract.methods
             .executePositionsTriggers({
-                _meta: {
+                meta: {
                     sendGasTo: this.limitBot,
                     callId: callId,
                     nonce: getRandomNonce(),
                 },
-                _positionsMap: stopPositionsConfig,
+                positionsMap: stopPositionsConfig,
             })
             .send({
                 from: this.limitBot,

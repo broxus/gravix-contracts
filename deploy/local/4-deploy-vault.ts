@@ -13,15 +13,15 @@ export default async () => {
     const stg_root = await locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT");
     const priceNode = await locklift.deployments.getContract("PriceNode");
 
-    const vault = await setupVault(
-        owner,
-        usdt_root.address,
-        stg_root.address,
-        owner.address,
-        priceNode.address,
-        limitBot.address,
-        `0x${signer?.publicKey}`,
-    );
+    const vault = await setupVault({
+        owner: owner,
+        usdt: usdt_root.address,
+        stg_usdt: stg_root.address,
+        priceNode: priceNode.address,
+        limitBot: limitBot.address,
+        pricePk: `0x${signer?.publicKey}`,
+        log: true
+    });
     const { contract: limitBotVault } = await locklift.deployments.deploy({
         deploymentName: "LimitBotVault",
         enableLogs: true,

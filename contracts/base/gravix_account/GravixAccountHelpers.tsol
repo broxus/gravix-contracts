@@ -13,7 +13,6 @@ import {Callback} from "../../libraries/Callback.tsol";
 import {Gas} from "../../libraries/Gas.tsol";
 import {RPlatform as Platform} from "../../Platform.tsol";
 
-
 abstract contract GravixAccountHelpers is GravixAccountStorage {
     function getDetails() external view responsible returns (
         uint32 _currentVersion, address _vault, address _user, address _referrer, address _grandReferrer, uint128 _referralBalance
@@ -81,23 +80,6 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
                 assetPrice: input.assetPrice
             })
         );
-    }
-
-    function getPositionViewInternal(
-        Position _position,
-        uint128 _assetPrice
-    ) internal pure returns (PositionView positionView) {
-        bool isLong = _position.positionType == IGravixVault.PositionType.Long;
-
-        ViewInputInternal input = ViewInputInternal({
-            assetPrice: _assetPrice,
-            funding: IGravixVault.Funding({
-                accLongUSDFundingPerShare: isLong ? _position.accUSDFundingPerShare : 0,
-                accShortUSDFundingPerShare: isLong ? 0 : _position.accUSDFundingPerShare
-            })
-        });
-
-        return _getPositionView(_position, input);
     }
 
     function _getPositionView(Position _position, ViewInputInternal input) internal pure returns (PositionView positionView) {
@@ -304,13 +286,46 @@ abstract contract GravixAccountHelpers is GravixAccountStorage {
             ? takeProfitTriggerPrice <= _assetPrice
             : takeProfitTriggerPrice > _assetPrice;
     }
+    function getMinValueForRetrieveReferrersInMarketOrder(bool _isTriggersExist) internal pure returns (uint128) {
+        uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
 
-    function convertStopPriceToStopOrder(uint128 _stopPrice) internal pure returns (optional(PositionTrigger)) {
-        if (_stopPrice == 0) {
+        return  Gas.OPEN_ORDER_FEE / 2
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.GET_REFERRER_VALUE
+            + executeTriggerValue;
+    }
+
+    function getMinValueForRetrieveReferrersInLimitOrder(bool _isTriggersExist) internal pure returns (uint128) {
+        uint128 executeTriggerValue = _isTriggersExist ? Gas.EXECUTE_STOP_ORDER_VALUE : 0;
+
+        return  Gas.OPEN_ORDER_FEE / 2
+            + Gas.ORACLE_PROXY_DEPLOY
+            + Gas.ORACLE_PROXY_CALL
+            + Gas.GET_REFERRER_VALUE
+            + Gas.OPEN_LIMIT_ORDER_RESERVE
+            + executeTriggerValue;
+    }
+
+    function getMinValueForCreatingFirstTrigger() internal pure returns(uint128) {
+        return Gas.SET_OR_UPDATE_TRIGGERS_FEE / 2
+                + Gas.OPEN_LIMIT_ORDER_RESERVE;
+    }
+
+    // @dev If user haven't used his account for a long time (more than 80 days)
+    // storage fee could be too big and can lead to insufficient gas errors
+    function checkAndUpdateLastUsed() internal returns (bool) {
+        bool isOk = now - lastUsedTimeStamp < Constants.MAX_UNUSED_PERIOD;
+        lastUsedTimeStamp = now;
+        return isOk;
+    }
+
+    function _convertPriceToTrigger(uint128 _price) internal pure returns (optional(PositionTrigger)) {
+        if (_price == 0) {
             return null;
         }
         return PositionTrigger({
-            triggerPrice: _stopPrice,
+            triggerPrice: _price,
             createdAt: now
         });
     }

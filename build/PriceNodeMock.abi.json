@@ -14,16 +14,6 @@
 			]
 		},
 		{
-			"name": "getRequestsPerTicker",
-			"inputs": [
-				{"name":"answerId","type":"uint32"},
-				{"name":"ticker","type":"string"}
-			],
-			"outputs": [
-				{"name":"_requestsPerTicker","type":"uint32"}
-			]
-		},
-		{
 			"name": "getTickerConfigs",
 			"inputs": [
 				{"name":"answerId","type":"uint32"}
@@ -43,18 +33,12 @@
 			]
 		},
 		{
-			"name": "getDetails",
+			"name": "makeRequest",
 			"inputs": [
-				{"name":"answerId","type":"uint32"}
+				{"name":"ticker","type":"string"},
+				{"name":"sendGasTo","type":"address"}
 			],
 			"outputs": [
-				{"name":"_owner","type":"address"},
-				{"name":"_daemonPubkey","type":"uint256"},
-				{"name":"_oraclePubkey","type":"uint256"},
-				{"name":"_maxRequests","type":"uint16"},
-				{"name":"_requestsNum","type":"uint16"},
-				{"name":"_maxActionsPerTx","type":"uint16"},
-				{"name":"_requestNonce","type":"uint32"}
 			]
 		},
 		{
@@ -66,43 +50,19 @@
 			]
 		},
 		{
-			"name": "setMaxActionsPerTx",
+			"name": "setPrices",
 			"inputs": [
-				{"name":"newMax","type":"uint16"}
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"_prices","type":"tuple[]"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "transferOwnership",
+			"name": "getPrices",
 			"inputs": [
-				{"name":"newOwner","type":"address"}
 			],
 			"outputs": [
-			]
-		},
-		{
-			"name": "setMaxRequests",
-			"inputs": [
-				{"name":"newMax","type":"uint16"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setOraclePubkey",
-			"inputs": [
-				{"name":"newPk","type":"uint256"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setDaemonPubkey",
-			"inputs": [
-				{"name":"newPk","type":"uint256"}
-			],
-			"outputs": [
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"_prices","type":"tuple[]"}
 			]
 		},
 		{
@@ -119,15 +79,6 @@
 			]
 		},
 		{
-			"name": "makeRequest",
-			"inputs": [
-				{"name":"ticker","type":"string"},
-				{"name":"sendGasTo","type":"address"}
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "validatePrice",
 			"inputs": [
 				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"price","type":"tuple"}
@@ -138,7 +89,7 @@
 		{
 			"name": "resolveRequests",
 			"inputs": [
-				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"prices","type":"tuple[]"}
+				{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"_prices","type":"tuple[]"}
 			],
 			"outputs": [
 			]
@@ -148,52 +99,6 @@
 		{"key":1,"name":"deployNonce","type":"uint32"}
 	],
 	"events": [
-		{
-			"name": "NewOraclePubkey",
-			"inputs": [
-				{"name":"oldPk","type":"uint256"},
-				{"name":"newPk","type":"uint256"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "NewDaemonPubkey",
-			"inputs": [
-				{"name":"oldPk","type":"uint256"},
-				{"name":"newPk","type":"uint256"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "NewMaxRequests",
-			"inputs": [
-				{"name":"oldVal","type":"uint16"},
-				{"name":"newVal","type":"uint16"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "OwnershipTransferred",
-			"inputs": [
-				{"name":"oldOwner","type":"address"},
-				{"name":"newOwner","type":"address"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "NewRequest",
-			"inputs": [
-				{"name":"sender","type":"address"},
-				{"name":"nonce","type":"uint32"},
-				{"name":"ticker","type":"string"}
-			],
-			"outputs": [
-			]
-		},
 		{
 			"name": "RequestResolved",
 			"inputs": [
@@ -205,10 +110,11 @@
 			]
 		},
 		{
-			"name": "NewMaxActionsPerTx",
+			"name": "NewRequest",
 			"inputs": [
-				{"name":"oldVal","type":"uint16"},
-				{"name":"newVal","type":"uint16"}
+				{"name":"sender","type":"address"},
+				{"name":"nonce","type":"uint32"},
+				{"name":"ticker","type":"string"}
 			],
 			"outputs": [
 			]
@@ -228,6 +134,7 @@
 		{"name":"maxActionsPerTx","type":"uint16"},
 		{"name":"tickerConfigs","type":"optional(cell)"},
 		{"name":"requests","type":"optional(cell)"},
-		{"name":"requestsPerTicker","type":"optional(cell)"}
+		{"name":"requestsPerTicker","type":"optional(cell)"},
+		{"components":[{"name":"price","type":"uint128"},{"name":"serverTime","type":"uint32"},{"name":"oracleTime","type":"uint32"},{"name":"ticker","type":"string"},{"name":"signature","type":"cell"}],"name":"prices","type":"tuple[]"}
 	]
 }

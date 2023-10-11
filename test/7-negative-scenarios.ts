@@ -1,8 +1,8 @@
-import { bn, DEFAULT_TICKER, PriceNodeMockAdapter } from "./utils/common";
+import { bn, DEFAULT_TICKER, deployUser, PriceNodeMockAdapter } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
-import { Address, Contract, lockliftChai, toNano } from "locklift";
+import { Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress } from "locklift";
 import chai, { expect } from "chai";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
 import {
@@ -12,26 +12,34 @@ import {
     PriceNodeMockAbi,
     TokenRootUpgradeableAbi,
 } from "../build/factorySource";
+import { GravixAccount } from "./utils/wrappers/vault_acc";
 import BigNumber from "bignumber.js";
 import {
     closePosition,
+    openMarketOrder,
     openMarketOrderWithTests,
     setPrice,
-    testLimitPosition,
     testMarketPosition,
+    testPositionFunding,
 } from "./utils/orders";
-import { LimitType, RETRIEVE_REFERRER_VALUE } from "./utils/constants";
+import {
+    BOUNCE_HANDLING_FEE,
+    FEE_FOR_TOKEN_TRANSFER,
+    OPEN_ORDER_FEE,
+    ORACLE_PROXY_CALL,
+    ORACLE_PROXY_DEPLOY,
+} from "./utils/constants";
 
+const logger = require("mocha-logger");
 chai.use(lockliftChai);
 
 describe("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
-    let openLimitOrderBaseValue: string;
-    let openLimitOrderFullValue: string;
-    let usdt_root: Token;
-    let stg_root: Token;
+
+    let usdRoot: Token;
+    let stgRoot: Token;
     const USDT_DECIMALS = 10 ** 6;
     const PRICE_DECIMALS = 10 ** 8;
     const LEVERAGE_DECIMALS = 10 ** 6;
@@ -62,18 +70,22 @@ describe("Testing main orders flow", async function () {
     let priceNode: Contract<PriceNodeAbi>;
 
     let userUsdtWallet: TokenWallet;
-    let user1_usdt_wallet: TokenWallet;
-    let owner_usdt_wallet: TokenWallet;
+    let user1UsdtWallet: TokenWallet;
+    let ownerUsdtWallet: TokenWallet;
     let user_stg_wallet: TokenWallet;
 
     // left - eth, right - usdt
     let ethUsdtMock: Contract<PairMockAbi>;
     // left - btc, right - eth
     let btc_eth_mock: Contract<PairMockAbi>;
+
     let priceNodeMock: PriceNodeMockAdapter;
 
     const eth_addr = new Address("0:1111111111111111111111111111111111111111111111111111111111111111");
     const btc_addr = new Address("0:2222222222222222222222222222222222222222222222222222222222222222");
+    const MARKET_IDX = 0;
+    const GRAVIX_ACCOUNT_DEPLOY_VALUE = toNano(0.65);
+    const MIN_MSG_VALUE_FOR_OPEN_ORDER = toNano(0.55);
 
     const basic_config: MarketConfig = {
         priceSource: 1,
@@ -103,8 +115,8 @@ describe("Testing main orders flow", async function () {
             user1 = locklift.deployments.getAccount("User1").account;
             const { account: limitBot } = locklift.deployments.getAccount("LimitBot");
             vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
-            stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
-            usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
+            stgRoot = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
+            usdRoot = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
             ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
             const priceNodeContract = locklift.deployments.getContract<PriceNodeMockAbi>("PriceNodeMock");
             await priceNodeContract.methods
@@ -124,12 +136,9 @@ describe("Testing main orders flow", async function () {
                 });
             priceNodeMock = new PriceNodeMockAdapter(priceNodeContract, DEFAULT_TICKER, signer);
             await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
-            userUsdtWallet = await usdt_root.wallet(user);
-            user1_usdt_wallet = await usdt_root.wallet(user1);
-            owner_usdt_wallet = await usdt_root.wallet(owner);
-
-            openLimitOrderBaseValue = await vault.getOpenOrderBaseValue(false).then(res => res.limit);
-            openLimitOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.limit);
+            userUsdtWallet = await usdRoot.wallet(user);
+            user1UsdtWallet = await usdRoot.wallet(user1);
+            ownerUsdtWallet = await usdRoot.wallet(owner);
         });
     });
 
@@ -141,7 +150,7 @@ describe("Testing main orders flow", async function () {
             const oracle: Oracle = {
                 dex: {
                     targetToken: eth_addr,
-                    path: [{ addr: ethUsdtMock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
+                    path: [{ addr: ethUsdtMock.address, leftRoot: eth_addr, rightRoot: usdRoot.address }],
                 },
                 priceNode: { ticker: DEFAULT_TICKER, maxOracleDelay: 0, maxServerDelay: 0 },
             };
@@ -165,90 +174,100 @@ describe("Testing main orders flow", async function () {
             expect(details._poolAssets.balance).to.be.eq(deposit_amount.toString());
             pool_balance = bn(deposit_amount);
 
-            user_stg_wallet = await stg_root.wallet(user);
+            user_stg_wallet = await stgRoot.wallet(user);
             const user_stg_bal = await user_stg_wallet.balance();
             expect(user_stg_bal.toString()).to.be.eq(deposit_amount.toString());
         });
 
-        describe("Basic scenarios: open fee, pnl, close fee, spreads, liq price checked", async function () {
-            const marketIdx = 0;
+        describe("Open order tests with different gas values", async () => {
+            it("try to open order with minimal required gas", async () => {
+                const INITIAL_PRICE = 1000 * USDT_DECIMALS;
 
-            describe("Test solo long positions", async function () {
-                it("Pnl+, 1x leverage, LIMIT/LONG open/close 1050$/1000$/1100$", async function () {
-                    await vault.deployGravixAccount(user1);
-                    await testLimitPosition({
+                await setPrice(priceNodeMock, INITIAL_PRICE);
+                const openMarketOrderMinValue = await vault.getOpenOrderBaseValue(false).then(res => res.market);
+
+                const { traceTree } = await locklift.tracing.trace(
+                    openMarketOrder({
                         vault,
                         pair: priceNodeMock,
                         user,
                         userWallet: userUsdtWallet,
-                        marketIdx: marketIdx,
                         leverage: LEVERAGE_DECIMALS,
-                        initialPrice: 1050 * USDT_DECIMALS,
-                        triggerPrice: 1000 * USDT_DECIMALS,
-                        finishPrice: 1100 * USDT_DECIMALS,
+                        marketIdx: MARKET_IDX,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        limitType: LimitType.Limit,
-                        referrer: user1.address,
-                        value: bn(openLimitOrderFullValue).plus(RETRIEVE_REFERRER_VALUE).toString(),
-                    });
-                });
+                        value: openMarketOrderMinValue,
+                    }),
+                    {
+                        raise: true,
+                        allowedCodes: {
+                            compute: [null],
+                        },
+                    },
+                );
+                expect(traceTree)
+                    .and.to.emit("MarketOrderRequestRevert")
+                    //there is no success process_requestMarketOrder call
+                    .and.not.to.be.call("process_requestMarketOrder");
             });
-            describe("Test solo short positions", async function () {
-                it("Pnl+, 1x leverage, LIMIT/SHORT 950$/1000$/900$", async function () {
-                    await testLimitPosition({
+            it("try to open order with full required gas", async () => {
+                const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+                await setPrice(ethUsdtMock, INITIAL_PRICE);
+                const openMarketOrderFullValue = await vault.getFullOpenOrderValue(false).then(res => res.market);
+                const callId = getRandomNonce();
+                const { traceTree } = await locklift.tracing.trace(
+                    openMarketOrder({
                         vault,
-                        pair: priceNodeMock,
+                        pair: ethUsdtMock,
                         user,
                         userWallet: userUsdtWallet,
-                        marketIdx: marketIdx,
                         leverage: LEVERAGE_DECIMALS,
-                        initialPrice: 950 * USDT_DECIMALS,
-                        triggerPrice: 1000 * USDT_DECIMALS,
-                        finishPrice: 900 * USDT_DECIMALS,
-                        posType: SHORT_POS,
-                        collateral: 100 * USDT_DECIMALS,
-                        limitType: LimitType.Limit,
-                        value: openLimitOrderBaseValue,
-                    });
-                });
-            });
-            describe("Test solo short positions", async function () {
-                it("Pnl+, 1x leverage, STOP/LONG 950$/1000$/1100$", async function () {
-                    await testLimitPosition({
-                        vault,
-                        pair: priceNodeMock,
-                        user,
-                        userWallet: userUsdtWallet,
-                        marketIdx: marketIdx,
-                        leverage: LEVERAGE_DECIMALS,
-                        initialPrice: 950 * USDT_DECIMALS,
-                        triggerPrice: 1000 * USDT_DECIMALS,
-                        finishPrice: 1100 * USDT_DECIMALS,
+                        marketIdx: MARKET_IDX,
                         posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        limitType: LimitType.Stop,
-                        value: openLimitOrderBaseValue,
-                    });
+                        value: openMarketOrderFullValue,
+                        callId,
+                    }),
+                    {
+                        raise: false,
+                        allowedCodes: {
+                            compute: [null],
+                        },
+                    },
+                );
+                expect(traceTree).and.to.emit("MarketOrderExecution").withNamedArgs({
+                    callId: callId.toString(),
                 });
             });
-            describe("Test solo short positions", async function () {
-                it("Pnl+, 1x leverage, STOP/SHORT 950$/1000$/1100$", async function () {
-                    await testLimitPosition({
+            it("try to open order with minimal required gas, and existed account", async () => {
+                const INITIAL_PRICE = 1000 * USDT_DECIMALS;
+
+                await setPrice(priceNodeMock, INITIAL_PRICE);
+                const callId = getRandomNonce();
+
+                const openMarketOrderMinValue = await vault.getOpenOrderBaseValue(false).then(res => res.market);
+                const { traceTree } = await locklift.tracing.trace(
+                    openMarketOrder({
                         vault,
                         pair: priceNodeMock,
                         user,
                         userWallet: userUsdtWallet,
-                        marketIdx: marketIdx,
                         leverage: LEVERAGE_DECIMALS,
-                        initialPrice: 1000 * USDT_DECIMALS,
-                        triggerPrice: 950 * USDT_DECIMALS,
-                        finishPrice: 900 * USDT_DECIMALS,
-                        posType: SHORT_POS,
+                        marketIdx: MARKET_IDX,
+                        posType: LONG_POS,
                         collateral: 100 * USDT_DECIMALS,
-                        limitType: LimitType.Stop,
-                        value: openLimitOrderBaseValue,
-                    });
+                        value: openMarketOrderMinValue,
+                        callId,
+                    }),
+                    {
+                        raise: false,
+                        allowedCodes: {
+                            compute: [null],
+                        },
+                    },
+                );
+                expect(traceTree).and.to.emit("MarketOrderExecution").withNamedArgs({
+                    callId: callId.toString(),
                 });
             });
         });

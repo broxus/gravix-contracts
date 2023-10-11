@@ -1,22 +1,19 @@
-import { bn, deployUser, setupPairMock, setupTokenRoot, setupVault, tryIncreaseTime } from "./utils/common";
+import { bn, DEFAULT_TICKER, PriceNodeMockAdapter } from "./utils/common";
 import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { TokenWallet } from "./utils/wrappers/token_wallet";
-import { Address, Contract, getRandomNonce, lockliftChai, toNano, zeroAddress } from "locklift";
-import chai, { expect, use } from "chai";
+import { Address, Contract, lockliftChai, toNano } from "locklift";
+import chai, { expect } from "chai";
 import { GravixVault, MarketConfig, Oracle } from "./utils/wrappers/vault";
-import { GravixVaultAbi, PairMockAbi, PriceNodeAbi, TokenRootUpgradeableAbi } from "../build/factorySource";
-import { GravixAccount } from "./utils/wrappers/vault_acc";
-import BigNumber from "bignumber.js";
 import {
-    closePosition,
-    openMarketOrderWithTests,
-    setPrice,
-    testMarketPosition,
-    testPositionFunding,
-} from "./utils/orders";
+    GravixVaultAbi,
+    PairMockAbi,
+    PriceNodeAbi,
+    PriceNodeMockAbi,
+    TokenRootUpgradeableAbi,
+} from "../build/factorySource";
+import { GravixAccount } from "./utils/wrappers/vault_acc";
 
-const logger = require("mocha-logger");
 chai.use(lockliftChai);
 
 describe("Testing liquidity pool mechanics", async function () {
@@ -48,9 +45,10 @@ describe("Testing liquidity pool mechanics", async function () {
     let user_stg_wallet: TokenWallet;
 
     // left - eth, right - usdt
-    let eth_usdt_mock: Contract<PairMockAbi>;
+    let ethUsdtMock: Contract<PairMockAbi>;
     // left - btc, right - eth
     let btc_eth_mock: Contract<PairMockAbi>;
+    let priceNodeMock: PriceNodeMockAdapter;
 
     const eth_addr = new Address("0:1111111111111111111111111111111111111111111111111111111111111111");
     const btc_addr = new Address("0:2222222222222222222222222222222222222222222222222222222222222222");
@@ -77,6 +75,7 @@ describe("Testing liquidity pool mechanics", async function () {
     describe("Setup contracts", async function () {
         it("Run fixtures", async function () {
             await locklift.deployments.fixture();
+            const signer = (await locklift.keystore.getSigner("0"))!;
 
             owner = locklift.deployments.getAccount("Owner").account;
             user = locklift.deployments.getAccount("User").account;
@@ -84,7 +83,25 @@ describe("Testing liquidity pool mechanics", async function () {
             vault = new GravixVault(locklift.deployments.getContract<GravixVaultAbi>("Vault"), owner, limitBot.address);
             stg_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("StgUSDT"), owner);
             usdt_root = new Token(locklift.deployments.getContract<TokenRootUpgradeableAbi>("USDT"), owner);
-            eth_usdt_mock = locklift.deployments.getContract("ETH_USDT");
+            ethUsdtMock = locklift.deployments.getContract("ETH_USDT");
+            const priceNodeContract = locklift.deployments.getContract<PriceNodeMockAbi>("PriceNodeMock");
+            await priceNodeContract.methods
+                .setTickerConfigs({
+                    configs: [
+                        {
+                            ticker: DEFAULT_TICKER,
+                            maxOracleDelay: 10000000,
+                            maxServerDelay: 10000000,
+                            enabled: true,
+                        },
+                    ],
+                })
+                .send({
+                    from: owner.address,
+                    amount: toNano(1),
+                });
+            priceNodeMock = new PriceNodeMockAdapter(priceNodeContract, DEFAULT_TICKER, signer);
+            await vault.setPriceNode(priceNodeMock.priceNodeMock.address);
             user_usdt_wallet = await usdt_root.wallet(user);
             owner_usdt_wallet = await usdt_root.wallet(user);
         });
@@ -96,9 +113,9 @@ describe("Testing liquidity pool mechanics", async function () {
             const oracle: Oracle = {
                 dex: {
                     targetToken: eth_addr,
-                    path: [{ addr: eth_usdt_mock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
+                    path: [{ addr: ethUsdtMock.address, leftRoot: eth_addr, rightRoot: usdt_root.address }],
                 },
-                priceNode: { ticker: "", maxOracleDelay: 0, maxServerDelay: 0 },
+                priceNode: { ticker: DEFAULT_TICKER, maxOracleDelay: 0, maxServerDelay: 0 },
             };
 
             await locklift.tracing.trace(vault.addMarkets([basic_config]));

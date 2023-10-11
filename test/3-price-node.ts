@@ -106,6 +106,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -113,6 +114,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -120,6 +122,7 @@ describe("Testing liquidity pool mechanics", async function () {
                     priceNode.methods
                         .makeRequest({
                             ticker: "BTC / USD",
+                            sendGasTo: owner.address,
                         })
                         .send({ from: user.address, amount: toNano(2) }),
                 );
@@ -180,7 +183,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         },
                     })
                     .call();
-                // console.log(res2);
 
                 const { traceTree } = await locklift.tracing.trace(
                     priceNode.methods
@@ -293,7 +295,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         signature: cell.boc,
                     })
                     .call();
-                // console.log(res);
 
                 const res2 = await priceNode.methods
                     .validatePrice({
@@ -306,7 +307,6 @@ describe("Testing liquidity pool mechanics", async function () {
                         },
                     })
                     .call();
-                // console.log(res2);
 
                 const { traceTree } = await locklift.tracing.trace(
                     priceNode.methods

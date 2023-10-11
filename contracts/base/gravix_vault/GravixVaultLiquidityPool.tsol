@@ -67,15 +67,22 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         emit InsuranceFundWithdraw(meta.callId, _treasuryAmount, _projectFundAmount, _devFundAmount);
     }
 
-    function _handleInsuranceDeposit(address user, uint128 amount, Callback.CallMeta meta) internal {
+    function _handleInsuranceDeposit(address user, uint128 amount, Callback.CallMeta meta) internal returns(bool) {
+        if (msg.value < Gas.DEPOSIT_USDT_FEE) {
+            return false;
+        }
         _increaseInsuranceFund(amount);
         emit InsuranceFundDeposit(meta.callId, user, amount);
         meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
+        return true;
     }
 
     function _handleUsdtDeposit(
         address user, uint128 amount, Callback.CallMeta meta
-    ) internal {
+    ) internal returns (bool) {
+        if (msg.value < Gas.DEPOSIT_USDT_FEE) {
+            return false;
+        }
         uint128 mintAmount = usdtToStgUsdt(amount);
 
         poolAssets.balance += amount;
@@ -84,17 +91,22 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         emit LiquidityPoolDeposit(meta.callId, user, amount, mintAmount);
 
         ITokenRoot(stgUsdt.root).mint{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            mintAmount, user, Gas.TOKEN_WALLET_DEPLOY_VALUE / 2, meta.sendGasTo, true, _makeCell(meta.nonce)
+            mintAmount, user, Gas.DEPOSIT_USDT_FEE / 2, meta.sendGasTo, true, _makeCell(meta.nonce)
         );
+        return true;
     }
 
-    function _handleStgUsdtDeposit(address user, uint128 amount, Callback.CallMeta meta) internal view {
+    function _handleStgUsdtDeposit(address user, uint128 amount, Callback.CallMeta meta) internal view returns(bool) {
+        if (msg.value < Gas.BURN_STG_USDT_FEE) {
+            return false;
+        }
         TvmBuilder builder;
         builder.store(user);
         builder.store(meta);
         IBurnableTokenWallet(stgUsdt.wallet).burn{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             amount, meta.sendGasTo, address(this), builder.toCell()
         );
+        return true;
     }
 
     function _handleStgUsdtBurn(uint128 stgUsdtAmount, TvmCell payload) internal {
