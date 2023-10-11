@@ -10,6 +10,7 @@ import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 import {ITokenRoot} from "@broxus/tip3/contracts/interfaces/ITokenRoot.tsol";
 import {Gas} from "../../libraries/Gas.tsol";
 import {IBurnableTokenWallet} from "@broxus/tip3/contracts/interfaces/IBurnableTokenWallet.tsol";
+import {ITokenWallet} from "@broxus/tip3/contracts/interfaces/ITokenWallet.tsol";
 
 
 abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
@@ -122,11 +123,11 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
 
         emit LiquidityPoolWithdraw(meta.callId, user, usdtAmount, stgUsdtAmount);
 
-        ITokenWallet(usdtWallet).transfer{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
-            usdt_amount,
+        ITokenWallet(usdt.wallet).transfer{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+            usdtAmount,
             user,
-            Constants.DEPLOY_TOKEN_WALLET_VALUE,
-            meta.send_gas_to,
+            Gas.USER_TOKEN_WALLET_DEPLOY_VALUE,
+            meta.sendGasTo,
             true,
             _makeCell(meta.nonce)
         );
