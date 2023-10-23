@@ -1,0 +1,61 @@
+pragma ever-solidity ^0.62.0;
+
+
+
+import "./IGravixVault.tsol";
+
+
+
+
+interface IOldGravixAccount {
+
+    struct MarketOrder {
+        uint32 marketIdx;
+        IGravixVault.PositionType positionType;
+        uint128 collateral; // 6 decimals number
+        uint128 expectedPrice; // 8 decimals number
+        uint32 leverage; // 2 decimals number
+        uint64 maxSlippageRate; // %
+        uint64 openFeeRate; // %
+        uint64 closeFeeRate; // %
+        uint64 baseSpreadRate; // %
+        uint64 liquidationThresholdRate; // %
+        uint64 borrowBaseRatePerHour; // %
+    }
+
+    struct Position {
+        uint32 marketIdx;
+        IGravixVault.PositionType positionType;
+        uint128 initialCollateral; // 6 decimals number
+        uint128 openFee; // amount of usdt taken when position was opened
+        uint128 openPrice; // 8 decimals number
+        uint128 markPrice; // 8 decimals number
+        uint32 leverage;
+        int256 accUSDFundingPerShare;
+        uint64 borrowBaseRatePerHour; // % per hour
+        uint64 baseSpreadRate; // %
+        uint64 closeFeeRate; // %
+        uint64 liquidationThresholdRate; // %
+        uint32 createdAt; // %
+    }
+
+    struct PositionView {
+        Position position;
+        uint128 positionSizeUSD; // 6 decimals number
+        uint128 closePrice; // 8 decimals number
+        uint128 borrowFee; // 6 decimals number
+        int256 fundingFee; // 6 decimals number
+        uint128 closeFee; // 6 decimals number
+        uint128 liquidationPrice; // 8 decimals number
+        int256 pnl; // 6 decimals number
+        bool liquidate;
+        uint32 viewTime;
+    }
+
+    struct ViewInput {
+        uint32 positionKey;
+        uint128 assetPrice; // 8 decimals number
+        IGravixVault.Funding funding;
+    }
+
+}

@@ -19,7 +19,7 @@ import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 import {Callback} from "./libraries/Callback.tsol";
 import {IGravixVault} from "./interfaces/IGravixVault.tsol";
 import {IGravixAccount} from "./interfaces/IGravixAccount.tsol";
-
+import {IOldGravixAccount} from "./interfaces/IOldGravixAccount.tsol";
 
 contract GravixAccount is GravixAccountBase {
     // Cant be deployed directly
@@ -121,30 +121,63 @@ contract GravixAccount is GravixAccountBase {
             TvmCell data = s.loadRef();
             (uint32 callId, uint32 nonce, TvmCell storageData) = abi.decode(data, (uint32, uint32, TvmCell));
             (
-                referrerChecked,
-                grandReferrer,
-                grandReferrerChecked,
-                referralBalance,
-                marketOrders,
-                limitOrders,
-                positions,
-                requestCounter,
-                lastUsedTimeStamp
+                mapping(uint32 => IOldGravixAccount.MarketOrder) oldMarketOrders,
+                mapping (uint32 => IOldGravixAccount.Position) oldPositions,
+                uint32 oldRequestCounter
+                address oldGrandReferrer,
+                uint128 oldReferralBalance,
             ) = abi.decode(
                 storageData,
-                    (
-                        bool,
-                        address,
-                        bool,
-                        uint128,
-                        mapping(uint32 => MarketOrder),
-                        mapping(uint32 => LimitOrder),
-                        mapping(uint32 => Position),
-                        uint32,
-                        uint32
-                    )
+                (
+                    mapping(uint32 => IOldGravixAccount.MarketOrder), // marketOrders
+                    mapping (uint32 => IOldGravixAccount.Position), // positions
+                    uint32,
+                    address,
+                    uint128,
+                )
             );
+            // region map old orders
+            for ((uint32 orderNonce, IOldGravixAccount.MarketOrder order) : oldMarketOrders) {
+                marketOrders[orderNonce] = MarketOrder({
+                    marketIdx: order.marketIdx,
+                    positionType: order.positionType,
+                    collateral: order.collateral,
+                    expectedPrice: order.expectedPrice,
+                    leverage: order.leverage,
+                    maxSlippageRate: order.maxSlippageRate,
+                    openFeeRate: order.openFeeRate,
+                    closeFeeRate: order.closeFeeRate,
+                    baseSpreadRate: order.baseSpreadRate,
+                    liquidationThresholdRate: order.liquidationThresholdRate,
+                    borrowBaseRatePerHour: order.borrowBaseRatePerHour,
+                    stopLossTriggerPrice: 0,
+                    takeProfitTriggerPrice: 0,
+                    createdAt: now
+                });
+            }
+            // endregion
 
+            // region map old positions
+            for ((uint32 positionNonce, IOldGravixAccount.Position position): oldPositions) {
+                positions[positionNonce] = Position({
+                    marketIdx: position.marketIdx,
+                    positionType: position.positionType,
+                    initialCollateral: position.initialCollateral,
+                    openFee: position.openFee,
+                    openPrice: position.openPrice,
+                    markPrice: position.markPrice,
+                    leverage: position.leverage,
+                    accUSDFundingPerShare: position.accUSDFundingPerShare,
+                    borrowBaseRatePerHour: position.borrowBaseRatePerHour,
+                    baseSpreadRate: position.baseSpreadRate,
+                    closeFeeRate: position.closeFeeRate,
+                    liquidationThresholdRate: position.liquidationThresholdRate,
+                    createdAt: position.createdAt,
+                    stopLoss: null,
+                    takeProfit: null
+                });
+            }
+            // endregion
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, _oldVersion, _currentVersion, Callback.CallMeta(callId, nonce, sendGasTo)
             );
