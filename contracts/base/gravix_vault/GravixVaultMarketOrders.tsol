@@ -314,7 +314,6 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         uint32 _marketIdx,
         uint128 _collateral,
         uint128 _positionSizeAsset,
-        uint128 _assetPrice,
         PositionType _positionType,
         uint32 _revertReason,
         Callback.CallMeta _meta
@@ -323,7 +322,7 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
 
         // too high slippage / bad triggers
         if (_collateral > 0) {
-            _removePositionFromMarket(_marketIdx, _positionSizeAsset, _assetPrice, _positionType);
+            _removePositionFromMarket(_marketIdx, _positionSizeAsset, _positionType);
             collateralReserve -= _collateral;
             _transfer(
                 usdt.wallet, _collateral, _user, _makeCell(_meta.nonce), _meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED
@@ -346,10 +345,10 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
         collateralReserve -= _newPos.openFee;
 
         uint128 positionSizeAssetRaw = calculatePositionAssetSize(_newPos.initialCollateral, _newPos.leverage, _newPos.markPrice);
-        _removePositionFromMarket(_newPos.marketIdx, positionSizeAssetRaw, _newPos.markPrice, _newPos.positionType);
+        _removePositionFromMarket(_newPos.marketIdx, positionSizeAssetRaw, _newPos.positionType);
 
         uint128 positionSizeAsset = calculatePositionAssetSize(_newPos.initialCollateral - _newPos.openFee, _newPos.leverage, _newPos.openPrice);
-        _addPositionToMarket(_newPos.marketIdx, positionSizeAsset, _newPos.markPrice, _newPos.positionType);
+        _addPositionToMarket(_newPos.marketIdx, positionSizeAsset, _newPos.positionType);
 
         if (_newPos.takeProfit.hasValue() || _newPos.stopLoss.hasValue()) {
             limitBotVault.transfer({value: Gas.OPEN_LIMIT_ORDER_RESERVE});

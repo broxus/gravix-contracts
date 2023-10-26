@@ -91,9 +91,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint128 maxTotalLongsUSD;
         uint128 maxTotalShortsUSD;
 
-        uint128 lastNoiUpdatePrice;
-        uint16 noiWeight; // 100 -> 1x
-
         Funding funding;
         uint32 lastFundingUpdateTime;
 
@@ -187,7 +184,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         OracleType priceSource;
         uint128 maxLongsUSD;
         uint128 maxShortsUSD;
-        uint16 noiWeight;
         uint32 maxLeverage;
         uint128 depthAsset;
         Fees fees;
@@ -256,8 +252,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint64[3] referralFeeSchema;
         uint64[3] grandReferralFeeSchema;
         uint128 collateralReserve; // sum of all usdt provided as a collateral for open order
-        uint128 totalNOI;
-        bool totalNOILimitEnabled;
         uint64 maxPoolUtilRatio;
         uint64 maxPnlRate;
         uint128 minPositionCollateral;
@@ -454,7 +448,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         uint32 marketIdx,
         uint128 collateral,
         uint128 positionSizeAsset,
-        uint128 assetPrice,
         PositionType positionType,
         uint32 revertReason,
         Callback.CallMeta meta
@@ -542,7 +535,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
     function finish_closePosition(
         address user,
         uint32 positionKey,
-        uint128 assetPrice,
         IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,
@@ -568,9 +560,7 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address user,
         uint32 orderKey,
         uint32 marketIdx,
-        uint128 collateral,
         uint128 positionSizeAsset,
-        uint128 assetPrice,
         PositionType positionType,
         uint32 revertReason,
         Callback.CallMeta meta
@@ -657,7 +647,6 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         address user,
         address liquidator,
         uint32 positionKey,
-        uint128 assetPrice,
         IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,

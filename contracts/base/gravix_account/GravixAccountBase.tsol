@@ -147,7 +147,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 _marketIdx,
                 0,
                 _positionSizeAsset,
-                _assetPrice,
                 _positionType,
                 !isLatestVersion ? Errors.NOT_LATEST_ACCOUNT_VERSION : Errors.ORDER_NOT_EXISTS,
                 _meta
@@ -199,7 +198,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 _marketIdx,
                 request.collateral,
                 _positionSizeAsset,
-                _assetPrice,
                 _positionType,
                 revertReason,
                 _meta
@@ -523,9 +521,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 user,
                 _orderKey,
                 _marketIdx,
-                0,
                 _positionSizeAsset,
-                _assetPrice,
                 _positionType,
                 !isLatestVersion ? Errors.NOT_LATEST_ACCOUNT_VERSION : Errors.ORDER_NOT_EXISTS,
                 _meta
@@ -552,9 +548,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 user,
                 _orderKey,
                 _marketIdx,
-                request.collateral,
                 _positionSizeAsset,
-                _assetPrice,
                 _positionType,
                 Errors.INVALID_OPEN_LIMIT_ORDER_PRICE,
                 _meta
@@ -903,7 +897,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             _positionKey,
-            stopPrice,
             positionView,
             referrer,
             grandReferrer,
@@ -981,7 +974,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
                 user,
                 _liquidator,
                 _positionKey,
-                _assetPrice,
                 positionView,
                 referrer,
                 grandReferrer,
@@ -1043,7 +1035,6 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         IGravixVault(vault).finish_closePosition{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
             user,
             _positionKey,
-            _assetPrice,
             positionView,
             referrer,
             grandReferrer,

@@ -77,11 +77,6 @@ abstract contract GravixVaultBase is GravixVaultMarketOrders, GravixVaultLimitOr
         emit MaxPnlRateUpdate(meta.callId, newMaxRate);
     }
 
-    function setTotalNOILimit(bool newState, Callback.CallMeta meta) external onlyOwner reserveAndSendGas(meta) {
-        totalNOILimitEnabled = newState;
-        emit TotalNOILimit(meta.callId, newState);
-    }
-
     function setOpenCloseFeeDistributionSchema(
         uint64[2] newOpenFeeSchema, uint64[2] newCloseFeeSchema, Callback.CallMeta meta
     ) external onlyOwner reserveAndSendGas(meta) {

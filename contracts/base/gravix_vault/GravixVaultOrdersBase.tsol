@@ -479,19 +479,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
         // we dont want it to accumulate because it could affect further calculations
         if (oldPosSize != newPosSize) {
-            Market _market = markets[position.marketIdx];
-
             _removePositionFromMarket(
                 position.marketIdx,
                 oldPosSize,
-                _market.lastNoiUpdatePrice,
                 position.positionType
             );
 
             _addPositionToMarket(
                 position.marketIdx,
                 newPosSize,
-                _market.lastNoiUpdatePrice,
                 position.positionType
             );
         }
@@ -568,19 +564,15 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
         // we dont want it to accumulate because it could affect further calculations
         if (oldPosSize != newPosSize) {
-            Market _market = markets[position.marketIdx];
-
             _removePositionFromMarket(
                 position.marketIdx,
                 oldPosSize,
-                _market.lastNoiUpdatePrice,
                 position.positionType
             );
 
             _addPositionToMarket(
                 position.marketIdx,
                 newPosSize,
-                _market.lastNoiUpdatePrice,
                 position.positionType
             );
         }
@@ -746,7 +738,6 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function finish_closePosition(
         address _user,
         uint32 _positionKey,
-        uint128 _assetPrice,
         IGravixAccount.PositionView _positionView,
         address _referrer,
         address _grandReferrer,
@@ -761,7 +752,6 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         _removePositionFromMarket(
             _positionView.position.marketIdx,
             initialPositionSizeAsset,
-            _assetPrice,
             _positionView.position.positionType
         );
 
@@ -1084,7 +1074,6 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         address user,
         address liquidator,
         uint32 positionKey,
-        uint128 assetPrice,
         IGravixAccount.PositionView positionView,
         address referrer,
         address grandReferrer,
@@ -1099,7 +1088,6 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         _removePositionFromMarket(
             positionView.position.marketIdx,
             initialPositionSizeAsset,
-            assetPrice,
             positionView.position.positionType
         );
 
@@ -1131,14 +1119,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         PositionType positionType
     ) public view returns (uint16) {
         uint128 positionSizeAsset = calculatePositionAssetSize(collateral, leverage, assetPrice);
-        (,,uint16 _error) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, assetPrice, positionType);
+        (,uint16 _error) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, assetPrice, positionType);
         return _error;
-    }
-
-    function _marketNOI(Market _market) internal pure returns (uint128) {
-        return _market.totalLongsAsset > _market.totalShortsAsset ?
-        _market.totalLongsAsset - _market.totalShortsAsset :
-        _market.totalShortsAsset - _market.totalLongsAsset;
     }
 
     // @dev Will not apply changes if _error > 0
@@ -1150,13 +1132,11 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint32 marketIdx, uint128 positionSizeAsset, uint128 curAssetPrice, PositionType positionType
     ) internal returns (uint16) {
         (
-        Market _market,
-        uint128 _totalNOI,
-        uint16 _error
+            Market _market,
+            uint16 _error
         ) = _calculatePositionImpactAndCheckAllowed(marketIdx, positionSizeAsset, curAssetPrice, positionType);
         if (_error == 0) {
             markets[marketIdx] = _market;
-            totalNOI = _totalNOI;
         }
         return _error;
     }
@@ -1170,49 +1150,30 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 positionSizeAsset,
         uint128 curAssetPrice,
         PositionType positionType
-    ) internal view returns (Market _market, uint128 _totalNOI, uint16 _error) {
-        (_market, _totalNOI) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, false);
+    ) internal view returns (Market _market, uint16 _error) {
+        _market = _calculatePositionImpact(marketIdx, positionSizeAsset, positionType, false);
 
         uint128 shortsUsd = math.muldiv(_market.totalShortsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
         uint128 longsUsd = math.muldiv(_market.totalLongsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
         // market limits
         if (shortsUsd > _market.maxTotalShortsUSD || longsUsd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
-        // common platform limit
-        if (totalNOILimitEnabled && math.muldiv(
-            poolAssets.balance,
-            maxPoolUtilRatio,
-            Constants.HUNDRED_PERCENT
-        ) < _totalNOI) _error = Errors.PLATFORM_POSITIONS_LIMIT_REACHED;
-        return (_market, _totalNOI, _error);
+        return (_market, _error);
     }
 
     // @param marketIdx - market id
     // @param positionSizeAsset - position value in asset, 6 decimals number
-    // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
     // @param positionType - 0 - long, 1 - short
     // @param bool - whether position is removed or added
     function _calculatePositionImpact(
-        uint32 marketIdx, uint128 positionSizeAsset, uint128 curAssetPrice, PositionType positionType, bool remove
-    ) internal view returns (Market _market, uint128 _totalNOI) {
+        uint32 marketIdx, uint128 positionSizeAsset, PositionType positionType, bool remove
+    ) internal view returns (Market _market) {
         _market = markets[marketIdx];
-        _totalNOI = totalNOI;
-
-        uint128 noiAssetBefore = _marketNOI(_market);
-        uint128 noiUsdBefore = math.muldiv(noiAssetBefore, _market.lastNoiUpdatePrice, Constants.PRICE_DECIMALS);
 
         if (positionType == PositionType.Long) {
             _market.totalLongsAsset = remove ? (_market.totalLongsAsset - positionSizeAsset) : (_market.totalLongsAsset + positionSizeAsset);
         } else {
             _market.totalShortsAsset = remove ? (_market.totalShortsAsset - positionSizeAsset) : (_market.totalShortsAsset + positionSizeAsset);
         }
-
-        uint128 noiAssetAfter = _marketNOI(_market);
-        uint128 noiUsdAfter = math.muldiv(noiAssetAfter, curAssetPrice, Constants.PRICE_DECIMALS);
-
-        _totalNOI -= math.muldiv(noiUsdBefore, _market.noiWeight, Constants.WEIGHT_BASE);
-        _totalNOI += math.muldiv(noiUsdAfter, _market.noiWeight, Constants.WEIGHT_BASE);
-
-        _market.lastNoiUpdatePrice = curAssetPrice;
     }
 
 
@@ -1220,26 +1181,18 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
     function _addPositionToMarket(
         uint32 marketIdx,
         uint128 positionSizeAsset,
-        uint128 curAssetPrice,
         PositionType positionType
     ) internal {
-        (
-            markets[marketIdx],
-            totalNOI
-        ) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, false);
+        markets[marketIdx] = _calculatePositionImpact(marketIdx, positionSizeAsset, positionType, false);
     }
 
     // @param curAssetPrice - asset price on moment of update, required for TNOI calculation, 8 decimals number
     function _removePositionFromMarket(
         uint32 marketIdx,
         uint128 positionSizeAsset,
-        uint128 curAssetPrice,
         PositionType positionType
     ) internal {
-        (
-            markets[marketIdx],
-            totalNOI
-        ) = _calculatePositionImpact(marketIdx, positionSizeAsset, curAssetPrice, positionType, true);
+        markets[marketIdx] = _calculatePositionImpact(marketIdx, positionSizeAsset, positionType, true);
     }
     //endregion
 
