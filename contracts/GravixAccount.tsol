@@ -105,6 +105,9 @@ contract GravixAccount is GravixAccountBase {
             user = _user;
             currentVersion = _currentVersion;
             lastUsedTimeStamp = now;
+
+            referrer = referrer == user ? address.makeAddrStd(0, 0) : referrer;
+
             IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, Callback.CallMeta(0, 0, sendGasTo)
             );
