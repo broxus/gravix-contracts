@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import "@broxus/locklift-verifier";
 import "locklift-deploy";
 import { Deployments } from "locklift-deploy";
+import path from "path";
 dotenv.config();
 
 declare global {
@@ -66,6 +67,40 @@ const config: LockliftConfig = {
                 amount: 20,
             },
         },
+        ["locklift-fork"]: {
+            deploy: ["local/"],
+            connection: {
+                id: 1001,
+                // @ts-ignore
+                type: "proxy",
+                // @ts-ignore
+                data: {},
+            },
+            keys: {
+                // Use everdev to generate your phrase
+                // !!! Never commit it in your repos !!!
+                // phrase: "action inject penalty envelope rabbit element slim tornado dinner pizza off blood",
+                amount: 20,
+            },
+            fork: {
+                source: {
+                    type: "block",
+                    block: 32438397,
+                },
+                contracts: [
+                    {
+                        abi: { path: path.resolve("prevVersionAbi/GravixVaultPrevVersion.json") },
+                        address: "0:79f285cdc6522a78e9025453a547bed817a4a6b8ca548c39ddc5591b42a59113",
+                    },
+                    {
+                        abi: { path: path.resolve("prevVersionAbi/GravixAccountPrevVersion.json") },
+                        codeHash: {
+                            deriveAddress: "0:0b8f78c747010b6fe7f164c84614808ee6ca0d55b55644726225be758f1e6641",
+                        },
+                    },
+                ],
+            },
+        },
         local: {
             deploy: ["local/"],
             // Specify connection settings for https://github.com/broxus/everscale-client/
@@ -112,7 +147,7 @@ const config: LockliftConfig = {
                 key: process.env.TESTNET_GIVER_KEY ?? "",
             },
             tracing: {
-                endpoint: process.env.TEST_GQL_ENDPOINT
+                endpoint: process.env.TEST_GQL_ENDPOINT,
             },
 
             keys: {

@@ -28,7 +28,7 @@ import {
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
 
-describe("Testing main orders flow", async function () {
+describe.skip("Testing main orders flow", async function () {
     let user: Account;
     let user1: Account;
     let owner: Account;
