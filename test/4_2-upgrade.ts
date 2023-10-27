@@ -85,7 +85,7 @@ describe("Testing main orders flow", async function () {
             const detailsAfterUpgrade = await vault.methods.getDetails({ answerId: 0 }).call();
 
             Object.entries(marketsBeforeUpgrade).forEach(([key, value]) => {
-                const { priceSource: priceSourceBefore, ...valueBefore } = value;
+                const { priceSource: priceSourceBefore, lastNoiUpdatePrice, noiWeight, ...valueBefore } = value;
                 const { priceSource: priceSourceAfter, ...valueAfter } = marketsAfterUpgrade[key];
 
                 expect(valueBefore).deep.eq(valueAfter);
