@@ -123,9 +123,9 @@ contract GravixAccount is GravixAccountBase {
             (
                 mapping(uint32 => IOldGravixAccount.MarketOrder) oldMarketOrders,
                 mapping (uint32 => IOldGravixAccount.Position) oldPositions,
-                uint32 oldRequestCounter
+                uint32 oldRequestCounter,
                 address oldGrandReferrer,
-                uint128 oldReferralBalance,
+                uint128 oldReferralBalance
             ) = abi.decode(
                 storageData,
                 (
@@ -133,7 +133,7 @@ contract GravixAccount is GravixAccountBase {
                     mapping (uint32 => IOldGravixAccount.Position), // positions
                     uint32,
                     address,
-                    uint128,
+                    uint128
                 )
             );
             // region map old orders
@@ -176,6 +176,21 @@ contract GravixAccount is GravixAccountBase {
                     stopLoss: null,
                     takeProfit: null
                 });
+            }
+            // endregion
+
+            // region simple fields
+            requestCounter = oldRequestCounter;
+            grandReferrer = oldGrandReferrer;
+            referralBalance = oldReferralBalance;
+            // endregion
+
+            //region logic
+            if (referrer != address(0)) {
+                referrerChecked = true;
+            }
+            if (grandReferrer != address(0)) {
+                grandReferrerChecked = true;
             }
             // endregion
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(

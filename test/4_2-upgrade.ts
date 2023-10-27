@@ -2,7 +2,12 @@ import { Account } from "locklift/everscale-client";
 import { Token } from "./utils/wrappers/token";
 import { Address, Contract, lockliftChai, toNano } from "locklift";
 import chai, { expect } from "chai";
-import { GravixAccountPrevVersionAbi, GravixVaultAbi, GravixVaultPrevVersionAbi } from "../build/factorySource";
+import {
+    GravixAccountAbi,
+    GravixAccountPrevVersionAbi,
+    GravixVaultAbi,
+    GravixVaultPrevVersionAbi,
+} from "../build/factorySource";
 
 const logger = require("mocha-logger");
 chai.use(lockliftChai);
@@ -10,42 +15,27 @@ chai.use(lockliftChai);
 describe("Testing main orders flow", async function () {
     let owner: Account;
     let user: Account;
-    let user1: Account;
-    let openMarketOrderBaseValue: string;
-    let openLimitOrderBaseValue: string;
-
-    let stg_root: Token;
-    const USDT_DECIMALS = 10 ** 6;
-    const LEVERAGE_DECIMALS = 10 ** 6;
-
-    const LONG_POS = 0;
-
-    const empty_price = {
-        price: 0,
-        serverTime: 0,
-        oracleTime: 0,
-        ticker: "",
-        signature: "",
-    };
 
     let vault: Contract<GravixVaultAbi>;
-    let prevVaultState: Contract<GravixVaultPrevVersionAbi>;
-    let prevAccountState: Contract<GravixAccountPrevVersionAbi>;
+    let prevVaultContractState: Contract<GravixVaultPrevVersionAbi>;
+    let prevAccountContractState: Contract<GravixAccountPrevVersionAbi>;
+    let account: Contract<GravixAccountAbi>;
 
     const MARKET_IDX = 0;
     describe("Setup contracts", async function () {
         it("Run fixtures", async function () {
             // await locklift.deployments.fixture();
-            prevVaultState = locklift.factory.getDeployedContract(
+
+            prevVaultContractState = locklift.factory.getDeployedContract(
                 "GravixVaultPrevVersion",
                 new Address("0:79f285cdc6522a78e9025453a547bed817a4a6b8ca548c39ddc5591b42a59113"),
             );
-            const prevVaultDetails = await prevVaultState.methods.getDetails({ answerId: 0 }).call();
-            prevAccountState = locklift.factory.getDeployedContract(
+            const prevVaultDetails = await prevVaultContractState.methods.getDetails({ answerId: 0 }).call();
+            prevAccountContractState = locklift.factory.getDeployedContract(
                 "GravixAccountPrevVersion",
                 new Address("0:0b8f78c747010b6fe7f164c84614808ee6ca0d55b55644726225be758f1e6641"),
             );
-            const prevAccountDetails = await prevAccountState.methods.getDetails({ answerId: 0 }).call();
+            const prevAccountDetails = await prevAccountContractState.methods.getDetails({ answerId: 0 }).call();
             owner = locklift.network.insertWallet(prevVaultDetails._owner);
             user = locklift.network.insertWallet(prevAccountDetails._user);
         });
@@ -53,7 +43,7 @@ describe("Testing main orders flow", async function () {
 
     describe("Running scenarios", async function () {
         it("Upgrade vault", async function () {
-            const marketsBeforeUpgrade = await prevVaultState.methods
+            const marketsBeforeUpgrade = await prevVaultContractState.methods
                 .getMarkets({ answerId: 0 })
                 .call()
                 .then(res => {
@@ -64,9 +54,9 @@ describe("Testing main orders flow", async function () {
                         };
                     }, {} as Record<string, (typeof res)["_markets"][0][1]>);
                 });
-            const detailsBeforeUpgrade = await prevVaultState.methods.getDetails({ answerId: 0 }).call();
+            const detailsBeforeUpgrade = await prevVaultContractState.methods.getDetails({ answerId: 0 }).call();
             const { traceTree } = await locklift.tracing.trace(
-                prevVaultState.methods
+                prevVaultContractState.methods
                     .upgrade({
                         meta: {
                             nonce: 0,
@@ -80,7 +70,7 @@ describe("Testing main orders flow", async function () {
                         amount: toNano(1),
                     }),
             );
-            vault = locklift.factory.getDeployedContract("GravixVault", prevVaultState.address);
+            vault = locklift.factory.getDeployedContract("GravixVault", prevVaultContractState.address);
             const marketsAfterUpgrade = await vault.methods
                 .getMarkets({ answerId: 0 })
                 .call()
@@ -142,7 +132,17 @@ describe("Testing main orders flow", async function () {
                     from: owner.address,
                     amount: toNano(1),
                 });
-
+            const positionsBefore = await prevAccountContractState.methods
+                .positions()
+                .call()
+                .then(res =>
+                    res.positions.reduce((acc, [key, value]) => {
+                        return {
+                            ...acc,
+                            [key]: value,
+                        };
+                    }, {} as Record<string, (typeof res)["positions"][0][1]>),
+                );
             const { traceTree } = await locklift.tracing.trace(
                 vault.methods
                     .upgradeGravixAccount({
@@ -154,7 +154,26 @@ describe("Testing main orders flow", async function () {
                     })
                     .send({ from: user.address, amount: toNano(1) }),
             );
-            await traceTree.beautyPrint();
+            account = locklift.factory.getDeployedContract("GravixAccount", prevAccountContractState.address);
+            const positionsAfter = await account.methods
+                .positions()
+                .call()
+                .then(res =>
+                    res.positions.reduce((acc, [key, value]) => {
+                        return {
+                            ...acc,
+                            [key]: value,
+                        };
+                    }, {} as Record<string, (typeof res)["positions"][0][1]>),
+                );
+
+            Object.entries(positionsBefore).forEach(([key, value]) => {
+                const { ...positionBefore } = value;
+                const { stopLoss, takeProfit, ...positionAfter } = positionsAfter[key];
+                expect(positionBefore).deep.eq(positionAfter);
+                expect(stopLoss).to.be.eq(null);
+                expect(takeProfit).to.be.eq(null);
+            });
         });
     });
 });
