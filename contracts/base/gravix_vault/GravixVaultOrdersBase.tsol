@@ -473,8 +473,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 newCollateral = position.initialCollateral - position.openFee;
         uint128 oldCollateral = newCollateral - amount;
 
-        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.markPrice);
-        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.markPrice);
+        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.openPrice);
+        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.openPrice);
 
         // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
         // we dont want it to accumulate because it could affect further calculations
@@ -558,8 +558,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 newCollateral = position.initialCollateral - position.openFee;
         uint128 oldCollateral = newCollateral + amount;
 
-        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.markPrice);
-        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.markPrice);
+        uint128 oldPosSize = calculatePositionAssetSize(oldCollateral, oldLeverage, position.openPrice);
+        uint128 newPosSize = calculatePositionAssetSize(newCollateral, position.leverage, position.openPrice);
 
         // position size doesnt change when we change collateral, but because of rounding err we can get tiny delta
         // we dont want it to accumulate because it could affect further calculations
