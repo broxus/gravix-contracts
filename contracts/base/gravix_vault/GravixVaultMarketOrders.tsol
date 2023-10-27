@@ -320,9 +320,9 @@ abstract contract GravixVaultMarketOrders is GravixVaultOrdersBase {
     ) external override onlyGravixAccount(_user) reserve {
         emit MarketOrderExecutionRevert(_meta.callId, _user, _orderKey, _revertReason);
 
+        _removePositionFromMarket(_marketIdx, _positionSizeAsset, _positionType);
         // too high slippage / bad triggers
         if (_collateral > 0) {
-            _removePositionFromMarket(_marketIdx, _positionSizeAsset, _positionType);
             collateralReserve -= _collateral;
             _transfer(
                 usdt.wallet, _collateral, _user, _makeCell(_meta.nonce), _meta.sendGasTo, MsgFlag.ALL_NOT_RESERVED

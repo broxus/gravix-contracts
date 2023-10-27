@@ -8203,25 +8203,26 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 324
-PUSH S3
+.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 323
+ROLL 4
+SWAP2
+CALLREF {
+	CALL $_removePositionFromMarket_40569489_internal_macro$
+}
+.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 325
+OVER
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 325
-	PUSH3 S4, S2, S1
-	CALLREF {
-		CALL $_removePositionFromMarket_40569489_internal_macro$
-	}
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 326
 	GETGLOB 26
-	PUSH S4
+	PUSH S2
 	SUB
 	UFITS 128
 	SETGLOB 26
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 327
 	GETGLOB 14
 	SECOND
-	PUSH3 S4, S6, S1
+	PUSH3 S2, S3, S1
 	SECOND
 	CALLREF {
 		CALL $_makeCell_67dcfcc8_internal_macro$
@@ -8235,7 +8236,7 @@ PUSHCONT {
 }
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 332
-	PUSH2 S5, S0
+	PUSH2 S2, S0
 	SECOND
 	FALSE
 	PUSH S3
@@ -8246,7 +8247,7 @@ PUSHCONT {
 }
 IFELSE
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 0
-BLKDROP 6
+BLKDROP 3
 
 .macro finish_executeMarketOrder
 DROP
