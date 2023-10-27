@@ -1156,7 +1156,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 shortsUsd = math.muldiv(_market.totalShortsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
         uint128 longsUsd = math.muldiv(_market.totalLongsAsset, curAssetPrice, Constants.PRICE_DECIMALS);
         // market limits
-        if (shortsUsd > _market.maxTotalShortsUSD || longsUsd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
+        if (positionType == PositionType.Long && longsUsd > _market.maxTotalLongsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
+        if (positionType == PositionType.Short && shortsUsd > _market.maxTotalShortsUSD) _error = Errors.MARKET_POSITIONS_LIMIT_REACHED;
         return (_market, _error);
     }
 
