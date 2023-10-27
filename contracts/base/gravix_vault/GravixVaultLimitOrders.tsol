@@ -522,7 +522,7 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         uint128 positionSizeAsset = calculatePositionAssetSize(_collateral, _leverage, _assetPrice);
 
         Funding _funding = _updateFunding(_marketIdx, _assetPrice);
-        _addPositionToMarket(_marketIdx, positionSizeAsset, _assetPrice, _positionType);
+        _addPositionToMarket(_marketIdx, positionSizeAsset, _positionType);
 
         address gravixAcc = getGravixAccountAddress(_user);
 
@@ -552,20 +552,17 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
 
     }
 
-
     function revert_executeLimitOrder(
         address _user,
         uint32 _orderKey,
         uint32 _marketIdx,
-        uint128,
         uint128 _positionSizeAsset,
-        uint128 _assetPrice,
         PositionType _positionType,
         uint32 _revertReason,
         Callback.CallMeta _meta
     ) external override onlyGravixAccount(_user) reserve {
         emit LimitOrderExecutionRevert(_meta.callId, _user, _orderKey, _revertReason);
-        _removePositionFromMarket(_marketIdx, _positionSizeAsset, _assetPrice, _positionType);
+        _removePositionFromMarket(_marketIdx, _positionSizeAsset, _positionType);
 
         limitBotVault.transfer({value: 0, flag: MsgFlag.ALL_NOT_RESERVED});
     }
@@ -582,10 +579,10 @@ abstract contract GravixVaultLimitOrders is GravixVaultOrdersBase {
         collateralReserve -= newPos.openFee;
 
         uint128 positionSizeAssetRaw = calculatePositionAssetSize(newPos.initialCollateral, newPos.leverage, newPos.markPrice);
-        _removePositionFromMarket(newPos.marketIdx, positionSizeAssetRaw, newPos.markPrice, newPos.positionType);
+        _removePositionFromMarket(newPos.marketIdx, positionSizeAssetRaw,  newPos.positionType);
 
         uint128 positionSizeAsset = calculatePositionAssetSize(newPos.initialCollateral - newPos.openFee, newPos.leverage, newPos.openPrice);
-        _addPositionToMarket(newPos.marketIdx, positionSizeAsset, newPos.markPrice, newPos.positionType);
+        _addPositionToMarket(newPos.marketIdx, positionSizeAsset,  newPos.positionType);
         ILimitBotVault(limitBotVault).onMoneyFree{value: 0.01 ever, flag: MsgFlag.SENDER_PAYS_FEES, bounce: false}(Gas.OPEN_LIMIT_ORDER_RESERVE);
 
         emit LimitOrderExecution(

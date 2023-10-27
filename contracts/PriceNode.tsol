@@ -26,6 +26,7 @@ contract PriceNode is IPriceNode {
     uint32 requestNonce;
     uint16 maxRequests = 1000;
     uint16 requestsNum;
+    uint32 lastRequestResolveTime;
 
     uint16 maxActionsPerTx = 20;
 
@@ -67,10 +68,11 @@ contract PriceNode is IPriceNode {
         uint16 _maxRequests,
         uint16 _requestsNum,
         uint16 _maxActionsPerTx,
-        uint32 _requestNonce
+        uint32 _requestNonce,
+        uint32 _lastRequestResolveTime
     ) {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
-            owner, daemonPubkey, oraclePubkey, maxRequests, requestsNum, maxActionsPerTx, requestNonce
+            owner, daemonPubkey, oraclePubkey, maxRequests, requestsNum, maxActionsPerTx, requestNonce, lastRequestResolveTime
         );
     }
 
@@ -142,15 +144,14 @@ contract PriceNode is IPriceNode {
         require (requestsNum > 0, Errors.NO_REQUESTS);
         tvm.accept();
 
-        uint32 requestsResolved = 0;
+        uint16 requestsResolved = 0;
         for (Price price: prices) {
             validatePrice(price);
 
             mapping (uint32 => Request) reqsMap = requests[price.ticker];
-            uint32 requestsResolvedPerTicker = requestsResolved;
+            uint16 requestsResolvedPerTicker = requestsResolved;
             for ((uint32 nonce, Request req) : reqsMap) {
                 requestsResolved += 1;
-                requestsNum -= 1;
                 delete reqsMap[nonce];
                 IOnPriceCallback(req.sender).onPriceCallback{value: req.callbackValue - Gas.PRICE_NODE_CALLBACK_FEE}(price.price, price.ticker);
                 emit RequestResolved(req.sender, nonce, price.ticker);
@@ -160,7 +161,11 @@ contract PriceNode is IPriceNode {
                 }
             }
             requestsResolvedPerTicker = requestsResolved - requestsResolvedPerTicker;
+            requestsNum -= requestsResolvedPerTicker;
             requestsPerTicker[price.ticker] -= requestsResolvedPerTicker;
+            if (requestsResolved > 0) {
+                lastRequestResolveTime = now;
+            }
 
             requests[price.ticker] = reqsMap;
             if (requestsResolved >= maxActionsPerTx) {

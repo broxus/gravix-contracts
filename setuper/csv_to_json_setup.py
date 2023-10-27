@@ -44,7 +44,6 @@ with open('gravix_setup.csv', 'r') as f:
             "priceSource": 1,
             "maxLongsUSD": 100_000_000_000, # 100k
             "maxShortsUSD": 100_000_000_000, # 100k
-            "noiWeight": 100,
             "maxLeverage": int(float(max_lev) * 1000000),
             "depthAsset": int(float(depth.replace(',', '')) * BASE_DECIMALS),
             "fees": {
