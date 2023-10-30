@@ -651,7 +651,7 @@ abstract contract GravixAccountBase is GravixAccountHelpers {
         Position position = positions[_positionKey];
 
         bool isLatestVersion = isLatestVersion(_accountVersion);
-        bool isFirstPositionTrigger = !position.stopLoss.hasValue() || !position.takeProfit.hasValue();
+        bool isFirstPositionTrigger = !position.stopLoss.hasValue() && !position.takeProfit.hasValue();
         uint128 minValueForContinue = isFirstPositionTrigger ? getMinValueForCreatingFirstTrigger() : 0;
 
         bool isStorageFeeEnough = checkAndUpdateLastUsed();
