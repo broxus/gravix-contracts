@@ -1083,6 +1083,8 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 collateral = positionView.position.initialCollateral - positionView.position.openFee;
         collateralReserve -= collateral;
 
+        bool isPositionHasTriggerPrice = positionView.position.stopLoss.hasValue() || positionView.position.takeProfit.hasValue();
+
         // we added exactly this amount when opened order
         uint128 initialPositionSizeAsset = calculatePositionAssetSize(collateral, positionView.position.leverage, positionView.position.openPrice);
         _removePositionFromMarket(
@@ -1096,6 +1098,13 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         _collectPnlAndReferral(collateral - liquidatorReward, referrer, grandReferrer, user, meta);
 
         emit LiquidatePosition(meta.callId, user, liquidator, positionKey, positionView);
+
+        if (isPositionHasTriggerPrice) {
+            ILimitBotVault(limitBotVault).sendTo{
+                value: 0.01 ever,
+                flag: MsgFlag.SENDER_PAYS_FEES
+            }(user, Gas.OPEN_LIMIT_ORDER_RESERVE - 0.06 ever);
+        }
 
         _transfer(usdt.wallet, liquidatorReward, liquidator, _makeCell(meta.nonce), meta.sendGasTo, MsgFlag.SENDER_PAYS_FEES);
         _sendCallbackOrGas(user, meta.nonce, true, meta.sendGasTo);

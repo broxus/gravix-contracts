@@ -26,7 +26,7 @@ contract PriceNode is IPriceNode {
     uint32 requestNonce;
     uint16 maxRequests = 1000;
     uint16 requestsNum;
-    uint32 lastRequestResolveTime;
+    uint32 private lastRequestResolveTime;
 
     uint16 maxActionsPerTx = 20;
 
@@ -74,6 +74,11 @@ contract PriceNode is IPriceNode {
         return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS }(
             owner, daemonPubkey, oraclePubkey, maxRequests, requestsNum, maxActionsPerTx, requestNonce, lastRequestResolveTime
         );
+    }
+
+    function getLastRequestResolveTime() external view responsible returns (uint32 _lastRequestResolveTime) {
+        _lastRequestResolveTime = requestsNum > 0 ? lastRequestResolveTime : now;
+        return { value: 0, bounce: false, flag: MsgFlag.REMAINING_GAS } _lastRequestResolveTime;
     }
 
     function setTickerConfigs(TickerConfig[] configs) external onlyOwner {

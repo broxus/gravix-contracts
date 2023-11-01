@@ -577,7 +577,7 @@ GETGLOB 14
 GETGLOB 17
 .loc ../contracts/PriceNode.tsol, 0
 
-.macro setTickerConfigs
+.macro getLastRequestResolveTime
 DROP
 GETGLOB 6
 THROWIFNOT 76
@@ -587,6 +587,99 @@ IFREF {
 	CALL $c4_to_c7$
 }
 .loc ../contracts/PriceNode.tsol, 79
+LDU 32
+GETGLOB 4
+ROT
+SETINDEXQ 5
+SETGLOB 4
+ENDS
+.loc ../contracts/PriceNode.tsol, 0
+CALLREF {
+	CALL $getLastRequestResolveTime_3becf014_internal_macro$
+}
+OVER
+PUSHCONT {
+	PUSH S3
+	CTOS
+	LDU 2
+	LDMSGADDR
+	DROP
+	NIP
+	NEWC
+	STSLICECONST xc
+	STSLICE
+	PUSHINT 2397592249
+	STUR 130
+	STU 32
+	ENDC
+	PUSHINT 0
+}
+PUSHCONT {
+	GETGLOB 4
+	DUP
+	INDEX 3
+	OVER
+	THIRD
+	GETGLOB 9
+	ROLL 3
+	SECOND
+	NEWC
+	STSLICECONST x2_
+	STI 1
+	STSLICECONST x1_
+	STSLICE
+	SWAP
+	STGRAMS
+	STDICT
+	PUSHINT 106
+	STZEROES
+	GETGLOB 4
+	INDEX 5
+	STUR 32
+	STU 32
+	ENDC
+	GETGLOB 4
+	INDEX 4
+}
+IFELSE
+SENDRAWMSG
+IFREF {
+	CALL $upd_only_time_in_c4$
+}
+THROW 0
+
+.macro getLastRequestResolveTime_3becf014_internal_macro
+.loc ../contracts/PriceNode.tsol, 80
+GETGLOB 16
+GTINT 0
+PUSHCONT {
+	GETGLOB 17
+}
+PUSHCONT {
+	NOW
+}
+IFELSE
+.loc ../contracts/PriceNode.tsol, 81
+GETGLOB 4
+PUSHINT 0
+SETINDEXQ 2
+FALSE
+SETINDEXQ 1
+PUSHINT 64
+SETINDEXQ 4
+SETGLOB 4
+.loc ../contracts/PriceNode.tsol, 0
+
+.macro setTickerConfigs
+DROP
+GETGLOB 6
+THROWIFNOT 76
+GETGLOB 2
+ISNULL
+IFREF {
+	CALL $c4_to_c7$
+}
+.loc ../contracts/PriceNode.tsol, 84
 LDU 32
 LDDICT
 ROTREV
@@ -609,7 +702,7 @@ GETGLOB 9
 GETGLOB 11
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 80
+.loc ../contracts/PriceNode.tsol, 85
 SECOND
 PUSHINT 0
 NULL
@@ -632,7 +725,7 @@ PUSHCONT {
 	NOT
 }
 PUSHCONT {
-	.loc ../contracts/PriceNode.tsol, 81
+	.loc ../contracts/PriceNode.tsol, 86
 	DUP
 	GETGLOB 19
 	PUSH S2
@@ -670,7 +763,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 85
+.loc ../contracts/PriceNode.tsol, 90
 LDU 16
 ENDS
 .loc ../contracts/PriceNode.tsol, 0
@@ -689,7 +782,7 @@ GETGLOB 9
 GETGLOB 11
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 86
+.loc ../contracts/PriceNode.tsol, 91
 DUP
 GETGLOB 18
 PUSHSLICE xc0000000000000000000000000008fe797
@@ -700,7 +793,7 @@ STU 16
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/PriceNode.tsol, 87
+.loc ../contracts/PriceNode.tsol, 92
 SETGLOB 18
 .loc ../contracts/PriceNode.tsol, 0
 
@@ -713,7 +806,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 90
+.loc ../contracts/PriceNode.tsol, 95
 OVER
 PUSHCONT {
 	LDREF
@@ -739,7 +832,7 @@ GETGLOB 9
 GETGLOB 11
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 91
+.loc ../contracts/PriceNode.tsol, 96
 DUP
 GETGLOB 11
 PUSHSLICE xc0000000000000000000000001
@@ -757,7 +850,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/PriceNode.tsol, 92
+.loc ../contracts/PriceNode.tsol, 97
 SETGLOB 11
 .loc ../contracts/PriceNode.tsol, 0
 
@@ -770,7 +863,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 95
+.loc ../contracts/PriceNode.tsol, 100
 LDU 16
 ENDS
 .loc ../contracts/PriceNode.tsol, 0
@@ -789,7 +882,7 @@ GETGLOB 9
 GETGLOB 11
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 96
+.loc ../contracts/PriceNode.tsol, 101
 DUP
 GETGLOB 15
 PUSHSLICE xc0000000000000000000000000588d1f4a
@@ -800,7 +893,7 @@ STU 16
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/PriceNode.tsol, 97
+.loc ../contracts/PriceNode.tsol, 102
 SETGLOB 15
 .loc ../contracts/PriceNode.tsol, 0
 
@@ -813,7 +906,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 100
+.loc ../contracts/PriceNode.tsol, 105
 OVER
 PUSHCONT {
 	LDREF
@@ -839,7 +932,7 @@ GETGLOB 9
 GETGLOB 11
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 101
+.loc ../contracts/PriceNode.tsol, 106
 DUP
 GETGLOB 13
 PUSHSLICE xc0000000000000000000000000321c692b
@@ -850,7 +943,7 @@ STU 256
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/PriceNode.tsol, 102
+.loc ../contracts/PriceNode.tsol, 107
 SETGLOB 13
 .loc ../contracts/PriceNode.tsol, 0
 
@@ -863,7 +956,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 105
+.loc ../contracts/PriceNode.tsol, 110
 OVER
 PUSHCONT {
 	LDREF
@@ -889,7 +982,7 @@ GETGLOB 9
 GETGLOB 11
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 106
+.loc ../contracts/PriceNode.tsol, 111
 DUP
 GETGLOB 12
 PUSHSLICE xc00000000000000000000000002e420205
@@ -900,7 +993,7 @@ STU 256
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/PriceNode.tsol, 107
+.loc ../contracts/PriceNode.tsol, 112
 SETGLOB 12
 .loc ../contracts/PriceNode.tsol, 0
 
@@ -913,7 +1006,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 110
+.loc ../contracts/PriceNode.tsol, 115
 OVER
 PUSHCONT {
 	LDREF
@@ -963,7 +1056,7 @@ THROW 0
 CALL $checkSign_a936ad0d_internal_macro$
 
 .macro checkSign_a936ad0d_internal_macro
-.loc ../contracts/PriceNode.tsol, 113
+.loc ../contracts/PriceNode.tsol, 118
 REVERSE 5, 0
 NEWC
 STU 128
@@ -971,7 +1064,7 @@ STU 32
 STU 32
 STREF
 ENDC
-.loc ../contracts/PriceNode.tsol, 114
+.loc ../contracts/PriceNode.tsol, 119
 HASHCU
 SWAP
 CTOS
@@ -988,7 +1081,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 117
+.loc ../contracts/PriceNode.tsol, 122
 OVER
 PUSHCONT {
 	LDREF
@@ -1013,14 +1106,14 @@ CALLREF {
 THROW 0
 
 .macro makeRequest_6561cf1c_internal_macro
-.loc ../contracts/PriceNode.tsol, 118
+.loc ../contracts/PriceNode.tsol, 123
 DEPTH
 ADDCONST -2
 PICK
 PUSHINT 120000000
 GEQ
 THROWIFNOT 1004
-.loc ../contracts/PriceNode.tsol, 119
+.loc ../contracts/PriceNode.tsol, 124
 OVER
 HASHCU
 GETGLOB 19
@@ -1045,7 +1138,7 @@ IFREFELSEREF
 }
 FIRST
 THROWIFNOT 1005
-.loc ../contracts/PriceNode.tsol, 121
+.loc ../contracts/PriceNode.tsol, 126
 OVER
 HASHCU
 GETGLOB 21
@@ -1059,7 +1152,7 @@ IF
 GETGLOB 15
 GEQ
 PUSHCONT {
-	.loc ../contracts/PriceNode.tsol, 122
+	.loc ../contracts/PriceNode.tsol, 127
 	NEWC
 	STSLICECONST x42_
 	STSLICE
@@ -1068,12 +1161,12 @@ PUSHCONT {
 	ENDC
 	PUSHINT 64
 	SENDRAWMSG
-	.loc ../contracts/PriceNode.tsol, 123
+	.loc ../contracts/PriceNode.tsol, 128
 	DROP
 	.loc ../contracts/PriceNode.tsol, 0
 }
 IFJMP
-.loc ../contracts/PriceNode.tsol, 127
+.loc ../contracts/PriceNode.tsol, 132
 DROP
 GETGLOB 9
 DEPTH
@@ -1116,17 +1209,17 @@ ROTREV
 PUSHPOW2 8
 DICTUSETB
 SETGLOB 20
-.loc ../contracts/PriceNode.tsol, 128
+.loc ../contracts/PriceNode.tsol, 133
 GETGLOB 16
 INC
 UFITS 16
 SETGLOB 16
-.loc ../contracts/PriceNode.tsol, 129
+.loc ../contracts/PriceNode.tsol, 134
 GETGLOB 14
 INC
 UFITS 32
 SETGLOB 14
-.loc ../contracts/PriceNode.tsol, 130
+.loc ../contracts/PriceNode.tsol, 135
 GETGLOB 21
 OVER
 HASHCU
@@ -1147,7 +1240,7 @@ ROTREV
 PUSHPOW2 8
 DICTUSETB
 SETGLOB 21
-.loc ../contracts/PriceNode.tsol, 131
+.loc ../contracts/PriceNode.tsol, 136
 GETGLOB 14
 DEC
 UFITS 32
@@ -1172,7 +1265,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 134
+.loc ../contracts/PriceNode.tsol, 139
 OVER
 PUSHCONT {
 	LDREF
@@ -1203,7 +1296,7 @@ THROW 0
 CALL $validatePrice_eb8ca0fb_internal_macro$
 
 .macro validatePrice_eb8ca0fb_internal_macro
-.loc ../contracts/PriceNode.tsol, 135
+.loc ../contracts/PriceNode.tsol, 140
 DUP
 INDEX 3
 HASHCU
@@ -1227,11 +1320,11 @@ IFREFELSEREF
 	DUP
 	TUPLE 4
 }
-.loc ../contracts/PriceNode.tsol, 136
+.loc ../contracts/PriceNode.tsol, 141
 DUP
 FIRST
 THROWIFNOT 1005
-.loc ../contracts/PriceNode.tsol, 137
+.loc ../contracts/PriceNode.tsol, 142
 PUSHINT 5000
 NOW
 PUSH S3
@@ -1242,7 +1335,7 @@ PUSH S2
 THIRD
 LESS
 THROWANYIFNOT
-.loc ../contracts/PriceNode.tsol, 138
+.loc ../contracts/PriceNode.tsol, 143
 PUSHINT 5000
 NOW
 PUSH S3
@@ -1253,7 +1346,7 @@ ROT
 INDEX 3
 LESS
 THROWANYIFNOT
-.loc ../contracts/PriceNode.tsol, 139
+.loc ../contracts/PriceNode.tsol, 144
 PUSHINT 5001
 OVER
 FIRST
@@ -1280,7 +1373,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/PriceNode.tsol, 142
+.loc ../contracts/PriceNode.tsol, 147
 LDU 32
 LDDICT
 ROTREV
@@ -1298,7 +1391,7 @@ CALLREF {
 THROW 0
 
 .macro resolveRequests_dbf56c45_internal_macro
-.loc ../contracts/PriceNode.tsol, 143
+.loc ../contracts/PriceNode.tsol, 148
 GETGLOB 5
 DUP
 ISNULL
@@ -1314,16 +1407,16 @@ MYADDR
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/PriceNode.tsol, 144
+.loc ../contracts/PriceNode.tsol, 149
 PUSHINT 5002
 GETGLOB 16
 GTINT 0
 THROWANYIFNOT
-.loc ../contracts/PriceNode.tsol, 145
+.loc ../contracts/PriceNode.tsol, 150
 ACCEPT
-.loc ../contracts/PriceNode.tsol, 147
+.loc ../contracts/PriceNode.tsol, 152
 PUSHINT 0
-.loc ../contracts/PriceNode.tsol, 148
+.loc ../contracts/PriceNode.tsol, 153
 OVER
 SECOND
 PUSHINT 0
@@ -1349,12 +1442,12 @@ PUSHCONT {
 	NOT
 }
 PUSHCONT {
-	.loc ../contracts/PriceNode.tsol, 149
+	.loc ../contracts/PriceNode.tsol, 154
 	OVER
 	CALLREF {
 		CALL $validatePrice_eb8ca0fb_internal_macro$
 	}
-	.loc ../contracts/PriceNode.tsol, 151
+	.loc ../contracts/PriceNode.tsol, 156
 	OVER
 	INDEX 3
 	HASHCU
@@ -1368,9 +1461,9 @@ PUSHCONT {
 		NEWDICT
 	}
 	IFELSE
-	.loc ../contracts/PriceNode.tsol, 152
+	.loc ../contracts/PriceNode.tsol, 157
 	PUSH3 S5, S0, S0
-	.loc ../contracts/PriceNode.tsol, 153
+	.loc ../contracts/PriceNode.tsol, 158
 	PUSHINT 32
 	DICTUMIN
 	PUSHCONT {
@@ -1391,18 +1484,18 @@ IFREFELSE {
 		NOT
 	}
 	PUSHCONT {
-		.loc ../contracts/PriceNode.tsol, 154
+		.loc ../contracts/PriceNode.tsol, 159
 		PUSH S10
 		INC
 		UFITS 16
 		POP S11
-		.loc ../contracts/PriceNode.tsol, 155
+		.loc ../contracts/PriceNode.tsol, 160
 		PUSH2 S1, S5
 		PUSHINT 32
 		DICTUDEL
 		DROP
 		POP S6
-		.loc ../contracts/PriceNode.tsol, 156
+		.loc ../contracts/PriceNode.tsol, 161
 		PUSH S7
 		INDEX 3
 		PUSH S8
@@ -1426,7 +1519,7 @@ IFREFELSE {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/PriceNode.tsol, 157
+		.loc ../contracts/PriceNode.tsol, 162
 		PUSH S7
 		INDEX 3
 		BLKPUSH 2, 2
@@ -1440,7 +1533,7 @@ IFREFELSE {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/PriceNode.tsol, 159
+		.loc ../contracts/PriceNode.tsol, 164
 		PUSH S10
 		GETGLOB 18
 		GEQ
@@ -1465,17 +1558,17 @@ IFREFELSE {
 	}
 	WHILEBRK
 	BLKDROP 4
-	.loc ../contracts/PriceNode.tsol, 163
+	.loc ../contracts/PriceNode.tsol, 168
 	PUSH S6
 	SUBR
 	UFITS 16
-	.loc ../contracts/PriceNode.tsol, 164
+	.loc ../contracts/PriceNode.tsol, 169
 	GETGLOB 16
 	OVER
 	SUB
 	UFITS 16
 	SETGLOB 16
-	.loc ../contracts/PriceNode.tsol, 165
+	.loc ../contracts/PriceNode.tsol, 170
 	GETGLOB 21
 	PUSH S4
 	INDEX 3
@@ -1498,17 +1591,17 @@ IFREFELSE {
 	PUSHPOW2 8
 	DICTUSETB
 	SETGLOB 21
-	.loc ../contracts/PriceNode.tsol, 166
+	.loc ../contracts/PriceNode.tsol, 171
 	PUSH S5
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/PriceNode.tsol, 167
+		.loc ../contracts/PriceNode.tsol, 172
 		NOW
 		SETGLOB 17
 		.loc ../contracts/PriceNode.tsol, 0
 	}
 	IF
-	.loc ../contracts/PriceNode.tsol, 170
+	.loc ../contracts/PriceNode.tsol, 175
 	GETGLOB 20
 	PUSH S3
 	INDEX 3
@@ -1520,12 +1613,12 @@ IFREFELSE {
 	PUSHPOW2 8
 	DICTUSETB
 	SETGLOB 20
-	.loc ../contracts/PriceNode.tsol, 171
+	.loc ../contracts/PriceNode.tsol, 176
 	PUSH S4
 	GETGLOB 18
 	GEQ
 	PUSHCONT {
-		.loc ../contracts/PriceNode.tsol, 172
+		.loc ../contracts/PriceNode.tsol, 177
 		ROLL 5
 		MYADDR
 		NEWC
@@ -1541,7 +1634,7 @@ IFREFELSE {
 		ENDC
 		PUSHINT 0
 		SENDRAWMSG
-		.loc ../contracts/PriceNode.tsol, 173
+		.loc ../contracts/PriceNode.tsol, 178
 		BLKDROP 5
 		PUSHINT 4
 		RETALT
@@ -1839,9 +1932,15 @@ IFJMPREF {
 	}
 }
 DUP
-PUSHINT 1018356592
+PUSHINT 546262338
 LEQ
 IFJMPREF {
+	DUP
+	PUSHINT 250108601
+	EQUAL
+	IFJMPREF {
+		CALL $getLastRequestResolveTime$
+	}
 	DUP
 	PUSHINT 296305286
 	EQUAL
@@ -1860,17 +1959,17 @@ IFJMPREF {
 	IFJMPREF {
 		CALL $constructor$
 	}
+}
+DUP
+PUSHINT 1659095111
+LEQ
+IFJMPREF {
 	DUP
 	PUSHINT 1018356592
 	EQUAL
 	IFJMPREF {
 		CALL $setMaxRequests$
 	}
-}
-DUP
-PUSHINT 1808660327
-LEQ
-IFJMPREF {
 	DUP
 	PUSHINT 1342902531
 	EQUAL
@@ -1889,17 +1988,17 @@ IFJMPREF {
 	IFJMPREF {
 		CALL $resolveRequests$
 	}
+}
+DUP
+PUSHINT 2117122827
+LEQ
+IFJMPREF {
 	DUP
 	PUSHINT 1808660327
 	EQUAL
 	IFJMPREF {
 		CALL $setOraclePubkey$
 	}
-}
-DUP
-PUSHINT 2117122827
-LEQ
-IFJMPREF {
 	DUP
 	PUSHINT 1811527890
 	EQUAL
