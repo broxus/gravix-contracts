@@ -1,4 +1,4 @@
-import { toNano } from "../../../ever-locklift";
+import { toNano } from "locklift";
 
 export enum PosType {
     Long = 0,
