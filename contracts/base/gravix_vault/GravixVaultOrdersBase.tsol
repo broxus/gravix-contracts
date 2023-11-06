@@ -147,7 +147,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
         uint128 pnl, address referrer, address grandReferrer, address referral, Callback.CallMeta meta
     ) internal {
         pnl = _distributeReferralFee(pnl, referrer, grandReferrer, referral, ReferralFeeSchema.PnlFee, meta);
-        _increaseInsuranceFund(pnl);
+        _collectPnl(pnl);
     }
 
     //endregion

@@ -15,8 +15,9 @@ pragma ever-solidity ^0.62.0;
 //───────────────────────────────────────────────────────────────────────────────────────────────
 
 
-import {GravixVaultBase} from "./base/gravix_vault/GravixVaultBase.tsol";
 import {Callback} from "./libraries/Callback.tsol";
+import {Constants} from "./libraries/Constants.tsol";
+import {GravixVaultBase} from "./base/gravix_vault/GravixVaultBase.tsol";
 import {IGravixVault} from "./interfaces/IGravixVault.tsol";
 import {IOldGravixVault} from "./interfaces/IOldGravixVault.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
@@ -71,6 +72,7 @@ contract GravixVault is GravixVaultBase {
                 minStopLossRate: minStopLossRate,
                 openFeeDistributionSchema: openFeeDistributionSchema,
                 closeFeeDistributionSchema: closeFeeDistributionSchema,
+                pnlDistributionSchema: pnlDistributionSchema,
                 marketCount: marketCount,
                 markets: markets,
                 workingHours: workingHours,
@@ -245,6 +247,7 @@ contract GravixVault is GravixVaultBase {
         insuranceFundOverflowDistributionSchema = _insuranceFundOverflowDistributionSchema;
         referralFeeSchema = _referralFeeSchema;
         grandReferralFeeSchema = _grandReferralFeeSchema;
+        pnlDistributionSchema = [0, Constants.HUNDRED_PERCENT];
         collateralReserve = _collateralReserve;
         maxPoolUtilRatio = _maxPoolUtilRatio;
         maxPnlRate = _maxPnlRate;
@@ -318,6 +321,3 @@ contract GravixVault is GravixVaultBase {
     }
 
 }
-// add bot interface for controlling pending limit requests
-// add ever transfer mechanism to the bot
-// add methods for handling pending limit submissions

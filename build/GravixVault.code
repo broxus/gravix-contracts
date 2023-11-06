@@ -33,38 +33,38 @@ LDU 256
 LDREF
 LDREF
 ENDS
-.loc ../contracts/GravixVault.tsol, 35
+.loc ../contracts/GravixVault.tsol, 36
 GETGLOB 11
 ROLL 7
 SETINDEX 0
 SETGLOB 11
-.loc ../contracts/GravixVault.tsol, 36
+.loc ../contracts/GravixVault.tsol, 37
 GETGLOB 14
 ROLL 6
 SETINDEX 0
 SETGLOB 14
-.loc ../contracts/GravixVault.tsol, 37
+.loc ../contracts/GravixVault.tsol, 38
 GETGLOB 15
 ROLL 5
 SETINDEX 0
 SETGLOB 15
-.loc ../contracts/GravixVault.tsol, 38
+.loc ../contracts/GravixVault.tsol, 39
 ROLL 3
 SETGLOB 12
-.loc ../contracts/GravixVault.tsol, 39
+.loc ../contracts/GravixVault.tsol, 40
 ROT
 SETGLOB 13
-.loc ../contracts/GravixVault.tsol, 40
+.loc ../contracts/GravixVault.tsol, 41
 GETGLOB 20
 ROT
 SETINDEX 0
 SETGLOB 20
-.loc ../contracts/GravixVault.tsol, 41
+.loc ../contracts/GravixVault.tsol, 42
 GETGLOB 19
 SWAP
 SETINDEX 0
 SETGLOB 19
-.loc ../contracts/GravixVault.tsol, 43
+.loc ../contracts/GravixVault.tsol, 44
 CALLREF {
 	CALL $_setupTokenWallets_32824a55_internal_macro$
 }
@@ -83,7 +83,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/GravixVault.tsol, 46
+.loc ../contracts/GravixVault.tsol, 47
 OVER
 PUSHCONT {
 	LDREF
@@ -115,7 +115,7 @@ CALLREF {
 THROW 0
 
 .macro upgrade_663c7430_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 487
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 489
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -126,7 +126,7 @@ SECOND
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/GravixVault.tsol, 47
+.loc ../contracts/GravixVault.tsol, 48
 GETGLOB 11
 GETGLOB 12
 GETGLOB 13
@@ -172,7 +172,9 @@ PUSHINT 42
 GETGLOBVAR
 PUSHINT 43
 GETGLOBVAR
-PUSHINT 33
+PUSHINT 44
+GETGLOBVAR
+PUSHINT 34
 TUPLEVAR
 NEWC
 ROT
@@ -182,14 +184,18 @@ STU 32
 STU 32
 STSLICE
 SWAP
-PUSHINT 33
-UNTUPLEVAR
 PUSHINT 34
+UNTUPLEVAR
+PUSHINT 35
 PUSHINT 0
 REVX
 SWAP
 UNTUPLE 4
 REVERSE 5, 0
+PUSHINT 37
+ROLLREVX
+NEWC
+STSLICE
 PUSHINT 36
 ROLLREVX
 NEWC
@@ -206,11 +212,18 @@ PUSHINT 33
 ROLLREVX
 NEWC
 STSLICE
+STU 256
+SWAP
+UNPAIR
+XCHG S2
 PUSHINT 32
 ROLLREVX
 NEWC
 STSLICE
-STU 256
+PUSHINT 31
+ROLLREVX
+NEWC
+STSLICE
 SWAP
 UNPAIR
 XCHG S2
@@ -223,28 +236,17 @@ ROLLREVX
 NEWC
 STSLICE
 SWAP
-UNPAIR
-XCHG S2
-PUSHINT 30
-ROLLREVX
-NEWC
-STSLICE
-PUSHINT 29
-ROLLREVX
-NEWC
-STSLICE
-SWAP
 UNTRIPLE
 REVERSE 4, 0
+PUSHINT 31
+ROLLREVX
+NEWC
+STSLICE
 PUSHINT 30
 ROLLREVX
 NEWC
 STSLICE
 PUSHINT 29
-ROLLREVX
-NEWC
-STSLICE
-PUSHINT 28
 ROLLREVX
 NEWC
 STSLICE
@@ -265,7 +267,7 @@ UNTRIPLE
 REVERSE 4, 0
 STU 128
 STU 128
-PUSHINT 23
+PUSHINT 24
 ROLLREVX
 NEWC
 STU 128
@@ -299,7 +301,7 @@ UNPAIR
 XCHG S2
 STU 64
 STU 64
-ROLLREV 12
+ROLLREV 13
 NEWC
 STU 64
 SWAP
@@ -312,16 +314,21 @@ UNPAIR
 XCHG S2
 STU 32
 STDICT
+SWAP
+UNPAIR
+XCHG S2
 STU 32
 STDICT
-ROLLREV 7
+STU 32
+ROLLREV 8
 NEWC
 STDICT
 STDICT
 STDICT
-STU 32
-ROLLREV 3
+ROLLREV 5
 NEWC
+STDICT
+STU 32
 STDICT
 STDICT
 STSLICE
@@ -342,10 +349,10 @@ STBREFR
 STBREFR
 STBREFR
 ENDC
-.loc ../contracts/GravixVault.tsol, 87
+.loc ../contracts/GravixVault.tsol, 89
 OVER
 SETCODE
-.loc ../contracts/GravixVault.tsol, 90
+.loc ../contracts/GravixVault.tsol, 92
 SWAP
 CTOS
 DUP
@@ -360,7 +367,7 @@ PLDREF
 CTOS
 BLESS
 POP C3
-.loc ../contracts/GravixVault.tsol, 91
+.loc ../contracts/GravixVault.tsol, 93
 CALLREF {
 	CALL $:onCodeUpgrade$
 }
@@ -368,13 +375,13 @@ CALLREF {
 
 .internal-alias :onCodeUpgrade, 2
 .internal :onCodeUpgrade
-.loc ../contracts/GravixVault.tsol, 95
+.loc ../contracts/GravixVault.tsol, 97
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/GravixVault.tsol, 96
+.loc ../contracts/GravixVault.tsol, 98
 PUSHINT 0
 SETGLOB 10
 PUSHREFSLICE {
@@ -470,9 +477,11 @@ PAIR
 PUSHINT 34
 SETGLOBVAR
 PUSHINT 0
+NEWDICT
+PAIR
 PUSHINT 35
 SETGLOBVAR
-NEWDICT
+PUSHINT 0
 PUSHINT 36
 SETGLOBVAR
 NEWDICT
@@ -484,21 +493,21 @@ SETGLOBVAR
 NEWDICT
 PUSHINT 39
 SETGLOBVAR
-PUSHINT 0
+NEWDICT
 PUSHINT 40
 SETGLOBVAR
-NEWDICT
+PUSHINT 0
 PUSHINT 41
 SETGLOBVAR
 NEWDICT
 PUSHINT 42
 SETGLOBVAR
+NEWDICT
+PUSHINT 43
+SETGLOBVAR
 PUSHREFSLICE {
 	.blob x8000000000000000000000000000000000000000000000000000000000000000001_
 }
-PUSHINT 43
-SETGLOBVAR
-PUSHINT 0
 PUSHINT 44
 SETGLOBVAR
 PUSHINT 0
@@ -534,7 +543,7 @@ SETGLOBVAR
 PUSHINT 0
 PUSHINT 55
 SETGLOBVAR
-.loc ../contracts/GravixVault.tsol, 98
+.loc ../contracts/GravixVault.tsol, 100
 CTOS
 LDU 32
 LDU 32
@@ -656,7 +665,7 @@ PUSHINT 1
 PUSHINT 40
 BLKSWX
 DROP
-.loc ../contracts/GravixVault.tsol, 196
+.loc ../contracts/GravixVault.tsol, 198
 PUSHINT 3
 PUSHINT 40
 BLKSWX
@@ -665,113 +674,134 @@ PUSHREFSLICE {
 }
 TUPLE 4
 SETGLOB 11
-.loc ../contracts/GravixVault.tsol, 202
+.loc ../contracts/GravixVault.tsol, 204
 PUSHINT 39
 ROLLX
 SETGLOB 12
-.loc ../contracts/GravixVault.tsol, 203
+.loc ../contracts/GravixVault.tsol, 205
 PUSHINT 38
 ROLLX
 SETGLOB 13
-.loc ../contracts/GravixVault.tsol, 205
+.loc ../contracts/GravixVault.tsol, 207
 PUSHINT 2
 PUSHINT 36
 BLKSWX
 PAIR
 SETGLOB 14
-.loc ../contracts/GravixVault.tsol, 210
+.loc ../contracts/GravixVault.tsol, 212
 PUSHINT 2
 PUSHINT 34
 BLKSWX
 PAIR
 SETGLOB 15
-.loc ../contracts/GravixVault.tsol, 215
+.loc ../contracts/GravixVault.tsol, 217
 PUSHINT 3
 PUSHINT 31
 BLKSWX
 TRIPLE
 SETGLOB 16
-.loc ../contracts/GravixVault.tsol, 221
+.loc ../contracts/GravixVault.tsol, 223
 PUSHINT 29
 ROLLX
 SETGLOB 17
-.loc ../contracts/GravixVault.tsol, 222
+.loc ../contracts/GravixVault.tsol, 224
 PUSHINT 25
 ROLLX
 INC
 UFITS 32
 SETGLOB 18
-.loc ../contracts/GravixVault.tsol, 224
+.loc ../contracts/GravixVault.tsol, 226
 PUSHINT 28
 ROLLX
 PUSHINT 26
 ROLLX
 PAIR
 SETGLOB 19
-.loc ../contracts/GravixVault.tsol, 229
+.loc ../contracts/GravixVault.tsol, 231
 PUSHINT 2
 PUSHINT 25
 BLKSWX
 PAIR
 SETGLOB 20
-.loc ../contracts/GravixVault.tsol, 234
+.loc ../contracts/GravixVault.tsol, 236
 PUSHINT 3
 PUSHINT 22
 BLKSWX
 TRIPLE
 SETGLOB 21
-.loc ../contracts/GravixVault.tsol, 240
+.loc ../contracts/GravixVault.tsol, 242
 PUSHINT 2
 PUSHINT 20
 BLKSWX
 PAIR
 SETGLOB 22
-.loc ../contracts/GravixVault.tsol, 245
+.loc ../contracts/GravixVault.tsol, 247
 PUSHINT 19
 ROLLX
 SETGLOB 23
-.loc ../contracts/GravixVault.tsol, 246
+.loc ../contracts/GravixVault.tsol, 248
 PUSHINT 18
 ROLLX
 SETGLOB 24
-.loc ../contracts/GravixVault.tsol, 247
+.loc ../contracts/GravixVault.tsol, 249
 PUSHINT 17
 ROLLX
 SETGLOB 25
-.loc ../contracts/GravixVault.tsol, 248
+.loc ../contracts/GravixVault.tsol, 250
+PUSHINT 1000000000000
+PUSHINT 0
+DUP
+NEWDICT
+PUSHINT 2
+PUSHCONT {
+	ROT
+	NEWC
+	STU 64
+	PUSH S2
+	INC
+	XCHG S3
+	ROT
+	PUSHINT 32
+	DICTUSETB
+}
+REPEAT
+PAIR
+PUSHINT 35
+SETGLOBVAR
+.loc ../contracts/GravixVault.tsol, 251
 ROLL 16
 SETGLOB 26
-.loc ../contracts/GravixVault.tsol, 249
+.loc ../contracts/GravixVault.tsol, 252
 ROLL 13
 SETGLOB 27
-.loc ../contracts/GravixVault.tsol, 250
+.loc ../contracts/GravixVault.tsol, 253
 ROLL 12
 SETGLOB 28
-.loc ../contracts/GravixVault.tsol, 251
+.loc ../contracts/GravixVault.tsol, 254
 ROLL 11
 SETGLOB 29
-.loc ../contracts/GravixVault.tsol, 252
+.loc ../contracts/GravixVault.tsol, 255
 ROLL 10
 SETGLOB 30
-.loc ../contracts/GravixVault.tsol, 254
+.loc ../contracts/GravixVault.tsol, 257
 BLKSWAP 2, 8
 PAIR
 SETGLOB 31
-.loc ../contracts/GravixVault.tsol, 259
+.loc ../contracts/GravixVault.tsol, 262
 ROLL 7
 PUSHINT 33
 SETGLOBVAR
-.loc ../contracts/GravixVault.tsol, 260
+.loc ../contracts/GravixVault.tsol, 263
 ROLL 6
 PUSHINT 34
 SETGLOBVAR
-.loc ../contracts/GravixVault.tsol, 261
-ROLL 5
-PUSHINT 35
-SETGLOBVAR
 .loc ../contracts/GravixVault.tsol, 264
+ROLL 5
+PUSHINT 36
+SETGLOBVAR
+.loc ../contracts/GravixVault.tsol, 267
 NEWDICT
-.loc ../contracts/GravixVault.tsol, 266
+.loc ../contracts/GravixVault.tsol, 269
 ROLL 5
 DUP
 PUSHINT 32
@@ -827,18 +857,18 @@ PUSHCONT {
 	NOT
 }
 PUSHCONT {
-	.loc ../contracts/GravixVault.tsol, 267
+	.loc ../contracts/GravixVault.tsol, 270
 	DUP
 	FIRST
-	.loc ../contracts/GravixVault.tsol, 268
+	.loc ../contracts/GravixVault.tsol, 271
 	PUSHINT 0
-	.loc ../contracts/GravixVault.tsol, 269
+	.loc ../contracts/GravixVault.tsol, 272
 	OVER
 	PUSHCONT {
 		OVER
 		EQINT 1
 		PUSHCONT {
-			.loc ../contracts/GravixVault.tsol, 272
+			.loc ../contracts/GravixVault.tsol, 275
 			DROP
 			PUSHINT 0
 		}
@@ -846,7 +876,7 @@ PUSHCONT {
 			OVER
 			EQINT 2
 			PUSHCONT {
-				.loc ../contracts/GravixVault.tsol, 274
+				.loc ../contracts/GravixVault.tsol, 277
 				DROP
 				PUSHINT 1
 				.loc ../contracts/GravixVault.tsol, 0
@@ -856,12 +886,12 @@ PUSHCONT {
 		IFELSE
 	}
 	PUSHCONT {
-		.loc ../contracts/GravixVault.tsol, 270
+		.loc ../contracts/GravixVault.tsol, 273
 		DROP
 		PUSHINT 1
 	}
 	IFELSE
-	.loc ../contracts/GravixVault.tsol, 277
+	.loc ../contracts/GravixVault.tsol, 280
 	PUSH S2
 	SECOND
 	PUSH S3
@@ -979,20 +1009,20 @@ IFREFELSE {
 }
 WHILE
 BLKDROP 4
-.loc ../contracts/GravixVault.tsol, 298
-PUSHINT 36
-SETGLOBVAR
-.loc ../contracts/GravixVault.tsol, 300
-ROLL 3
+.loc ../contracts/GravixVault.tsol, 301
 PUSHINT 37
 SETGLOBVAR
-.loc ../contracts/GravixVault.tsol, 301
-ROT
+.loc ../contracts/GravixVault.tsol, 303
+ROLL 3
 PUSHINT 38
 SETGLOBVAR
 .loc ../contracts/GravixVault.tsol, 304
+ROT
+PUSHINT 39
+SETGLOBVAR
+.loc ../contracts/GravixVault.tsol, 307
 NEWDICT
-.loc ../contracts/GravixVault.tsol, 305
+.loc ../contracts/GravixVault.tsol, 308
 ROT
 DUP
 PUSHINT 32
@@ -1033,7 +1063,7 @@ PUSHCONT {
 	NOT
 }
 PUSHCONT {
-	.loc ../contracts/GravixVault.tsol, 306
+	.loc ../contracts/GravixVault.tsol, 309
 	DUP
 	FIRST
 	SWAP
@@ -1102,13 +1132,13 @@ IFREFELSE {
 }
 WHILE
 BLKDROP 4
-.loc ../contracts/GravixVault.tsol, 312
-PUSHINT 39
-SETGLOBVAR
 .loc ../contracts/GravixVault.tsol, 315
-PUSHINT 41
+PUSHINT 40
 SETGLOBVAR
-.loc ../contracts/GravixVault.tsol, 317
+.loc ../contracts/GravixVault.tsol, 318
+PUSHINT 42
+SETGLOBVAR
+.loc ../contracts/GravixVault.tsol, 320
 DROP2
 THIRD
 NEWC
@@ -1165,21 +1195,21 @@ CALLREF {
 THROW 0
 
 .macro transferOwnership_757963d7_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 16
 GETGLOB 11
@@ -1196,7 +1226,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1247,21 +1277,21 @@ CALLREF {
 THROW 0
 
 .macro setMarketManager_65932c0c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 21
 GETGLOB 11
@@ -1278,7 +1308,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1329,21 +1359,21 @@ CALLREF {
 THROW 0
 
 .macro setManager_3ce63462_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 26
 GETGLOB 11
@@ -1360,7 +1390,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1411,21 +1441,21 @@ CALLREF {
 THROW 0
 
 .macro setPriceNode_07b86f48_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 32
 OVER
@@ -1440,7 +1470,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1493,21 +1523,21 @@ CALLREF {
 THROW 0
 
 .macro setPricePubkey_19736e96_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 37
 OVER
@@ -1522,7 +1552,7 @@ STU 256
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1573,21 +1603,21 @@ CALLREF {
 THROW 0
 
 .macro setLimitBot_9cccada8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 42
 GETGLOB 11
@@ -1604,7 +1634,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1655,25 +1685,25 @@ CALLREF {
 THROW 0
 
 .macro setLimitBotVault_1868425c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 47
 OVER
-PUSHINT 43
+PUSHINT 44
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 48
 FIRST
@@ -1685,7 +1715,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1738,21 +1768,21 @@ CALLREF {
 THROW 0
 
 .macro setPause_cea20708_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 52
 OVER
@@ -1767,7 +1797,7 @@ STI 1
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1820,21 +1850,21 @@ CALLREF {
 THROW 0
 
 .macro setLiquidationThresholdRate_1ad190a3_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 57
 OVER
@@ -1856,7 +1886,7 @@ STU 64
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1909,21 +1939,21 @@ CALLREF {
 THROW 0
 
 .macro setLiquidatorRewardShare_3bf4793c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 64
 OVER
@@ -1945,7 +1975,7 @@ STU 64
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -1998,21 +2028,21 @@ CALLREF {
 THROW 0
 
 .macro setMaxPoolUtilRatio_45947ec7_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 71
 OVER
@@ -2027,7 +2057,7 @@ STU 64
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2080,21 +2110,21 @@ CALLREF {
 THROW 0
 
 .macro setMaxPnlRate_459eab00_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 76
 OVER
@@ -2109,7 +2139,7 @@ STU 64
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2180,21 +2210,21 @@ CALLREF {
 THROW 0
 
 .macro setOpenCloseFeeDistributionSchema_7a6349db_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROLLREV 3
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 83
 PUSHINT 0
@@ -2264,7 +2294,7 @@ STDICT
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2315,21 +2345,21 @@ CALLREF {
 THROW 0
 
 .macro setTreasury_41e4194f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 95
 GETGLOB 16
@@ -2346,7 +2376,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2397,21 +2427,21 @@ CALLREF {
 THROW 0
 
 .macro setProjectFund_e5ab7d16_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 102
 GETGLOB 16
@@ -2428,7 +2458,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2479,21 +2509,21 @@ CALLREF {
 THROW 0
 
 .macro setDevFund_395555bd_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 109
 GETGLOB 16
@@ -2510,7 +2540,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2563,21 +2593,21 @@ CALLREF {
 THROW 0
 
 .macro setInsuranceFundLimit_d78e1515_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 116
 GETGLOB 22
@@ -2594,7 +2624,7 @@ STU 128
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2655,21 +2685,21 @@ CALLREF {
 THROW 0
 
 .macro setInsuranceFundOverflowDistributionSchema_5206b99e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 123
 OVER
@@ -2688,7 +2718,7 @@ STDICT
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2749,21 +2779,21 @@ CALLREF {
 THROW 0
 
 .macro setReferralFeeSchema_d3a0013c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 130
 OVER
@@ -2782,7 +2812,7 @@ STDICT
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2843,21 +2873,21 @@ CALLREF {
 THROW 0
 
 .macro setGrandReferralFeeSchema_a318b182_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 137
 OVER
@@ -2876,7 +2906,7 @@ STDICT
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -2929,21 +2959,21 @@ CALLREF {
 THROW 0
 
 .macro setMinPositionCollateral_3de8b7aa_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 144
 OVER
@@ -2958,7 +2988,7 @@ STU 128
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -3011,21 +3041,21 @@ CALLREF {
 THROW 0
 
 .macro setMinStopLossRate_9a650368_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 151
 OVER
@@ -3041,7 +3071,7 @@ STU 64
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -3158,7 +3188,7 @@ CALLREF {
 THROW 0
 
 .macro onAcceptTokensTransfer_e63f2284_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -3408,7 +3438,7 @@ CALLREF {
 THROW 0
 
 .macro onAcceptTokensBurn_07d14114_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -3468,7 +3498,7 @@ PUSHCONT {
 		POP S4
 		.loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 243
 		DUP
-		PUSHINT 41
+		PUSHINT 42
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -3661,7 +3691,7 @@ PUSHCONT {
 		POP S4
 		.loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 264
 		DUP
-		PUSHINT 42
+		PUSHINT 43
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -3854,7 +3884,7 @@ PUSHCONT {
 		POP S3
 		.loc ../contracts/base/gravix_vault/GravixVaultBase.tsol, 290
 		DUP
-		PUSHINT 42
+		PUSHINT 43
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -4107,7 +4137,7 @@ CALL $_limitOrder_591ba8e8_internal_macro$
 .macro _limitOrder_591ba8e8_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 87
 PUSH S10
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -4163,7 +4193,7 @@ IFELSE
 FIRST
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 88
 PUSH S11
-PUSHINT 39
+PUSHINT 40
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -4246,7 +4276,7 @@ CALL $_requestPendingLimitOrder_48e112fa_internal_macro$
 .macro _requestPendingLimitOrder_48e112fa_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 136
 PUSH S9
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -4300,11 +4330,11 @@ PUSHCONT {
 }
 IFELSE
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 137
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
 INC
 UFITS 32
-PUSHINT 40
+PUSHINT 41
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 139
 PUSH S11
@@ -4331,9 +4361,9 @@ BLKSWAP 3, 14
 PUSHINT 17
 TUPLEVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 158
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
-PUSHINT 42
+PUSHINT 43
 GETGLOBVAR
 PUSH S2
 CALLREF {
@@ -4374,7 +4404,7 @@ ENDC
 ROTREV
 PUSHINT 32
 DICTUSETREF
-PUSHINT 42
+PUSHINT 43
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 160
 SWAP
@@ -4385,7 +4415,7 @@ CALLREF {
 GETGLOB 20
 SECOND
 ROT
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
 ROLL 3
 NEWC
@@ -4550,15 +4580,15 @@ THROW 0
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 169
 OVER
 FIRST
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -4577,12 +4607,12 @@ CALL $_revertRequestPendingLimitOrder_484c299d_internal_macro$
 .macro _revertRequestPendingLimitOrder_484c299d_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 182
 ROT
-PUSHINT 42
+PUSHINT 43
 GETGLOBVAR
 PUSHINT 32
 DICTUDEL
 DROP
-PUSHINT 42
+PUSHINT 43
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 183
 OVER
@@ -4722,15 +4752,15 @@ THROW 0
 .macro finish_requestPendingLimitOrder_b37ddbaf_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 202
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -4738,12 +4768,12 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 209
 ROLL 3
-PUSHINT 42
+PUSHINT 43
 GETGLOBVAR
 PUSHINT 32
 DICTUDEL
 DROP
-PUSHINT 42
+PUSHINT 43
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 211
 PUSH3 S1, S2, S3
@@ -4943,15 +4973,15 @@ THROW 0
 .macro oracle_requestLimitOrder_b336411d_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 258
 ROLL 12
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -4976,7 +5006,7 @@ CALL $_requestLimitOrder_c23b8c4f_internal_macro$
 .macro _requestLimitOrder_c23b8c4f_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 305
 PUSH S11
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -5030,11 +5060,11 @@ PUSHCONT {
 }
 IFELSE
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 306
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
 INC
 UFITS 32
-PUSHINT 40
+PUSHINT 41
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 308
 PUSH S13
@@ -5065,9 +5095,9 @@ OVER
 ISNULL
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 329
-	PUSHINT 40
+	PUSHINT 41
 	GETGLOBVAR
-	PUSHINT 42
+	PUSHINT 43
 	GETGLOBVAR
 	PUSH S2
 	CALLREF {
@@ -5108,7 +5138,7 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETREF
-	PUSHINT 42
+	PUSHINT 43
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 0
 }
@@ -5126,7 +5156,7 @@ PUSHINT 32
 GETGLOBVAR
 GETGLOB 28
 ROLL 5
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
 ROLL 6
 NEWC
@@ -5305,15 +5335,15 @@ THROW 0
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 344
 OVER
 FIRST
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -5332,12 +5362,12 @@ CALL $_revertRequestLimitOrder_d3930046_internal_macro$
 .macro _revertRequestLimitOrder_d3930046_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 357
 ROT
-PUSHINT 42
+PUSHINT 43
 GETGLOBVAR
 PUSHINT 32
 DICTUDEL
 DROP
-PUSHINT 42
+PUSHINT 43
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 358
 OVER
@@ -5477,15 +5507,15 @@ THROW 0
 .macro finish_requestLimitOrder_c197f78c_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 377
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -5493,12 +5523,12 @@ PUSHINT 0
 RAWRESERVE
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 384
 ROLL 3
-PUSHINT 42
+PUSHINT 43
 GETGLOBVAR
 PUSHINT 32
 DICTUDEL
 DROP
-PUSHINT 42
+PUSHINT 43
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 385
 PUSH S2
@@ -5562,7 +5592,7 @@ CONDSEL
 PUSHINT 400000000
 ADD
 UFITS 128
-PUSHINT 43
+PUSHINT 44
 GETGLOBVAR
 NEWC
 STSLICECONST x62_
@@ -5628,19 +5658,19 @@ THROW 0
 .macro executeLimitOrders_fec9c4b0_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 415
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 450
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 452
 GETGLOB 9
 GETGLOB 11
 INDEX 3
 SDEQ
 THROWIFNOT 1010
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 451
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 453
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 419
 PUSH2 S1, S1
@@ -5678,7 +5708,7 @@ PUSHCONT {
 	PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 420
 		OVER
-		PUSHINT 36
+		PUSHINT 37
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -5734,7 +5764,7 @@ PUSHCONT {
 		FIRST
 		.loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 421
 		PUSH S2
-		PUSHINT 39
+		PUSHINT 40
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGET
@@ -5884,7 +5914,7 @@ IFREFELSE {
 }
 WHILE
 BLKDROP 6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -5955,7 +5985,7 @@ CALLREF {
 THROW 0
 
 .macro self_executeLimitOrders_fbe6e5b8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -6175,15 +6205,15 @@ THROW 0
 .macro oracle_executeLimitOrder_c1956caf_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 497
 ROLL 3
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -6365,15 +6395,15 @@ THROW 0
 .macro revert_executeLimitOrder_11860bda_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 555
 PUSH S6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -6398,7 +6428,7 @@ CALLREF {
 	CALL $_removePositionFromMarket_40569489_internal_macro$
 }
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 567
-PUSHINT 43
+PUSHINT 44
 GETGLOBVAR
 NEWC
 STSLICECONST x62_
@@ -6551,23 +6581,23 @@ THROW 0
 .macro finish_executeLimitOrder_f147ec1e_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 570
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 6
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 578
 PUSH S3
@@ -6626,7 +6656,7 @@ CALLREF {
 }
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 586
 PUSHINT 400000000
-PUSHINT 43
+PUSHINT 44
 GETGLOBVAR
 FALSE
 NEWC
@@ -6713,7 +6743,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -6764,7 +6794,7 @@ IFREF {
 THROW 0
 
 .macro cancelLimitOrder_25d4fde6_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -6773,7 +6803,7 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -6861,23 +6891,23 @@ THROW 0
 .macro revert_cancelLimitOrder_8c03e0cf_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 617
 PUSH S3
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 SWAP
 REVERSE 4, 1
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 623
@@ -6892,7 +6922,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -6948,15 +6978,15 @@ THROW 0
 .macro finish_cancelLimitOrder_cd6349d7_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 626
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -7000,7 +7030,7 @@ ADD
 UFITS 128
 .loc ../contracts/base/gravix_vault/GravixVaultLimitOrders.tsol, 639
 PUSH S3
-PUSHINT 43
+PUSHINT 44
 GETGLOBVAR
 NEWC
 STSLICECONST x62_
@@ -7118,7 +7148,7 @@ CALL $_marketOrder_21e8ba82_internal_macro$
 .macro _marketOrder_21e8ba82_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 93
 PUSH S10
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -7172,11 +7202,11 @@ PUSHCONT {
 }
 IFELSE
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 94
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
 INC
 UFITS 32
-PUSHINT 40
+PUSHINT 41
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 96
 PUSH S12
@@ -7203,9 +7233,9 @@ BLKSWAP 3, 14
 PUSHINT 17
 TUPLEVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 116
-PUSHINT 40
-GETGLOBVAR
 PUSHINT 41
+GETGLOBVAR
+PUSHINT 42
 GETGLOBVAR
 PUSH S2
 CALLREF {
@@ -7256,7 +7286,7 @@ ENDC
 ROTREV
 PUSHINT 32
 DICTUSETREF
-PUSHINT 41
+PUSHINT 42
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 117
 SWAP
@@ -7267,7 +7297,7 @@ CALLREF {
 GETGLOB 20
 SECOND
 ROT
-PUSHINT 40
+PUSHINT 41
 GETGLOBVAR
 ROLL 3
 NEWC
@@ -7426,15 +7456,15 @@ THROW 0
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 125
 OVER
 FIRST
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -7453,12 +7483,12 @@ CALL $_revertRequestMarketOrder_72a14462_internal_macro$
 .macro _revertRequestMarketOrder_72a14462_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 138
 ROT
-PUSHINT 41
+PUSHINT 42
 GETGLOBVAR
 PUSHINT 32
 DICTUDEL
 DROP
-PUSHINT 41
+PUSHINT 42
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 139
 OVER
@@ -7621,33 +7651,33 @@ THROW 0
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 158
 OVER
 FIRST
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 DUP
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 OVER
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 460
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 462
 BLKSWAP 3, 2
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 163
 	ROT
-	PUSHINT 41
+	PUSHINT 42
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUDEL
 	DROP
-	PUSHINT 41
+	PUSHINT 42
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 164
 	OVER
@@ -7708,7 +7738,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 180
 	OVER
 	SECOND
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGETREF
@@ -7765,7 +7795,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 181
 	PUSH S2
 	SECOND
-	PUSHINT 39
+	PUSHINT 40
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGET
@@ -7971,15 +8001,15 @@ THROW 0
 .macro oracle_executeMarketOrder_ce683732_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 245
 ROLL 8
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -8174,15 +8204,15 @@ THROW 0
 .macro revert_executeMarketOrder_006baaf7_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 311
 PUSH S7
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -8390,23 +8420,23 @@ THROW 0
 .macro finish_executeMarketOrder_30d3a133_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 336
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 6
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 344
 PUSH S3
@@ -8475,7 +8505,7 @@ NOT
 OR
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 354
-	PUSHINT 43
+	PUSHINT 44
 	GETGLOBVAR
 	NEWC
 	STSLICECONST x62_
@@ -8561,7 +8591,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -8612,7 +8642,7 @@ IFREF {
 THROW 0
 
 .macro cancelMarketOrder_9772fe2f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -8621,7 +8651,7 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -8708,23 +8738,23 @@ THROW 0
 .macro revert_cancelMarketOrder_e914fe3f_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 381
 PUSH S3
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 SWAP
 REVERSE 4, 1
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 387
@@ -8739,7 +8769,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -8794,15 +8824,15 @@ THROW 0
 .macro finish_cancelMarketOrder_c7a257c9_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarketOrders.tsol, 395
 PUSH S3
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -8860,7 +8890,7 @@ PUSHCONT {
 IFJMP
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 31
 PUSH S2
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -8873,7 +8903,7 @@ PUSHCONT {
 IFNOTJMP
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 32
 XCHG S2
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -8961,7 +8991,7 @@ CALL $_deployOracleProxy_35c622c3_internal_macro$
 .macro _deployOracleProxy_35c622c3_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 51
 OVER
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -9017,7 +9047,7 @@ IFELSE
 FIRST
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 52
 PUSH S2
-PUSHINT 39
+PUSHINT 40
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -9202,7 +9232,7 @@ IFREF {
 THROW 0
 
 .macro withdrawReferralBalance_49f6e89c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -9211,7 +9241,7 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -9291,15 +9321,15 @@ THROW 0
 .macro finish_withdrawReferralBalance_4e28fd99_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 80
 PUSH S2
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -9536,7 +9566,7 @@ CALLREF {
 }
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 150
 CALLREF {
-	CALL $_increaseInsuranceFund_4ab09332_internal_macro$
+	CALL $_collectPnl_9ef949c6_internal_macro$
 }
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 0
 
@@ -9682,7 +9712,7 @@ CALL $getDynamicSpread_aa75633f_internal_macro$
 PUSHINT 0
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 170
 ROT
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -9853,7 +9883,7 @@ CALLREF {
 THROW 0
 
 .macro setOrUpdatePositionTriggers_f69caf27_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -9862,13 +9892,13 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 460
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 462
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 193
 	DEPTH
@@ -9927,7 +9957,7 @@ PUSHCONT {
 	IFNOTJMP
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 207
 	PUSH S4
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGETREF
@@ -9983,7 +10013,7 @@ PUSHCONT {
 	FIRST
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 208
 	PUSH S5
-	PUSHINT 39
+	PUSHINT 40
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGET
@@ -10144,15 +10174,15 @@ THROW 0
 .macro oracle_setOrUpdatePositionTriggers_1d037d70_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 250
 ROLL 7
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -10362,23 +10392,23 @@ THROW 0
 .macro finish_setOrUpdatePositionTriggers_3e2c1991_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 297
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 6
 XCHG S1, S5
 XCHG S2, S3
@@ -10457,7 +10487,7 @@ SENDRAWMSG
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 312
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 313
-	PUSHINT 43
+	PUSHINT 44
 	GETGLOBVAR
 	NEWC
 	STSLICECONST x62_
@@ -10470,7 +10500,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -10526,23 +10556,23 @@ THROW 0
 .macro revert_setOrUpdatePositionTriggers_3d4e9dc3_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 318
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 SWAP
 REVERSE 5, 1
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 325
@@ -10558,7 +10588,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -10617,13 +10647,13 @@ CALLREF {
 THROW 0
 
 .macro removePositionTriggers_e0500a65_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 460
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 462
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 342
 	PUSH S3
@@ -10841,23 +10871,23 @@ THROW 0
 .macro finish_removePositionTriggers_8b3d094d_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 368
 PUSH S6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 BLKSWAP 2, 3
 REVERSE 6, 2
 BLKSWAP 4, 3
@@ -10948,7 +10978,7 @@ PUSHCONT {
 	SUB
 	UFITS 128
 	OVER
-	PUSHINT 43
+	PUSHINT 44
 	GETGLOBVAR
 	NEWC
 	STSLICECONST x62_
@@ -10969,7 +10999,7 @@ PUSHCONT {
 IF
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 0
 DROP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -11025,23 +11055,23 @@ THROW 0
 .macro revert_removePositionTriggers_da590214_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 393
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 SWAP
 REVERSE 5, 1
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 400
@@ -11057,7 +11087,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -11196,15 +11226,15 @@ THROW 0
 .macro revert_addCollateral_a107a6f4_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 441
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -11391,23 +11421,23 @@ THROW 0
 .macro finish_addCollateral_fb1d5cf2_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 463
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 6
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 471
 GETGLOB 26
@@ -11539,7 +11569,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -11595,7 +11625,7 @@ IFREF {
 THROW 0
 
 .macro removeCollateral_dd4c79ed_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -11604,13 +11634,13 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 460
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 462
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 501
 	DEPTH
@@ -11668,7 +11698,7 @@ PUSHCONT {
 	ROT
 	GETGLOB 29
 	PUSH S4
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGETREF
@@ -11801,23 +11831,23 @@ THROW 0
 .macro revert_removeCollateral_b37e685c_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 530
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 ROLLREV 6
 XCHG S1, S5
 XCHG S2, S3
@@ -11835,7 +11865,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -11993,15 +12023,15 @@ THROW 0
 .macro finish_removeCollateral_e827840c_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 548
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -12228,21 +12258,21 @@ CALLREF {
 THROW 0
 
 .macro forceClosePositions_77be1151_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROLLREV 5
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 596
 PUSH S4
@@ -12284,7 +12314,7 @@ PUSHCONT {
 		DICTUGET
 		THROWIFNOT 50
 		PLDU 32
-		PUSHINT 36
+		PUSHINT 37
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -12345,7 +12375,7 @@ PUSHCONT {
 		DICTUGET
 		THROWIFNOT 50
 		PLDU 32
-		PUSHINT 39
+		PUSHINT 40
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGET
@@ -12514,7 +12544,7 @@ IFREFELSEREF
 }
 WHILE
 BLKDROP 6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -12598,21 +12628,21 @@ CALLREF {
 THROW 0
 
 .macro forceClosePositionsWithPrice_6713d5b4_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROLLREV 5
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 628
 PUSH S4
@@ -12691,7 +12721,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -12762,7 +12792,7 @@ CALLREF {
 THROW 0
 
 .macro closePosition_fa6cab32_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -12771,13 +12801,13 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 460
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 462
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 646
 	DEPTH
@@ -12829,7 +12859,7 @@ PUSHCONT {
 	IFNOTJMP
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 662
 	PUSH S2
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGETREF
@@ -12885,7 +12915,7 @@ PUSHCONT {
 	FIRST
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 663
 	PUSH S3
-	PUSHINT 39
+	PUSHINT 40
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGET
@@ -13041,15 +13071,15 @@ THROW 0
 .macro oracle_closePosition_9ac349d3_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 690
 ROLL 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -13167,23 +13197,23 @@ THROW 0
 .macro revert_closePosition_177b3eaf_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 722
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 SWAP
 REVERSE 5, 1
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 729
@@ -13199,7 +13229,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -13371,15 +13401,15 @@ THROW 0
 .macro finish_closePosition_4e80fb81_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 738
 PUSH S6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -13540,7 +13570,7 @@ PUSHCONT {
 		SUB
 		UFITS 128
 		PUSH S9
-		PUSHINT 43
+		PUSHINT 44
 		GETGLOBVAR
 		NEWC
 		STSLICECONST x62_
@@ -13646,7 +13676,7 @@ PUSHCONT {
 		SUB
 		UFITS 128
 		PUSH S11
-		PUSHINT 43
+		PUSHINT 44
 		GETGLOBVAR
 		NEWC
 		STSLICECONST x62_
@@ -13668,7 +13698,7 @@ PUSHCONT {
 		PUSHCONT {
 			.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 796
 			PUSHINT 400000000
-			PUSHINT 43
+			PUSHINT 44
 			GETGLOBVAR
 			FALSE
 			NEWC
@@ -13871,13 +13901,13 @@ CALLREF {
 THROW 0
 
 .macro executePositionsTriggers_43046b7e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 450
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 452
 GETGLOB 9
 GETGLOB 11
 INDEX 3
 SDEQ
 THROWIFNOT 1010
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -13919,7 +13949,7 @@ PUSHCONT {
 	PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 821
 		OVER
-		PUSHINT 36
+		PUSHINT 37
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -13975,7 +14005,7 @@ PUSHCONT {
 		FIRST
 		.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 822
 		PUSH S2
-		PUSHINT 39
+		PUSHINT 40
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGET
@@ -14242,7 +14272,7 @@ CALLREF {
 THROW 0
 
 .macro self_executePositionsTriggers_f3b0aecf_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -14472,15 +14502,15 @@ THROW 0
 .macro oracle_executePositionsTriggers_158e53eb_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 912
 ROLL 4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -14569,15 +14599,15 @@ THROW 0
 .macro revert_executePositionsTriggers_d5c19baf_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 932
 PUSH S4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -14650,7 +14680,7 @@ IFREF {
 THROW 0
 
 .macro liquidatePositions_65b61887_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 497
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 499
 GETGLOB 30
 NOT
 GETGLOB 9
@@ -14659,15 +14689,15 @@ FIRST
 SDEQ
 OR
 THROWIFNOT 1001
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 498
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 500
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 958
 PUSH2 S1, S1
@@ -14705,7 +14735,7 @@ PUSHCONT {
 	PUSHCONT {
 		.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 960
 		OVER
-		PUSHINT 36
+		PUSHINT 37
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGETREF
@@ -14761,7 +14791,7 @@ PUSHCONT {
 		FIRST
 		.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 961
 		PUSH S2
-		PUSHINT 39
+		PUSHINT 40
 		GETGLOBVAR
 		PUSHINT 32
 		DICTUGET
@@ -14913,7 +14943,7 @@ IFREFELSE {
 }
 WHILE
 BLKDROP 6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -15014,23 +15044,23 @@ THROW 0
 .macro revert_liquidatePositions_916f0871_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 992
 PUSH S5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 470
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 471
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 473
 SWAP
 XCHG S5, S6
 REVERSE 6, 1
@@ -15057,7 +15087,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 472
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 474
 GETGLOB 9
 OVER
 SECOND
@@ -15121,15 +15151,15 @@ THROW 0
 .macro oracle_liquidatePositions_062c4909_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1010
 ROLL 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 444
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 446
 CALLREF {
 	CALL $getOracleProxyAddress_9967381a_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 445
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 447
 GETGLOB 9
 SDEQ
 THROWIFNOT 2005
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -15221,7 +15251,7 @@ CALLREF {
 THROW 0
 
 .macro self_liquidatePositions_3018f122_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -15551,15 +15581,15 @@ THROW 0
 .macro finish_liquidatePositions_36ea1be6_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1073
 PUSH S6
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -15728,7 +15758,7 @@ PUSHCONT {
 	SUB
 	UFITS 128
 	PUSH S4
-	PUSHINT 43
+	PUSHINT 44
 	GETGLOBVAR
 	NEWC
 	STSLICECONST x62_
@@ -15859,7 +15889,7 @@ DUP
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1148
 	PUSH S2
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSH S3
 	CALLREF {
@@ -15898,7 +15928,7 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETREF
-	PUSHINT 36
+	PUSHINT 37
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 0
 }
@@ -15982,7 +16012,7 @@ CALL $_calculatePositionImpact_f4d69d10_internal_macro$
 .macro _calculatePositionImpact_f4d69d10_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1180
 ROLL 3
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -16093,7 +16123,7 @@ FALSE
 CALLREF {
 	CALL $_calculatePositionImpact_f4d69d10_internal_macro$
 }
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 SWAP
 CALLREF {
@@ -16132,7 +16162,7 @@ ENDC
 ROTREV
 PUSHINT 32
 DICTUSETREF
-PUSHINT 36
+PUSHINT 37
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 0
 
@@ -16148,7 +16178,7 @@ TRUE
 CALLREF {
 	CALL $_calculatePositionImpact_f4d69d10_internal_macro$
 }
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 SWAP
 CALLREF {
@@ -16187,7 +16217,7 @@ ENDC
 ROTREV
 PUSHINT 32
 DICTUSETREF
-PUSHINT 36
+PUSHINT 37
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 0
 
@@ -16198,7 +16228,7 @@ CALL $_updateFunding_4e7c360e_internal_macro$
 .macro _updateFunding_4e7c360e_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1214
 OVER
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -16284,7 +16314,7 @@ SETINDEX 5
 NOW
 SETINDEX 6
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1225
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 OVER
 XCHG S2, S3
@@ -16324,7 +16354,7 @@ ENDC
 ROTREV
 PUSHINT 32
 DICTUSETREF
-PUSHINT 36
+PUSHINT 37
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1226
 INDEX 5
@@ -16398,7 +16428,7 @@ PUSHCONT {
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1235
 	OVER
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGETREF
@@ -16643,7 +16673,7 @@ CALL $getFundingRates_9c7b9555_internal_macro$
 
 .macro getFundingRates_9c7b9555_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultOrdersBase.tsol, 1278
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -16845,7 +16875,7 @@ CALL $marketOpen_fd98500f_internal_macro$
 .macro marketOpen_fd98500f_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 15
 DUP
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -16927,7 +16957,7 @@ CALLREF {
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 28
 NOW
 PUSH S5
-PUSHINT 38
+PUSHINT 39
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -16996,7 +17026,7 @@ IFRET
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 35
 DROP
 ROLL 4
-PUSHINT 37
+PUSHINT 38
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -17177,21 +17207,21 @@ CALLREF {
 THROW 0
 
 .macro addMarkets_9421e47d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 XCHG S2
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 54
 SECOND
@@ -17278,9 +17308,9 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 66
 	OVER
 	INDEX 7
-	PUSHINT 35
+	PUSHINT 36
 	GETGLOBVAR
-	PUSHINT 37
+	PUSHINT 38
 	GETGLOBVAR
 	ROT
 	NEWC
@@ -17288,12 +17318,12 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETB
-	PUSHINT 37
+	PUSHINT 38
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 67
-	PUSHINT 35
-	GETGLOBVAR
 	PUSHINT 36
+	GETGLOBVAR
+	PUSHINT 37
 	GETGLOBVAR
 	ROT
 	CALLREF {
@@ -17332,14 +17362,14 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETREF
-	PUSHINT 36
+	PUSHINT 37
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 68
-	PUSHINT 35
+	PUSHINT 36
 	GETGLOBVAR
 	INC
 	UFITS 32
-	PUSHINT 35
+	PUSHINT 36
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 70
 	PUSH2 S0, S3
@@ -17377,7 +17407,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -17430,21 +17460,21 @@ CALLREF {
 THROW 0
 
 .macro setMarketsConfigs_0ec087ac_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 XCPU S2, S0
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 77
 PUSHINT 32
@@ -17486,7 +17516,7 @@ PUSHCONT {
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 78
 	OVER
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGET
@@ -17501,7 +17531,7 @@ PUSHCONT {
 	THROWIFNOT 1005
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 81
 	OVER
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGETREF
@@ -17586,7 +17616,7 @@ PUSHCONT {
 	OVER
 	INDEX 7
 	PUSH S3
-	PUSHINT 37
+	PUSHINT 38
 	GETGLOBVAR
 	ROT
 	NEWC
@@ -17594,11 +17624,11 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETB
-	PUSHINT 37
+	PUSHINT 38
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 91
 	PUSH S2
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	ROT
 	CALLREF {
@@ -17637,7 +17667,7 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETREF
-	PUSHINT 36
+	PUSHINT 37
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 93
 	PUSH3 S0, S1, S4
@@ -17706,7 +17736,7 @@ IFREFELSE {
 }
 WHILE
 BLKDROP 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -17759,7 +17789,7 @@ CALLREF {
 THROW 0
 
 .macro setOracleConfigs_35c1773c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 487
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 489
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -17770,15 +17800,15 @@ SECOND
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 488
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 490
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 XCPU S2, S0
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 100
 PUSHINT 32
@@ -17815,7 +17845,7 @@ PUSHCONT {
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 101
 	OVER
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGET
@@ -17824,7 +17854,7 @@ PUSHCONT {
 	THROWIFNOT 1005
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 103
 	OVER
-	PUSHINT 39
+	PUSHINT 40
 	GETGLOBVAR
 	PUSH S2
 	CALLREF {
@@ -17849,7 +17879,7 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETB
-	PUSHINT 39
+	PUSHINT 40
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 104
 	PUSH3 S0, S1, S4
@@ -17911,7 +17941,7 @@ IFREFELSE {
 }
 WHILE
 BLKDROP 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -18194,7 +18224,7 @@ CALLREF {
 THROW 0
 
 .macro setMarketsPause_cc0739d5_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 492
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 494
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -18210,15 +18240,15 @@ SDEQ
 OR
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 493
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 495
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 XCPU S2, S0
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 128
 PUSHINT 32
@@ -18241,7 +18271,7 @@ PUSHCONT {
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 129
 	OVER
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	PUSHINT 32
 	DICTUGET
@@ -18250,7 +18280,7 @@ PUSHCONT {
 	THROWIFNOT 1005
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 131
 	PUSH2 S0, S1
-	PUSHINT 36
+	PUSHINT 37
 	GETGLOBVAR
 	DUP2
 	PUSHINT 32
@@ -18342,7 +18372,7 @@ PUSHCONT {
 	ROTREV
 	PUSHINT 32
 	DICTUSETREF
-	PUSHINT 36
+	PUSHINT 37
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 132
 	PUSH3 S0, S1, S4
@@ -18374,7 +18404,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -18427,7 +18457,7 @@ CALLREF {
 THROW 0
 
 .macro setMarketsWorkingHours_82ab3b6c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 492
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 494
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -18443,15 +18473,15 @@ SDEQ
 OR
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 493
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 495
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 XCPU S2, S0
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 140
 PUSHINT 32
@@ -18496,7 +18526,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -18559,7 +18589,7 @@ CALLREF {
 THROW 0
 
 .macro setMarketsCommonWorkingHours_6130ab96_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 492
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 494
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -18575,15 +18605,15 @@ SDEQ
 OR
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 493
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 495
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 3
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 150
 PUSHINT 0
@@ -18610,7 +18640,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -18629,7 +18659,7 @@ CALL $_setMarketWorkingHours_74d8aab4_internal_macro$
 .macro _setMarketWorkingHours_74d8aab4_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 160
 PUSH S2
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -18729,7 +18759,7 @@ WHILE
 BLKDROP 4
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 169
 PUSH S2
-PUSHINT 37
+PUSHINT 38
 GETGLOBVAR
 PUSH S3
 NEWC
@@ -18737,7 +18767,7 @@ STDICT
 ROTREV
 PUSHINT 32
 DICTUSETB
-PUSHINT 37
+PUSHINT 38
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 170
 XCHG S1, S2
@@ -18812,7 +18842,7 @@ CALLREF {
 THROW 0
 
 .macro addMarketsWeekends_cef8930f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 492
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 494
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -18828,15 +18858,15 @@ SDEQ
 OR
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 493
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 495
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 3
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 178
 PUSH S2
@@ -18895,7 +18925,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -18992,7 +19022,7 @@ CALLREF {
 THROW 0
 
 .macro addMarketsCommonWeekends_e866a573_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 492
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 494
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -19008,15 +19038,15 @@ SDEQ
 OR
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 493
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 495
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROLLREV 3
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 190
 PUSHINT 0
@@ -19043,7 +19073,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 4
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -19062,7 +19092,7 @@ CALL $_addMarketWeekends_1519f574_internal_macro$
 .macro _addMarketWeekends_1519f574_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 200
 PUSH S2
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -19089,7 +19119,7 @@ CALLREF {
 }
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 207
 PUSH2 S1, S4
-PUSHINT 38
+PUSHINT 39
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -19150,7 +19180,7 @@ IFNOT
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 216
 DROP
 PUSH2 S1, S4
-PUSHINT 38
+PUSHINT 39
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -19206,7 +19236,7 @@ IFNOT
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 223
 DROP2
 PUSH2 S2, S3
-PUSHINT 38
+PUSHINT 39
 GETGLOBVAR
 DUP2
 PUSHINT 32
@@ -19248,7 +19278,7 @@ STDICT
 ROTREV
 PUSHINT 32
 DICTUSETB
-PUSHINT 38
+PUSHINT 39
 SETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 224
 XCHG S1, S2
@@ -19330,7 +19360,7 @@ CALLREF {
 THROW 0
 
 .macro clearMarketsWeekends_a5e586e8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 492
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 494
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -19346,15 +19376,15 @@ SDEQ
 OR
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 493
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 495
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 230
 PUSHINT 0
@@ -19365,7 +19395,7 @@ PUSHCONT {
 }
 PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 231
-	PUSHINT 38
+	PUSHINT 39
 	GETGLOBVAR
 	PUSH2 S1, S3
 	SECOND
@@ -19377,7 +19407,7 @@ PUSHCONT {
 	PUSHINT 32
 	DICTUDEL
 	DROP
-	PUSHINT 38
+	PUSHINT 39
 	SETGLOBVAR
 	.loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 232
 	PUSH2 S0, S2
@@ -19402,7 +19432,7 @@ PUSHCONT {
 }
 WHILE
 BLKDROP 3
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -19652,7 +19682,7 @@ SETINDEXQ 1
 PUSHINT 64
 SETINDEXQ 4
 SETGLOB 4
-PUSHINT 37
+PUSHINT 38
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -19747,7 +19777,7 @@ SETINDEXQ 1
 PUSHINT 64
 SETINDEXQ 4
 SETGLOB 4
-PUSHINT 38
+PUSHINT 39
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -19907,7 +19937,7 @@ SETINDEXQ 1
 PUSHINT 64
 SETINDEXQ 4
 SETGLOB 4
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 PUSHINT 32
 DICTUGETREF
@@ -20043,7 +20073,7 @@ SETINDEXQ 1
 PUSHINT 64
 SETINDEXQ 4
 SETGLOB 4
-PUSHINT 36
+PUSHINT 37
 GETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 0
 
@@ -20128,7 +20158,7 @@ SETINDEXQ 1
 PUSHINT 64
 SETINDEXQ 4
 SETGLOB 4
-PUSHINT 39
+PUSHINT 40
 GETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultMarkets.tsol, 0
 
@@ -20253,7 +20283,7 @@ SETINDEXQ 1
 PUSHINT 64
 SETINDEXQ 4
 SETGLOB 4
-PUSHINT 39
+PUSHINT 40
 GETGLOBVAR
 PUSHINT 32
 DICTUGET
@@ -20332,21 +20362,21 @@ CALLREF {
 THROW 0
 
 .macro withdrawInsuranceFundOverflow_bb4e2ee7_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 482
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 484
 GETGLOB 9
 GETGLOB 11
 FIRST
 SDEQ
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 483
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 485
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 SWAP
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 21
 GETGLOB 22
@@ -20477,7 +20507,7 @@ STU 128
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -21244,12 +21274,26 @@ CALLREF {
 }
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 
+.globl	_collectPnl_9ef949c6_internal
+.type	_collectPnl_9ef949c6_internal, @function
+CALL $_collectPnl_9ef949c6_internal_macro$
+
+.macro _collectPnl_9ef949c6_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 186
+PUSHINT 35
+GETGLOBVAR
+SWAP
+CALLREF {
+	CALL $_collectFeeWithSchema_bfde5bb6_internal_macro$
+}
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
+
 .globl	_collectFeeWithSchema_bfde5bb6_internal
 .type	_collectFeeWithSchema_bfde5bb6_internal, @function
 CALL $_collectFeeWithSchema_bfde5bb6_internal_macro$
 
 .macro _collectFeeWithSchema_bfde5bb6_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 186
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 190
 DUP
 PUSHINT 0
 ROLL 3
@@ -21261,15 +21305,15 @@ PLDU 64
 PUSHINT 1000000000000
 MULDIV
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 187
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 191
 TUCK
 SUB
 UFITS 128
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 189
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 193
 DUP
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 189
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 193
 	DUP
 	CALLREF {
 		CALL $_increaseInsuranceFund_4ab09332_internal_macro$
@@ -21277,137 +21321,167 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 190
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 194
 DROP
 DUP
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 191
-	DUP
-	GETGLOB 21
-	DUP
-	FIRST
-	ROT
-	ADD
-	UFITS 128
-	SETINDEX 0
-	SETGLOB 21
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 192
-	DUP
-	PUSHSLICE xc000000000000000000000000032833471
-	NEWC
-	STSLICE
-	STU 128
-	ENDC
-	PUSHINT 0
-	SENDRAWMSG
 	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 194
-	GETGLOB 21
-	THIRD
-	GTINT 0
 	DUP
-	PUSHCONT {
-		DROP
-		CALLREF {
-			CALL $poolDebt_ade1a170_internal_macro$
-		}
-		EQINT 0
+	CALLREF {
+		CALL $_increasePool_f8463c20_internal_macro$
 	}
-	IF
-	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 194
-		GETGLOB 21
-		PUSHINT 0
-		SETINDEX 2
-		SETGLOB 21
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
-	}
-	IF
 	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 }
 IF
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 DROP
 
+.globl	_increasePool_f8463c20_internal
+.type	_increasePool_f8463c20_internal, @function
+CALL $_increasePool_f8463c20_internal_macro$
+
+.macro _increasePool_f8463c20_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 198
+DUP
+GETGLOB 21
+DUP
+FIRST
+ROT
+ADD
+UFITS 128
+SETINDEX 0
+SETGLOB 21
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 199
+PUSHSLICE xc000000000000000000000000032833471
+NEWC
+STSLICE
+STU 128
+ENDC
+PUSHINT 0
+SENDRAWMSG
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 201
+GETGLOB 21
+THIRD
+GTINT 0
+DUP
+PUSHCONT {
+	DROP
+	CALLREF {
+		CALL $poolDebt_ade1a170_internal_macro$
+	}
+	EQINT 0
+}
+IF
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 201
+	GETGLOB 21
+	PUSHINT 0
+	SETINDEX 2
+	SETGLOB 21
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
+}
+IF
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
+
+.globl	_decreasePool_14ca6dff_internal
+.type	_decreasePool_14ca6dff_internal, @function
+CALL $_decreasePool_14ca6dff_internal_macro$
+
+.macro _decreasePool_14ca6dff_internal_macro
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 204
+PUSHINT 0
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 206
+GETGLOB 21
+THIRD
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 207
+	CALLREF {
+		CALL $stgUsdtPrice_b446aa01_internal_macro$
+	}
+	DROP
+	GETGLOB 21
+	SWAP
+	SETINDEX 2
+	SETGLOB 21
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
+}
+IFNOT
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 209
+OVER
+GETGLOB 21
+FIRST
+GREATER
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 210
+	OVER
+	GETGLOB 21
+	FIRST
+	SUB
+	UFITS 128
+	NIP
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 211
+	GETGLOB 21
+	FIRST
+	POP S2
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
+}
+IF
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 213
+SWAP
+GETGLOB 21
+DUP
+FIRST
+ROT
+SUB
+UFITS 128
+SETINDEX 0
+SETGLOB 21
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
+
 .globl	_decreaseInsuranceFund_74c0e3b6_internal
 .type	_decreaseInsuranceFund_74c0e3b6_internal, @function
 CALL $_decreaseInsuranceFund_74c0e3b6_internal_macro$
 
 .macro _decreaseInsuranceFund_74c0e3b6_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 198
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 216
 PUSHINT 0
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 199
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 217
 OVER
 GETGLOB 22
 FIRST
 LEQ
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 200
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 218
 	OVER
 	GETGLOB 22
-	DUP
-	FIRST
-	ROT
-	SUB
-	UFITS 128
-}
-PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 202
-	OVER
-	GETGLOB 22
-	FIRST
-	SUB
-	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 204
-	GETGLOB 21
-	THIRD
-	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 205
-		CALLREF {
-			CALL $stgUsdtPrice_b446aa01_internal_macro$
-		}
-		DROP
-		GETGLOB 21
-		SWAP
-		SETINDEX 2
-		SETGLOB 21
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
-	}
-	IFNOT
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 207
-	DUP
-	GETGLOB 21
-	FIRST
-	GREATER
-	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 208
-		GETGLOB 21
-		FIRST
-		SUB
-		UFITS 128
-		NIP
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 209
-		GETGLOB 21
-		FIRST
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
-	}
-	IF
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 211
-	GETGLOB 21
 	DUP
 	FIRST
 	ROT
 	SUB
 	UFITS 128
 	SETINDEX 0
-	SETGLOB 21
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 212
+	SETGLOB 22
+}
+PUSHCONT {
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 220
+	OVER
+	GETGLOB 22
+	FIRST
+	SUB
+	UFITS 128
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 221
 	GETGLOB 22
 	PUSHINT 0
+	SETINDEX 0
+	SETGLOB 22
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 222
+	CALLREF {
+		CALL $_decreasePool_14ca6dff_internal_macro$
+	}
+	NIP
 }
 IFELSE
-SETINDEX 0
-SETGLOB 22
 .loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 NIP
 
@@ -21416,16 +21490,16 @@ NIP
 CALL $_increaseInsuranceFund_4ab09332_internal_macro$
 
 .macro _increaseInsuranceFund_4ab09332_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 217
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 227
 GETGLOB 21
 THIRD
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 218
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 229
 	CALLREF {
 		CALL $poolDebt_ade1a170_internal_macro$
 	}
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 219
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 230
 	PUSH2 S0, S1
 	MIN
 	GETGLOB 21
@@ -21436,16 +21510,16 @@ PUSHCONT {
 	UFITS 128
 	SETINDEX 0
 	SETGLOB 21
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 220
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 231
 	OVER
 	MIN
 	SUB
 	UFITS 128
-	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 221
+	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 232
 	DUP
 	GTINT 0
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 221
+		.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 232
 		GETGLOB 21
 		PUSHINT 0
 		SETINDEX 2
@@ -21456,7 +21530,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 223
+.loc ../contracts/base/gravix_vault/GravixVaultLiquidityPool.tsol, 234
 GETGLOB 22
 DUP
 FIRST
@@ -21508,7 +21582,7 @@ CALLREF {
 THROW 0
 
 .macro updateGravixAccountCode_f0b20e37_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 487
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 489
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -21519,15 +21593,15 @@ SECOND
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 488
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 490
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 XCHG S2
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 15
 GETGLOB 20
@@ -21560,7 +21634,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -21613,7 +21687,7 @@ CALLREF {
 THROW 0
 
 .macro updateOracleProxyCode_b5ab6ae8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 487
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 489
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -21624,15 +21698,15 @@ SECOND
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 488
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 490
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 XCHG S2
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 25
 GETGLOB 19
@@ -21665,7 +21739,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -21715,7 +21789,7 @@ IFREF {
 THROW 0
 
 .macro upgradeGravixAccount_21ff63e3_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -21785,7 +21859,7 @@ IFREF {
 THROW 0
 
 .macro forceUpgradeGravixAccountsByUsers_5115735e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 487
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 489
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -21796,7 +21870,7 @@ SECOND
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -21888,7 +21962,7 @@ IFREF {
 THROW 0
 
 .macro forceUpgradeGravixAccountsByContracts_269d0a0f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 487
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 489
 GETGLOB 9
 GETGLOB 11
 FIRST
@@ -21899,7 +21973,7 @@ SECOND
 SDEQ
 OR
 THROWIFNOT 1000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -22073,15 +22147,15 @@ THROW 0
 .macro onGravixAccountRequestUpgrade_f4750d8d_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 75
 PUSH S2
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 459
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 461
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
@@ -22158,23 +22232,23 @@ THROW 0
 .macro onGravixAccountUpgrade_eaff3a78_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 86
 PUSH S3
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 SWAP
 REVERSE 4, 1
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 92
@@ -22189,7 +22263,7 @@ STU 32
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -22241,23 +22315,23 @@ THROW 0
 .macro onGravixAccountDeploy_24807c3a_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 95
 OVER
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 438
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
 CALLREF {
 	CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 439
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 441
 GETGLOB 9
 SDEQ
 THROWIFNOT 2000
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 440
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 442
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 464
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 465
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 467
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 98
 FIRST
@@ -22269,7 +22343,7 @@ STSLICE
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 466
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 468
 GETGLOB 9
 OVER
 SECOND
@@ -22379,13 +22453,13 @@ THROW 0
 .macro deployGravixAccount_831abc2e_internal_macro
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 101
 DUP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 476
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
 CALLREF {
 	CALL $_reserve_413ab4a8_internal_macro$
 }
 PUSHINT 0
 RAWRESERVE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 477
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 479
 ROTREV
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 104
 DROP
@@ -22417,7 +22491,7 @@ CALLREF {
 }
 .loc ../contracts/base/gravix_vault/GravixVaultUpgradable.tsol, 0
 SWAP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 478
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 480
 THIRD
 NEWC
 STSLICECONST x42_
@@ -22528,9 +22602,9 @@ ENDS
 CALLREF {
 	CALL $getDetails_fbbf93a0_internal_macro$
 }
-PUSH S22
+PUSH S23
 PUSHCONT {
-	PUSH S24
+	PUSH S25
 	CTOS
 	LDU 2
 	LDMSGADDR
@@ -22541,14 +22615,18 @@ PUSHCONT {
 	STSLICE
 	PUSHINT 1
 	STUR 98
-	PUSHINT 23
+	PUSHINT 24
 	PUSHINT 0
 	REVX
 	NEWC
-	STSLICECONST xb56585f8
+	STSLICECONST xd87f04e7
 	SWAP
 	UNTUPLE 4
 	REVERSE 5, 0
+	STSLICE
+	PUSHINT 25
+	ROLLREVX
+	NEWC
 	STSLICE
 	PUSHINT 24
 	ROLLREVX
@@ -22562,11 +22640,18 @@ PUSHCONT {
 	ROLLREVX
 	NEWC
 	STSLICE
+	STU 256
+	SWAP
+	UNPAIR
+	XCHG S2
 	PUSHINT 21
 	ROLLREVX
 	NEWC
 	STSLICE
-	STU 256
+	PUSHINT 20
+	ROLLREVX
+	NEWC
+	STSLICE
 	SWAP
 	UNPAIR
 	XCHG S2
@@ -22579,8 +22664,12 @@ PUSHCONT {
 	NEWC
 	STSLICE
 	SWAP
-	UNPAIR
-	XCHG S2
+	UNTRIPLE
+	REVERSE 4, 0
+	PUSHINT 20
+	ROLLREVX
+	NEWC
+	STSLICE
 	PUSHINT 19
 	ROLLREVX
 	NEWC
@@ -22592,28 +22681,14 @@ PUSHCONT {
 	SWAP
 	UNTRIPLE
 	REVERSE 4, 0
-	PUSHINT 19
-	ROLLREVX
-	NEWC
-	STSLICE
-	PUSHINT 18
-	ROLLREVX
-	NEWC
-	STSLICE
+	STU 128
+	STU 128
+	STU 128
+	SWAP
+	UNPAIR
+	XCHG S2
 	PUSHINT 17
 	ROLLREVX
-	NEWC
-	STSLICE
-	SWAP
-	UNTRIPLE
-	REVERSE 4, 0
-	STU 128
-	STU 128
-	STU 128
-	SWAP
-	UNPAIR
-	XCHG S2
-	ROLLREV 16
 	NEWC
 	STU 128
 	STU 128
@@ -22643,8 +22718,13 @@ PUSHCONT {
 	XCHG S2
 	STU 64
 	STU 64
-	ROLLREV 4
+	ROLLREV 5
 	NEWC
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
 	SWAP
 	UNPAIR
 	XCHG S2
@@ -22693,7 +22773,7 @@ PUSHCONT {
 	STDICT
 	PUSHINT 1
 	STUR 106
-	PUSHINT 23
+	PUSHINT 24
 	PUSHINT 0
 	REVX
 	NEWC
@@ -22703,6 +22783,10 @@ PUSHCONT {
 	SWAP
 	UNTUPLE 4
 	REVERSE 5, 0
+	STSLICE
+	PUSHINT 25
+	ROLLREVX
+	NEWC
 	STSLICE
 	PUSHINT 24
 	ROLLREVX
@@ -22716,11 +22800,18 @@ PUSHCONT {
 	ROLLREVX
 	NEWC
 	STSLICE
+	STU 256
+	SWAP
+	UNPAIR
+	XCHG S2
 	PUSHINT 21
 	ROLLREVX
 	NEWC
 	STSLICE
-	STU 256
+	PUSHINT 20
+	ROLLREVX
+	NEWC
+	STSLICE
 	SWAP
 	UNPAIR
 	XCHG S2
@@ -22733,8 +22824,12 @@ PUSHCONT {
 	NEWC
 	STSLICE
 	SWAP
-	UNPAIR
-	XCHG S2
+	UNTRIPLE
+	REVERSE 4, 0
+	PUSHINT 20
+	ROLLREVX
+	NEWC
+	STSLICE
 	PUSHINT 19
 	ROLLREVX
 	NEWC
@@ -22746,28 +22841,14 @@ PUSHCONT {
 	SWAP
 	UNTRIPLE
 	REVERSE 4, 0
-	PUSHINT 19
-	ROLLREVX
-	NEWC
-	STSLICE
-	PUSHINT 18
-	ROLLREVX
-	NEWC
-	STSLICE
+	STU 128
+	STU 128
+	STU 128
+	SWAP
+	UNPAIR
+	XCHG S2
 	PUSHINT 17
 	ROLLREVX
-	NEWC
-	STSLICE
-	SWAP
-	UNTRIPLE
-	REVERSE 4, 0
-	STU 128
-	STU 128
-	STU 128
-	SWAP
-	UNPAIR
-	XCHG S2
-	ROLLREV 16
 	NEWC
 	STU 128
 	STU 128
@@ -22797,8 +22878,13 @@ PUSHCONT {
 	XCHG S2
 	STU 64
 	STU 64
-	ROLLREV 4
+	ROLLREV 5
 	NEWC
+	SWAP
+	UNPAIR
+	XCHG S2
+	STU 32
+	STDICT
 	SWAP
 	UNPAIR
 	XCHG S2
@@ -22837,7 +22923,7 @@ IFREF {
 THROW 0
 
 .macro getDetails_fbbf93a0_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 46
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 47
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -22871,7 +22957,9 @@ PUSHINT 34
 GETGLOBVAR
 PUSHINT 35
 GETGLOBVAR
-PUSHINT 43
+PUSHINT 36
+GETGLOBVAR
+PUSHINT 44
 GETGLOBVAR
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 
@@ -22884,7 +22972,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 72
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 74
 LDU 32
 GETGLOB 4
 ROT
@@ -22972,7 +23060,7 @@ IFREF {
 THROW 0
 
 .macro getCodes_c29fb0f1_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 78
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 80
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -22992,14 +23080,14 @@ GETGLOB 18
 CALL $_sendCallbackOrGas_a7c3a26f_internal_macro$
 
 .macro _sendCallbackOrGas_a7c3a26f_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 87
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 89
 PUSH S2
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 88
+	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 90
 	OVER
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 89
+		.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 91
 		PUSH2 S2, S3
 		NEWC
 		STSLICECONST x62_
@@ -23007,7 +23095,7 @@ PUSHCONT {
 		PUSHSLICE x00000000000000000000000000003ad5fd0b_
 	}
 	PUSHCONT {
-		.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 93
+		.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 95
 		PUSH2 S2, S3
 		NEWC
 		STSLICECONST x62_
@@ -23023,7 +23111,7 @@ PUSHCONT {
 	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 }
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 98
+	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 100
 	DUP
 	NEWC
 	STSLICECONST x42_
@@ -23043,7 +23131,7 @@ BLKDROP 4
 CALL $_setupTokenWallets_32824a55_internal_macro$
 
 .macro _setupTokenWallets_32824a55_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 103
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 105
 PUSHINT 250000000
 MYADDR
 GETGLOB 14
@@ -23063,7 +23151,7 @@ STBREFR
 ENDC
 PUSHINT 0
 SENDRAWMSG
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 107
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 109
 PUSHINT 250000000
 MYADDR
 GETGLOB 15
@@ -23090,7 +23178,7 @@ SENDRAWMSG
 CALL $_timeToDateTime_6b7c2aff_internal_macro$
 
 .macro _timeToDateTime_6b7c2aff_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 114
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 116
 ROLL 3
 UFITS 16
 ROLL 3
@@ -23109,7 +23197,7 @@ TUPLE 5
 CALL $_dateTimeToTimestamp_181bb1f7_internal_macro$
 
 .macro _dateTimeToTimestamp_181bb1f7_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 118
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 120
 DUP
 FIRST
 OVER
@@ -23131,7 +23219,7 @@ UFITS 32
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 121
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 123
 OVER
 PUSHCONT {
 	LDU 32
@@ -23216,7 +23304,7 @@ IFREF {
 THROW 0
 
 .macro encodeMarketOrder_c16caecb_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 134
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 136
 BLKSWAP 9, 2
 REVERSE 9, 0
 NEWC
@@ -23240,7 +23328,7 @@ NEWC
 STSLICE
 STBREFR
 ENDC
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 145
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 147
 PUSHINT 0
 ROLLREV 3
 CALLREF {
@@ -23252,7 +23340,7 @@ CALLREF {
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 148
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 150
 LDREF
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -23313,14 +23401,14 @@ THROW 0
 CALL $decodeMarketOrder_740f5275_internal_macro$
 
 .macro decodeMarketOrder_740f5275_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 148
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 150
 PUSHINT 0
 BLKPUSH 9, 0
 PUSHREF {
 }
 DUP
 TUPLE 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 161
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 163
 ROLL 8
 CTOS
 LDU 32
@@ -23361,7 +23449,7 @@ POP S2
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 187
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 189
 OVER
 PUSHCONT {
 	LDU 32
@@ -23452,7 +23540,7 @@ IFREF {
 THROW 0
 
 .macro encodeLimitOrder_d44add7b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 200
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 202
 SWAP
 XCHG S3, S4
 REVERSE 9, 0
@@ -23479,7 +23567,7 @@ NEWC
 STSLICE
 STBREFR
 ENDC
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 211
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 213
 PUSHINT 5
 ROLLREV 3
 CALLREF {
@@ -23491,7 +23579,7 @@ CALLREF {
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 214
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 216
 LDREF
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -23552,14 +23640,14 @@ THROW 0
 CALL $decodeLimitOrder_17856d74_internal_macro$
 
 .macro decodeLimitOrder_17856d74_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 214
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 216
 PUSHINT 0
 BLKPUSH 9, 0
 PUSHREF {
 }
 DUP
 TUPLE 5
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 227
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 229
 ROLL 8
 CTOS
 LDU 32
@@ -23603,7 +23691,7 @@ POP S2
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 253
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 255
 LDU 32
 LDU 32
 LDU 32
@@ -23645,7 +23733,7 @@ THROW 0
 CALL $encodeAddCollateral_3422105e_internal_macro$
 
 .macro encodeAddCollateral_3422105e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 256
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 258
 PUSHINT 4
 ROLL 4
 XCHG S1, S4
@@ -23662,7 +23750,7 @@ CALLREF {
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 259
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 261
 LDREF
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -23704,7 +23792,7 @@ THROW 0
 CALL $decodeAddCollateral_dd98792d_internal_macro$
 
 .macro decodeAddCollateral_dd98792d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 260
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 262
 CTOS
 LDU 32
 LDU 32
@@ -23715,7 +23803,7 @@ ENDS
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 263
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 265
 LDU 32
 LDU 32
 ENDS
@@ -23755,7 +23843,7 @@ THROW 0
 CALL $encodeLiquidityDeposit_bcc8e5ae_internal_macro$
 
 .macro encodeLiquidityDeposit_bcc8e5ae_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 265
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 267
 PUSHINT 1
 ROTREV
 PUSHREF {
@@ -23769,7 +23857,7 @@ CALLREF {
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 268
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 270
 LDU 32
 LDU 32
 ENDS
@@ -23809,7 +23897,7 @@ THROW 0
 CALL $encodeLiquidityWithdraw_1b4138d9_internal_macro$
 
 .macro encodeLiquidityWithdraw_1b4138d9_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 270
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 272
 PUSHINT 2
 ROTREV
 PUSHREF {
@@ -23823,7 +23911,7 @@ CALLREF {
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 273
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 275
 LDU 32
 LDU 32
 ENDS
@@ -23863,7 +23951,7 @@ THROW 0
 CALL $encodeInsuranceDeposit_c685819d_internal_macro$
 
 .macro encodeInsuranceDeposit_c685819d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 275
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 277
 PUSHINT 3
 ROTREV
 PUSHREF {
@@ -23877,7 +23965,7 @@ CALLREF {
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 278
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 280
 LDU 8
 OVER
 GTINT 6
@@ -23922,7 +24010,7 @@ THROW 0
 CALL $encodeTokenTransfer_8faf2831_internal_macro$
 
 .macro encodeTokenTransfer_8faf2831_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 281
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 283
 REVERSE 4, 0
 NEWC
 STU 8
@@ -23936,7 +24024,7 @@ ENDC
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 284
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 286
 LDREF
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -23981,18 +24069,18 @@ THROW 0
 CALL $decodeTokenTransfer_fa957a1c_internal_macro$
 
 .macro decodeTokenTransfer_fa957a1c_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 284
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 286
 PUSHINT 0
 BLKPUSH 2, 0
 PUSHREF {
 }
 PUSHINT 0
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 292
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 294
 PUSH S5
 CTOS
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 294
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 296
 SBITREFS
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 295
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 297
 SWAP
 EQINT 72
 SWAP
@@ -24008,7 +24096,7 @@ PUSHCONT {
 }
 IF
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 296
+	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 298
 	PUSH S5
 	CTOS
 	LDU 8
@@ -24023,7 +24111,7 @@ PUSHCONT {
 	POP S5
 	POP S5
 	POP S5
-	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 297
+	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 299
 	DROP
 	TRUE
 	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -24041,7 +24129,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 301
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 303
 LDU 128
 LDU 32
 LDU 32
@@ -24084,7 +24172,7 @@ THROW 0
 CALL $checkSign_a936ad0d_internal_macro$
 
 .macro checkSign_a936ad0d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 304
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 306
 REVERSE 5, 0
 NEWC
 STU 128
@@ -24092,7 +24180,7 @@ STU 32
 STU 32
 STREF
 ENDC
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 305
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 307
 HASHCU
 SWAP
 CTOS
@@ -24109,7 +24197,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 308
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 310
 LDU 128
 LDU 32
 LDU 32
@@ -24161,7 +24249,7 @@ THROW 0
 CALL $checkPrice_940463e0_internal_macro$
 
 .macro checkPrice_940463e0_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 309
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 311
 OVER
 INDEX 3
 HASHCU
@@ -24174,7 +24262,7 @@ PUSHCONT {
 	FALSE
 }
 IFJMP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 310
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 312
 NOW
 PUSH S2
 THIRD
@@ -24188,7 +24276,7 @@ PUSHCONT {
 	FALSE
 }
 IFJMP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 311
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 313
 NOW
 PUSH S2
 SECOND
@@ -24202,7 +24290,7 @@ PUSHCONT {
 	FALSE
 }
 IFJMP
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 312
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 314
 DUP
 FIRST
 OVER
@@ -24227,7 +24315,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 315
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 317
 LDU 32
 GETGLOB 4
 ROT
@@ -24309,7 +24397,7 @@ THROW 0
 CALL $getGravixAccountAddress_af7cc05b_internal_macro$
 
 .macro getGravixAccountAddress_af7cc05b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 316
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 318
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -24341,7 +24429,7 @@ ISNULL
 IFREF {
 	CALL $c4_to_c7$
 }
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 321
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 323
 LDU 32
 GETGLOB 4
 ROT
@@ -24416,7 +24504,7 @@ THROW 0
 CALL $getOracleProxyAddress_9967381a_internal_macro$
 
 .macro getOracleProxyAddress_9967381a_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 322
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 324
 GETGLOB 4
 PUSHINT 0
 SETINDEXQ 2
@@ -24441,19 +24529,19 @@ CTOS
 CALL $_makeCell_67dcfcc8_internal_macro$
 
 .macro _makeCell_67dcfcc8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 328
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 330
 NEWC
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 329
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 331
 OVER
 GTINT 0
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 330
+	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 332
 	OVER
 	STUR 32
 	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 332
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 334
 ENDC
 NIP
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -24463,19 +24551,19 @@ NIP
 CALL $_transfer_601b185b_internal_macro$
 
 .macro _transfer_601b185b_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 338
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 340
 DUP
 PUSHPOW2 7
 NEQ
 PUSHINT 100000000
 PUSHINT 0
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 339
-FALSE
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 341
+FALSE
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 343
 PUSH S4
 CTOS
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 342
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 344
 DUP
 SBITS
 GTINT 0
@@ -24484,13 +24572,13 @@ SREFS
 GTINT 0
 OR
 PUSHCONT {
-	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 343
+	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 345
 	DROP
 	TRUE
 	.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 }
 IF
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 345
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 347
 BLKSWAP 2, 3
 XCHG S1, S2
 PUSHINT 0
@@ -24527,7 +24615,7 @@ SENDRAWMSG
 CALL $_buildOracleProxyInitData_5b076ab1_internal_macro$
 
 .macro _buildOracleProxyInitData_5b076ab1_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 356
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 358
 PUSHINT 0
 NEWC
 STU 256
@@ -24565,10 +24653,10 @@ ENDC
 CALL $_buildGravixAccountParams_45942caf_internal_macro$
 
 .macro _buildGravixAccountParams_45942caf_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 369
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 371
 NEWC
 STSLICE
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 370
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 372
 ENDC
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 
@@ -24577,7 +24665,7 @@ ENDC
 CALL $_buildGravixAccountInitData_b98c665e_internal_macro$
 
 .macro _buildGravixAccountInitData_b98c665e_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 374
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 376
 PUSHINT 0
 NEWC
 STU 256
@@ -24622,7 +24710,7 @@ ENDC
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 387
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 389
 LDI 1
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -24661,11 +24749,11 @@ THROW 0
 CALL $getBaseOpenMarketOrderValue_d34f25be_internal_macro$
 
 .macro getBaseOpenMarketOrderValue_d34f25be_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 388
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 390
 PUSHINT 500000000
 PUSHINT 0
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 389
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 391
 PUSHINT 300000000
 PUSHINT 220000000
 ADD
@@ -24681,7 +24769,7 @@ UFITS 128
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 395
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 397
 LDI 1
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
@@ -24720,11 +24808,11 @@ THROW 0
 CALL $getBaseOpenLimitOrderValue_0edb0671_internal_macro$
 
 .macro getBaseOpenLimitOrderValue_0edb0671_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 396
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 398
 PUSHINT 500000000
 PUSHINT 0
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 397
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 399
 PUSHINT 300000000
 PUSHINT 400000000
 ADD
@@ -24744,7 +24832,7 @@ UFITS 128
 CALL $getMinValueForContinueOpenMarketOrder_f0dcdc4d_internal_macro$
 
 .macro getMinValueForContinueOpenMarketOrder_f0dcdc4d_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 407
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 409
 DUP
 INDEX 14
 GTINT 0
@@ -24752,7 +24840,7 @@ OVER
 INDEX 15
 GTINT 0
 OR
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 408
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 410
 SWAP
 INDEX 13
 PUSHREFSLICE {
@@ -24762,7 +24850,7 @@ SDEQ
 PUSHINT 0
 PUSHINT 150000000
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 409
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 411
 PUSHINT 650000000
 ADD
 UFITS 128
@@ -24779,7 +24867,7 @@ UFITS 128
 CALL $getMinValueForContinueOpenLimitOrder_d1a5c6fe_internal_macro$
 
 .macro getMinValueForContinueOpenLimitOrder_d1a5c6fe_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 417
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 419
 DUP
 INDEX 14
 GTINT 0
@@ -24787,7 +24875,7 @@ OVER
 INDEX 15
 GTINT 0
 OR
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 418
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 420
 SWAP
 INDEX 12
 PUSHREFSLICE {
@@ -24797,7 +24885,7 @@ SDEQ
 PUSHINT 0
 PUSHINT 150000000
 CONDSEL
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 420
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 422
 PUSHINT 650000000
 ADD
 UFITS 128
@@ -24813,7 +24901,7 @@ UFITS 128
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 425
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 427
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 CALLREF {
@@ -24851,7 +24939,7 @@ THROW 0
 CALL $getMinValueForClosePosition_48702ae5_internal_macro$
 
 .macro getMinValueForClosePosition_48702ae5_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 426
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 428
 PUSHINT 200000000
 PUSHINT 220000000
 ADD
@@ -24865,7 +24953,7 @@ UFITS 128
 DROP
 GETGLOB 6
 THROWIFNOT 76
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 431
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 433
 ENDS
 .loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 0
 CALLREF {
@@ -24903,7 +24991,7 @@ THROW 0
 CALL $getSetOrUpdateTriggersMinValue_48ee0658_internal_macro$
 
 .macro getSetOrUpdateTriggersMinValue_48ee0658_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 432
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 434
 PUSHINT 300000000
 PUSHINT 220000000
 ADD
@@ -24918,7 +25006,7 @@ UFITS 128
 CALL $_reserve_413ab4a8_internal_macro$
 
 .macro _reserve_413ab4a8_internal_macro
-.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 455
+.loc ../contracts/base/gravix_vault/GravixVaultHelpers.tsol, 457
 GETPARAM 7
 FIRST
 DEPTH
@@ -25063,20 +25151,24 @@ PAIR
 SWAP
 LDU 32
 LDDICT
-LDREF
-ENDS
-CTOS
-LDDICT
-LDDICT
-LDDICT
+ROTREV
+PAIR
+SWAP
 LDU 32
 LDREF
 ENDS
 CTOS
 LDDICT
 LDDICT
+LDDICT
+LDREF
+ENDS
+CTOS
+LDDICT
+LDU 32
+LDDICT
+LDDICT
 LDMSGADDR
-LDI 1
 LDI 1
 LDI 1
 LDI 1
@@ -25191,7 +25283,7 @@ PUSHCONT {
 	DUP
 	NEWDICT
 	PAIR
-	DUP
+	BLKPUSH 2, 0
 	PUSHINT 0
 	NEWDICT
 	BLKPUSH 3, 0
@@ -25202,7 +25294,7 @@ PUSHCONT {
 		.blob x8000000000000000000000000000000000000000000000000000000000000000001_
 	}
 	PUSHINT 0
-	BLKPUSH 11, 0
+	BLKPUSH 10, 0
 	PUSHINT 56
 	TUPLEVAR
 	POP C7
@@ -25330,11 +25422,31 @@ PUSHCONT {
 	PAIR
 	PUSHINT 34
 	SETGLOBVAR
+	PUSHINT 1000000000000
 	PUSHINT 0
+	DUP
+	NEWDICT
+	PUSHINT 2
+	PUSHCONT {
+		ROT
+		NEWC
+		STU 64
+		PUSH S2
+		INC
+		XCHG S3
+		ROT
+		PUSHINT 32
+		DICTUSETB
+	}
+	REPEAT
+	PAIR
 	PUSHINT 35
 	SETGLOBVAR
 	PUSHINT 0
-	PUSHINT 40
+	PUSHINT 36
+	SETGLOBVAR
+	PUSHINT 0
+	PUSHINT 41
 	SETGLOBVAR
 }
 IFREFELSE {
@@ -25483,21 +25595,25 @@ UNPAIR
 XCHG S2
 STU 32
 STDICT
+SWAP
+UNPAIR
+XCHG S2
 STU 32
 STDICT
+STU 32
 PUSHINT 19
 ROLLREVX
 NEWC
 STDICT
 STDICT
 STDICT
-STU 32
-ROLLREV 15
+ROLLREV 16
 NEWC
+STDICT
+STU 32
 STDICT
 STDICT
 STSLICE
-STI 1
 STI 1
 STI 1
 STI 1
@@ -26293,7 +26409,7 @@ INC
 
 .macro public_function_selector
 DUP
-PUSHINT 935780399
+PUSHINT 949794317
 LEQ
 IFJMPREF {
 	DUP
@@ -26660,7 +26776,7 @@ IFJMPREF {
 		}
 	}
 	DUP
-	PUSHINT 935780399
+	PUSHINT 949794317
 	LEQ
 	IFJMPREF {
 		DUP
@@ -26722,7 +26838,7 @@ IFJMPREF {
 			}
 		}
 		DUP
-		PUSHINT 895845880
+		PUSHINT 907609788
 		LEQ
 		IFJMPREF {
 			DUP
@@ -26744,22 +26860,16 @@ IFJMPREF {
 				CALL $encodeLimitOrder$
 			}
 			DUP
-			PUSHINT 895845880
-			EQUAL
-			IFJMPREF {
-				CALL $getDetails$
-			}
-		}
-		DUP
-		PUSHINT 935780399
-		LEQ
-		IFJMPREF {
-			DUP
 			PUSHINT 907609788
 			EQUAL
 			IFJMPREF {
 				CALL $checkPositionAllowed$
 			}
+		}
+		DUP
+		PUSHINT 949794317
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 912336075
 			EQUAL
@@ -26778,6 +26888,12 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setMarketsWorkingHours$
 			}
+			DUP
+			PUSHINT 949794317
+			EQUAL
+			IFJMPREF {
+				CALL $calculatePositionAssetSize$
+			}
 		}
 	}
 }
@@ -26786,19 +26902,13 @@ PUSHINT 1979337915
 LEQ
 IFJMPREF {
 	DUP
-	PUSHINT 1207085133
+	PUSHINT 1210792860
 	LEQ
 	IFJMPREF {
 		DUP
-		PUSHINT 969619197
+		PUSHINT 971539466
 		LEQ
 		IFJMPREF {
-			DUP
-			PUSHINT 949794317
-			EQUAL
-			IFJMPREF {
-				CALL $calculatePositionAssetSize$
-			}
 			DUP
 			PUSHINT 956094269
 			EQUAL
@@ -26817,17 +26927,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $finish_requestPendingLimitOrder$
 			}
-		}
-		DUP
-		PUSHINT 1009059346
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 971539466
 			EQUAL
 			IFJMPREF {
 				CALL $revert_liquidatePositions$
 			}
+		}
+		DUP
+		PUSHINT 1030889744
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 987055988
 			EQUAL
@@ -26846,17 +26956,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $withdrawInsuranceFundOverflow$
 			}
-		}
-		DUP
-		PUSHINT 1107687718
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1030889744
 			EQUAL
 			IFJMPREF {
 				CALL $setLiquidatorRewardShare$
 			}
+		}
+		DUP
+		PUSHINT 1134740424
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1077568897
 			EQUAL
@@ -26875,17 +26985,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $oracle_executePositionsTriggers$
 			}
-		}
-		DUP
-		PUSHINT 1207085133
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1134740424
 			EQUAL
 			IFJMPREF {
 				CALL $revert_setOrUpdatePositionTriggers$
 			}
+		}
+		DUP
+		PUSHINT 1210792860
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1156155968
 			EQUAL
@@ -26904,22 +27014,22 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $revert_executeMarketOrder$
 			}
-		}
-	}
-	DUP
-	PUSHINT 1433610311
-	LEQ
-	IFJMPREF {
-		DUP
-		PUSHINT 1252511245
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1210792860
 			EQUAL
 			IFJMPREF {
 				CALL $setLimitBot$
 			}
+		}
+	}
+	DUP
+	PUSHINT 1474401532
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 1280044228
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1239843297
 			EQUAL
@@ -26938,17 +27048,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $transferOwnership$
 			}
-		}
-		DUP
-		PUSHINT 1345850728
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1280044228
 			EQUAL
 			IFJMPREF {
 				CALL $oracle_closePosition$
 			}
+		}
+		DUP
+		PUSHINT 1354746527
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1289151665
 			EQUAL
@@ -26967,17 +27077,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setInsuranceFundLimit$
 			}
-		}
-		DUP
-		PUSHINT 1373802292
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1354746527
 			EQUAL
 			IFJMPREF {
 				CALL $receiveTokenWalletAddress$
 			}
+		}
+		DUP
+		PUSHINT 1385598845
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1368331614
 			EQUAL
@@ -26996,17 +27106,17 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $setMarketsPause$
 			}
-		}
-		DUP
-		PUSHINT 1433610311
-		LEQ
-		IFJMPREF {
 			DUP
 			PUSHINT 1385598845
 			EQUAL
 			IFJMPREF {
 				CALL $onGravixAccountUpgrade$
 			}
+		}
+		DUP
+		PUSHINT 1474401532
+		LEQ
+		IFJMPREF {
 			DUP
 			PUSHINT 1396355438
 			EQUAL
@@ -27025,6 +27135,12 @@ IFJMPREF {
 			IFJMPREF {
 				CALL $revert_cancelMarketOrder$
 			}
+			DUP
+			PUSHINT 1474401532
+			EQUAL
+			IFJMPREF {
+				CALL $revert_addCollateral$
+			}
 		}
 	}
 	DUP
@@ -27036,10 +27152,10 @@ IFJMPREF {
 		LEQ
 		IFJMPREF {
 			DUP
-			PUSHINT 1474401532
+			PUSHINT 1484719335
 			EQUAL
 			IFJMPREF {
-				CALL $revert_addCollateral$
+				CALL $getDetails$
 			}
 			DUP
 			PUSHINT 1501784833

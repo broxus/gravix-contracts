@@ -182,17 +182,35 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
         _collectFeeWithSchema(closeFeeDistributionSchema, amount);
     }
 
+    function _collectPnl(uint128 amount) internal {
+        _collectFeeWithSchema(pnlDistributionSchema, amount);
+    }
+
     function _collectFeeWithSchema(uint64[2] feeSchema, uint128 amount) internal {
         uint128 poolFee = math.muldiv(amount, feeSchema[uint8(FeeDistributionSchema.Pool)], Constants.HUNDRED_PERCENT);
         uint128 fundFee = amount - poolFee;
 
         if (fundFee > 0) _increaseInsuranceFund(fundFee);
-        if (poolFee > 0) {
-            poolAssets.balance += poolFee;
-            emit LiquidityPoolFees(poolFee);
-            // we are in undercollaterized state and recover is finished
-            if (poolAssets.targetPrice > 0 && poolDebt() == 0) poolAssets.targetPrice = 0;
+        if (poolFee > 0) _increasePool(poolFee);
+    }
+
+    function _increasePool(uint128 amount) internal {
+        poolAssets.balance += amount;
+        emit LiquidityPoolFees(amount);
+        // we are in undercollaterized state and recover is finished
+        if (poolAssets.targetPrice > 0 && poolDebt() == 0) poolAssets.targetPrice = 0;
+    }
+
+    function _decreasePool(uint128 amount) internal returns (uint128 debt) {
+        // we just ran out of insurance fund, save target price
+        if (poolAssets.targetPrice == 0) {
+            (poolAssets.targetPrice,) = stgUsdtPrice();
         }
+        if (amount > poolAssets.balance) {
+            debt = amount - poolAssets.balance;
+            amount = poolAssets.balance;
+        }
+        poolAssets.balance -= amount;
     }
 
     function _decreaseInsuranceFund(uint128 amount) internal returns (uint128 debt) {
@@ -200,21 +218,14 @@ abstract contract GravixVaultLiquidityPool is GravixVaultUpgradable {
             insuranceFund.balance -= amount;
         } else {
             uint128 delta = amount - insuranceFund.balance;
-            // we just ran out of insurance fund, save target price
-            if (poolAssets.targetPrice == 0) {
-                (poolAssets.targetPrice,) = stgUsdtPrice();
-            }
-            if (delta > poolAssets.balance) {
-                debt = delta - poolAssets.balance;
-                delta = poolAssets.balance;
-            }
-            poolAssets.balance -= delta;
             insuranceFund.balance = 0;
+            debt = _decreasePool(delta);
         }
     }
 
     function _increaseInsuranceFund(uint128 amount) internal {
         if (poolAssets.targetPrice > 0) {
+            // recovering
             uint128 debt = poolDebt();
             poolAssets.balance += math.min(debt, amount);
             amount -= math.min(debt, amount);
