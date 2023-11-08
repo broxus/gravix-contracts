@@ -63,7 +63,7 @@ with open('gravix_setup.csv', 'r') as f:
             "priceNode": {
                 "ticker": ticker,
                 "maxOracleDelay": ttl2,
-                "maxServerDelay": 15,
+                "maxServerDelay": 20,
             }
         }
         node_conf = {
