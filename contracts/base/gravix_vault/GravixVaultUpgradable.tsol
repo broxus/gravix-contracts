@@ -54,7 +54,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     }
 
     function _upgradeGravixAccountByContract(address gravixAcc, uint128 value, Callback.CallMeta meta) internal view {
-        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 1;
         IGravixAccount(gravixAcc).upgrade{ value: value, flag: flag }(
             gravixAccountCode.code,
             gravixAccountCode.version,
@@ -64,7 +64,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
 
     function _upgradeGravixAccountByUser(address user, uint128 value, Callback.CallMeta meta) internal view {
         address gravixAcc = getGravixAccountAddress(user);
-        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 0;
+        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 1;
         IGravixAccount(gravixAcc).upgrade{ value: value, flag: flag }(
             gravixAccountCode.code,
             gravixAccountCode.version,
