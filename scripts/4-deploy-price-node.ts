@@ -27,7 +27,7 @@ const main = async () => {
     ]);
     console.log("\x1b[1m", "\nSetup complete! ✔");
 
-    const price_node_configs = JSON.parse(readFileSync("./price_node_configs.json").toString());
+    const price_node_configs = JSON.parse(readFileSync("./configs/price_node_configs.json").toString());
 
     const spinner = ora("Deploying temporary owner...").start();
     const user = await deployUser(3, false);

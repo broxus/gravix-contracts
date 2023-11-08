@@ -45,7 +45,7 @@ const main = async () => {
 
     spinner.start("Upgrading accounts...");
     while (old_accs.length) {
-        const pack = old_accs.splice(0, 30);
+        const pack = old_accs.splice(0, 20);
         await locklift.transactions.waitFinalized(
             vault.methods
                 .forceUpgradeGravixAccountsByContracts({

@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import "@broxus/locklift-verifier";
 import "locklift-deploy";
 import { Deployments } from "locklift-deploy";
+import {TestnetGiver} from "./giverSettings";
 import path from "path";
 dotenv.config();
 
@@ -179,6 +180,7 @@ const config: LockliftConfig = {
                 },
             },
             giver: {
+                giverFactory: (ever, keyPair, address) => new TestnetGiver(ever, keyPair, address),
                 address: "0:73a868302a14a05ee6de24eed367bd42e7cd345406bb12e5fc6749de91a579ff",
                 phrase: process.env.MAIN_SEED_PHRASE ?? "",
                 accountId: 0,
