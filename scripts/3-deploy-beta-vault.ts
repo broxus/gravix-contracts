@@ -5,7 +5,7 @@ import { readFileSync } from "fs";
 
 const owner = new Address("0:311fe8e7bfeb6a2622aaba02c21569ac1e6f01c81c33f2623e5d8f1a5ba232d7");
 const usdt = new Address("0:a6706285f0137339a14d7768a4843a5b7b2e3e4d82ef12371b4b2f4bc86eb73b");
-const price_node = new Address("0:613893e3d5a5413819e25e44f367fbe9df8fa6b8c6252834bcc86845a0925b54");
+const price_node = new Address("0:70c783783e139f555a58b70dd86b705ca3c1751b8886dac0254a77d65b512d8e");
 const oracle_pubkey = "0x50ff1f834be4c175d4defbc9d0bf097a435e1b10fcfaf1650781939165666f47";
 const limit_bot = new Address("0:a6ef004f3b292eb7da3e0acb569ac202f7fc4840fa65bd824e011004a819df06");
 
@@ -15,8 +15,8 @@ const main = async () => {
     const user = await deployUser(10);
     console.log("Deployed tmp admin");
 
-    const market_configs = JSON.parse(readFileSync("./setup.json").toString());
-    const oracle_configs = JSON.parse(readFileSync("./oracle_setup.json").toString());
+    const market_configs = JSON.parse(readFileSync("./configs/setup.json").toString());
+    const oracle_configs = JSON.parse(readFileSync("./configs/oracle_setup.json").toString());
 
     const stgUSDT = await setupTokenRoot("stgUSDT_test", "stgUSDT_test", user, 6);
     console.log("Deployed stgUSDT");

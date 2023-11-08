@@ -6,7 +6,7 @@ export default async () => {
     });
     await locklift.deployments.saveContract({
         deploymentName: "beta_Vault",
-        address: "0:0246f10dbb1ac07b63963eb78660d16c4b23661edb8211fd0ef5e2e178225fa6",
+        address: "0:6621e0d891f2f73e1be31cd8a92b34a4a5f51d9bdabbedd20e0d82cdc7a03dad",
         contractName: "GravixVault",
     });
 

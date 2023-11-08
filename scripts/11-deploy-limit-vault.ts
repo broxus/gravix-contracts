@@ -11,7 +11,7 @@ const main = async () => {
     {
       type: "text",
       name: "_owner",
-      message: "Price node owner address",
+      message: "Owner address",
       validate: (value: string) => (isValidEverAddress(value) ? true : "Invalid Everscale address"),
     },
     {
