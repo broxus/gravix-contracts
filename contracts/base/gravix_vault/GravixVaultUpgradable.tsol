@@ -50,7 +50,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
         this._upgradeGravixAccountsBatch{flag: MsgFlag.ALL_NOT_RESERVED}(contracts, 0, false,meta);
     }
 
-    function _upgradeGravixAccountsBatch(address[] addrs, uint128 startIdx, bool userAddresses, Callback.CallMeta meta) external view reserveAndSendGas(meta) {
+    function _upgradeGravixAccountsBatch(address[] addrs, uint128 startIdx, bool userAddresses, Callback.CallMeta meta) external view reserve {
         require (msg.sender == address(this), Errors.NOT_VAULT);
 
         uint128 batchSize = 20;
@@ -67,7 +67,9 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
             this._upgradeGravixAccountsBatch{value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false}(
                 addrs, startIdx, userAddresses,meta
             );
+            return;
         }
+        meta.sendGasTo.transfer(0, false, MsgFlag.ALL_NOT_RESERVED);
     }
 
     function _upgradeGravixAccountByContract(address gravixAcc, uint128 value, Callback.CallMeta meta) internal view {
