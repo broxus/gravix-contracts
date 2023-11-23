@@ -53,7 +53,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function _upgradeGravixAccountsBatch(address[] addrs, uint128 startIdx, bool userAddresses, Callback.CallMeta meta) external view reserve {
         require (msg.sender == address(this), Errors.NOT_VAULT);
 
-        uint128 batchSize = 20;
+        uint128 batchSize = 15;
         for (; startIdx < addrs.length && batchSize != 0; startIdx++) {
             batchSize--;
             if (userAddresses) {
