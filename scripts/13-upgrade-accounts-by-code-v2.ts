@@ -59,6 +59,9 @@ const main = async () => {
         continuation = accs.continuation;
         if (!continuation) break;
     }
+    while (old_accs.length) {
+        await sleep(5000);
+    }
 };
 
 main()
