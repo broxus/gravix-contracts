@@ -85,8 +85,8 @@ const config: LockliftConfig = {
             },
             fork: {
                 source: {
-                    type: "block",
-                    block: 32438397,
+                    type: "live",
+                    connection: "mainnetJrpc"
                 },
                 contracts: [
                     {

@@ -3,22 +3,12 @@
   "data": [
     {
       "key": 1,
-      "name": "deploy_nonce",
+      "name": "deployNonce",
       "type": "uint32"
     },
     {
       "key": 2,
-      "name": "oracleProxyCode",
-      "type": "cell"
-    },
-    {
-      "key": 3,
       "name": "platformCode",
-      "type": "cell"
-    },
-    {
-      "key": 4,
-      "name": "gravixAccountCode",
       "type": "cell"
     }
   ],
@@ -26,11 +16,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_owner",
+          "name": "newOwner",
           "type": "address"
         }
       ],
@@ -40,15 +30,15 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "old_version",
+          "name": "oldVersion",
           "type": "uint32"
         },
         {
-          "name": "new_version",
+          "name": "newVersion",
           "type": "uint32"
         }
       ],
@@ -58,15 +48,15 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "old_version",
+          "name": "oldVersion",
           "type": "uint32"
         },
         {
-          "name": "new_version",
+          "name": "newVersion",
           "type": "uint32"
         }
       ],
@@ -76,7 +66,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -84,11 +74,11 @@
           "type": "address"
         },
         {
-          "name": "old_version",
+          "name": "oldVersion",
           "type": "uint32"
         },
         {
-          "name": "new_version",
+          "name": "newVersion",
           "type": "uint32"
         }
       ],
@@ -98,7 +88,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -112,7 +102,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -126,11 +116,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_ratio",
+          "name": "newRatio",
           "type": "uint64"
         }
       ],
@@ -140,11 +130,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_ratio",
+          "name": "newRatio",
           "type": "uint64"
         }
       ],
@@ -154,25 +144,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_state",
-          "type": "bool"
-        }
-      ],
-      "name": "TotalNOILimit",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "call_id",
-          "type": "uint32"
-        },
-        {
-          "name": "new_limit",
+          "name": "newLimit",
           "type": "uint128"
         }
       ],
@@ -182,7 +158,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -190,11 +166,11 @@
           "type": "address"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
-          "name": "position_type",
+          "name": "positionType",
           "type": "uint8"
         },
         {
@@ -202,7 +178,15 @@
           "type": "uint128"
         },
         {
-          "name": "expected_price",
+          "name": "expectedPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "takeProfitTriggerPrice",
           "type": "uint128"
         },
         {
@@ -210,11 +194,11 @@
           "type": "uint32"
         },
         {
-          "name": "max_slippage_rate",
+          "name": "maxSlippageRate",
           "type": "uint64"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         }
       ],
@@ -224,7 +208,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -232,7 +216,29 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "MarketOrderRequestRevert",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "orderKey",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
           "type": "uint32"
         }
       ],
@@ -242,7 +248,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -302,13 +308,41 @@
             {
               "name": "createdAt",
               "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
           "name": "position",
           "type": "tuple"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         }
       ],
@@ -318,7 +352,337 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "initialCollateral",
+              "type": "uint128"
+            },
+            {
+              "name": "openFee",
+              "type": "uint128"
+            },
+            {
+              "name": "openPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "markPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "accUSDFundingPerShare",
+              "type": "int256"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
+            }
+          ],
+          "name": "position",
+          "type": "tuple"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        }
+      ],
+      "name": "LimitOrderExecution",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "LimitOrderRequestRevert",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "LimitOrderPendingRequestRevert",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "orderType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "triggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "openFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "state",
+              "type": "uint8"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            }
+          ],
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "name": "orderKey",
+          "type": "uint32"
+        }
+      ],
+      "name": "PendingLimitOrderCreated",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "orderType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "triggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "openFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "state",
+              "type": "uint8"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            }
+          ],
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "name": "orderKey",
+          "type": "uint32"
+        }
+      ],
+      "name": "LimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "LimitOrderExecutionRevert",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -340,7 +704,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -358,11 +722,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -372,7 +736,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -388,10 +752,6 @@
             {
               "name": "maxShortsUSD",
               "type": "uint128"
-            },
-            {
-              "name": "noiWeight",
-              "type": "uint16"
             },
             {
               "name": "maxLeverage",
@@ -480,11 +840,145 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "initialCollateral",
+              "type": "uint128"
+            },
+            {
+              "name": "openFee",
+              "type": "uint128"
+            },
+            {
+              "name": "openPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "markPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "accUSDFundingPerShare",
+              "type": "int256"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
+            }
+          ],
+          "name": "updatedPos",
+          "type": "tuple"
+        }
+      ],
+      "name": "SetOrUpdatePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "RevertSetOrUpdatePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
@@ -500,10 +994,6 @@
             {
               "name": "maxShortsUSD",
               "type": "uint128"
-            },
-            {
-              "name": "noiWeight",
-              "type": "uint16"
             },
             {
               "name": "maxLeverage",
@@ -592,11 +1082,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
@@ -640,11 +1130,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
@@ -712,11 +1202,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -726,15 +1216,15 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
-          "name": "new_state",
+          "name": "newState",
           "type": "bool"
         }
       ],
@@ -744,11 +1234,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_manager",
+          "name": "newManager",
           "type": "address"
         }
       ],
@@ -758,11 +1248,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_manager",
+          "name": "newManager",
           "type": "address"
         }
       ],
@@ -772,11 +1262,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_state",
+          "name": "newState",
           "type": "bool"
         }
       ],
@@ -786,11 +1276,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_share",
+          "name": "newShare",
           "type": "uint64"
         }
       ],
@@ -800,11 +1290,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_rate",
+          "name": "newRate",
           "type": "uint64"
         }
       ],
@@ -814,15 +1304,15 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_open_fee_schema",
+          "name": "newOpenFeeSchema",
           "type": "uint64[]"
         },
         {
-          "name": "new_close_fee_schema",
+          "name": "newCloseFeeSchema",
           "type": "uint64[]"
         }
       ],
@@ -832,25 +1322,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "oracle",
-          "type": "address"
-        }
-      ],
-      "name": "NewOracle",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "call_id",
-          "type": "uint32"
-        },
-        {
-          "name": "price_node",
+          "name": "priceNode",
           "type": "address"
         }
       ],
@@ -860,11 +1336,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_pubkey",
+          "name": "newPubkey",
           "type": "uint256"
         }
       ],
@@ -874,11 +1350,39 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "limitBot",
+          "type": "address"
+        }
+      ],
+      "name": "NewLimitBot",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "limitBot",
+          "type": "address"
+        }
+      ],
+      "name": "NewLimitBotVault",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
@@ -918,24 +1422,6 @@
                   "type": "string"
                 },
                 {
-                  "name": "ttl",
-                  "type": "uint32"
-                },
-                {
-                  "name": "chainID",
-                  "type": "uint16"
-                }
-              ],
-              "name": "chainlink",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "name": "ticker",
-                  "type": "string"
-                },
-                {
                   "name": "maxOracleDelay",
                   "type": "uint32"
                 },
@@ -958,11 +1444,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_treasury",
+          "name": "newTreasury",
           "type": "address"
         }
       ],
@@ -972,11 +1458,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_project_fund",
+          "name": "newProjectFund",
           "type": "address"
         }
       ],
@@ -986,11 +1472,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_dev_fund",
+          "name": "newDevFund",
           "type": "address"
         }
       ],
@@ -1000,7 +1486,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1018,7 +1504,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1026,11 +1512,11 @@
           "type": "uint128"
         },
         {
-          "name": "project_fund",
+          "name": "projectFund",
           "type": "uint128"
         },
         {
-          "name": "dev_fund",
+          "name": "devFund",
           "type": "uint128"
         }
       ],
@@ -1040,11 +1526,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_schema",
+          "name": "newSchema",
           "type": "uint64[]"
         }
       ],
@@ -1054,11 +1540,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_schema",
+          "name": "newSchema",
           "type": "uint64[]"
         }
       ],
@@ -1068,11 +1554,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_schema",
+          "name": "newSchema",
           "type": "uint64[]"
         }
       ],
@@ -1082,11 +1568,11 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "new_val",
+          "name": "newVal",
           "type": "uint128"
         }
       ],
@@ -1096,7 +1582,21 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "newVal",
+          "type": "uint64"
+        }
+      ],
+      "name": "MinStopLossRateUpdate",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1104,7 +1604,11 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
           "type": "uint32"
         }
       ],
@@ -1114,7 +1618,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1122,7 +1626,7 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         }
       ],
@@ -1132,7 +1636,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1140,11 +1644,55 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "CancelLimitOrderRevert",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "orderKey",
+          "type": "uint32"
+        }
+      ],
+      "name": "CancelLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
           "type": "uint32"
         }
       ],
@@ -1154,7 +1702,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1162,7 +1710,7 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
@@ -1220,6 +1768,34 @@
                 {
                   "name": "createdAt",
                   "type": "uint32"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "stopLoss",
+                  "type": "optional(tuple)"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "takeProfit",
+                  "type": "optional(tuple)"
                 }
               ],
               "name": "position",
@@ -1262,7 +1838,7 @@
               "type": "uint32"
             }
           ],
-          "name": "position_view",
+          "name": "positionView",
           "type": "tuple"
         }
       ],
@@ -1272,7 +1848,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1280,7 +1856,7 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
@@ -1340,9 +1916,37 @@
             {
               "name": "createdAt",
               "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
-          "name": "updated_pos",
+          "name": "updatedPos",
           "type": "tuple"
         }
       ],
@@ -1352,7 +1956,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1360,16 +1964,20 @@
           "type": "address"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
           "name": "amount",
           "type": "uint128"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
         }
       ],
       "name": "AddPositionCollateralRevert",
@@ -1378,7 +1986,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1386,7 +1994,7 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
@@ -1446,9 +2054,37 @@
             {
               "name": "createdAt",
               "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
-          "name": "updated_pos",
+          "name": "updatedPos",
           "type": "tuple"
         }
       ],
@@ -1458,7 +2094,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1466,16 +2102,20 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
           "name": "amount",
           "type": "uint128"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
         }
       ],
       "name": "RemovePositionCollateralRevert",
@@ -1484,7 +2124,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1502,7 +2142,167 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "ExecutePositionTriggerRevert",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "initialCollateral",
+              "type": "uint128"
+            },
+            {
+              "name": "openFee",
+              "type": "uint128"
+            },
+            {
+              "name": "openPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "markPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "accUSDFundingPerShare",
+              "type": "int256"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
+            }
+          ],
+          "name": "updatedPos",
+          "type": "tuple"
+        }
+      ],
+      "name": "RemovePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
+          "type": "uint32"
+        },
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "RevertRemovePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1514,7 +2314,7 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
@@ -1572,6 +2372,34 @@
                 {
                   "name": "createdAt",
                   "type": "uint32"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "stopLoss",
+                  "type": "optional(tuple)"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "takeProfit",
+                  "type": "optional(tuple)"
                 }
               ],
               "name": "position",
@@ -1614,7 +2442,7 @@
               "type": "uint32"
             }
           ],
-          "name": "position_view",
+          "name": "positionView",
           "type": "tuple"
         }
       ],
@@ -1624,7 +2452,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1636,11 +2464,15 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
           "type": "uint32"
         }
       ],
@@ -1650,7 +2482,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1658,11 +2490,11 @@
           "type": "address"
         },
         {
-          "name": "usdt_amount_in",
+          "name": "usdtAmountIn",
           "type": "uint128"
         },
         {
-          "name": "stg_usdt_amount_out",
+          "name": "stgUsdtAmountOut",
           "type": "uint128"
         }
       ],
@@ -1672,7 +2504,7 @@
     {
       "inputs": [
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
@@ -1680,11 +2512,11 @@
           "type": "address"
         },
         {
-          "name": "usdt_amount_out",
+          "name": "usdtAmountOut",
           "type": "uint128"
         },
         {
-          "name": "stg_usdt_amount_in",
+          "name": "stgUsdtAmountIn",
           "type": "uint128"
         }
       ],
@@ -1716,24 +2548,30 @@
       "type": "bool"
     },
     {
-      "name": "deploy_nonce",
+      "name": "deployNonce",
       "type": "uint32"
     },
     {
-      "name": "owner",
-      "type": "address"
-    },
-    {
-      "name": "manager",
-      "type": "address"
-    },
-    {
-      "name": "marketManager",
-      "type": "address"
-    },
-    {
-      "name": "oracle",
-      "type": "address"
+      "components": [
+        {
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "name": "manager",
+          "type": "address"
+        },
+        {
+          "name": "marketManager",
+          "type": "address"
+        },
+        {
+          "name": "limitBot",
+          "type": "address"
+        }
+      ],
+      "name": "managers",
+      "type": "tuple"
     },
     {
       "name": "priceNode",
@@ -1744,76 +2582,118 @@
       "type": "uint256"
     },
     {
+      "components": [
+        {
+          "name": "root",
+          "type": "address"
+        },
+        {
+          "name": "wallet",
+          "type": "address"
+        }
+      ],
       "name": "usdt",
-      "type": "address"
+      "type": "tuple"
     },
     {
-      "name": "usdtWallet",
-      "type": "address"
-    },
-    {
+      "components": [
+        {
+          "name": "root",
+          "type": "address"
+        },
+        {
+          "name": "wallet",
+          "type": "address"
+        }
+      ],
       "name": "stgUsdt",
-      "type": "address"
+      "type": "tuple"
     },
     {
-      "name": "stgUsdtWallet",
-      "type": "address"
-    },
-    {
-      "name": "treasury",
-      "type": "address"
-    },
-    {
-      "name": "projectFund",
-      "type": "address"
-    },
-    {
-      "name": "devFund",
-      "type": "address"
-    },
-    {
-      "name": "oracleProxyCode",
-      "type": "cell"
+      "components": [
+        {
+          "name": "treasury",
+          "type": "address"
+        },
+        {
+          "name": "projectFund",
+          "type": "address"
+        },
+        {
+          "name": "devFund",
+          "type": "address"
+        }
+      ],
+      "name": "treasuries",
+      "type": "tuple"
     },
     {
       "name": "platformCode",
       "type": "cell"
     },
     {
-      "name": "gravixAccountCode",
-      "type": "cell"
-    },
-    {
-      "name": "gravixAccountVersion",
-      "type": "uint32"
-    },
-    {
-      "name": "oracleProxyVersion",
-      "type": "uint32"
-    },
-    {
       "name": "gravixVaultVersion",
       "type": "uint32"
     },
     {
-      "name": "poolBalance",
-      "type": "uint128"
+      "components": [
+        {
+          "name": "code",
+          "type": "cell"
+        },
+        {
+          "name": "version",
+          "type": "uint32"
+        }
+      ],
+      "name": "oracleProxyCode",
+      "type": "tuple"
     },
     {
-      "name": "stgUsdtSupply",
-      "type": "uint128"
+      "components": [
+        {
+          "name": "code",
+          "type": "cell"
+        },
+        {
+          "name": "version",
+          "type": "uint32"
+        }
+      ],
+      "name": "gravixAccountCode",
+      "type": "tuple"
     },
     {
-      "name": "targetPrice",
-      "type": "uint128"
+      "components": [
+        {
+          "name": "balance",
+          "type": "uint128"
+        },
+        {
+          "name": "stgUsdtSupply",
+          "type": "uint128"
+        },
+        {
+          "name": "targetPrice",
+          "type": "uint128"
+        }
+      ],
+      "name": "poolAssets",
+      "type": "tuple"
     },
     {
+      "components": [
+        {
+          "name": "balance",
+          "type": "uint128"
+        },
+        {
+          "name": "limit",
+          "type": "uint128"
+        }
+      ],
       "name": "insuranceFund",
-      "type": "uint128"
-    },
-    {
-      "name": "insuranceFundLimit",
-      "type": "uint128"
+      "type": "tuple"
     },
     {
       "name": "insuranceFundOverflowDistributionSchema",
@@ -1832,14 +2712,6 @@
       "type": "uint128"
     },
     {
-      "name": "totalNOI",
-      "type": "uint128"
-    },
-    {
-      "name": "totalNOILimitEnabled",
-      "type": "bool"
-    },
-    {
       "name": "maxPoolUtilRatio",
       "type": "uint64"
     },
@@ -1856,11 +2728,21 @@
       "type": "bool"
     },
     {
-      "name": "liquidationThresholdRate",
-      "type": "uint64"
+      "components": [
+        {
+          "name": "thresholdRate",
+          "type": "uint64"
+        },
+        {
+          "name": "rewardShare",
+          "type": "uint64"
+        }
+      ],
+      "name": "liquidationParams",
+      "type": "tuple"
     },
     {
-      "name": "liquidatorRewardShare",
+      "name": "minStopLossRate",
       "type": "uint64"
     },
     {
@@ -1869,6 +2751,10 @@
     },
     {
       "name": "closeFeeDistributionSchema",
+      "type": "uint64[]"
+    },
+    {
+      "name": "pnlDistributionSchema",
       "type": "uint64[]"
     },
     {
@@ -1896,14 +2782,6 @@
         {
           "name": "maxTotalShortsUSD",
           "type": "uint128"
-        },
-        {
-          "name": "lastNoiUpdatePrice",
-          "type": "uint128"
-        },
-        {
-          "name": "noiWeight",
-          "type": "uint16"
         },
         {
           "components": [
@@ -2102,24 +2980,6 @@
               "type": "string"
             },
             {
-              "name": "ttl",
-              "type": "uint32"
-            },
-            {
-              "name": "chainID",
-              "type": "uint16"
-            }
-          ],
-          "name": "chainlink",
-          "type": "tuple"
-        },
-        {
-          "components": [
-            {
-              "name": "ticker",
-              "type": "string"
-            },
-            {
               "name": "maxOracleDelay",
               "type": "uint32"
             },
@@ -2136,7 +2996,7 @@
       "type": "map(uint32,tuple)"
     },
     {
-      "name": "request_nonce",
+      "name": "requestNonce",
       "type": "uint32"
     },
     {
@@ -2192,32 +3052,6 @@
         {
           "components": [
             {
-              "name": "eventTransaction",
-              "type": "uint256"
-            },
-            {
-              "name": "eventIndex",
-              "type": "uint32"
-            },
-            {
-              "name": "eventData",
-              "type": "cell"
-            },
-            {
-              "name": "eventBlockNumber",
-              "type": "uint32"
-            },
-            {
-              "name": "eventBlock",
-              "type": "uint256"
-            }
-          ],
-          "name": "eventData",
-          "type": "tuple"
-        },
-        {
-          "components": [
-            {
               "name": "price",
               "type": "uint128"
             },
@@ -2246,9 +3080,17 @@
           "type": "address"
         },
         {
+          "name": "stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2256,7 +3098,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2264,8 +3106,144 @@
           "type": "tuple"
         }
       ],
-      "name": "pending_market_requests",
+      "name": "pendingMarketRequests",
       "type": "map(uint32,tuple)"
+    },
+    {
+      "components": [
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "collateral",
+          "type": "uint128"
+        },
+        {
+          "name": "triggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "orderType",
+          "type": "uint8"
+        },
+        {
+          "name": "leverage",
+          "type": "uint32"
+        },
+        {
+          "name": "openFeeRate",
+          "type": "uint64"
+        },
+        {
+          "name": "closeFeeRate",
+          "type": "uint64"
+        },
+        {
+          "name": "baseSpreadRate",
+          "type": "uint64"
+        },
+        {
+          "name": "liquidationThresholdRate",
+          "type": "uint64"
+        },
+        {
+          "name": "borrowBaseRatePerHour",
+          "type": "uint64"
+        },
+        {
+          "name": "referrer",
+          "type": "address"
+        },
+        {
+          "name": "assetPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "pendingLimitRequests",
+      "type": "map(uint32,tuple)"
+    },
+    {
+      "name": "limitBotVault",
+      "type": "address"
+    },
+    {
+      "name": "dummy1",
+      "type": "bool"
+    },
+    {
+      "name": "dummy2",
+      "type": "bool"
+    },
+    {
+      "name": "dummy3",
+      "type": "bool"
+    },
+    {
+      "name": "dummy4",
+      "type": "bool"
+    },
+    {
+      "name": "dummy5",
+      "type": "bool"
+    },
+    {
+      "name": "dummy6",
+      "type": "bool"
+    },
+    {
+      "name": "dummy7",
+      "type": "bool"
+    },
+    {
+      "name": "dummy8",
+      "type": "bool"
+    },
+    {
+      "name": "dummy9",
+      "type": "bool"
+    },
+    {
+      "name": "dummy10",
+      "type": "bool"
+    },
+    {
+      "name": "dummy11",
+      "type": "bool"
     }
   ],
   "functions": [
@@ -2284,16 +3262,20 @@
           "type": "address"
         },
         {
-          "name": "_oracle",
-          "type": "address"
-        },
-        {
           "name": "_priceNode",
           "type": "address"
         },
         {
           "name": "_pricePubkey",
           "type": "uint256"
+        },
+        {
+          "name": "_gravixAccountCode",
+          "type": "cell"
+        },
+        {
+          "name": "_oracleProxyCode",
+          "type": "cell"
         }
       ],
       "name": "constructor",
@@ -2308,7 +3290,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2316,7 +3298,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2330,13 +3312,13 @@
     {
       "inputs": [
         {
-          "name": "new_owner",
+          "name": "newOwner",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2344,7 +3326,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2358,13 +3340,13 @@
     {
       "inputs": [
         {
-          "name": "new_manager",
+          "name": "newManager",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2372,7 +3354,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2386,13 +3368,13 @@
     {
       "inputs": [
         {
-          "name": "new_manager",
+          "name": "newManager",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2400,7 +3382,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2414,13 +3396,13 @@
     {
       "inputs": [
         {
-          "name": "new_oracle",
+          "name": "newNode",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2428,35 +3410,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "setOracle",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "new_node",
-          "type": "address"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2470,13 +3424,13 @@
     {
       "inputs": [
         {
-          "name": "new_pubkey",
+          "name": "newPubkey",
           "type": "uint256"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2484,7 +3438,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2498,13 +3452,13 @@
     {
       "inputs": [
         {
-          "name": "new_state",
-          "type": "bool"
+          "name": "_newLimitBot",
+          "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2512,7 +3466,63 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "setLimitBot",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_newLimitBotVault",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "setLimitBotVault",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "newState",
+          "type": "bool"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2526,13 +3536,13 @@
     {
       "inputs": [
         {
-          "name": "new_rate",
+          "name": "newRate",
           "type": "uint64"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2540,7 +3550,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2554,13 +3564,13 @@
     {
       "inputs": [
         {
-          "name": "new_share",
+          "name": "newShare",
           "type": "uint64"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2568,7 +3578,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2582,13 +3592,13 @@
     {
       "inputs": [
         {
-          "name": "new_ratio",
+          "name": "newRatio",
           "type": "uint64"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2596,7 +3606,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2610,13 +3620,13 @@
     {
       "inputs": [
         {
-          "name": "new_max_rate",
+          "name": "newMaxRate",
           "type": "uint64"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2624,7 +3634,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2638,13 +3648,17 @@
     {
       "inputs": [
         {
-          "name": "new_state",
-          "type": "bool"
+          "name": "newOpenFeeSchema",
+          "type": "uint64[]"
+        },
+        {
+          "name": "newCloseFeeSchema",
+          "type": "uint64[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2652,39 +3666,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "setTotalNOILimit",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "new_open_fee_schema",
-          "type": "uint64[]"
-        },
-        {
-          "name": "new_close_fee_schema",
-          "type": "uint64[]"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2698,13 +3680,13 @@
     {
       "inputs": [
         {
-          "name": "new_treasury",
+          "name": "newTreasury",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2712,7 +3694,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2726,13 +3708,13 @@
     {
       "inputs": [
         {
-          "name": "new_project_fund",
+          "name": "newProjectFund",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2740,7 +3722,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2754,13 +3736,13 @@
     {
       "inputs": [
         {
-          "name": "new_dev_fund",
+          "name": "newDevFund",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2768,7 +3750,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2782,13 +3764,13 @@
     {
       "inputs": [
         {
-          "name": "new_limit",
+          "name": "newLimit",
           "type": "uint128"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2796,7 +3778,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2810,13 +3792,13 @@
     {
       "inputs": [
         {
-          "name": "new_schema",
+          "name": "newSchema",
           "type": "uint64[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2824,7 +3806,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2838,13 +3820,13 @@
     {
       "inputs": [
         {
-          "name": "new_schema",
+          "name": "newSchema",
           "type": "uint64[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2852,7 +3834,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2866,13 +3848,13 @@
     {
       "inputs": [
         {
-          "name": "new_schema",
+          "name": "newSchema",
           "type": "uint64[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2880,7 +3862,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2894,13 +3876,13 @@
     {
       "inputs": [
         {
-          "name": "new_val",
+          "name": "newVal",
           "type": "uint128"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -2908,7 +3890,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -2917,6 +3899,34 @@
         }
       ],
       "name": "setMinPositionCollateral",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "newVal",
+          "type": "uint64"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "setMinStopLossRate",
       "outputs": []
     },
     {
@@ -2988,34 +3998,7 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "name": "collateral",
-          "type": "uint128"
-        },
-        {
-          "name": "leverage",
-          "type": "uint32"
-        },
-        {
-          "name": "max_slippage",
-          "type": "uint64"
-        }
-      ],
-      "name": "validateOrderParams",
-      "outputs": [
-        {
-          "name": "correct",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "inputs": [
-        {
-          "name": "req_nonce",
+          "name": "_reqNonce",
           "type": "uint32"
         },
         {
@@ -3037,16 +4020,16 @@
               "type": "uint128"
             },
             {
-              "name": "expectedPrice",
+              "name": "triggerPrice",
               "type": "uint128"
+            },
+            {
+              "name": "orderType",
+              "type": "uint8"
             },
             {
               "name": "leverage",
               "type": "uint32"
-            },
-            {
-              "name": "maxSlippageRate",
-              "type": "uint64"
             },
             {
               "name": "openFeeRate",
@@ -3069,31 +4052,433 @@
               "type": "uint64"
             },
             {
+              "name": "referrer",
+              "type": "address"
+            },
+            {
+              "name": "assetPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
               "components": [
                 {
-                  "name": "eventTransaction",
-                  "type": "uint256"
-                },
-                {
-                  "name": "eventIndex",
+                  "name": "callId",
                   "type": "uint32"
                 },
                 {
-                  "name": "eventData",
-                  "type": "cell"
-                },
-                {
-                  "name": "eventBlockNumber",
+                  "name": "nonce",
                   "type": "uint32"
                 },
                 {
-                  "name": "eventBlock",
-                  "type": "uint256"
+                  "name": "sendGasTo",
+                  "type": "address"
                 }
               ],
-              "name": "eventData",
+              "name": "meta",
               "type": "tuple"
+            }
+          ],
+          "name": "_pendingRequest",
+          "type": "tuple"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "revert_requestPendingLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "reqNonce",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
             },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "orderType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "triggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "openFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "state",
+              "type": "uint8"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            }
+          ],
+          "name": "_order",
+          "type": "tuple"
+        },
+        {
+          "name": "_orderKey",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_requestPendingLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_nonce",
+          "type": "uint64"
+        },
+        {
+          "name": "_orderKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "_collateral",
+          "type": "uint128"
+        },
+        {
+          "name": "_leverage",
+          "type": "uint32"
+        },
+        {
+          "name": "_triggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_limitOrderType",
+          "type": "uint8"
+        },
+        {
+          "name": "stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        },
+        {
+          "name": "_assetPrice",
+          "type": "uint128"
+        }
+      ],
+      "name": "oracle_requestLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_reqNonce",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "triggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "orderType",
+              "type": "uint8"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "openFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "referrer",
+              "type": "address"
+            },
+            {
+              "name": "assetPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "components": [
+                {
+                  "name": "callId",
+                  "type": "uint32"
+                },
+                {
+                  "name": "nonce",
+                  "type": "uint32"
+                },
+                {
+                  "name": "sendGasTo",
+                  "type": "address"
+                }
+              ],
+              "name": "meta",
+              "type": "tuple"
+            }
+          ],
+          "name": "_pendRequest",
+          "type": "tuple"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "revert_requestLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "reqNonce",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "orderType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "triggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "openFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "state",
+              "type": "uint8"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            }
+          ],
+          "name": "order",
+          "type": "tuple"
+        },
+        {
+          "name": "orderKey",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_requestLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "components": [
             {
               "components": [
                 {
@@ -3121,45 +4506,43 @@
               "type": "tuple"
             },
             {
-              "name": "referrer",
-              "type": "address"
-            },
-            {
               "components": [
                 {
-                  "name": "call_id",
+                  "name": "orderKey",
                   "type": "uint32"
                 },
                 {
-                  "name": "nonce",
+                  "name": "marketIdx",
                   "type": "uint32"
                 },
                 {
-                  "name": "send_gas_to",
+                  "name": "collateral",
+                  "type": "uint128"
+                },
+                {
+                  "name": "leverage",
+                  "type": "uint32"
+                },
+                {
+                  "name": "positionType",
+                  "type": "uint8"
+                },
+                {
+                  "name": "user",
                   "type": "address"
                 }
               ],
-              "name": "meta",
-              "type": "tuple"
+              "name": "orders",
+              "type": "tuple[]"
             }
           ],
-          "name": "request",
-          "type": "tuple"
+          "name": "limitOrdersMap",
+          "type": "map(uint32,tuple)"
         },
-        {
-          "name": "position_key",
-          "type": "uint32"
-        }
-      ],
-      "name": "finish_requestMarketOrder",
-      "outputs": []
-    },
-    {
-      "inputs": [
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3167,7 +4550,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -3175,23 +4558,49 @@
           "type": "tuple"
         }
       ],
-      "name": "withdrawReferralBalance",
+      "name": "executeLimitOrders",
       "outputs": []
     },
     {
       "inputs": [
         {
-          "name": "user",
-          "type": "address"
+          "components": [
+            {
+              "name": "orderKey",
+              "type": "uint32"
+            },
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "_limitOrders",
+          "type": "tuple[]"
         },
         {
-          "name": "ref_bal",
+          "name": "_assetPrice",
           "type": "uint128"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3199,55 +4608,65 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
-          "name": "meta",
+          "name": "_meta",
           "type": "tuple"
+        },
+        {
+          "name": "_startIdx",
+          "type": "uint256"
         }
       ],
-      "name": "finish_withdrawReferralBalance",
+      "name": "self_executeLimitOrders",
       "outputs": []
     },
     {
       "inputs": [
         {
-          "name": "nonce",
+          "name": "_nonce",
           "type": "uint64"
         },
         {
-          "name": "user",
-          "type": "address"
+          "components": [
+            {
+              "name": "orderKey",
+              "type": "uint32"
+            },
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "user",
+              "type": "address"
+            }
+          ],
+          "name": "limitOrders",
+          "type": "tuple[]"
         },
         {
-          "name": "position_key",
-          "type": "uint32"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "name": "collateral",
-          "type": "uint128"
-        },
-        {
-          "name": "leverage",
-          "type": "uint32"
-        },
-        {
-          "name": "position_type",
-          "type": "uint8"
-        },
-        {
-          "name": "asset_price",
+          "name": "_assetPrice",
           "type": "uint128"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3255,15 +4674,63 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
-          "name": "meta",
+          "name": "_meta",
           "type": "tuple"
         }
       ],
-      "name": "oracle_executeMarketOrder",
+      "name": "oracle_executeLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_orderKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_positionSizeAsset",
+          "type": "uint128"
+        },
+        {
+          "name": "_positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_executeLimitOrder",
       "outputs": []
     },
     {
@@ -3273,59 +4740,7 @@
           "type": "address"
         },
         {
-          "name": "position_key",
-          "type": "uint32"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "name": "collateral",
-          "type": "uint128"
-        },
-        {
-          "name": "position_size_asset",
-          "type": "uint128"
-        },
-        {
-          "name": "asset_price",
-          "type": "uint128"
-        },
-        {
-          "name": "position_type",
-          "type": "uint8"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "revert_executeMarketOrder",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "user",
-          "type": "address"
-        },
-        {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
@@ -3381,9 +4796,37 @@
             {
               "name": "createdAt",
               "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
-          "name": "new_pos",
+          "name": "newPos",
           "type": "tuple"
         },
         {
@@ -3397,7 +4840,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3405,7 +4848,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -3413,89 +4856,7 @@
           "type": "tuple"
         }
       ],
-      "name": "finish_executeMarketOrder",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "collateral",
-          "type": "uint128"
-        },
-        {
-          "name": "leverage",
-          "type": "uint32"
-        },
-        {
-          "name": "asset_price",
-          "type": "uint128"
-        }
-      ],
-      "name": "calculatePositionAssetSize",
-      "outputs": [
-        {
-          "name": "position_size_asset",
-          "type": "uint128"
-        }
-      ]
-    },
-    {
-      "inputs": [
-        {
-          "name": "answerId",
-          "type": "uint32"
-        },
-        {
-          "name": "position_size_asset",
-          "type": "uint128"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "name": "position_type",
-          "type": "uint8"
-        }
-      ],
-      "name": "getDynamicSpread",
-      "outputs": [
-        {
-          "name": "dynamic_spread",
-          "type": "uint64"
-        }
-      ]
-    },
-    {
-      "inputs": [
-        {
-          "name": "user",
-          "type": "address"
-        },
-        {
-          "name": "position_key",
-          "type": "uint32"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "cancelMarketOrder",
+      "name": "finish_executeLimitOrder",
       "outputs": []
     },
     {
@@ -3505,13 +4866,13 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3519,7 +4880,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -3527,7 +4888,7 @@
           "type": "tuple"
         }
       ],
-      "name": "revert_cancelMarketOrder",
+      "name": "cancelLimitOrder",
       "outputs": []
     },
     {
@@ -3537,17 +4898,17 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         },
         {
-          "name": "collateral",
-          "type": "uint128"
+          "name": "revertReason",
+          "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3555,7 +4916,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -3563,219 +4924,295 @@
           "type": "tuple"
         }
       ],
-      "name": "finish_cancelMarketOrder",
+      "name": "revert_cancelLimitOrder",
       "outputs": []
     },
     {
       "inputs": [
         {
-          "name": "users",
-          "type": "address[]"
+          "name": "_user",
+          "type": "address"
         },
         {
-          "name": "position_keys",
-          "type": "uint32[]"
+          "name": "_orderKey",
+          "type": "uint32"
         },
         {
-          "name": "market_idx",
-          "type": "uint32[]"
+          "name": "_collateral",
+          "type": "uint128"
+        },
+        {
+          "name": "_positionHasTriggers",
+          "type": "bool"
         },
         {
           "components": [
             {
-              "name": "eventTransaction",
-              "type": "uint256"
-            },
-            {
-              "name": "eventIndex",
+              "name": "callId",
               "type": "uint32"
             },
             {
-              "name": "eventData",
-              "type": "cell"
-            },
-            {
-              "name": "eventBlockNumber",
+              "name": "nonce",
               "type": "uint32"
             },
             {
-              "name": "eventBlock",
-              "type": "uint256"
+              "name": "sendGasTo",
+              "type": "address"
             }
           ],
-          "name": "event_datas",
-          "type": "tuple[]"
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_cancelLimitOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_reqNonce",
+          "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "price",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
               "type": "uint128"
             },
             {
-              "name": "serverTime",
-              "type": "uint32"
-            },
-            {
-              "name": "oracleTime",
-              "type": "uint32"
-            },
-            {
-              "name": "ticker",
-              "type": "string"
-            },
-            {
-              "name": "signature",
-              "type": "cell"
-            }
-          ],
-          "name": "prices",
-          "type": "tuple[]"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "forceClosePositions",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "users",
-          "type": "address[]"
-        },
-        {
-          "name": "position_keys",
-          "type": "uint32[]"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32[]"
-        },
-        {
-          "name": "asset_prices",
-          "type": "uint128[]"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "forceClosePositionsWithPrice",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "position_key",
-          "type": "uint32"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "components": [
-            {
-              "name": "eventTransaction",
-              "type": "uint256"
-            },
-            {
-              "name": "eventIndex",
-              "type": "uint32"
-            },
-            {
-              "name": "eventData",
-              "type": "cell"
-            },
-            {
-              "name": "eventBlockNumber",
-              "type": "uint32"
-            },
-            {
-              "name": "eventBlock",
-              "type": "uint256"
-            }
-          ],
-          "name": "event_data",
-          "type": "tuple"
-        },
-        {
-          "components": [
-            {
-              "name": "price",
+              "name": "expectedPrice",
               "type": "uint128"
             },
             {
-              "name": "serverTime",
+              "name": "leverage",
               "type": "uint32"
             },
             {
-              "name": "oracleTime",
-              "type": "uint32"
+              "name": "maxSlippageRate",
+              "type": "uint64"
             },
             {
-              "name": "ticker",
-              "type": "string"
+              "name": "openFeeRate",
+              "type": "uint64"
             },
             {
-              "name": "signature",
-              "type": "cell"
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "components": [
+                {
+                  "name": "price",
+                  "type": "uint128"
+                },
+                {
+                  "name": "serverTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "oracleTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "ticker",
+                  "type": "string"
+                },
+                {
+                  "name": "signature",
+                  "type": "cell"
+                }
+              ],
+              "name": "price",
+              "type": "tuple"
+            },
+            {
+              "name": "referrer",
+              "type": "address"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "components": [
+                {
+                  "name": "callId",
+                  "type": "uint32"
+                },
+                {
+                  "name": "nonce",
+                  "type": "uint32"
+                },
+                {
+                  "name": "sendGasTo",
+                  "type": "address"
+                }
+              ],
+              "name": "meta",
+              "type": "tuple"
             }
           ],
-          "name": "price",
+          "name": "_pendRequest",
           "type": "tuple"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        }
+      ],
+      "name": "revert_requestMarketOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "reqNonce",
+          "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
+              "name": "user",
               "type": "address"
+            },
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "collateral",
+              "type": "uint128"
+            },
+            {
+              "name": "expectedPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "maxSlippageRate",
+              "type": "uint64"
+            },
+            {
+              "name": "openFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "components": [
+                {
+                  "name": "price",
+                  "type": "uint128"
+                },
+                {
+                  "name": "serverTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "oracleTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "ticker",
+                  "type": "string"
+                },
+                {
+                  "name": "signature",
+                  "type": "cell"
+                }
+              ],
+              "name": "price",
+              "type": "tuple"
+            },
+            {
+              "name": "referrer",
+              "type": "address"
+            },
+            {
+              "name": "stopLossTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "takeProfitTriggerPrice",
+              "type": "uint128"
+            },
+            {
+              "components": [
+                {
+                  "name": "callId",
+                  "type": "uint32"
+                },
+                {
+                  "name": "nonce",
+                  "type": "uint32"
+                },
+                {
+                  "name": "sendGasTo",
+                  "type": "address"
+                }
+              ],
+              "name": "meta",
+              "type": "tuple"
             }
           ],
-          "name": "meta",
+          "name": "request",
           "type": "tuple"
+        },
+        {
+          "name": "orderKey",
+          "type": "uint32"
         }
       ],
-      "name": "closePosition",
+      "name": "finish_requestMarketOrder",
       "outputs": []
     },
     {
@@ -3789,21 +5226,33 @@
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
-          "name": "asset_price",
+          "name": "collateral",
+          "type": "uint128"
+        },
+        {
+          "name": "leverage",
+          "type": "uint32"
+        },
+        {
+          "name": "positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "assetPrice",
           "type": "uint128"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3811,7 +5260,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -3819,27 +5268,43 @@
           "type": "tuple"
         }
       ],
-      "name": "oracle_closePosition",
+      "name": "oracle_executeMarketOrder",
       "outputs": []
     },
     {
       "inputs": [
         {
-          "name": "user",
+          "name": "_user",
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "_orderKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_collateral",
+          "type": "uint128"
+        },
+        {
+          "name": "_positionSizeAsset",
+          "type": "uint128"
+        },
+        {
+          "name": "_positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "_revertReason",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3847,143 +5312,125 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
-          "name": "meta",
+          "name": "_meta",
           "type": "tuple"
         }
       ],
-      "name": "revert_closePosition",
+      "name": "revert_executeMarketOrder",
       "outputs": []
     },
     {
       "inputs": [
         {
-          "name": "user",
+          "name": "_user",
           "type": "address"
         },
         {
-          "name": "position_key",
+          "name": "_positionKey",
           "type": "uint32"
         },
         {
-          "name": "asset_price",
-          "type": "uint128"
-        },
-        {
           "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "initialCollateral",
+              "type": "uint128"
+            },
+            {
+              "name": "openFee",
+              "type": "uint128"
+            },
+            {
+              "name": "openPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "markPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "accUSDFundingPerShare",
+              "type": "int256"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            },
             {
               "components": [
                 {
-                  "name": "marketIdx",
-                  "type": "uint32"
-                },
-                {
-                  "name": "positionType",
-                  "type": "uint8"
-                },
-                {
-                  "name": "initialCollateral",
+                  "name": "triggerPrice",
                   "type": "uint128"
-                },
-                {
-                  "name": "openFee",
-                  "type": "uint128"
-                },
-                {
-                  "name": "openPrice",
-                  "type": "uint128"
-                },
-                {
-                  "name": "markPrice",
-                  "type": "uint128"
-                },
-                {
-                  "name": "leverage",
-                  "type": "uint32"
-                },
-                {
-                  "name": "accUSDFundingPerShare",
-                  "type": "int256"
-                },
-                {
-                  "name": "borrowBaseRatePerHour",
-                  "type": "uint64"
-                },
-                {
-                  "name": "baseSpreadRate",
-                  "type": "uint64"
-                },
-                {
-                  "name": "closeFeeRate",
-                  "type": "uint64"
-                },
-                {
-                  "name": "liquidationThresholdRate",
-                  "type": "uint64"
                 },
                 {
                   "name": "createdAt",
                   "type": "uint32"
                 }
               ],
-              "name": "position",
-              "type": "tuple"
+              "name": "stopLoss",
+              "type": "optional(tuple)"
             },
             {
-              "name": "positionSizeUSD",
-              "type": "uint128"
-            },
-            {
-              "name": "closePrice",
-              "type": "uint128"
-            },
-            {
-              "name": "borrowFee",
-              "type": "uint128"
-            },
-            {
-              "name": "fundingFee",
-              "type": "int256"
-            },
-            {
-              "name": "closeFee",
-              "type": "uint128"
-            },
-            {
-              "name": "liquidationPrice",
-              "type": "uint128"
-            },
-            {
-              "name": "pnl",
-              "type": "int256"
-            },
-            {
-              "name": "liquidate",
-              "type": "bool"
-            },
-            {
-              "name": "viewTime",
-              "type": "uint32"
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
-          "name": "position_view",
+          "name": "_newPos",
           "type": "tuple"
         },
         {
-          "name": "referrer",
+          "name": "_referrer",
           "type": "address"
         },
         {
-          "name": "grandReferrer",
+          "name": "_grandReferrer",
           "type": "address"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -3991,15 +5438,15 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
-          "name": "meta",
+          "name": "_meta",
           "type": "tuple"
         }
       ],
-      "name": "finish_closePosition",
+      "name": "finish_executeMarketOrder",
       "outputs": []
     },
     {
@@ -4009,21 +5456,13 @@
           "type": "address"
         },
         {
-          "name": "amount",
-          "type": "uint128"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "name": "position_key",
+          "name": "orderKey",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4031,7 +5470,723 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "cancelMarketOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_orderKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_cancelMarketOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_orderKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_collateral",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_cancelMarketOrder",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "withdrawReferralBalance",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "refBal",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_withdrawReferralBalance",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "collateral",
+          "type": "uint128"
+        },
+        {
+          "name": "leverage",
+          "type": "uint32"
+        },
+        {
+          "name": "assetPrice",
+          "type": "uint128"
+        }
+      ],
+      "name": "calculatePositionAssetSize",
+      "outputs": [
+        {
+          "name": "positionSizeAsset",
+          "type": "uint128"
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "answerId",
+          "type": "uint32"
+        },
+        {
+          "name": "positionSizeAsset",
+          "type": "uint128"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "positionType",
+          "type": "uint8"
+        }
+      ],
+      "name": "getDynamicSpread",
+      "outputs": [
+        {
+          "name": "dynamicSpread",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "price",
+              "type": "uint128"
+            },
+            {
+              "name": "serverTime",
+              "type": "uint32"
+            },
+            {
+              "name": "oracleTime",
+              "type": "uint32"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "signature",
+              "type": "cell"
+            }
+          ],
+          "name": "_price",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "setOrUpdatePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_nonce",
+          "type": "uint64"
+        },
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_assetPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "oracle_setOrUpdatePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "initialCollateral",
+              "type": "uint128"
+            },
+            {
+              "name": "openFee",
+              "type": "uint128"
+            },
+            {
+              "name": "openPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "markPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "accUSDFundingPerShare",
+              "type": "int256"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
+            }
+          ],
+          "name": "_position",
+          "type": "tuple"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_isFirstPositionTriggerPrice",
+          "type": "bool"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_setOrUpdatePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_setOrUpdatePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "removeStopLoss",
+          "type": "bool"
+        },
+        {
+          "name": "removeTakeProfit",
+          "type": "bool"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "removePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_triggersBefore",
+          "type": "uint8"
+        },
+        {
+          "name": "_triggersAfter",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "name": "marketIdx",
+              "type": "uint32"
+            },
+            {
+              "name": "positionType",
+              "type": "uint8"
+            },
+            {
+              "name": "initialCollateral",
+              "type": "uint128"
+            },
+            {
+              "name": "openFee",
+              "type": "uint128"
+            },
+            {
+              "name": "openPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "markPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "leverage",
+              "type": "uint32"
+            },
+            {
+              "name": "accUSDFundingPerShare",
+              "type": "int256"
+            },
+            {
+              "name": "borrowBaseRatePerHour",
+              "type": "uint64"
+            },
+            {
+              "name": "baseSpreadRate",
+              "type": "uint64"
+            },
+            {
+              "name": "closeFeeRate",
+              "type": "uint64"
+            },
+            {
+              "name": "liquidationThresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
+            }
+          ],
+          "name": "_updatedPosition",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_removePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_removePositionTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_amount",
+          "type": "uint128"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4105,23 +6260,51 @@
             {
               "name": "createdAt",
               "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
           "name": "position",
           "type": "tuple"
         },
         {
-          "name": "old_leverage",
+          "name": "oldLeverage",
           "type": "uint32"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4129,7 +6312,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4147,17 +6330,17 @@
           "type": "uint128"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4165,7 +6348,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4179,25 +6362,29 @@
     {
       "inputs": [
         {
-          "name": "user",
+          "name": "_user",
           "type": "address"
         },
         {
-          "name": "amount",
+          "name": "_amount",
           "type": "uint128"
         },
         {
-          "name": "position_key",
+          "name": "_positionKey",
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4205,11 +6392,11 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
-          "name": "meta",
+          "name": "_meta",
           "type": "tuple"
         }
       ],
@@ -4279,23 +6466,51 @@
             {
               "name": "createdAt",
               "type": "uint32"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "stopLoss",
+              "type": "optional(tuple)"
+            },
+            {
+              "components": [
+                {
+                  "name": "triggerPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                }
+              ],
+              "name": "takeProfit",
+              "type": "optional(tuple)"
             }
           ],
           "name": "position",
           "type": "tuple"
         },
         {
-          "name": "old_leverage",
+          "name": "oldLeverage",
           "type": "uint32"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4303,7 +6518,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4317,81 +6532,47 @@
     {
       "inputs": [
         {
-          "components": [
-            {
-              "components": [
-                {
-                  "name": "eventTransaction",
-                  "type": "uint256"
-                },
-                {
-                  "name": "eventIndex",
-                  "type": "uint32"
-                },
-                {
-                  "name": "eventData",
-                  "type": "cell"
-                },
-                {
-                  "name": "eventBlockNumber",
-                  "type": "uint32"
-                },
-                {
-                  "name": "eventBlock",
-                  "type": "uint256"
-                }
-              ],
-              "name": "eventData",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "name": "price",
-                  "type": "uint128"
-                },
-                {
-                  "name": "serverTime",
-                  "type": "uint32"
-                },
-                {
-                  "name": "oracleTime",
-                  "type": "uint32"
-                },
-                {
-                  "name": "ticker",
-                  "type": "string"
-                },
-                {
-                  "name": "signature",
-                  "type": "cell"
-                }
-              ],
-              "name": "price",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "name": "user",
-                  "type": "address"
-                },
-                {
-                  "name": "positionKey",
-                  "type": "uint32"
-                }
-              ],
-              "name": "positions",
-              "type": "tuple[]"
-            }
-          ],
-          "name": "liquidations",
-          "type": "map(uint32,tuple)"
+          "name": "users",
+          "type": "address[]"
+        },
+        {
+          "name": "positionKeys",
+          "type": "uint32[]"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "price",
+              "type": "uint128"
+            },
+            {
+              "name": "serverTime",
+              "type": "uint32"
+            },
+            {
+              "name": "oracleTime",
+              "type": "uint32"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "signature",
+              "type": "cell"
+            }
+          ],
+          "name": "prices",
+          "type": "tuple[]"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4399,7 +6580,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4407,31 +6588,31 @@
           "type": "tuple"
         }
       ],
-      "name": "liquidatePositions",
+      "name": "forceClosePositions",
       "outputs": []
     },
     {
       "inputs": [
         {
-          "name": "user",
-          "type": "address"
+          "name": "users",
+          "type": "address[]"
         },
         {
-          "name": "liquidator",
-          "type": "address"
+          "name": "positionKeys",
+          "type": "uint32[]"
         },
         {
-          "name": "position_key",
-          "type": "uint32"
+          "name": "marketIdx",
+          "type": "uint32[]"
         },
         {
-          "name": "market_idx",
-          "type": "uint32"
+          "name": "assetPrices",
+          "type": "uint128[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4439,7 +6620,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4447,7 +6628,65 @@
           "type": "tuple"
         }
       ],
-      "name": "revert_liquidatePositions",
+      "name": "forceClosePositionsWithPrice",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "price",
+              "type": "uint128"
+            },
+            {
+              "name": "serverTime",
+              "type": "uint32"
+            },
+            {
+              "name": "oracleTime",
+              "type": "uint32"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "signature",
+              "type": "cell"
+            }
+          ],
+          "name": "price",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "closePosition",
       "outputs": []
     },
     {
@@ -4457,35 +6696,25 @@
           "type": "uint64"
         },
         {
-          "name": "liquidator",
+          "name": "user",
           "type": "address"
         },
         {
-          "name": "market_idx",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
-          "components": [
-            {
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "name": "positionKey",
-              "type": "uint32"
-            }
-          ],
-          "name": "positions",
-          "type": "tuple[]"
+          "name": "marketIdx",
+          "type": "uint32"
         },
         {
-          "name": "asset_price",
+          "name": "assetPrice",
           "type": "uint128"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4493,7 +6722,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4501,57 +6730,7 @@
           "type": "tuple"
         }
       ],
-      "name": "oracle_liquidatePositions",
-      "outputs": []
-    },
-    {
-      "inputs": [
-        {
-          "name": "liquidator",
-          "type": "address"
-        },
-        {
-          "name": "market_idx",
-          "type": "uint32"
-        },
-        {
-          "components": [
-            {
-              "name": "user",
-              "type": "address"
-            },
-            {
-              "name": "positionKey",
-              "type": "uint32"
-            }
-          ],
-          "name": "positions",
-          "type": "tuple[]"
-        },
-        {
-          "name": "asset_price",
-          "type": "uint128"
-        },
-        {
-          "components": [
-            {
-              "name": "call_id",
-              "type": "uint32"
-            },
-            {
-              "name": "nonce",
-              "type": "uint32"
-            },
-            {
-              "name": "send_gas_to",
-              "type": "address"
-            }
-          ],
-          "name": "meta",
-          "type": "tuple"
-        }
-      ],
-      "name": "self_liquidatePositions",
+      "name": "oracle_closePosition",
       "outputs": []
     },
     {
@@ -4561,16 +6740,48 @@
           "type": "address"
         },
         {
-          "name": "liquidator",
-          "type": "address"
-        },
-        {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         },
         {
-          "name": "asset_price",
-          "type": "uint128"
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_closePosition",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
         },
         {
           "components": [
@@ -4627,6 +6838,34 @@
                 {
                   "name": "createdAt",
                   "type": "uint32"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "stopLoss",
+                  "type": "optional(tuple)"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "takeProfit",
+                  "type": "optional(tuple)"
                 }
               ],
               "name": "position",
@@ -4669,7 +6908,627 @@
               "type": "uint32"
             }
           ],
-          "name": "position_view",
+          "name": "_positionView",
+          "type": "tuple"
+        },
+        {
+          "name": "_referrer",
+          "type": "address"
+        },
+        {
+          "name": "_grandReferrer",
+          "type": "address"
+        },
+        {
+          "name": "_initiator",
+          "type": "address"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "finish_closePosition",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "name": "price",
+                  "type": "uint128"
+                },
+                {
+                  "name": "serverTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "oracleTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "ticker",
+                  "type": "string"
+                },
+                {
+                  "name": "signature",
+                  "type": "cell"
+                }
+              ],
+              "name": "price",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "user",
+                  "type": "address"
+                },
+                {
+                  "name": "positionKey",
+                  "type": "uint32"
+                },
+                {
+                  "name": "triggerPositionType",
+                  "type": "uint8"
+                }
+              ],
+              "name": "positions",
+              "type": "tuple[]"
+            }
+          ],
+          "name": "positionsMap",
+          "type": "map(uint32,tuple)"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "executePositionsTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "name": "positionKey",
+              "type": "uint32"
+            },
+            {
+              "name": "triggerPositionType",
+              "type": "uint8"
+            }
+          ],
+          "name": "_positions",
+          "type": "tuple[]"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_assetPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        },
+        {
+          "name": "_startIdx",
+          "type": "uint256"
+        }
+      ],
+      "name": "self_executePositionsTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_nonce",
+          "type": "uint64"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "name": "positionKey",
+              "type": "uint32"
+            },
+            {
+              "name": "triggerPositionType",
+              "type": "uint8"
+            }
+          ],
+          "name": "_positions",
+          "type": "tuple[]"
+        },
+        {
+          "name": "_assetPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "oracle_executePositionsTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_executePositionsTriggers",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "name": "price",
+                  "type": "uint128"
+                },
+                {
+                  "name": "serverTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "oracleTime",
+                  "type": "uint32"
+                },
+                {
+                  "name": "ticker",
+                  "type": "string"
+                },
+                {
+                  "name": "signature",
+                  "type": "cell"
+                }
+              ],
+              "name": "price",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "name": "user",
+                  "type": "address"
+                },
+                {
+                  "name": "positionKey",
+                  "type": "uint32"
+                }
+              ],
+              "name": "positions",
+              "type": "tuple[]"
+            }
+          ],
+          "name": "liquidations",
+          "type": "map(uint32,tuple)"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "liquidatePositions",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "name": "_liquidator",
+          "type": "address"
+        },
+        {
+          "name": "_positionKey",
+          "type": "uint32"
+        },
+        {
+          "name": "_marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "_revertReason",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "revert_liquidatePositions",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "nonce",
+          "type": "uint64"
+        },
+        {
+          "name": "liquidator",
+          "type": "address"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "name": "positionKey",
+              "type": "uint32"
+            }
+          ],
+          "name": "positions",
+          "type": "tuple[]"
+        },
+        {
+          "name": "assetPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "oracle_liquidatePositions",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "liquidator",
+          "type": "address"
+        },
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "name": "positionKey",
+              "type": "uint32"
+            }
+          ],
+          "name": "positions",
+          "type": "tuple[]"
+        },
+        {
+          "name": "assetPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "meta",
+          "type": "tuple"
+        },
+        {
+          "name": "_startIdx",
+          "type": "uint256"
+        }
+      ],
+      "name": "self_liquidatePositions",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "liquidator",
+          "type": "address"
+        },
+        {
+          "name": "positionKey",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "name": "marketIdx",
+                  "type": "uint32"
+                },
+                {
+                  "name": "positionType",
+                  "type": "uint8"
+                },
+                {
+                  "name": "initialCollateral",
+                  "type": "uint128"
+                },
+                {
+                  "name": "openFee",
+                  "type": "uint128"
+                },
+                {
+                  "name": "openPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "markPrice",
+                  "type": "uint128"
+                },
+                {
+                  "name": "leverage",
+                  "type": "uint32"
+                },
+                {
+                  "name": "accUSDFundingPerShare",
+                  "type": "int256"
+                },
+                {
+                  "name": "borrowBaseRatePerHour",
+                  "type": "uint64"
+                },
+                {
+                  "name": "baseSpreadRate",
+                  "type": "uint64"
+                },
+                {
+                  "name": "closeFeeRate",
+                  "type": "uint64"
+                },
+                {
+                  "name": "liquidationThresholdRate",
+                  "type": "uint64"
+                },
+                {
+                  "name": "createdAt",
+                  "type": "uint32"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "stopLoss",
+                  "type": "optional(tuple)"
+                },
+                {
+                  "components": [
+                    {
+                      "name": "triggerPrice",
+                      "type": "uint128"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "uint32"
+                    }
+                  ],
+                  "name": "takeProfit",
+                  "type": "optional(tuple)"
+                }
+              ],
+              "name": "position",
+              "type": "tuple"
+            },
+            {
+              "name": "positionSizeUSD",
+              "type": "uint128"
+            },
+            {
+              "name": "closePrice",
+              "type": "uint128"
+            },
+            {
+              "name": "borrowFee",
+              "type": "uint128"
+            },
+            {
+              "name": "fundingFee",
+              "type": "int256"
+            },
+            {
+              "name": "closeFee",
+              "type": "uint128"
+            },
+            {
+              "name": "liquidationPrice",
+              "type": "uint128"
+            },
+            {
+              "name": "pnl",
+              "type": "int256"
+            },
+            {
+              "name": "liquidate",
+              "type": "bool"
+            },
+            {
+              "name": "viewTime",
+              "type": "uint32"
+            }
+          ],
+          "name": "positionView",
           "type": "tuple"
         },
         {
@@ -4683,7 +7542,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4691,7 +7550,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4705,7 +7564,7 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
@@ -4717,11 +7576,11 @@
           "type": "uint32"
         },
         {
-          "name": "asset_price",
+          "name": "assetPrice",
           "type": "uint128"
         },
         {
-          "name": "position_type",
+          "name": "positionType",
           "type": "uint8"
         }
       ],
@@ -4761,18 +7620,18 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
       "name": "getFundingRates",
       "outputs": [
         {
-          "name": "long_rate_per_hour",
+          "name": "longRatePerHour",
           "type": "int128"
         },
         {
-          "name": "short_rate_per_hour",
+          "name": "shortRatePerHour",
           "type": "int128"
         }
       ]
@@ -4780,7 +7639,7 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -4809,10 +7668,6 @@
               "type": "uint128"
             },
             {
-              "name": "noiWeight",
-              "type": "uint16"
-            },
-            {
               "name": "maxLeverage",
               "type": "uint32"
             },
@@ -4889,13 +7744,13 @@
               "type": "map(uint8,tuple[])"
             }
           ],
-          "name": "new_markets",
+          "name": "newMarkets",
           "type": "tuple[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -4903,7 +7758,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -4931,10 +7786,6 @@
               "type": "uint128"
             },
             {
-              "name": "noiWeight",
-              "type": "uint16"
-            },
-            {
               "name": "maxLeverage",
               "type": "uint32"
             },
@@ -5011,13 +7862,13 @@
               "type": "map(uint8,tuple[])"
             }
           ],
-          "name": "new_configs",
+          "name": "newConfigs",
           "type": "map(uint32,tuple)"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5025,7 +7876,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5075,24 +7926,6 @@
                   "type": "string"
                 },
                 {
-                  "name": "ttl",
-                  "type": "uint32"
-                },
-                {
-                  "name": "chainID",
-                  "type": "uint16"
-                }
-              ],
-              "name": "chainlink",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "name": "ticker",
-                  "type": "string"
-                },
-                {
                   "name": "maxOracleDelay",
                   "type": "uint32"
                 },
@@ -5105,13 +7938,13 @@
               "type": "tuple"
             }
           ],
-          "name": "new_oracles",
+          "name": "newOracles",
           "type": "map(uint32,tuple)"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5119,7 +7952,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5145,10 +7978,6 @@
             {
               "name": "maxShortsUSD",
               "type": "uint128"
-            },
-            {
-              "name": "noiWeight",
-              "type": "uint16"
             },
             {
               "name": "maxLeverage",
@@ -5248,7 +8077,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5256,7 +8085,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5300,13 +8129,13 @@
               "type": "tuple"
             }
           ],
-          "name": "market_to_working_hours",
+          "name": "marketToWorkingHours",
           "type": "map(uint32,map(uint8,tuple[]))"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5314,7 +8143,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5328,7 +8157,7 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32[]"
         },
         {
@@ -5362,13 +8191,13 @@
               "type": "tuple"
             }
           ],
-          "name": "working_hours",
+          "name": "workingHours",
           "type": "map(uint8,tuple[])"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5376,7 +8205,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5390,7 +8219,7 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32[]"
         },
         {
@@ -5448,13 +8277,13 @@
               "type": "tuple"
             }
           ],
-          "name": "new_weekends",
+          "name": "newWeekends",
           "type": "tuple[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5462,7 +8291,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5476,7 +8305,7 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32[]"
         },
         {
@@ -5534,13 +8363,13 @@
               "type": "tuple"
             }
           ],
-          "name": "new_weekends",
+          "name": "newWeekends",
           "type": "tuple"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5548,7 +8377,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5562,13 +8391,13 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32[]"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -5576,7 +8405,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -5708,7 +8537,7 @@
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -5757,7 +8586,7 @@
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -5830,7 +8659,7 @@
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -5857,14 +8686,6 @@
             {
               "name": "maxTotalShortsUSD",
               "type": "uint128"
-            },
-            {
-              "name": "lastNoiUpdatePrice",
-              "type": "uint128"
-            },
-            {
-              "name": "noiWeight",
-              "type": "uint16"
             },
             {
               "components": [
@@ -5966,14 +8787,6 @@
             {
               "name": "maxTotalShortsUSD",
               "type": "uint128"
-            },
-            {
-              "name": "lastNoiUpdatePrice",
-              "type": "uint128"
-            },
-            {
-              "name": "noiWeight",
-              "type": "uint16"
             },
             {
               "components": [
@@ -6091,24 +8904,6 @@
                   "type": "string"
                 },
                 {
-                  "name": "ttl",
-                  "type": "uint32"
-                },
-                {
-                  "name": "chainID",
-                  "type": "uint16"
-                }
-              ],
-              "name": "chainlink",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "name": "ticker",
-                  "type": "string"
-                },
-                {
                   "name": "maxOracleDelay",
                   "type": "uint32"
                 },
@@ -6133,7 +8928,7 @@
           "type": "uint32"
         },
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         }
       ],
@@ -6176,24 +8971,6 @@
                   "type": "string"
                 },
                 {
-                  "name": "ttl",
-                  "type": "uint32"
-                },
-                {
-                  "name": "chainID",
-                  "type": "uint16"
-                }
-              ],
-              "name": "chainlink",
-              "type": "tuple"
-            },
-            {
-              "components": [
-                {
-                  "name": "ticker",
-                  "type": "string"
-                },
-                {
                   "name": "maxOracleDelay",
                   "type": "uint32"
                 },
@@ -6216,7 +8993,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6224,7 +9001,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6242,14 +9019,14 @@
           "type": "uint32"
         },
         {
-          "name": "usdt_amount",
+          "name": "usdtAmount",
           "type": "uint128"
         }
       ],
       "name": "usdtToStgUsdt",
       "outputs": [
         {
-          "name": "stg_amount",
+          "name": "stgAmount",
           "type": "uint128"
         }
       ]
@@ -6261,14 +9038,14 @@
           "type": "uint32"
         },
         {
-          "name": "stg_amount",
+          "name": "stgAmount",
           "type": "uint128"
         }
       ],
       "name": "stgUsdtToUsdt",
       "outputs": [
         {
-          "name": "usdt_amount",
+          "name": "usdtAmount",
           "type": "uint128"
         }
       ]
@@ -6283,11 +9060,11 @@
       "name": "stgUsdtPrice",
       "outputs": [
         {
-          "name": "in_price",
+          "name": "inPrice",
           "type": "uint128"
         },
         {
-          "name": "out_price",
+          "name": "outPrice",
           "type": "uint128"
         }
       ]
@@ -6311,7 +9088,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6319,7 +9096,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6339,7 +9116,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6347,7 +9124,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6363,7 +9140,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6371,7 +9148,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6391,7 +9168,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6399,7 +9176,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6419,7 +9196,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6427,7 +9204,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6441,21 +9218,17 @@
     {
       "inputs": [
         {
-          "name": "user",
+          "name": "_user",
           "type": "address"
         },
         {
-          "name": "old_version",
-          "type": "uint32"
-        },
-        {
-          "name": "new_version",
+          "name": "_accountVersion",
           "type": "uint32"
         },
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6463,7 +9236,43 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
+              "type": "address"
+            }
+          ],
+          "name": "_meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "onGravixAccountRequestUpgrade",
+      "outputs": []
+    },
+    {
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "name": "oldVersion",
+          "type": "uint32"
+        },
+        {
+          "name": "newVersion",
+          "type": "uint32"
+        },
+        {
+          "components": [
+            {
+              "name": "callId",
+              "type": "uint32"
+            },
+            {
+              "name": "nonce",
+              "type": "uint32"
+            },
+            {
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6483,7 +9292,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6491,7 +9300,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6515,7 +9324,7 @@
         {
           "components": [
             {
-              "name": "call_id",
+              "name": "callId",
               "type": "uint32"
             },
             {
@@ -6523,7 +9332,7 @@
               "type": "uint32"
             },
             {
-              "name": "send_gas_to",
+              "name": "sendGasTo",
               "type": "address"
             }
           ],
@@ -6549,20 +9358,26 @@
       "name": "getDetails",
       "outputs": [
         {
-          "name": "_owner",
-          "type": "address"
-        },
-        {
-          "name": "_manager",
-          "type": "address"
-        },
-        {
-          "name": "_marketManager",
-          "type": "address"
-        },
-        {
-          "name": "_oracle",
-          "type": "address"
+          "components": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "manager",
+              "type": "address"
+            },
+            {
+              "name": "marketManager",
+              "type": "address"
+            },
+            {
+              "name": "limitBot",
+              "type": "address"
+            }
+          ],
+          "name": "_managers",
+          "type": "tuple"
         },
         {
           "name": "_priceNode",
@@ -6573,52 +9388,82 @@
           "type": "uint256"
         },
         {
-          "name": "_usdt",
-          "type": "address"
+          "components": [
+            {
+              "name": "root",
+              "type": "address"
+            },
+            {
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "_usdtToken",
+          "type": "tuple"
         },
         {
-          "name": "_usdtWallet",
-          "type": "address"
+          "components": [
+            {
+              "name": "root",
+              "type": "address"
+            },
+            {
+              "name": "wallet",
+              "type": "address"
+            }
+          ],
+          "name": "_stgUsdtToken",
+          "type": "tuple"
         },
         {
-          "name": "_stgUsdt",
-          "type": "address"
+          "components": [
+            {
+              "name": "treasury",
+              "type": "address"
+            },
+            {
+              "name": "projectFund",
+              "type": "address"
+            },
+            {
+              "name": "devFund",
+              "type": "address"
+            }
+          ],
+          "name": "_treasuries",
+          "type": "tuple"
         },
         {
-          "name": "_stgUsdtWallet",
-          "type": "address"
+          "components": [
+            {
+              "name": "balance",
+              "type": "uint128"
+            },
+            {
+              "name": "stgUsdtSupply",
+              "type": "uint128"
+            },
+            {
+              "name": "targetPrice",
+              "type": "uint128"
+            }
+          ],
+          "name": "_poolAssets",
+          "type": "tuple"
         },
         {
-          "name": "_treasury",
-          "type": "address"
-        },
-        {
-          "name": "_projectFund",
-          "type": "address"
-        },
-        {
-          "name": "_devFund",
-          "type": "address"
-        },
-        {
-          "name": "_poolBalance",
-          "type": "uint128"
-        },
-        {
-          "name": "_stgUsdtSupply",
-          "type": "uint128"
-        },
-        {
-          "name": "_targetPrice",
-          "type": "uint128"
-        },
-        {
-          "name": "_insuranceFund",
-          "type": "uint128"
-        },
-        {
-          "name": "_insuranceFundLimit",
-          "type": "uint128"
+          "components": [
+            {
+              "name": "balance",
+              "type": "uint128"
+            },
+            {
+              "name": "limit",
+              "type": "uint128"
+            }
+          ],
+          "name": "_insuranceFunds",
+          "type": "tuple"
         },
         {
           "name": "_insuranceFundOverflowDistributionSchema",
@@ -6637,19 +9482,15 @@
           "type": "uint128"
         },
         {
-          "name": "_totalNOI",
-          "type": "uint128"
-        },
-        {
-          "name": "_totalNOILimitEnabled",
-          "type": "bool"
-        },
-        {
           "name": "_maxPoolUtilRatio",
           "type": "uint64"
         },
         {
           "name": "_maxPnlRate",
+          "type": "uint64"
+        },
+        {
+          "name": "_minStopLossRate",
           "type": "uint64"
         },
         {
@@ -6661,12 +9502,18 @@
           "type": "bool"
         },
         {
-          "name": "_liquidationThresholdRate",
-          "type": "uint64"
-        },
-        {
-          "name": "_liquidatorRewardShare",
-          "type": "uint64"
+          "components": [
+            {
+              "name": "thresholdRate",
+              "type": "uint64"
+            },
+            {
+              "name": "rewardShare",
+              "type": "uint64"
+            }
+          ],
+          "name": "_liquidation",
+          "type": "tuple"
         },
         {
           "name": "_openFeeDistributionSchema",
@@ -6677,8 +9524,16 @@
           "type": "uint64[]"
         },
         {
+          "name": "_pnlDistributionSchema",
+          "type": "uint64[]"
+        },
+        {
           "name": "_marketCount",
           "type": "uint32"
+        },
+        {
+          "name": "_limitBotVault",
+          "type": "address"
         }
       ]
     },
@@ -6692,24 +9547,36 @@
       "name": "getCodes",
       "outputs": [
         {
-          "name": "_oracleProxyCode",
-          "type": "cell"
+          "components": [
+            {
+              "name": "code",
+              "type": "cell"
+            },
+            {
+              "name": "version",
+              "type": "uint32"
+            }
+          ],
+          "name": "_oracleProxy",
+          "type": "tuple"
         },
         {
           "name": "_platformCode",
           "type": "cell"
         },
         {
-          "name": "_gravixAccountCode",
-          "type": "cell"
-        },
-        {
-          "name": "_oracleProxyVersion",
-          "type": "uint32"
-        },
-        {
-          "name": "_gravixAccountVersion",
-          "type": "uint32"
+          "components": [
+            {
+              "name": "code",
+              "type": "cell"
+            },
+            {
+              "name": "version",
+              "type": "uint32"
+            }
+          ],
+          "name": "_gravixAccount",
+          "type": "tuple"
         },
         {
           "name": "_gravixVaultVersion",
@@ -6720,50 +9587,32 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "_marketIdx",
           "type": "uint32"
         },
         {
-          "name": "position_type",
+          "name": "_positionType",
           "type": "uint8"
         },
         {
-          "name": "leverage",
+          "name": "_leverage",
           "type": "uint32"
         },
         {
-          "name": "expected_price",
+          "name": "_expectedPrice",
           "type": "uint128"
         },
         {
-          "name": "max_slippage_rate",
+          "name": "_maxSlippageRate",
           "type": "uint64"
         },
         {
-          "components": [
-            {
-              "name": "eventTransaction",
-              "type": "uint256"
-            },
-            {
-              "name": "eventIndex",
-              "type": "uint32"
-            },
-            {
-              "name": "eventData",
-              "type": "cell"
-            },
-            {
-              "name": "eventBlockNumber",
-              "type": "uint32"
-            },
-            {
-              "name": "eventBlock",
-              "type": "uint256"
-            }
-          ],
-          "name": "event_data",
-          "type": "tuple"
+          "name": "_stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_takeProfitTriggerPrice",
+          "type": "uint128"
         },
         {
           "components": [
@@ -6788,19 +9637,19 @@
               "type": "cell"
             }
           ],
-          "name": "price",
+          "name": "_price",
           "type": "tuple"
         },
         {
-          "name": "referrer",
+          "name": "_referrer",
           "type": "address"
         },
         {
-          "name": "nonce",
+          "name": "_nonce",
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "_callId",
           "type": "uint32"
         }
       ],
@@ -6815,18 +9664,18 @@
     {
       "inputs": [
         {
-          "name": "action_payload",
+          "name": "actionPayload",
           "type": "cell"
         }
       ],
       "name": "decodeMarketOrder",
       "outputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
-          "name": "position_type",
+          "name": "positionType",
           "type": "uint8"
         },
         {
@@ -6834,38 +9683,20 @@
           "type": "uint32"
         },
         {
-          "name": "expected_price",
+          "name": "expectedPrice",
           "type": "uint128"
         },
         {
-          "name": "max_slippage_rate",
+          "name": "maxSlippageRate",
           "type": "uint64"
         },
         {
-          "components": [
-            {
-              "name": "eventTransaction",
-              "type": "uint256"
-            },
-            {
-              "name": "eventIndex",
-              "type": "uint32"
-            },
-            {
-              "name": "eventData",
-              "type": "cell"
-            },
-            {
-              "name": "eventBlockNumber",
-              "type": "uint32"
-            },
-            {
-              "name": "eventBlock",
-              "type": "uint256"
-            }
-          ],
-          "name": "event_data",
-          "type": "tuple"
+          "name": "stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "takeProfitTriggerPrice",
+          "type": "uint128"
         },
         {
           "components": [
@@ -6902,11 +9733,157 @@
     {
       "inputs": [
         {
-          "name": "market_idx",
+          "name": "_marketIdx",
           "type": "uint32"
         },
         {
-          "name": "position_key",
+          "name": "_positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "_leverage",
+          "type": "uint32"
+        },
+        {
+          "name": "_triggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "components": [
+            {
+              "name": "price",
+              "type": "uint128"
+            },
+            {
+              "name": "serverTime",
+              "type": "uint32"
+            },
+            {
+              "name": "oracleTime",
+              "type": "uint32"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "signature",
+              "type": "cell"
+            }
+          ],
+          "name": "_price",
+          "type": "tuple"
+        },
+        {
+          "name": "_limitOrderType",
+          "type": "uint8"
+        },
+        {
+          "name": "_referrer",
+          "type": "address"
+        },
+        {
+          "name": "_nonce",
+          "type": "uint32"
+        },
+        {
+          "name": "_callId",
+          "type": "uint32"
+        }
+      ],
+      "name": "encodeLimitOrder",
+      "outputs": [
+        {
+          "name": "payload",
+          "type": "cell"
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "actionPayload",
+          "type": "cell"
+        }
+      ],
+      "name": "decodeLimitOrder",
+      "outputs": [
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "positionType",
+          "type": "uint8"
+        },
+        {
+          "name": "leverage",
+          "type": "uint32"
+        },
+        {
+          "name": "triggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "stopLossTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "takeProfitTriggerPrice",
+          "type": "uint128"
+        },
+        {
+          "name": "_limitOrderType",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "name": "price",
+              "type": "uint128"
+            },
+            {
+              "name": "serverTime",
+              "type": "uint32"
+            },
+            {
+              "name": "oracleTime",
+              "type": "uint32"
+            },
+            {
+              "name": "ticker",
+              "type": "string"
+            },
+            {
+              "name": "signature",
+              "type": "cell"
+            }
+          ],
+          "name": "price",
+          "type": "tuple"
+        },
+        {
+          "name": "referrer",
+          "type": "address"
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "marketIdx",
+          "type": "uint32"
+        },
+        {
+          "name": "positionKey",
           "type": "uint32"
         },
         {
@@ -6914,7 +9891,7 @@
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         }
       ],
@@ -6929,18 +9906,18 @@
     {
       "inputs": [
         {
-          "name": "action_payload",
+          "name": "actionPayload",
           "type": "cell"
         }
       ],
       "name": "decodeAddCollateral",
       "outputs": [
         {
-          "name": "market_idx",
+          "name": "marketIdx",
           "type": "uint32"
         },
         {
-          "name": "position_key",
+          "name": "positionKey",
           "type": "uint32"
         }
       ]
@@ -6952,7 +9929,7 @@
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         }
       ],
@@ -6971,7 +9948,7 @@
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         }
       ],
@@ -6990,7 +9967,7 @@
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         }
       ],
@@ -7013,11 +9990,11 @@
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "action_payload",
+          "name": "actionPayload",
           "type": "cell"
         }
       ],
@@ -7047,11 +10024,11 @@
           "type": "uint32"
         },
         {
-          "name": "call_id",
+          "name": "callId",
           "type": "uint32"
         },
         {
-          "name": "action_payload",
+          "name": "actionPayload",
           "type": "cell"
         },
         {
@@ -7181,6 +10158,56 @@
         {
           "name": "value0",
           "type": "address"
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "_triggersExists",
+          "type": "bool"
+        }
+      ],
+      "name": "getBaseOpenMarketOrderValue",
+      "outputs": [
+        {
+          "name": "value0",
+          "type": "uint128"
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "_triggersExists",
+          "type": "bool"
+        }
+      ],
+      "name": "getBaseOpenLimitOrderValue",
+      "outputs": [
+        {
+          "name": "value0",
+          "type": "uint128"
+        }
+      ]
+    },
+    {
+      "inputs": [],
+      "name": "getMinValueForClosePosition",
+      "outputs": [
+        {
+          "name": "value0",
+          "type": "uint128"
+        }
+      ]
+    },
+    {
+      "inputs": [],
+      "name": "getSetOrUpdateTriggersMinValue",
+      "outputs": [
+        {
+          "name": "value0",
+          "type": "uint128"
         }
       ]
     }

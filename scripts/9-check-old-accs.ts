@@ -5,7 +5,7 @@ const fs = require("fs");
 const prompts = require("prompts");
 const ora = require("ora");
 
-const cur_code_hash = "f413970f94e7c196f431447e92f2189f2448498b924400b14eef9d6eddbf15b8";
+const cur_code_hash = "e35c25eed033cb19e9b7a029471cdaa2ff653d4362e6d081b2b02e3c863ec4af";
 
 const main = async () => {
     await locklift.deployments.load();

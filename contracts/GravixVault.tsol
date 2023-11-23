@@ -16,10 +16,8 @@ pragma ever-solidity ^0.62.0;
 
 
 import {Callback} from "./libraries/Callback.tsol";
-import {Constants} from "./libraries/Constants.tsol";
 import {GravixVaultBase} from "./base/gravix_vault/GravixVaultBase.tsol";
 import {IGravixVault} from "./interfaces/IGravixVault.tsol";
-import {IOldGravixVault} from "./interfaces/IOldGravixVault.tsol";
 import {MsgFlag} from "@broxus/contracts/contracts/libraries/MsgFlag.tsol";
 
 
@@ -93,9 +91,8 @@ contract GravixVault is GravixVaultBase {
         onCodeUpgrade(data);
     }
 
-    function onCodeUpgrade(TvmCell upgradeData) private {
+    function onCodeUpgrade(TvmCell) private {
         tvm.rawReserve(_reserve(), 0);
         msg.sender.transfer({ value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false });
     }
-
 }

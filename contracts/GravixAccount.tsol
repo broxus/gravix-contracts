@@ -111,7 +111,8 @@ contract GravixAccount is GravixAccountBase {
             IGravixVault(vault).onGravixAccountDeploy{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, Callback.CallMeta(0, 0, sendGasTo)
             );
-        } else {
+        // 3 for ever, 1 for venom, big limit update
+        } else if (_oldVersion == 3 || _oldVersion == 1) {
             // storage was modified
             tvm.resetStorage();
             referrer = params.decode(address);
@@ -186,6 +187,7 @@ contract GravixAccount is GravixAccountBase {
             requestCounter = oldRequestCounter;
             grandReferrer = oldGrandReferrer;
             referralBalance = oldReferralBalance;
+            lastUsedTimeStamp = now;
             // endregion
 
             //region logic
@@ -196,6 +198,15 @@ contract GravixAccount is GravixAccountBase {
                 grandReferrerChecked = true;
             }
             // endregion
+            IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
+                user, _oldVersion, _currentVersion, Callback.CallMeta(callId, nonce, sendGasTo)
+            );
+        } else {
+            TvmCell data = s.loadRef();
+            currentVersion = _currentVersion;
+            (uint32 callId, uint32 nonce,) = abi.decode(data, (uint32, uint32, TvmCell));
+
+            lastUsedTimeStamp = now;
             IGravixVault(vault).onGravixAccountUpgrade{value: 0, flag: MsgFlag.ALL_NOT_RESERVED}(
                 user, _oldVersion, _currentVersion, Callback.CallMeta(callId, nonce, sendGasTo)
             );

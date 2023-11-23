@@ -3,13 +3,12 @@ pragma ever-solidity ^0.62.0;
 
 import {IAcceptTokensTransferCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensTransferCallback.tsol";
 import {IAcceptTokensBurnCallback} from "@broxus/tip3/contracts/interfaces/IAcceptTokensBurnCallback.tsol";
-import {IOldGravixVault} from "./IOldGravixVault.tsol";
 import {IPriceNode} from "./IPriceNode.tsol";
 import {Callback} from "../libraries/Callback.tsol";
 import {IGravixAccount} from "./IGravixAccount.tsol";
 
 
-interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback, IOldGravixVault {
+interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallback {
     enum Action {
         MarketOrder,
         LiquidityDeposit,
@@ -685,5 +684,4 @@ interface IGravixVault is IAcceptTokensTransferCallback, IAcceptTokensBurnCallba
         Callback.CallMeta meta
     ) external;
     function finish_withdrawReferralBalance(address user, uint128 refBal, Callback.CallMeta meta) external view;
-    function onGravixAccountRequestUpgrade(address _user, uint32 _accountVersion, Callback.CallMeta _meta) external;
 }

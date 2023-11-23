@@ -610,8 +610,7 @@ describe("Testing main orders flow", async function () {
                         undefined,
                         undefined,
                         undefined,
-                        openMarketOrderBaseValue,
-                        closePositionValue,
+                        openMarketOrderBaseValue
                     );
 
                     await testPositionFunding(
@@ -644,8 +643,7 @@ describe("Testing main orders flow", async function () {
                         undefined,
                         undefined,
                         undefined,
-                        openMarketOrderBaseValue,
-                        closePositionValue,
+                        openMarketOrderBaseValue
                     );
 
                     await testPositionFunding(
