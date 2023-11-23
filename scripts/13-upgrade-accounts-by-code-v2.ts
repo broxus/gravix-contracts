@@ -15,14 +15,14 @@ const upgradeAccounts = async (vault: Contract<GravixVaultAbi>, old_accs: Addres
     console.log('Starting upgrade loop in parallel', old_accs.length);
     while (old_accs.length) {
         const pack = old_accs.splice(0, 500);
-        vault.methods
+        await vault.methods
                 .forceUpgradeGravixAccountsByContracts({
                     contracts: pack,
                     meta: { callId: 0, nonce: 0, sendGasTo: manager },
                 })
                 .send({ from: manager, amount: toNano(pack.length + 2) });
         console.log("\x1b[1m", `${old_accs.length} accounts remain to upgrade`);
-        await sleep(5000);
+        await sleep(1000);
     }
 }
 
