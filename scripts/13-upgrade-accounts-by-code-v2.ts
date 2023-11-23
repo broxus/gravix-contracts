@@ -22,7 +22,7 @@ const upgradeAccounts = async (vault: Contract<GravixVaultAbi>, old_accs: Addres
                 })
                 .send({ from: manager, amount: toNano(pack.length + 2) });
         console.log("\x1b[1m", `${old_accs.length} accounts remain to upgrade`);
-        await sleep(3000);
+        await sleep(5000);
     }
 }
 
@@ -52,7 +52,7 @@ const main = async () => {
     let old_accs: Address[] = [];
     let continuation: string | undefined; // just not undefined
     setTimeout(upgradeAccounts, 5000, vault, old_accs, manager.address);
-    setInterval(() => console.log('Collect progress:', old_accs.length), 5000);
+    setInterval(() => console.log('Collect progress (not upgraded):', old_accs.length), 5000);
     while (true) {
         const accs = await getAccountsByCodeHash(cur_code_hash, continuation);
         accs.accounts.map((acc) => old_accs.push(acc));
