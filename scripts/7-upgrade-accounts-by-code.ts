@@ -1,10 +1,13 @@
 import { Address, toNano } from "locklift";
-import { isValidEverAddress } from "../test/utils/common";
 import { GravixVaultAbi } from "../build/factorySource";
+import {getAccountsByCodeHash, isValidEverAddress} from "../test/utils/common";
 
 const prompts = require("prompts");
 const ora = require("ora");
 
+// f413970f94e7c196f431447e92f2189f2448498b924400b14eef9d6eddbf15b8 - before limits
+// e35c25eed033cb19e9b7a029471cdaa2ff653d4362e6d081b2b02e3c863ec4af - limits
+// 2f9b3e60a0872ea38a0e205f39e4003799e866629276510dc2a39864dfb28031 - 2.1
 const cur_code_hash = "e35c25eed033cb19e9b7a029471cdaa2ff653d4362e6d081b2b02e3c863ec4af";
 
 const main = async () => {
@@ -33,19 +36,17 @@ const main = async () => {
     let old_accs: Address[] = [];
     let continuation: string | undefined; // just not undefined
     while (true) {
-        const accs = await locklift.provider.getAccountsByCodeHash({
-            codeHash: cur_code_hash,
-            continuation: continuation,
-        });
+        const accs = await getAccountsByCodeHash(cur_code_hash, continuation);
         old_accs = old_accs.concat(accs.accounts);
         continuation = accs.continuation;
+        if (old_accs.length % 500 === 0) console.log('Collect progress:', old_accs.length);
         if (!continuation) break;
     }
     spinner.succeed(`Found ${old_accs.length} old accounts`);
 
     spinner.start("Upgrading accounts...");
     while (old_accs.length) {
-        const pack = old_accs.splice(0, 20);
+        const pack = old_accs.splice(0, 500);
         await locklift.transactions.waitFinalized(
             vault.methods
                 .forceUpgradeGravixAccountsByContracts({

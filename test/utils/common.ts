@@ -34,6 +34,22 @@ export function toUSD(num: Bignumber | number) {
         .toFixed(5);
 }
 
+// Function for getting accounts by code hash with try catch block
+export const getAccountsByCodeHash = async (codeHash: string, continuation?: string): Promise<{
+  accounts: Address[];
+  continuation: string | undefined;
+}> => {
+  try {
+    return await locklift.provider.getAccountsByCodeHash({
+      codeHash: codeHash,
+      continuation: continuation,
+    });
+  } catch (e) {
+    console.log(e);
+    return await getAccountsByCodeHash(codeHash, continuation);
+  }
+}
+
 export async function tryIncreaseTime(seconds: number) {
     // @ts-ignore
     if (locklift.testing.isEnabled) {

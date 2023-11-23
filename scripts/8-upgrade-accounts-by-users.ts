@@ -32,7 +32,7 @@ const main = async () => {
 
     const spinner = ora("Upgrading accounts...").start();
     while (users.length) {
-        const pack = users.splice(0, 50).map(i => new Address(i));
+        const pack = users.splice(0, 500).map(i => new Address(i));
         await locklift.tracing.trace(
             vault.methods
                 .forceUpgradeGravixAccountsByUsers({

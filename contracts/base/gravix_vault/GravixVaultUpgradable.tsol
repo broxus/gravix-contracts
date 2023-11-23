@@ -40,16 +40,33 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
     function forceUpgradeGravixAccountsByUsers(address[] users, Callback.CallMeta meta) external view onlyManager reserve {
         require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE * (users.length + 1), Errors.LOW_MSG_VALUE);
 
-        for (uint i = 0; i < users.length; i++) {
-            _upgradeGravixAccountByUser(users[i], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
-        }
+        this._upgradeGravixAccountsBatch{flag: MsgFlag.ALL_NOT_RESERVED}(users, 0, true,meta);
+
     }
 
     function forceUpgradeGravixAccountsByContracts(address[] contracts, Callback.CallMeta meta) external view onlyManager reserve {
         require (msg.value >= Gas.GRAVIX_ACC_UPGRADE_VALUE * (contracts.length + 1), Errors.LOW_MSG_VALUE);
 
-        for (uint i = 0; i < contracts.length; i++) {
-            _upgradeGravixAccountByContract(contracts[i], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
+        this._upgradeGravixAccountsBatch{flag: MsgFlag.ALL_NOT_RESERVED}(contracts, 0, false,meta);
+    }
+
+    function _upgradeGravixAccountsBatch(address[] addrs, uint128 startIdx, bool userAddresses, Callback.CallMeta meta) external view reserveAndSendGas(meta) {
+        require (msg.sender == address(this), Errors.NOT_VAULT);
+
+        uint128 batchSize = 20;
+        for (; startIdx < addrs.length && batchSize != 0; startIdx++) {
+            batchSize--;
+            if (userAddresses) {
+                _upgradeGravixAccountByUser(addrs[startIdx], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
+            } else {
+                _upgradeGravixAccountByContract(addrs[startIdx], Gas.GRAVIX_ACC_UPGRADE_VALUE, meta);
+            }
+        }
+
+        if (startIdx < addrs.length) {
+            this._upgradeGravixAccountsBatch{value: 0, flag: MsgFlag.ALL_NOT_RESERVED, bounce: false}(
+                addrs, startIdx, userAddresses,meta
+            );
         }
     }
 
@@ -64,12 +81,7 @@ abstract contract GravixVaultUpgradable is GravixVaultHelpers {
 
     function _upgradeGravixAccountByUser(address user, uint128 value, Callback.CallMeta meta) internal view {
         address gravixAcc = getGravixAccountAddress(user);
-        uint16 flag = value == 0 ? MsgFlag.ALL_NOT_RESERVED : 1;
-        IGravixAccount(gravixAcc).upgrade{ value: value, flag: flag }(
-            gravixAccountCode.code,
-            gravixAccountCode.version,
-            meta
-        );
+        _upgradeGravixAccountByContract(gravixAcc, value, meta);
     }
 
     function onGravixAccountUpgrade(

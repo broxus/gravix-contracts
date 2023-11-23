@@ -1,11 +1,13 @@
 import { Address, toNano } from "locklift";
-import { isValidEverAddress } from "../test/utils/common";
+import {getAccountsByCodeHash, isValidEverAddress} from "../test/utils/common";
 const fs = require("fs");
 
 const prompts = require("prompts");
 const ora = require("ora");
 
 const cur_code_hash = "e35c25eed033cb19e9b7a029471cdaa2ff653d4362e6d081b2b02e3c863ec4af";
+
+
 
 const main = async () => {
     await locklift.deployments.load();
@@ -25,12 +27,10 @@ const main = async () => {
     let all_old_accs: Address[] = [];
     let continuation: string | undefined; // just not undefined
     while (true) {
-        const accs = await locklift.provider.getAccountsByCodeHash({
-            codeHash: cur_code_hash,
-            continuation: continuation,
-        });
+        const accs = await getAccountsByCodeHash(cur_code_hash, continuation);
         all_old_accs = all_old_accs.concat(accs.accounts);
         continuation = accs.continuation;
+        if (all_old_accs.length % 500 === 0) console.log('Collect progress:', all_old_accs.length);
         if (!continuation) break;
     }
 

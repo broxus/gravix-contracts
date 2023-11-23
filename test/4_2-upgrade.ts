@@ -143,17 +143,24 @@ describe("Testing main orders flow", async function () {
                         };
                     }, {} as Record<string, (typeof res)["positions"][0][1]>),
                 );
-            const { traceTree } = await locklift.tracing.trace(
-                vault.methods
-                    .upgradeGravixAccount({
-                        meta: {
-                            nonce: 0,
-                            callId: 0,
-                            sendGasTo: user.address,
-                        },
-                    })
-                    .send({ from: user.address, amount: toNano(1) }),
+
+            const {traceTree} = await locklift.tracing.trace(
+              vault.methods.forceUpgradeGravixAccountsByUsers(
+                {users: [user.address], meta: { nonce: 0, callId: 0, sendGasTo: owner.address }}
+              ).send({ from: owner.address, amount: toNano(5) })
             );
+            await traceTree?.beautyPrint();
+            // const { traceTree } = await locklift.tracing.trace(
+            //     vault.methods
+            //         .upgradeGravixAccount({
+            //             meta: {
+            //                 nonce: 0,
+            //                 callId: 0,
+            //                 sendGasTo: user.address,
+            //             },
+            //         })
+            //         .send({ from: user.address, amount: toNano(1) }),
+            // );
             account = locklift.factory.getDeployedContract("GravixAccount", prevAccountContractState.address);
             const positionsAfter = await account.methods
                 .positions()
