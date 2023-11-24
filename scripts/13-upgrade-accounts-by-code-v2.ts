@@ -5,7 +5,8 @@ import {getAccountsByCodeHash, isValidEverAddress, sleep} from "../test/utils/co
 const prompts = require("prompts");
 const ora = require("ora");
 
-const cur_code_hash = "e35c25eed033cb19e9b7a029471cdaa2ff653d4362e6d081b2b02e3c863ec4af";
+const cur_code_hash = "f413970f94e7c196f431447e92f2189f2448498b924400b14eef9d6eddbf15b8";
+let fetching = true;
 
 // @dev Async function that iterates over an array of addresses in a while loop in batches of 20
 // and calls the forceUpgradeGravixAccountsByContracts method on the vault contract
@@ -13,7 +14,7 @@ const cur_code_hash = "e35c25eed033cb19e9b7a029471cdaa2ff653d4362e6d081b2b02e3c8
 // But it is much faster than synchronous version
 const upgradeAccounts = async (vault: Contract<GravixVaultAbi>, old_accs: Address[], manager: Address) => {
     console.log('Starting upgrade loop in parallel', old_accs.length);
-    while (old_accs.length) {
+    while (fetching || old_accs.length) {
         const pack = old_accs.splice(0, 500);
         await vault.methods
                 .forceUpgradeGravixAccountsByContracts({
@@ -24,6 +25,7 @@ const upgradeAccounts = async (vault: Contract<GravixVaultAbi>, old_accs: Addres
         console.log("\x1b[1m", `${old_accs.length} accounts remain to upgrade`);
         await sleep(1000);
     }
+    console.log('Finished upgrade loop')
 }
 
 const main = async () => {
@@ -59,6 +61,7 @@ const main = async () => {
         continuation = accs.continuation;
         if (!continuation) break;
     }
+    fetching = false;
     while (old_accs.length) {
         await sleep(5000);
     }
