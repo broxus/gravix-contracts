@@ -769,20 +769,20 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
             }
             _sendCallbackOrGas(_user, _meta.nonce, true, _meta.sendGasTo);
         } else {
+            int256 pnlWithFees = _positionView.pnl - _positionView.borrowFee - _positionView.fundingFee;
             int256 pnlLimit = math.muldiv(collateral, maxPnlRate, Constants.HUNDRED_PERCENT);
-            int256 limitedPnl = math.min(_positionView.pnl, pnlLimit);
+            int256 limitedPnlWithFees = math.min(pnlWithFees, pnlLimit);
 
-            int256 pnlWithFees = limitedPnl - _positionView.borrowFee - _positionView.fundingFee;
             _collectCloseFeeAndReferral(_positionView.closeFee, _referrer, _grandReferrer, _user, _meta);
 
             uint128 debt;
-            if (pnlWithFees < 0) {
+            if (limitedPnlWithFees < 0) {
                 // increase insurance fund + send referrer payment
-                _collectPnlAndReferral(uint128(math.abs(pnlWithFees)), _referrer, _grandReferrer, _user, _meta);
+                _collectPnlAndReferral(uint128(math.abs(limitedPnlWithFees)), _referrer, _grandReferrer, _user, _meta);
             }
-            if (pnlWithFees > 0) {
+            if (limitedPnlWithFees > 0) {
                 // positive debt if we dont have enough money to pay pnl
-                debt = _decreaseInsuranceFund(uint128(pnlWithFees));
+                debt = _decreaseInsuranceFund(uint128(limitedPnlWithFees));
             }
 
             // if transaction was triggered by user + position has trigger price, we need to send him reserved gas
@@ -798,7 +798,7 @@ abstract contract GravixVaultOrdersBase is GravixVaultMarkets {
                 // if position was closed by limit bot, we already emitted this event
             emit ClosePosition(_meta.callId, _user, _positionKey, _positionView);
             // we know for sure collateral > pnl and fee, otherwise position would have been liquidated
-            uint128 userNetUsdt = uint128(collateral + pnlWithFees - debt - _positionView.closeFee);
+            uint128 userNetUsdt = uint128(collateral + limitedPnlWithFees - debt - _positionView.closeFee);
             _transfer(
                 usdt.wallet,
                 userNetUsdt,

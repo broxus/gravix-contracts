@@ -767,7 +767,7 @@ export const closeOrderWithTraceTree = async ({
     const net_pnl = expected_pnl.minus(expected_close_fee);
     const percent_diff = net_pnl
         .div(bn(posView1.position.initialCollateral).minus(posView1.position.openFee))
-        .times(1000000);
+        // .times(1000000);
 
     const limited_pnl = max_pnl.gt(expected_pnl) ? expected_pnl : max_pnl;
     const pnl_with_fees = limited_pnl.minus(borrow_fee).minus(posView2.fundingFee);
