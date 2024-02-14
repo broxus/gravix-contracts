@@ -10,23 +10,23 @@ schedule = {
         [2, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
         [3, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
         [4, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
-        [5, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 20, 'minute': 0}}]],
-        [7, [{'from': {'hour': 21, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
+        [5, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 22, 'minute': 0}}]],
+        [7, [{'from': {'hour': 22, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
     ],
     'Equities': [
-        [1, [{'from': {'hour': 13, 'minute': 30}, 'to': {'hour': 20, 'minute': 0}}]],
-        [2, [{'from': {'hour': 13, 'minute': 30}, 'to': {'hour': 20, 'minute': 0}}]],
-        [3, [{'from': {'hour': 13, 'minute': 30}, 'to': {'hour': 20, 'minute': 0}}]],
-        [4, [{'from': {'hour': 13, 'minute': 30}, 'to': {'hour': 20, 'minute': 0}}]],
-        [5, [{'from': {'hour': 13, 'minute': 30}, 'to': {'hour': 20, 'minute': 0}}]]
+        [1, [{'from': {'hour': 14, 'minute': 30}, 'to': {'hour': 21, 'minute': 0}}]],
+        [2, [{'from': {'hour': 14, 'minute': 30}, 'to': {'hour': 21, 'minute': 0}}]],
+        [3, [{'from': {'hour': 14, 'minute': 30}, 'to': {'hour': 21, 'minute': 0}}]],
+        [4, [{'from': {'hour': 14, 'minute': 30}, 'to': {'hour': 21, 'minute': 0}}]],
+        [5, [{'from': {'hour': 14, 'minute': 30}, 'to': {'hour': 21, 'minute': 0}}]]
     ],
     'Commodities': [
-        [1, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 21, 'minute': 0}}, {'from': {'hour': 22, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
-        [2, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 21, 'minute': 0}}, {'from': {'hour': 22, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
-        [3, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 21, 'minute': 0}}, {'from': {'hour': 22, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
-        [4, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 21, 'minute': 0}}, {'from': {'hour': 22, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
-        [5, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 21, 'minute': 0}}]],
-        [7, [{'from': {'hour': 22, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]]
+        [1, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 22, 'minute': 0}}, {'from': {'hour': 23, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
+        [2, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 22, 'minute': 0}}, {'from': {'hour': 23, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
+        [3, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 22, 'minute': 0}}, {'from': {'hour': 23, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
+        [4, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 22, 'minute': 0}}, {'from': {'hour': 23, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]],
+        [5, [{'from': {'hour': 0, 'minute': 0}, 'to': {'hour': 22, 'minute': 0}}]],
+        [7, [{'from': {'hour': 23, 'minute': 0}, 'to': {'hour': 0, 'minute': 0}}]]
     ]
 }
 
